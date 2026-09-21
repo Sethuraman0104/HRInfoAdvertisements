@@ -1,0 +1,6 @@
+@HRInfoAdvertisements.API_HostAddress = http://localhost:5299
+
+GET {{HRInfoAdvertisements.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
