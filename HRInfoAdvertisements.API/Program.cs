@@ -17,7 +17,7 @@ var builder = WebApplication.CreateBuilder(args);
 // ------------------------------------------------------------
 
 builder.Services.AddControllers();
-
+builder.Services.AddHttpContextAccessor();
 
 // ------------------------------------------------------------
 // Swagger
@@ -111,6 +111,17 @@ builder.Services.AddScoped<
     IAuthService,
     AuthService>();
 
+builder.Services.AddScoped<
+    IAdvertisementService,
+    AdvertisementService>();
+
+builder.Services.AddScoped<
+    IAdvertisementMediaService,
+    AdvertisementMediaService>();
+
+builder.Services.AddScoped<
+    IFileStorageService,
+    LocalFileStorageService>();
 
 // ------------------------------------------------------------
 // JWT Authentication
@@ -247,6 +258,8 @@ if (app.Environment.IsDevelopment())
 // ------------------------------------------------------------
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors("DevelopmentPolicy");
 
