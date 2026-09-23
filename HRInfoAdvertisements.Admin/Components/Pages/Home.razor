@@ -1,7 +1,525 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Dashboard | HR INFO ADs</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="dashboard-page">
 
-Welcome to your new app.
+    <!-- PAGE HEADER -->
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <div class="dashboard-eyebrow">
+                HR INFO ADs
+            </div>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                Monitor your advertisement platform and manage daily activities.
+            </p>
+
+        </div>
+
+
+        <div class="dashboard-actions">
+
+            <button class="dashboard-secondary-button"
+                    type="button">
+
+                <span>↻</span>
+
+                Refresh
+
+            </button>
+
+            <button class="dashboard-primary-button"
+                    type="button">
+
+                <span>＋</span>
+
+                New Advertisement
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- SUMMARY CARDS -->
+
+    <section class="summary-grid">
+
+        <div class="summary-card">
+
+            <div class="summary-card-top">
+
+                <div class="summary-icon blue">
+                    ◉
+                </div>
+
+                <span class="summary-label">
+                    TOTAL USERS
+                </span>
+
+            </div>
+
+            <div class="summary-value">
+                1
+            </div>
+
+            <div class="summary-description">
+                Registered platform users
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-card-top">
+
+                <div class="summary-icon royal">
+                    ▣
+                </div>
+
+                <span class="summary-label">
+                    ADVERTISEMENTS
+                </span>
+
+            </div>
+
+            <div class="summary-value">
+                2
+            </div>
+
+            <div class="summary-description">
+                Total advertisements
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-card-top">
+
+                <div class="summary-icon green">
+                    ✓
+                </div>
+
+                <span class="summary-label">
+                    PUBLISHED
+                </span>
+
+            </div>
+
+            <div class="summary-value">
+                1
+            </div>
+
+            <div class="summary-description">
+                Currently published
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-card-top">
+
+                <div class="summary-icon amber">
+                    ⚑
+                </div>
+
+                <span class="summary-label">
+                    REPORTS
+                </span>
+
+            </div>
+
+            <div class="summary-value">
+                1
+            </div>
+
+            <div class="summary-description">
+                Total reports submitted
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- MAIN DASHBOARD GRID -->
+
+    <section class="dashboard-grid">
+
+
+        <!-- ADVERTISEMENT STATUS -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Advertisement Overview
+                    </h2>
+
+                    <p>
+                        Current advertisement status
+                    </p>
+
+                </div>
+
+                <button class="panel-link"
+                        type="button">
+
+                    View all
+
+                </button>
+
+            </div>
+
+
+            <div class="status-list">
+
+                <div class="status-row">
+
+                    <div class="status-name">
+
+                        <span class="status-marker published"></span>
+
+                        Published
+
+                    </div>
+
+                    <strong>
+                        1
+                    </strong>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <div class="status-name">
+
+                        <span class="status-marker pending"></span>
+
+                        Pending Review
+
+                    </div>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <div class="status-name">
+
+                        <span class="status-marker rejected"></span>
+
+                        Rejected
+
+                    </div>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <div class="status-name">
+
+                        <span class="status-marker suspended"></span>
+
+                        Suspended
+
+                    </div>
+
+                    <strong>
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PLATFORM ACTIVITY -->
+
+        <div class="dashboard-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Platform Activity
+                    </h2>
+
+                    <p>
+                        Current system activity
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="activity-list">
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        AD
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Advertisements
+                        </strong>
+
+                        <span>
+                            2 total advertisements
+                        </span>
+
+                    </div>
+
+                    <div class="activity-value">
+                        2
+                    </div>
+
+                </div>
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        US
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Users
+                        </strong>
+
+                        <span>
+                            1 active user
+                        </span>
+
+                    </div>
+
+                    <div class="activity-value">
+                        1
+                    </div>
+
+                </div>
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        RP
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Reports
+                        </strong>
+
+                        <span>
+                            1 resolved report
+                        </span>
+
+                    </div>
+
+                    <div class="activity-value">
+                        1
+                    </div>
+
+                </div>
+
+
+                <div class="activity-item">
+
+                    <div class="activity-icon">
+                        LG
+                    </div>
+
+                    <div class="activity-content">
+
+                        <strong>
+                            Audit Logs
+                        </strong>
+
+                        <span>
+                            System activity recorded
+                        </span>
+
+                    </div>
+
+                    <div class="activity-value">
+                        1
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- QUICK ACTIONS -->
+
+    <section class="quick-section">
+
+        <div class="section-heading">
+
+            <div>
+
+                <h2>
+                    Quick Actions
+                </h2>
+
+                <p>
+                    Frequently used administration functions
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="quick-grid">
+
+            <button class="quick-card"
+                    type="button">
+
+                <span class="quick-card-icon">
+                    ＋
+                </span>
+
+                <span class="quick-card-content">
+
+                    <strong>
+                        Add Advertisement
+                    </strong>
+
+                    <small>
+                        Create a new advertisement
+                    </small>
+
+                </span>
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </button>
+
+
+            <button class="quick-card"
+                    type="button">
+
+                <span class="quick-card-icon">
+                    ▣
+                </span>
+
+                <span class="quick-card-content">
+
+                    <strong>
+                        Manage Advertisements
+                    </strong>
+
+                    <small>
+                        Review and manage listings
+                    </small>
+
+                </span>
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </button>
+
+
+            <button class="quick-card"
+                    type="button">
+
+                <span class="quick-card-icon">
+                    ⚑
+                </span>
+
+                <span class="quick-card-content">
+
+                    <strong>
+                        Review Reports
+                    </strong>
+
+                    <small>
+                        Monitor reported content
+                    </small>
+
+                </span>
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </button>
+
+
+            <button class="quick-card"
+                    type="button">
+
+                <span class="quick-card-icon">
+                    ◷
+                </span>
+
+                <span class="quick-card-content">
+
+                    <strong>
+                        Audit Logs
+                    </strong>
+
+                    <small>
+                        Review system activities
+                    </small>
+
+                </span>
+
+                <span class="quick-arrow">
+                    →
+                </span>
+
+            </button>
+
+        </div>
+
+    </section>
+
+</div>

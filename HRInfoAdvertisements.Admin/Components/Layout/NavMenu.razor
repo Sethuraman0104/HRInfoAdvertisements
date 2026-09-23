@@ -1,30 +1,179 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">HRInfoAdvertisements.Admin</a>
+﻿<div class="hr-navigation">
+
+    <!-- BRAND -->
+    <div class="hr-brand">
+
+        <div class="hr-brand-logo">
+
+            <div class="hr-logo-placeholder">
+                HR
+            </div>
+
+        </div>
+
+        <div class="hr-brand-text">
+
+            <div class="hr-brand-name">
+                HR INFO ADs
+            </div>
+
+            <div class="hr-brand-subtitle">
+                Administration
+            </div>
+
+        </div>
+
     </div>
-</div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+    <!-- NAVIGATION -->
+    <nav class="hr-nav">
+
+        <div class="hr-nav-section-title">
+            MAIN
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
+
+        <NavLink href="/"
+                 Match="NavLinkMatch.All"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">⌂</span>
+
+            <span>Dashboard</span>
+
+        </NavLink>
+
+
+        <NavLink href="/advertisements"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">▣</span>
+
+            <span>Advertisements</span>
+
+        </NavLink>
+
+
+        <NavLink href="/users"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">♙</span>
+
+            <span>Users</span>
+
+        </NavLink>
+
+
+        <NavLink href="/favorites"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">☆</span>
+
+            <span>Favorites</span>
+
+        </NavLink>
+
+
+        <NavLink href="/enquiries"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">✉</span>
+
+            <span>Enquiries</span>
+
+        </NavLink>
+
+
+        <div class="hr-nav-section-title">
+            MONITORING
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
+
+        <NavLink href="/reports"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">⚑</span>
+
+            <span>Reports</span>
+
+        </NavLink>
+
+
+        <NavLink href="/messages"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">☷</span>
+
+            <span>Messages</span>
+
+        </NavLink>
+
+
+        <NavLink href="/audit-logs"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">◷</span>
+
+            <span>Audit Logs</span>
+
+        </NavLink>
+
+
+        <div class="hr-nav-section-title">
+            MANAGEMENT
         </div>
+
+
+        <NavLink href="/categories"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">▦</span>
+
+            <span>Categories</span>
+
+        </NavLink>
+
+
+        <NavLink href="/roles"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">♟</span>
+
+            <span>Roles & Permissions</span>
+
+        </NavLink>
+
+
+        <NavLink href="/settings"
+                 class="hr-nav-link">
+
+            <span class="hr-nav-icon">⚙</span>
+
+            <span>Settings</span>
+
+        </NavLink>
+
     </nav>
-</div>
 
+
+    <!-- SIDEBAR FOOTER -->
+    <div class="hr-sidebar-footer">
+
+        <div class="hr-sidebar-status">
+
+            <span class="hr-status-dot"></span>
+
+            <span>
+                System Online
+            </span>
+
+        </div>
+
+        <div class="hr-sidebar-version">
+            HR INFO ADs · Admin
+        </div>
+
+    </div>
+
+</div>

@@ -262,6 +262,9 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<long>("AdvertisementID")
                         .HasColumnType("bigint");
 
+                    b.Property<DateTime?>("ClosedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("ContactEmail")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
@@ -273,13 +276,16 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("LastRepliedDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(3000)
                         .HasColumnType("nvarchar(3000)");
 
-                    b.Property<DateTime?>("RespondedDate")
-                        .HasColumnType("datetime2");
+                    b.Property<long>("RecipientUserID")
+                        .HasColumnType("bigint");
 
                     b.Property<long>("SenderUserID")
                         .HasColumnType("bigint");
@@ -289,13 +295,83 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("AdvertisementEnquiryID");
+
+                    b.HasIndex("RecipientUserID");
 
                     b.HasIndex("SenderUserID");
 
                     b.HasIndex("AdvertisementID", "CreatedDate");
 
                     b.ToTable("AdvertisementEnquiries", (string)null);
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiryMessage", b =>
+                {
+                    b.Property<long>("AdvertisementEnquiryMessageID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementEnquiryMessageID"));
+
+                    b.Property<long>("AdvertisementEnquiryID")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<DateTime?>("ReadDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("SenderUserID")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("AdvertisementEnquiryMessageID");
+
+                    b.HasIndex("AdvertisementEnquiryID", "CreatedDate");
+
+                    b.HasIndex("SenderUserID", "IsRead");
+
+                    b.ToTable("AdvertisementEnquiryMessages", (string)null);
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFavorite", b =>
+                {
+                    b.Property<long>("AdvertisementFavoriteID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementFavoriteID"));
+
+                    b.Property<long>("AdvertisementID")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("UserID")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("AdvertisementFavoriteID");
+
+                    b.HasIndex("AdvertisementID");
+
+                    b.HasIndex("UserID", "AdvertisementID")
+                        .IsUnique();
+
+                    b.ToTable("AdvertisementFavorites", (string)null);
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
@@ -935,7 +1011,7 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("MessageID"));
 
-                    b.Property<long>("AdvertisementID")
+                    b.Property<long?>("AdvertisementID")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedDate")
@@ -988,11 +1064,13 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Message")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<int?>("NotificationTemplateID")
                         .HasColumnType("int");
@@ -1343,15 +1421,20 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("RoleDescription")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("RoleID");
 
-                    b.ToTable("Roles");
+                    b.HasIndex("RoleName")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RolePermission", b =>
@@ -1856,6 +1939,12 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "RecipientUser")
+                        .WithMany()
+                        .HasForeignKey("RecipientUserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SenderUser")
                         .WithMany()
                         .HasForeignKey("SenderUserID")
@@ -1864,7 +1953,47 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     b.Navigation("Advertisement");
 
+                    b.Navigation("RecipientUser");
+
                     b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiryMessage", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", "AdvertisementEnquiry")
+                        .WithMany("Messages")
+                        .HasForeignKey("AdvertisementEnquiryID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SenderUser")
+                        .WithMany()
+                        .HasForeignKey("SenderUserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AdvertisementEnquiry");
+
+                    b.Navigation("SenderUser");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFavorite", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+                        .WithMany()
+                        .HasForeignKey("AdvertisementID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Advertisement");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
@@ -2069,12 +2198,12 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
                         .WithMany("Messages")
                         .HasForeignKey("AdvertisementID")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", "Enquiry")
                         .WithMany()
-                        .HasForeignKey("EnquiryID");
+                        .HasForeignKey("EnquiryID")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "ReceiverUser")
                         .WithMany()
@@ -2323,6 +2452,11 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
                 {
                     b.Navigation("Advertisements");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
+                {
+                    b.Navigation("Messages");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>

@@ -31,12 +31,13 @@ public class AdvertisementService : IAdvertisementService
 
         var category = await _context.AdvertisementCategories
             .FirstOrDefaultAsync(x =>
-                x.CategoryID == request.CategoryID);
+                x.CategoryID == request.CategoryID &&
+                x.IsActive);
 
         if (category == null)
         {
             throw new InvalidOperationException(
-                "Advertisement category was not found.");
+                "Advertisement category was not found or is inactive.");
         }
 
         // --------------------------------------------------------
@@ -46,12 +47,13 @@ public class AdvertisementService : IAdvertisementService
         var type = await _context.AdvertisementTypes
             .FirstOrDefaultAsync(x =>
                 x.AdvertisementTypeID ==
-                request.AdvertisementTypeID);
+                request.AdvertisementTypeID &&
+                x.IsActive);
 
         if (type == null)
         {
             throw new InvalidOperationException(
-                "Advertisement type was not found.");
+                "Advertisement type was not found or is inactive.");
         }
 
         // --------------------------------------------------------
@@ -61,12 +63,13 @@ public class AdvertisementService : IAdvertisementService
         var draftStatus =
             await _context.AdvertisementStatuses
                 .FirstOrDefaultAsync(x =>
-                    x.StatusCode == "DRAFT");
+                    x.StatusCode == "DRAFT" &&
+                    x.IsActive);
 
         if (draftStatus == null)
         {
             throw new InvalidOperationException(
-                "Advertisement DRAFT status was not found.");
+                "Advertisement DRAFT status was not found or is inactive.");
         }
 
         // --------------------------------------------------------
@@ -84,17 +87,20 @@ public class AdvertisementService : IAdvertisementService
         {
             UserID = userId,
 
-            CategoryID = request.CategoryID,
+            CategoryID =
+                request.CategoryID,
 
             AdvertisementTypeID =
                 request.AdvertisementTypeID,
 
-            StatusID = draftStatus.StatusID,
+            StatusID =
+                draftStatus.StatusID,
 
             AdvertisementNumber =
                 advertisementNumber,
 
-            Title = request.Title.Trim(),
+            Title =
+                request.Title.Trim(),
 
             TitleAr =
                 string.IsNullOrWhiteSpace(request.TitleAr)
@@ -105,16 +111,15 @@ public class AdvertisementService : IAdvertisementService
                 request.Description.Trim(),
 
             DescriptionAr =
-                string.IsNullOrWhiteSpace(
-                    request.DescriptionAr)
+                string.IsNullOrWhiteSpace(request.DescriptionAr)
                     ? null
                     : request.DescriptionAr.Trim(),
 
-            Price = request.Price,
+            Price =
+                request.Price,
 
             CurrencyCode =
-                string.IsNullOrWhiteSpace(
-                    request.CurrencyCode)
+                string.IsNullOrWhiteSpace(request.CurrencyCode)
                     ? "BHD"
                     : request.CurrencyCode
                         .Trim()
@@ -123,51 +128,66 @@ public class AdvertisementService : IAdvertisementService
             IsNegotiable =
                 request.IsNegotiable,
 
-            CountryID = request.CountryID,
+            CountryID =
+                request.CountryID,
 
-            StateID = request.StateID,
+            StateID =
+                request.StateID,
 
-            CityID = request.CityID,
+            CityID =
+                request.CityID,
 
-            AreaID = request.AreaID,
+            AreaID =
+                request.AreaID,
 
             AddressLine =
-                string.IsNullOrWhiteSpace(
-                    request.AddressLine)
+                string.IsNullOrWhiteSpace(request.AddressLine)
                     ? null
                     : request.AddressLine.Trim(),
 
-            Latitude = request.Latitude,
+            Latitude =
+                request.Latitude,
 
-            Longitude = request.Longitude,
+            Longitude =
+                request.Longitude,
 
             PlotNumber =
-                string.IsNullOrWhiteSpace(
-                    request.PlotNumber)
+                string.IsNullOrWhiteSpace(request.PlotNumber)
                     ? null
                     : request.PlotNumber.Trim(),
 
-            LandArea = request.LandArea,
+            LandArea =
+                request.LandArea,
 
-            BuiltUpArea = request.BuiltUpArea,
+            BuiltUpArea =
+                request.BuiltUpArea,
 
-            Bedrooms = request.Bedrooms,
+            Bedrooms =
+                request.Bedrooms,
 
-            Bathrooms = request.Bathrooms,
+            Bathrooms =
+                request.Bathrooms,
 
-            PropertyAge = request.PropertyAge,
+            PropertyAge =
+                request.PropertyAge,
 
-            IsFeatured = false,
+            IsFeatured =
+                false,
 
-            FeaturedUntil = null,
+            FeaturedUntil =
+                null,
 
-            PublishedDate = null,
+            PublishedDate =
+                null,
 
-            ExpiryDate = request.ExpiryDate,
+            ExpiryDate =
+                request.ExpiryDate,
 
-            CreatedDate = DateTime.UtcNow,
+            CreatedDate =
+                DateTime.UtcNow,
 
-            CreatedBy = userId
+            CreatedBy =
+                userId
         };
 
         _context.Advertisements.Add(advertisement);
@@ -267,15 +287,19 @@ public class AdvertisementService : IAdvertisementService
 
         return new AdvertisementListResponse
         {
-            Items = items
-                .Select(MapToResponse)
-                .ToList(),
+            Items =
+                items
+                    .Select(MapToResponse)
+                    .ToList(),
 
-            PageNumber = pageNumber,
+            PageNumber =
+                pageNumber,
 
-            PageSize = pageSize,
+            PageSize =
+                pageSize,
 
-            TotalRecords = totalRecords,
+            TotalRecords =
+                totalRecords,
 
             TotalPages =
                 (int)Math.Ceiling(
@@ -319,7 +343,8 @@ public class AdvertisementService : IAdvertisementService
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
                 .Where(x =>
-                    x.Status.StatusCode == "PUBLISHED");
+                    x.Status.StatusCode == "PUBLISHED" &&
+                    x.Status.IsActive);
 
         // --------------------------------------------------------
         // Search
@@ -425,15 +450,19 @@ public class AdvertisementService : IAdvertisementService
 
         return new AdvertisementListResponse
         {
-            Items = items
-                .Select(MapToResponse)
-                .ToList(),
+            Items =
+                items
+                    .Select(MapToResponse)
+                    .ToList(),
 
-            PageNumber = pageNumber,
+            PageNumber =
+                pageNumber,
 
-            PageSize = pageSize,
+            PageSize =
+                pageSize,
 
-            TotalRecords = totalRecords,
+            TotalRecords =
+                totalRecords,
 
             TotalPages =
                 (int)Math.Ceiling(
@@ -464,19 +493,24 @@ public class AdvertisementService : IAdvertisementService
         }
 
         // --------------------------------------------------------
-        // Only Draft / Rejected advertisements can be edited.
+        // Get Current Status
         // --------------------------------------------------------
 
         var status =
             await _context.AdvertisementStatuses
                 .FirstOrDefaultAsync(x =>
                     x.StatusID ==
-                    advertisement.StatusID);
+                    advertisement.StatusID &&
+                    x.IsActive);
 
         if (status == null)
         {
             return null;
         }
+
+        // --------------------------------------------------------
+        // Only Draft / Rejected advertisements can be edited.
+        // --------------------------------------------------------
 
         if (status.StatusCode != "DRAFT" &&
             status.StatusCode != "REJECTED")
@@ -493,12 +527,13 @@ public class AdvertisementService : IAdvertisementService
             await _context.AdvertisementCategories
                 .AnyAsync(x =>
                     x.CategoryID ==
-                    request.CategoryID);
+                    request.CategoryID &&
+                    x.IsActive);
 
         if (!categoryExists)
         {
             throw new InvalidOperationException(
-                "Advertisement category was not found.");
+                "Advertisement category was not found or is inactive.");
         }
 
         // --------------------------------------------------------
@@ -509,12 +544,13 @@ public class AdvertisementService : IAdvertisementService
             await _context.AdvertisementTypes
                 .AnyAsync(x =>
                     x.AdvertisementTypeID ==
-                    request.AdvertisementTypeID);
+                    request.AdvertisementTypeID &&
+                    x.IsActive);
 
         if (!typeExists)
         {
             throw new InvalidOperationException(
-                "Advertisement type was not found.");
+                "Advertisement type was not found or is inactive.");
         }
 
         // --------------------------------------------------------
@@ -539,8 +575,7 @@ public class AdvertisementService : IAdvertisementService
             request.Description.Trim();
 
         advertisement.DescriptionAr =
-            string.IsNullOrWhiteSpace(
-                request.DescriptionAr)
+            string.IsNullOrWhiteSpace(request.DescriptionAr)
                 ? null
                 : request.DescriptionAr.Trim();
 
@@ -548,8 +583,7 @@ public class AdvertisementService : IAdvertisementService
             request.Price;
 
         advertisement.CurrencyCode =
-            string.IsNullOrWhiteSpace(
-                request.CurrencyCode)
+            string.IsNullOrWhiteSpace(request.CurrencyCode)
                 ? "BHD"
                 : request.CurrencyCode
                     .Trim()
@@ -571,8 +605,7 @@ public class AdvertisementService : IAdvertisementService
             request.AreaID;
 
         advertisement.AddressLine =
-            string.IsNullOrWhiteSpace(
-                request.AddressLine)
+            string.IsNullOrWhiteSpace(request.AddressLine)
                 ? null
                 : request.AddressLine.Trim();
 
@@ -583,8 +616,7 @@ public class AdvertisementService : IAdvertisementService
             request.Longitude;
 
         advertisement.PlotNumber =
-            string.IsNullOrWhiteSpace(
-                request.PlotNumber)
+            string.IsNullOrWhiteSpace(request.PlotNumber)
                 ? null
                 : request.PlotNumber.Trim();
 
@@ -621,12 +653,13 @@ public class AdvertisementService : IAdvertisementService
             var draftStatus =
                 await _context.AdvertisementStatuses
                     .FirstOrDefaultAsync(x =>
-                        x.StatusCode == "DRAFT");
+                        x.StatusCode == "DRAFT" &&
+                        x.IsActive);
 
             if (draftStatus == null)
             {
                 throw new InvalidOperationException(
-                    "Advertisement DRAFT status was not found.");
+                    "Advertisement DRAFT status was not found or is inactive.");
             }
 
             advertisement.StatusID =
@@ -664,8 +697,9 @@ public class AdvertisementService : IAdvertisementService
         // Only Draft / Rejected advertisements can be deleted.
         // --------------------------------------------------------
 
-        if (advertisement.Status.StatusCode != "DRAFT" &&
-            advertisement.Status.StatusCode != "REJECTED")
+        if (advertisement.Status == null ||
+            (advertisement.Status.StatusCode != "DRAFT" &&
+             advertisement.Status.StatusCode != "REJECTED"))
         {
             return false;
         }
@@ -702,7 +736,8 @@ public class AdvertisementService : IAdvertisementService
         // Only Draft advertisements can be submitted.
         // --------------------------------------------------------
 
-        if (advertisement.Status.StatusCode != "DRAFT")
+        if (advertisement.Status == null ||
+            advertisement.Status.StatusCode != "DRAFT")
         {
             return false;
         }
@@ -711,31 +746,36 @@ public class AdvertisementService : IAdvertisementService
         // Validate mandatory information
         // --------------------------------------------------------
 
-        if (string.IsNullOrWhiteSpace(
-                advertisement.Title) ||
-            string.IsNullOrWhiteSpace(
-                advertisement.Description))
+        if (string.IsNullOrWhiteSpace(advertisement.Title) ||
+            string.IsNullOrWhiteSpace(advertisement.Description))
         {
             return false;
         }
 
         // --------------------------------------------------------
-        // Get Under Review status
+        // Get Pending Review Status
         // --------------------------------------------------------
 
-        var reviewStatus =
+        var pendingReviewStatus =
             await _context.AdvertisementStatuses
                 .FirstOrDefaultAsync(x =>
-                    x.StatusCode == "UNDER_REVIEW");
+                    x.StatusCode == "PENDING_REVIEW" &&
+                    x.IsActive);
 
-        if (reviewStatus == null)
+        if (pendingReviewStatus == null)
         {
             throw new InvalidOperationException(
-                "Advertisement UNDER_REVIEW status was not found.");
+                "Advertisement PENDING_REVIEW status was not found or is inactive.");
         }
 
+        // --------------------------------------------------------
+        // Change Status
+        //
+        // DRAFT → PENDING_REVIEW
+        // --------------------------------------------------------
+
         advertisement.StatusID =
-            reviewStatus.StatusID;
+            pendingReviewStatus.StatusID;
 
         advertisement.ModifiedDate =
             DateTime.UtcNow;

@@ -1,23 +1,166 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
+<div class="hr-app-shell">
+
+    <!-- LEFT NAVIGATION -->
+    <aside class="hr-sidebar">
+
         <NavMenu />
+
+    </aside>
+
+
+    <!-- MAIN APPLICATION AREA -->
+    <section class="hr-main">
+
+        <!-- TOP HEADER -->
+        <header class="hr-topbar">
+
+            <div class="hr-topbar-left">
+
+                <button class="hr-mobile-menu"
+                        type="button"
+                        aria-label="Open navigation"
+                        @onclick="ToggleSidebar">
+
+                    <span></span>
+                    <span></span>
+                    <span></span>
+
+                </button>
+
+                <div class="hr-page-context">
+
+                    <span class="hr-page-context-title">
+                        Administration Portal
+                    </span>
+
+                    <span class="hr-page-context-subtitle">
+                        HR INFO ADs
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="hr-topbar-right">
+
+                <button class="hr-icon-button"
+                        type="button"
+                        title="Notifications"
+                        aria-label="Notifications">
+
+                    <span class="hr-notification-icon">●</span>
+
+                </button>
+
+
+                <div class="hr-topbar-divider"></div>
+
+
+                <div class="hr-user-summary">
+
+                    <div class="hr-user-avatar">
+                        S
+                    </div>
+
+                    <div class="hr-user-details">
+
+                        <span class="hr-user-name">
+                            Administrator
+                        </span>
+
+                        <span class="hr-user-role">
+                            System Administrator
+                        </span>
+
+                    </div>
+
+                    <span class="hr-user-chevron">
+                        ▾
+                    </span>
+
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- CONTENT -->
+        <main class="hr-content">
+
+            @Body
+
+        </main>
+
+
+        <!-- FOOTER -->
+        <footer class="hr-footer">
+
+            <span>
+                © @DateTime.Now.Year HR INFO ADs
+            </span>
+
+            <span>
+                Advertisement Management Platform
+            </span>
+
+        </footer>
+
+    </section>
+
+</div>
+
+
+@if (sidebarOpen)
+{
+    <div class="hr-mobile-overlay"
+         @onclick="CloseSidebar">
+    </div>
+}
+
+
+<div id="blazor-error-ui"
+     data-nosnippet>
+
+    <div class="hr-error-message">
+
+        <strong>Something went wrong.</strong>
+
+        <span>
+            An unexpected application error occurred.
+        </span>
+
+        <a href="."
+           class="hr-error-reload">
+            Reload
+        </a>
+
+        <button class="hr-error-dismiss"
+                type="button"
+                onclick="this.parentElement.parentElement.style.display='none'">
+            ×
+        </button>
+
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
 </div>
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+
+@code {
+
+    private bool sidebarOpen;
+
+    private void ToggleSidebar()
+    {
+        sidebarOpen = !sidebarOpen;
+    }
+
+    private void CloseSidebar()
+    {
+        sidebarOpen = false;
+    }
+
+}

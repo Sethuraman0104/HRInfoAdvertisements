@@ -13,6 +13,15 @@ public class NotificationConfiguration
 
         builder.HasKey(x => x.NotificationID);
 
+        builder.Property(x => x.NotificationID)
+            .ValueGeneratedOnAdd();
+
+        builder.Property(x => x.UserID)
+            .IsRequired();
+
+        builder.Property(x => x.NotificationTemplateID)
+            .IsRequired(false);
+
         builder.Property(x => x.NotificationType)
             .HasMaxLength(50)
             .IsRequired();
@@ -22,10 +31,25 @@ public class NotificationConfiguration
             .IsRequired();
 
         builder.Property(x => x.Message)
-            .HasMaxLength(2000);
+            .HasMaxLength(4000)
+            .IsRequired(false);
 
         builder.Property(x => x.ReferenceType)
-            .HasMaxLength(100);
+            .HasMaxLength(100)
+            .IsRequired(false);
+
+        builder.Property(x => x.ReferenceID)
+            .IsRequired(false);
+
+        builder.Property(x => x.IsRead)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(x => x.ReadDate)
+            .IsRequired(false);
+
+        builder.Property(x => x.CreatedDate)
+            .IsRequired();
 
         builder.HasIndex(x => new
         {

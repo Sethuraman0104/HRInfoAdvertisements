@@ -22,7 +22,10 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .IsRequired();
 
         builder.Property(x => x.AdvertisementID)
-            .IsRequired();
+            .IsRequired(false);
+
+        builder.Property(x => x.EnquiryID)
+            .IsRequired(false);
 
         builder.Property(x => x.MessageText)
             .IsRequired()
@@ -31,6 +34,9 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
         builder.Property(x => x.IsRead)
             .IsRequired()
             .HasDefaultValue(false);
+
+        builder.Property(x => x.ReadDate)
+            .IsRequired(false);
 
         builder.Property(x => x.CreatedDate)
             .IsRequired();
@@ -53,6 +59,13 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .HasForeignKey(x => x.AdvertisementID)
             .OnDelete(DeleteBehavior.NoAction);
 
+        // Enquiry
+        builder.HasOne(x => x.Enquiry)
+            .WithMany()
+            .HasForeignKey(x => x.EnquiryID)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        // Receiver unread-message lookup
         builder.HasIndex(x => new
         {
             x.ReceiverUserID,

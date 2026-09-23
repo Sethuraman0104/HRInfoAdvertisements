@@ -5,6 +5,15 @@ using HRInfoAdvertisements.Application.Settings;
 using HRInfoAdvertisements.Infrastructure.Data;
 using HRInfoAdvertisements.Infrastructure.Data.Seed;
 using HRInfoAdvertisements.Infrastructure.Services;
+using HRInfoAdvertisements.Application.Enquiries;
+using HRInfoAdvertisements.Infrastructure.Enquiries;
+using HRInfoAdvertisements.Application.Messaging;
+using HRInfoAdvertisements.Infrastructure.Messaging;
+using HRInfoAdvertisements.Application.Notifications;
+using HRInfoAdvertisements.Infrastructure.Notifications;
+using HRInfoAdvertisements.Application.Profile;
+using HRInfoAdvertisements.Infrastructure.Profile;
+using HRInfoAdvertisements.Application.Services;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -111,6 +120,18 @@ builder.Services.AddScoped<
     IAuthService,
     AuthService>();
 
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+builder.Services.AddScoped<
+    IDashboardStatisticsService,
+    DashboardStatisticsService>();
+
+builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+
+builder.Services.AddScoped<
+    IReportManagementService,
+    ReportManagementService>();
+
 builder.Services.AddScoped<
     IAdvertisementService,
     AdvertisementService>();
@@ -118,6 +139,48 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAdvertisementMediaService,
     AdvertisementMediaService>();
+
+builder.Services.AddScoped<
+    IAdvertisementModerationService,
+    AdvertisementModerationService>();
+
+builder.Services.AddScoped<
+    IAdvertisementSearchService,
+    AdvertisementSearchService>();
+
+builder.Services.AddScoped<
+    IAdvertisementFavoriteService,
+    AdvertisementFavoriteService>();
+
+builder.Services.AddScoped<IAdvertisementEnquiryService, AdvertisementEnquiryService>();
+
+builder.Services.AddScoped<IMessageService, MessageService>();
+
+builder.Services.AddScoped<
+    INotificationService,
+    NotificationService>();
+
+builder.Services.AddScoped<IProfileService, ProfileService>();
+
+builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
+
+builder.Services.AddScoped<
+    IPermissionManagementService,
+    PermissionManagementService>();
+
+builder.Services.AddScoped<
+    IRolePermissionManagementService,
+    RolePermissionManagementService>();
+
+builder.Services.AddScoped<
+    IReportReviewService,
+    ReportReviewService>();
+
+builder.Services.AddScoped<
+    IReportSubmissionService,
+    ReportSubmissionService>();
+
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 
 builder.Services.AddScoped<
     IFileStorageService,
@@ -204,7 +267,48 @@ builder.Services
 // Authorization
 // ------------------------------------------------------------
 
-builder.Services.AddAuthorization();
+// ------------------------------------------------------------
+// Authorization
+// ------------------------------------------------------------
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("USER_VIEW", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("permission", "USER_VIEW");
+    });
+
+    options.AddPolicy("USER_EDIT", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("permission", "USER_EDIT");
+    });
+
+    options.AddPolicy("USER_SUSPEND", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim("permission", "USER_SUSPEND");
+    });
+
+    options.AddPolicy("REPORT_VIEW", policy =>
+{
+    policy.RequireAuthenticatedUser();
+    policy.RequireClaim("permission", "REPORT_VIEW");
+});
+
+options.AddPolicy("REPORT_REVIEW", policy =>
+{
+    policy.RequireAuthenticatedUser();
+    policy.RequireClaim("permission", "REPORT_REVIEW");
+});
+
+options.AddPolicy("AUDIT_VIEW", policy =>
+{
+    policy.RequireAuthenticatedUser();
+    policy.RequireClaim("permission", "AUDIT_VIEW");
+});
+});
 
 
 // ------------------------------------------------------------

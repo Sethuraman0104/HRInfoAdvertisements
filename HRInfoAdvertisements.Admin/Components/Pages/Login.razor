@@ -1,0 +1,285 @@
+@page "/login"
+
+@using HRInfoAdvertisements.Admin.Services
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject AuthApiService AuthApiService
+@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Sign In | HR INFO ADs</PageTitle>
+
+<div class="login-page">
+
+    <div class="login-background">
+
+        <div class="login-background-shape shape-one"></div>
+        <div class="login-background-shape shape-two"></div>
+
+    </div>
+
+
+    <div class="login-modal">
+
+        <button type="button"
+                class="login-close"
+                title="Close"
+                @onclick="CloseLogin">
+
+            ×
+
+        </button>
+
+
+        <div class="login-brand">
+
+            <div class="login-logo">
+                HR
+            </div>
+
+            <div>
+
+                <div class="login-brand-name">
+                    HR INFO ADs
+                </div>
+
+                <div class="login-brand-subtitle">
+                    Advertisement Management Platform
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="login-heading">
+
+            <h1>
+                Welcome back
+            </h1>
+
+            <p>
+                Sign in to access the administration portal.
+            </p>
+
+        </div>
+
+
+        <EditForm Model="@loginModel"
+                  OnValidSubmit="@HandleLogin"
+                  FormName="AdminLoginForm">
+
+            <DataAnnotationsValidator />
+
+
+            <div class="login-field">
+
+                <label for="email">
+                    Email Address
+                </label>
+
+                <div class="login-input-wrapper">
+
+                    <span class="login-input-icon">
+                         &#64;
+                    </span>
+
+                    <InputText id="email"
+                               class="login-input"
+                               @bind-Value="loginModel.Email"
+                               autocomplete="username"
+                               placeholder="Enter your email address" />
+
+                </div>
+
+                <ValidationMessage For="@(() => loginModel.Email)" />
+
+            </div>
+
+
+            <div class="login-field">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="login-input-wrapper">
+
+                    <span class="login-input-icon">
+                        ●
+                    </span>
+
+                    <InputText id="password"
+                               class="login-input"
+                               type="password"
+                               @bind-Value="loginModel.Password"
+                               autocomplete="current-password"
+                               placeholder="Enter your password" />
+
+                </div>
+
+                <ValidationMessage For="@(() => loginModel.Password)" />
+
+            </div>
+
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="login-error">
+
+                    <span class="login-error-icon">
+                        !
+                    </span>
+
+                    <span>
+                        @errorMessage
+                    </span>
+
+                </div>
+            }
+
+
+            <button type="submit"
+                    class="login-submit"
+                    disabled="@isLoading">
+
+                @if (isLoading)
+                {
+                    <span class="login-spinner"></span>
+
+                    <span>
+                        Signing in...
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        Sign In
+                    </span>
+
+                    <span class="login-arrow">
+                        →
+                    </span>
+                }
+
+            </button>
+
+        </EditForm>
+
+
+        <div class="login-security">
+
+            <span class="login-security-icon">
+                ✓
+            </span>
+
+            <span>
+                Secure administrator access
+            </span>
+
+        </div>
+
+
+        <div class="login-footer">
+
+            © @DateTime.Now.Year HR INFO ADs
+
+        </div>
+
+    </div>
+
+</div>
+
+
+@code {
+
+    private readonly LoginModel loginModel = new();
+
+    private bool isLoading;
+
+    private string? errorMessage;
+
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+
+        isLoading = true;
+
+        try
+        {
+            var result = await AuthApiService.LoginAsync(
+                loginModel.Email,
+                loginModel.Password);
+
+            if (result is null)
+            {
+                errorMessage =
+                    "Invalid email address or password.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Login failed."
+                        : result.Message;
+
+                return;
+            }
+
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+
+            Navigation.NavigateTo("/");
+
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Unable to connect to the API. Please try again.";
+        }
+        catch (Exception)
+        {
+            errorMessage =
+                "An unexpected error occurred while signing in.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void CloseLogin()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    private sealed class LoginModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(
+            ErrorMessage = "Email address is required.")]
+        [System.ComponentModel.DataAnnotations.EmailAddress(
+            ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+
+        [System.ComponentModel.DataAnnotations.Required(
+            ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+}
