@@ -1,0 +1,703 @@
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject AuthApiService AuthApiService
+@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@if (IsOpen)
+{
+    <div class="auth-modal-overlay"
+         role="presentation"
+         @onclick="Close">
+
+        <section class="auth-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="auth-modal-title"
+                 @onclick:stopPropagation="true">
+
+            <!-- TOP ACCENT -->
+            <div class="auth-modal-accent"></div>
+
+            <!-- CLOSE -->
+            <button type="button"
+                    class="auth-modal-close"
+                    aria-label="Close"
+                    title="Close"
+                    @onclick="Close">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M6 6L18 18M18 6L6 18" />
+                </svg>
+
+            </button>
+
+
+            <!-- HEADER -->
+            <div class="auth-modal-header">
+
+                <div class="auth-brand">
+
+                    <div class="auth-brand-logo">
+                        <span>HR</span>
+                    </div>
+
+                    <div class="auth-brand-text">
+
+                        <div class="auth-brand-name">
+                            HR INFO <strong>ADs</strong>
+                        </div>
+
+                        <div class="auth-brand-subtitle">
+                            Advertisement Marketplace
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="auth-welcome">
+
+                    <div class="auth-welcome-icon">
+
+                        @if (Mode == AuthMode.SignIn)
+                        {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
+                                <path d="M10 12h10" />
+                                <path d="M17 8l4 4-4 4" />
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M19 8v6" />
+                                <path d="M22 11h-6" />
+                            </svg>
+                        }
+
+                    </div>
+
+                    <div>
+
+                        <h2 id="auth-modal-title">
+                            @if (Mode == AuthMode.SignIn)
+                            {
+                                @:Welcome back
+                            }
+                            else
+                            {
+                                @:Create your account
+                            }
+                        </h2>
+
+                        <p>
+                            @if (Mode == AuthMode.SignIn)
+                            {
+                                @:Sign in to manage your HR advertisements.
+                            }
+                            else
+                            {
+                                @:Join HR INFO ADs and manage your advertisements.
+                            }
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- TABS -->
+            <div class="auth-tabs">
+
+                <button type="button"
+                        class="auth-tab @(Mode == AuthMode.SignIn ? "active" : "")"
+                        @onclick="ShowSignIn">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
+                        <path d="M10 12h10" />
+                        <path d="M17 8l4 4-4 4" />
+                    </svg>
+
+                    <span>Sign In</span>
+
+                </button>
+
+
+                <button type="button"
+                        class="auth-tab @(Mode == AuthMode.SignUp ? "active" : "")"
+                        @onclick="ShowSignUp">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M19 8v6" />
+                        <path d="M22 11h-6" />
+                    </svg>
+
+                    <span>Sign Up</span>
+
+                </button>
+
+            </div>
+
+
+            @if (Mode == AuthMode.SignIn)
+            {
+                <!-- SIGN IN -->
+                <EditForm Model="@loginModel"
+                          OnValidSubmit="@HandleLogin"
+                          FormName="PublicSignInForm">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="auth-form">
+
+                        <!-- EMAIL -->
+                        <div class="auth-field">
+
+                            <label for="auth-email">
+                                Email Address
+                            </label>
+
+                            <div class="auth-input-box">
+
+                                <span class="auth-input-icon">
+
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="3"
+                                              y="5"
+                                              width="18"
+                                              height="14"
+                                              rx="2" />
+
+                                        <path d="M3 7l9 6 9-6" />
+                                    </svg>
+
+                                </span>
+
+                                <InputText id="auth-email"
+                                           class="auth-input"
+                                           @bind-Value="loginModel.Email"
+                                           autocomplete="username"
+                                           placeholder="Enter your email address" />
+
+                            </div>
+
+                            <ValidationMessage For="@(() => loginModel.Email)" />
+
+                        </div>
+
+
+                        <!-- PASSWORD -->
+                        <div class="auth-field">
+
+                            <div class="auth-label-row">
+
+                                <label for="auth-password">
+                                    Password
+                                </label>
+
+                                <button type="button"
+                                        class="auth-forgot"
+                                        @onclick="ForgotPassword">
+
+                                    Forgot password?
+
+                                </button>
+
+                            </div>
+
+
+                            <div class="auth-input-box">
+
+                                <span class="auth-input-icon">
+
+                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <rect x="4"
+                                              y="10"
+                                              width="16"
+                                              height="11"
+                                              rx="2" />
+
+                                        <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                    </svg>
+
+                                </span>
+
+
+                                <InputText id="auth-password"
+                                           class="auth-input auth-password-input"
+                                           type="@PasswordInputType"
+                                           @bind-Value="loginModel.Password"
+                                           autocomplete="current-password"
+                                           placeholder="Enter your password" />
+
+
+                                <button type="button"
+                                        class="auth-password-toggle"
+                                        title="Show / hide password"
+                                        aria-label="Show / hide password"
+                                        @onclick="TogglePassword">
+
+                                    @if (showPassword)
+                                    {
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    }
+                                    else
+                                    {
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M3 3l18 18" />
+                                            <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                                            <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
+                                            <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+                                        </svg>
+                                    }
+
+                                </button>
+
+                            </div>
+
+                            <ValidationMessage For="@(() => loginModel.Password)" />
+
+                        </div>
+
+
+                        <!-- ERROR -->
+                        @if (!string.IsNullOrWhiteSpace(errorMessage))
+                        {
+                            <div class="auth-error"
+                                 role="alert">
+
+                                <div class="auth-error-icon">
+                                    !
+                                </div>
+
+                                <div class="auth-error-content">
+
+                                    <strong>
+                                        Sign in failed
+                                    </strong>
+
+                                    <span>
+                                        @errorMessage
+                                    </span>
+
+                                </div>
+
+                                <button type="button"
+                                        class="auth-error-close"
+                                        @onclick="ClearError"
+                                        aria-label="Close error">
+
+                                    ×
+
+                                </button>
+
+                            </div>
+                        }
+
+
+                        <!-- SUBMIT -->
+                        <button type="submit"
+                                class="auth-submit"
+                                disabled="@isLoading">
+
+                            @if (isLoading)
+                            {
+                                <span class="auth-spinner"></span>
+
+                                <span>
+                                    Signing in...
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    Sign In
+                                </span>
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M5 12h13" />
+                                    <path d="M13 6l6 6-6 6" />
+                                </svg>
+                            }
+
+                        </button>
+
+
+                        <!-- DIVIDER -->
+                        <div class="auth-divider">
+
+                            <span>Secure access</span>
+
+                        </div>
+
+
+                        <!-- SECURITY -->
+                        <div class="auth-security">
+
+                            <div class="auth-security-icon">
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3z" />
+                                    <path d="M9 12l2 2 4-4" />
+                                </svg>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Your information is protected
+                                </strong>
+
+                                <span>
+                                    Secure authentication for your account.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </EditForm>
+            }
+            else
+            {
+                <!-- SIGN UP -->
+                <div class="auth-form">
+
+                    <div class="auth-signup-message">
+
+                        <div class="auth-signup-message-icon">
+
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4z" />
+                                <path d="M12 8v5" />
+                                <circle cx="12" cy="16.5" r=".8" />
+                            </svg>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Advertiser registration
+                            </strong>
+
+                            <p>
+                                Account registration is handled by the
+                                HR INFO ADs administration team.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- NAME -->
+                    <div class="auth-field">
+
+                        <label for="signup-name">
+                            Full Name
+                        </label>
+
+                        <div class="auth-input-box">
+
+                            <span class="auth-input-icon">
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <circle cx="12" cy="8" r="4" />
+                                    <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+                                </svg>
+
+                            </span>
+
+                            <input id="signup-name"
+                                   class="auth-input"
+                                   type="text"
+                                   placeholder="Enter your full name" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+                    <div class="auth-field">
+
+                        <label for="signup-email">
+                            Email Address
+                        </label>
+
+                        <div class="auth-input-box">
+
+                            <span class="auth-input-icon">
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3"
+                                          y="5"
+                                          width="18"
+                                          height="14"
+                                          rx="2" />
+
+                                    <path d="M3 7l9 6 9-6" />
+                                </svg>
+
+                            </span>
+
+                            <input id="signup-email"
+                                   class="auth-input"
+                                   type="email"
+                                   placeholder="Enter your email address" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- SIGN UP BUTTON -->
+                    <button type="button"
+                            class="auth-submit"
+                            @onclick="RequestRegistration">
+
+                        <span>
+                            Request an Account
+                        </span>
+
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 12h13" />
+                            <path d="M13 6l6 6-6 6" />
+                        </svg>
+
+                    </button>
+
+
+                    <div class="auth-signup-note">
+
+                        Already have an account?
+
+                        <button type="button"
+                                @onclick="ShowSignIn">
+
+                            Sign In
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <!-- FOOTER -->
+            <div class="auth-modal-footer">
+
+                <span>
+                    © @DateTime.Now.Year HR INFO ADs
+                </span>
+
+                <span class="auth-footer-dot">
+                    •
+                </span>
+
+                <button type="button"
+                        @onclick="Close">
+
+                    Return to marketplace
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </div>
+}
+
+
+@code {
+
+    [Parameter]
+    public bool IsOpen { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter]
+    public AuthMode Mode { get; set; } = AuthMode.SignIn;
+
+    [Parameter]
+    public EventCallback<AuthMode> ModeChanged { get; set; }
+
+
+    private readonly LoginModel loginModel = new();
+
+    private bool isLoading;
+
+    private bool showPassword;
+
+    private string? errorMessage;
+
+
+    private string PasswordInputType =>
+        showPassword ? "text" : "password";
+
+
+    private async Task ShowSignIn()
+    {
+        errorMessage = null;
+
+        Mode = AuthMode.SignIn;
+
+        await ModeChanged.InvokeAsync(Mode);
+    }
+
+
+    private async Task ShowSignUp()
+    {
+        errorMessage = null;
+
+        Mode = AuthMode.SignUp;
+
+        await ModeChanged.InvokeAsync(Mode);
+    }
+
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+
+        isLoading = true;
+
+        try
+        {
+            var result = await AuthApiService.LoginAsync(
+                loginModel.Email,
+                loginModel.Password);
+
+            if (result is null)
+            {
+                errorMessage =
+                    "Invalid email address or password.";
+
+                return;
+            }
+
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Login failed. Please check your credentials."
+                        : result.Message;
+
+                return;
+            }
+
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+
+            await Close();
+
+
+            Navigation.NavigateTo("/");
+
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch (Exception)
+        {
+            errorMessage =
+                "An unexpected error occurred while signing in.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void ClearError()
+    {
+        errorMessage = null;
+    }
+
+
+    private async Task Close()
+    {
+        errorMessage = null;
+        showPassword = false;
+
+        await IsOpenChanged.InvokeAsync(false);
+    }
+
+
+    private void ForgotPassword()
+    {
+        // Keep this available for your future password-reset implementation.
+        errorMessage =
+            "Please contact the HR INFO ADs administrator to reset your password.";
+    }
+
+
+    private void RequestRegistration()
+    {
+        // Registration API is not present in the supplied code.
+        errorMessage =
+            "Account registration is currently handled by the HR INFO ADs administration team.";
+    }
+
+
+    public enum AuthMode
+    {
+        SignIn,
+        SignUp
+    }
+
+
+    private sealed class LoginModel
+    {
+        [Required(
+            ErrorMessage = "Email address is required.")]
+        [EmailAddress(
+            ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

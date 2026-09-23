@@ -9,24 +9,35 @@ public class AdminAuthenticationStateProvider
     private static readonly ClaimsPrincipal Anonymous =
         new(new ClaimsIdentity());
 
-    private ClaimsPrincipal _currentUser = Anonymous;
+    private ClaimsPrincipal _currentUser =
+        Anonymous;
 
     private string? _accessToken;
+
     private string? _refreshToken;
+
     private DateTime _expiresAt;
 
-    public string? AccessToken => _accessToken;
+    public string? AccessToken =>
+        _accessToken;
 
-    public string? RefreshToken => _refreshToken;
+    public string? RefreshToken =>
+        _refreshToken;
 
-    public DateTime ExpiresAt => _expiresAt;
+    public DateTime ExpiresAt =>
+        _expiresAt;
 
     public override Task<AuthenticationState>
         GetAuthenticationStateAsync()
     {
         return Task.FromResult(
-            new AuthenticationState(_currentUser));
+            new AuthenticationState(
+                _currentUser));
     }
+
+    // ============================================================
+    // SIGN IN
+    // ============================================================
 
     public void SignIn(
         long userId,
@@ -38,56 +49,85 @@ public class AdminAuthenticationStateProvider
         string refreshToken,
         DateTime expiresAt)
     {
-        var claims = new List<Claim>
-        {
-            new(
-                ClaimTypes.NameIdentifier,
-                userId.ToString()),
+        var claims =
+            new List<Claim>
+            {
+                new(
+                    ClaimTypes.NameIdentifier,
+                    userId.ToString()),
 
-            new(
-                ClaimTypes.Name,
-                userName),
+                new(
+                    ClaimTypes.Name,
+                    userName),
 
-            new(
-                ClaimTypes.Email,
-                email)
-        };
+                new(
+                    ClaimTypes.Email,
+                    email)
+            };
 
         foreach (var role in roles)
         {
-            claims.Add(
-                new Claim(ClaimTypes.Role, role));
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                claims.Add(
+                    new Claim(
+                        ClaimTypes.Role,
+                        role));
+            }
         }
 
         foreach (var permission in permissions)
         {
-            claims.Add(
-                new Claim("permission", permission));
+            if (!string.IsNullOrWhiteSpace(permission))
+            {
+                claims.Add(
+                    new Claim(
+                        "permission",
+                        permission));
+            }
         }
 
-        var identity = new ClaimsIdentity(
-            claims,
-            authenticationType: "AdminJwt");
+        var identity =
+            new ClaimsIdentity(
+                claims,
+                authenticationType: "AdminJwt");
 
-        _currentUser = new ClaimsPrincipal(identity);
+        _currentUser =
+            new ClaimsPrincipal(identity);
 
-        _accessToken = accessToken;
-        _refreshToken = refreshToken;
-        _expiresAt = expiresAt;
+        _accessToken =
+            accessToken;
+
+        _refreshToken =
+            refreshToken;
+
+        _expiresAt =
+            expiresAt;
 
         NotifyAuthenticationStateChanged(
-            GetAuthenticationStateAsync());
+            Task.FromResult(
+                new AuthenticationState(
+                    _currentUser)));
     }
+
+    // ============================================================
+    // SIGN OUT
+    // ============================================================
 
     public void SignOut()
     {
-        _currentUser = Anonymous;
+        _currentUser =
+            Anonymous;
 
         _accessToken = null;
+
         _refreshToken = null;
+
         _expiresAt = default;
 
         NotifyAuthenticationStateChanged(
-            GetAuthenticationStateAsync());
+            Task.FromResult(
+                new AuthenticationState(
+                    _currentUser)));
     }
 }

@@ -1,28 +1,49 @@
 using HRInfoAdvertisements.Domain.Entities;
+using HRInfoAdvertisements.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRInfoAdvertisements.Infrastructure.Data.Seed;
 
 public static class DatabaseSeeder
 {
-    public static async Task SeedAsync(ApplicationDbContext context)
+    public static async Task SeedAsync(
+        ApplicationDbContext context)
     {
-        // Apply pending migrations first.
+        // ========================================================
+        // APPLY PENDING MIGRATIONS
+        // ========================================================
+
         await context.Database.MigrateAsync();
 
-        // Security / authorization master data.
+        // ========================================================
+        // SECURITY / AUTHORIZATION MASTER DATA
+        // ========================================================
+
         await SeedRolesAsync(context);
         await SeedPermissionsAsync(context);
         await SeedRolePermissionsAsync(context);
 
-        // Advertisement master data.
+        // ========================================================
+        // DEFAULT ADMINISTRATOR ACCOUNT
+        // ========================================================
+
+        await SeedAdminUserAsync(context);
+
+        // ========================================================
+        // ADVERTISEMENT MASTER DATA
+        // ========================================================
+
         await SeedAdvertisementStatusesAsync(context);
         await SeedAdvertisementCategoriesAsync(context);
         await SeedAdvertisementTypesAsync(context);
 
-        // Location master data.
+        // ========================================================
+        // LOCATION MASTER DATA
+        // ========================================================
+
         await SeedBahrainLocationsAsync(context);
     }
+
 
     // ============================================================
     // ROLES
@@ -80,6 +101,7 @@ public static class DatabaseSeeder
 
         await context.SaveChangesAsync();
     }
+
 
     // ============================================================
     // PERMISSIONS
@@ -218,6 +240,7 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
     }
 
+
     // ============================================================
     // ROLE PERMISSIONS
     // ============================================================
@@ -348,6 +371,192 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
     }
 
+
+    // ============================================================
+    // ADMIN USER
+    // ============================================================
+
+    private static async Task SeedAdminUserAsync(
+        ApplicationDbContext context)
+    {
+        // --------------------------------------------------------
+        // Default development administrator details
+        // --------------------------------------------------------
+
+        const string adminUserName = "admin";
+        const string adminEmail = "admin@siteads.local";
+        const string adminMobileNo = "39000000";
+
+        // Development password.
+        //
+        // This password is used only when:
+        //
+        // 1. The administrator account does not exist, OR
+        // 2. The existing account still contains the old
+        //    development placeholder hash.
+        //
+        // It will NOT overwrite an existing real password.
+        //
+        const string adminPassword = "Admin@12345";
+
+
+        // --------------------------------------------------------
+        // Find Admin role
+        // --------------------------------------------------------
+
+        var adminRole = await context.Roles
+            .FirstOrDefaultAsync(x =>
+                x.RoleName == "Admin" &&
+                x.IsActive);
+
+        if (adminRole == null)
+        {
+            throw new InvalidOperationException(
+                "Admin role was not found. " +
+                "SeedRolesAsync must run before " +
+                "SeedAdminUserAsync.");
+        }
+
+
+        // --------------------------------------------------------
+        // Find existing administrator
+        // --------------------------------------------------------
+
+        var adminUser = await context.Users
+            .FirstOrDefaultAsync(x =>
+                x.Email == adminEmail);
+
+
+        // --------------------------------------------------------
+        // Create administrator if it doesn't exist
+        // --------------------------------------------------------
+
+        if (adminUser == null)
+        {
+            adminUser = new User
+            {
+                UserName = adminUserName,
+                Email = adminEmail,
+                MobileNo = adminMobileNo,
+
+                IsEmailVerified = true,
+                IsMobileVerified = true,
+                IsMFAEnabled = false,
+
+                AccountStatus = "Active",
+
+                CreatedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.UtcNow
+            };
+
+
+            // ----------------------------------------------------
+            // Generate REAL ASP.NET Core Identity password hash
+            // ----------------------------------------------------
+
+            var passwordService =
+                new PasswordService();
+
+            adminUser.PasswordHash =
+                passwordService.HashPassword(
+                    adminUser,
+                    adminPassword);
+
+            context.Users.Add(adminUser);
+
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            // ----------------------------------------------------
+            // Existing administrator
+            // ----------------------------------------------------
+
+            adminUser.AccountStatus = "Active";
+
+            adminUser.ModifiedDate =
+                DateTime.UtcNow;
+
+
+            // ----------------------------------------------------
+            // Replace ONLY the old development placeholder hash.
+            //
+            // Do not reset an existing real password.
+            // ----------------------------------------------------
+
+            if (string.IsNullOrWhiteSpace(
+                    adminUser.PasswordHash) ||
+                adminUser.PasswordHash ==
+                    "DEV_HASH_REPLACE_WITH_ASPNET_IDENTITY_HASH")
+            {
+                var passwordService =
+                    new PasswordService();
+
+                adminUser.PasswordHash =
+                    passwordService.HashPassword(
+                        adminUser,
+                        adminPassword);
+            }
+
+            await context.SaveChangesAsync();
+        }
+
+
+        // --------------------------------------------------------
+        // Make sure UserProfile exists
+        // --------------------------------------------------------
+
+        var profileExists =
+            await context.UserProfiles
+                .AnyAsync(x =>
+                    x.UserID == adminUser.UserID);
+
+        if (!profileExists)
+        {
+            var profile = new UserProfile
+            {
+                UserID = adminUser.UserID,
+
+                FirstName = "System",
+                LastName = "Administrator",
+
+                PreferredLanguage = "en",
+                IsBusinessAccount = false,
+
+                CreatedDate = DateTime.UtcNow
+            };
+
+            context.UserProfiles.Add(profile);
+
+            await context.SaveChangesAsync();
+        }
+
+
+        // --------------------------------------------------------
+        // Make sure Admin role is assigned
+        // --------------------------------------------------------
+
+        var adminRoleMappingExists =
+            await context.UserRoles
+                .AnyAsync(x =>
+                    x.UserID == adminUser.UserID &&
+                    x.RoleID == adminRole.RoleID);
+
+        if (!adminRoleMappingExists)
+        {
+            context.UserRoles.Add(
+                new UserRole
+                {
+                    UserID = adminUser.UserID,
+                    RoleID = adminRole.RoleID,
+                    CreatedDate = DateTime.UtcNow
+                });
+
+            await context.SaveChangesAsync();
+        }
+    }
+
+
     // ============================================================
     // ADVERTISEMENT STATUSES
     // ============================================================
@@ -470,6 +679,7 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
     }
 
+
     // ============================================================
     // ADVERTISEMENT CATEGORIES
     // ============================================================
@@ -570,6 +780,7 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
     }
 
+
     // ============================================================
     // ADVERTISEMENT TYPES
     // ============================================================
@@ -636,6 +847,7 @@ public static class DatabaseSeeder
         await context.SaveChangesAsync();
     }
 
+
     // ============================================================
     // BAHRAIN LOCATIONS
     // ============================================================
@@ -665,6 +877,7 @@ public static class DatabaseSeeder
 
             await context.SaveChangesAsync();
         }
+
 
         // --------------------------------------------------------
         // Governorates

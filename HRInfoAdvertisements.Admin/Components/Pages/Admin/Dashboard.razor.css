@@ -1,0 +1,315 @@
+.admin-dashboard {
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+.admin-dashboard-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 25px;
+    margin-bottom: 26px;
+}
+
+.admin-dashboard-eyebrow {
+    margin-bottom: 7px;
+    color: #2563eb;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.1px;
+}
+
+.admin-dashboard-header h1 {
+    margin: 0;
+    color: #172033;
+    font-size: 29px;
+    font-weight: 800;
+    letter-spacing: -0.7px;
+}
+
+.admin-dashboard-header p {
+    margin: 7px 0 0;
+    color: #7a8496;
+    font-size: 13px;
+}
+
+.admin-dashboard-date {
+    padding: 9px 13px;
+    border: 1px solid #e3e8ef;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #687386;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+
+.admin-dashboard-cards {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 17px;
+    margin-bottom: 20px;
+}
+
+.dashboard-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 110px;
+    padding: 20px;
+    border: 1px solid #e5eaf1;
+    border-radius: 13px;
+    background: #ffffff;
+    box-shadow:
+        0 3px 12px rgba(15, 23, 42, 0.035);
+}
+
+.dashboard-stat-icon {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.dashboard-stat-content {
+    min-width: 0;
+}
+
+.dashboard-stat-content span {
+    display: block;
+    color: #687386;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dashboard-stat-content strong {
+    display: block;
+    margin-top: 3px;
+    color: #172033;
+    font-size: 22px;
+    line-height: 1.15;
+}
+
+.dashboard-stat-content small {
+    display: block;
+    margin-top: 3px;
+    color: #a0a8b5;
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   GRID
+   ============================================================ */
+
+.admin-dashboard-grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 1.6fr)
+        minmax(300px, 1fr);
+    gap: 20px;
+}
+
+.admin-dashboard-panel {
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid #e5eaf1;
+    border-radius: 13px;
+    background: #ffffff;
+    box-shadow:
+        0 3px 12px rgba(15, 23, 42, 0.035);
+}
+
+.admin-panel-header {
+    padding-bottom: 17px;
+    border-bottom: 1px solid #edf0f5;
+}
+
+.admin-panel-header h2 {
+    margin: 0;
+    color: #172033;
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.admin-panel-header p {
+    margin: 4px 0 0;
+    color: #8a94a6;
+    font-size: 11px;
+}
+
+
+/* ============================================================
+   QUICK ACTIONS
+   ============================================================ */
+
+.admin-quick-actions {
+    display: flex;
+    flex-direction: column;
+    margin-top: 6px;
+}
+
+.admin-quick-actions button {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 38px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 4px;
+    border: 0;
+    border-bottom: 1px solid #f0f2f6;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+}
+
+.admin-quick-actions button:last-child {
+    border-bottom: 0;
+}
+
+.admin-quick-actions button:hover {
+    background: #fafbfc;
+}
+
+.quick-action-icon {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: #f4f7fb;
+    color: #2563eb;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+.admin-quick-actions strong {
+    display: block;
+    color: #344054;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.admin-quick-actions small {
+    display: block;
+    margin-top: 3px;
+    color: #98a1b2;
+    font-size: 10px;
+}
+
+.quick-action-arrow {
+    color: #98a1b2;
+    font-size: 16px;
+}
+
+
+/* ============================================================
+   ACCOUNT
+   ============================================================ */
+
+.admin-account-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.admin-account-avatar {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(
+        135deg,
+        #1d4ed8,
+        #2563eb
+    );
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.admin-account-info {
+    min-width: 0;
+}
+
+.admin-account-info > strong {
+    display: block;
+    color: #172033;
+    font-size: 13px;
+    font-weight: 750;
+}
+
+.admin-account-info > span {
+    display: block;
+    margin-top: 3px;
+    color: #8a94a6;
+    font-size: 11px;
+    word-break: break-word;
+}
+
+.admin-account-roles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 11px;
+}
+
+.admin-role-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 23px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #2563eb;
+    font-size: 9px;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .admin-dashboard-cards {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .admin-dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (max-width: 650px) {
+
+    .admin-dashboard-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .admin-dashboard-cards {
+        grid-template-columns: 1fr;
+    }
+
+}

@@ -11,182 +11,253 @@
 
 <div class="login-page">
 
+    <!-- Background -->
     <div class="login-background">
+
+        <div class="login-background-gradient"></div>
 
         <div class="login-background-shape shape-one"></div>
         <div class="login-background-shape shape-two"></div>
+        <div class="login-background-shape shape-three"></div>
+
+        <div class="login-background-grid"></div>
 
     </div>
 
 
-    <div class="login-modal">
+    <!-- Main Login Area -->
+    <main class="login-main">
 
-        <button type="button"
-                class="login-close"
-                title="Close"
-                @onclick="CloseLogin">
+        <div class="login-card">
 
-            ×
+            <!-- Close -->
+            <button type="button"
+                    class="login-close"
+                    title="Back to HR INFO ADs"
+                    aria-label="Back to HR INFO ADs"
+                    @onclick="CloseLogin">
 
-        </button>
-
-
-        <div class="login-brand">
-
-            <div class="login-logo">
-                HR
-            </div>
-
-            <div>
-
-                <div class="login-brand-name">
-                    HR INFO ADs
-                </div>
-
-                <div class="login-brand-subtitle">
-                    Advertisement Management Platform
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <div class="login-heading">
-
-            <h1>
-                Welcome back
-            </h1>
-
-            <p>
-                Sign in to access the administration portal.
-            </p>
-
-        </div>
-
-
-        <EditForm Model="@loginModel"
-                  OnValidSubmit="@HandleLogin"
-                  FormName="AdminLoginForm">
-
-            <DataAnnotationsValidator />
-
-
-            <div class="login-field">
-
-                <label for="email">
-                    Email Address
-                </label>
-
-                <div class="login-input-wrapper">
-
-                    <span class="login-input-icon">
-                         &#64;
-                    </span>
-
-                    <InputText id="email"
-                               class="login-input"
-                               @bind-Value="loginModel.Email"
-                               autocomplete="username"
-                               placeholder="Enter your email address" />
-
-                </div>
-
-                <ValidationMessage For="@(() => loginModel.Email)" />
-
-            </div>
-
-
-            <div class="login-field">
-
-                <label for="password">
-                    Password
-                </label>
-
-                <div class="login-input-wrapper">
-
-                    <span class="login-input-icon">
-                        ●
-                    </span>
-
-                    <InputText id="password"
-                               class="login-input"
-                               type="password"
-                               @bind-Value="loginModel.Password"
-                               autocomplete="current-password"
-                               placeholder="Enter your password" />
-
-                </div>
-
-                <ValidationMessage For="@(() => loginModel.Password)" />
-
-            </div>
-
-
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
-            {
-                <div class="login-error">
-
-                    <span class="login-error-icon">
-                        !
-                    </span>
-
-                    <span>
-                        @errorMessage
-                    </span>
-
-                </div>
-            }
-
-
-            <button type="submit"
-                    class="login-submit"
-                    disabled="@isLoading">
-
-                @if (isLoading)
-                {
-                    <span class="login-spinner"></span>
-
-                    <span>
-                        Signing in...
-                    </span>
-                }
-                else
-                {
-                    <span>
-                        Sign In
-                    </span>
-
-                    <span class="login-arrow">
-                        →
-                    </span>
-                }
+                <span>×</span>
 
             </button>
 
-        </EditForm>
+
+            <!-- Brand -->
+            <div class="login-brand">
+
+                <div class="login-logo">
+                    <span>HR</span>
+                </div>
+
+                <div class="login-brand-content">
+
+                    <div class="login-brand-name">
+                        HR INFO <strong>ADs</strong>
+                    </div>
+
+                    <div class="login-brand-subtitle">
+                        Advertisement Management Platform
+                    </div>
+
+                </div>
+
+            </div>
 
 
-        <div class="login-security">
+            <!-- Heading -->
+            <div class="login-heading">
 
-            <span class="login-security-icon">
-                ✓
-            </span>
+                <div class="login-welcome-icon">
+                    <span>→</span>
+                </div>
 
-            <span>
-                Secure administrator access
-            </span>
+                <div>
+                    <h1>
+                        Welcome back
+                    </h1>
+
+                    <p>
+                        Sign in to manage your advertisements and account.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- Login Form -->
+            <EditForm Model="@loginModel"
+                      OnValidSubmit="@HandleLogin"
+                      FormName="AdminLoginForm">
+
+                <DataAnnotationsValidator />
+
+
+                <!-- Email -->
+                <div class="login-field">
+
+                    <label for="email">
+                        Email Address
+                    </label>
+
+                    <div class="login-input-wrapper">
+
+                        <span class="login-input-icon email-icon">
+                            &#64;
+                        </span>
+
+                        <InputText id="email"
+                                   class="login-input"
+                                   @bind-Value="loginModel.Email"
+                                   autocomplete="username"
+                                   placeholder="Enter your email address" />
+
+                    </div>
+
+                    <ValidationMessage For="@(() => loginModel.Email)" />
+
+                </div>
+
+
+                <!-- Password -->
+                <div class="login-field">
+
+                    <div class="login-label-row">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                    </div>
+
+                    <div class="login-input-wrapper">
+
+                        <span class="login-input-icon password-icon">
+                            ●
+                        </span>
+
+                        <InputText id="password"
+                                   class="login-input"
+                                   type="password"
+                                   @bind-Value="loginModel.Password"
+                                   autocomplete="current-password"
+                                   placeholder="Enter your password" />
+
+                    </div>
+
+                    <ValidationMessage For="@(() => loginModel.Password)" />
+
+                </div>
+
+
+                <!-- Error -->
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="login-error"
+                         role="alert">
+
+                        <span class="login-error-icon">
+                            !
+                        </span>
+
+                        <div class="login-error-content">
+
+                            <strong>
+                                Sign in failed
+                            </strong>
+
+                            <span>
+                                @errorMessage
+                            </span>
+
+                        </div>
+
+                        <button type="button"
+                                class="login-error-close"
+                                aria-label="Close error"
+                                @onclick="ClearError">
+
+                            ×
+
+                        </button>
+
+                    </div>
+                }
+
+
+                <!-- Submit -->
+                <button type="submit"
+                        class="login-submit"
+                        disabled="@isLoading">
+
+                    @if (isLoading)
+                    {
+                        <span class="login-spinner"></span>
+
+                        <span>
+                            Signing in...
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            Sign In
+                        </span>
+
+                        <span class="login-arrow">
+                            →
+                        </span>
+                    }
+
+                </button>
+
+            </EditForm>
+
+
+            <!-- Security -->
+            <div class="login-security">
+
+                <div class="login-security-icon">
+                    ✓
+                </div>
+
+                <div class="login-security-text">
+
+                    <strong>
+                        Secure administrator access
+                    </strong>
+
+                    <span>
+                        Your credentials are transmitted securely.
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- Footer -->
+            <div class="login-footer">
+
+                <span>
+                    © @DateTime.Now.Year HR INFO ADs
+                </span>
+
+                <span class="login-footer-dot">
+                    •
+                </span>
+
+                <button type="button"
+                        @onclick="CloseLogin">
+
+                    Return to marketplace
+
+                </button>
+
+            </div>
 
         </div>
 
-
-        <div class="login-footer">
-
-            © @DateTime.Now.Year HR INFO ADs
-
-        </div>
-
-    </div>
+    </main>
 
 </div>
 
@@ -230,7 +301,6 @@
                 return;
             }
 
-
             AuthenticationStateProvider.SignIn(
                 result.UserID,
                 result.UserName,
@@ -240,7 +310,6 @@
                 result.AccessToken,
                 result.RefreshToken,
                 result.ExpiresAt);
-
 
             Navigation.NavigateTo("/");
 
@@ -259,6 +328,12 @@
         {
             isLoading = false;
         }
+    }
+
+
+    private void ClearError()
+    {
+        errorMessage = null;
     }
 
 

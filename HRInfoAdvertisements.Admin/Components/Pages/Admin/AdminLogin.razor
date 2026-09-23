@@ -1,0 +1,558 @@
+@page "/admin"
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@rendermode InteractiveServer
+
+@inject HRInfoAdvertisements.Admin.Services.AuthApiService AuthApiService
+@inject HRInfoAdvertisements.Admin.Services.AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Administrator Login | HR INFO ADs</PageTitle>
+
+
+<div class="admin-login-page">
+
+    <div class="admin-login-container">
+
+        <!-- =====================================================
+             LEFT BRAND PANEL
+             ===================================================== -->
+
+        <section class="admin-login-brand-panel">
+
+            <div class="admin-brand-content">
+
+                <!-- Logo -->
+
+                <div class="admin-brand-logo">
+                    <span>HR</span>
+                </div>
+
+
+                <!-- Brand -->
+
+                <div class="admin-brand-name">
+                    HR INFO <span>ADs</span>
+                </div>
+
+                <div class="admin-brand-line"></div>
+
+                <div class="admin-brand-portal">
+                    Administration Portal
+                </div>
+
+
+                <!-- Description -->
+
+                <p class="admin-brand-description">
+                    Manage advertisements, users, enquiries,
+                    reports and platform settings from one
+                    centralized administration portal.
+                </p>
+
+
+                <!-- Features -->
+
+                <div class="admin-brand-features">
+
+                    <div class="admin-feature">
+
+                        <div class="admin-feature-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            Secure administrator access
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-feature">
+
+                        <div class="admin-feature-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            Advertisement management
+                        </div>
+
+                    </div>
+
+
+                    <div class="admin-feature">
+
+                        <div class="admin-feature-icon">
+                            ✓
+                        </div>
+
+                        <div>
+                            User and platform administration
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Brand footer -->
+
+            <div class="admin-brand-footer">
+
+                HR INFO ADs
+
+                <span>•</span>
+
+                Administration Portal
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             RIGHT LOGIN PANEL
+             ===================================================== -->
+
+        <section class="admin-login-form-panel">
+
+            <div class="admin-login-form-container">
+
+
+                <!-- Mobile brand -->
+
+                <div class="admin-mobile-brand">
+
+                    <div class="admin-mobile-logo">
+                        HR
+                    </div>
+
+                    <div>
+
+                        <div class="admin-mobile-title">
+                            HR INFO <span>ADs</span>
+                        </div>
+
+                        <div class="admin-mobile-subtitle">
+                            Administration Portal
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Heading -->
+
+                <div class="admin-login-heading">
+
+                    <div class="admin-login-eyebrow">
+                        ADMINISTRATOR ACCESS
+                    </div>
+
+                    <h1>
+                        Welcome back
+                    </h1>
+
+                    <p>
+                        Sign in to access the HR INFO ADs
+                        administration portal.
+                    </p>
+
+                </div>
+
+
+                <!-- Error -->
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="admin-login-error"
+                         role="alert">
+
+                        <div class="admin-error-icon">
+                            !
+                        </div>
+
+                        <div class="admin-error-content">
+
+                            <div class="admin-error-title">
+                                Sign-in unsuccessful
+                            </div>
+
+                            <div class="admin-error-message">
+                                @errorMessage
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+
+
+                <!-- =================================================
+                     LOGIN FORM
+                     ================================================= -->
+
+                <EditForm Model="@loginModel"
+                          OnValidSubmit="@HandleLogin"
+                          FormName="AdminLoginForm">
+
+                    <DataAnnotationsValidator />
+
+
+                    <!-- Email -->
+
+                    <div class="admin-form-group">
+
+                        <label for="admin-email">
+                            Email address
+                        </label>
+
+                        <div class="admin-input-wrapper">
+
+                            <span class="admin-input-icon"
+                                  aria-hidden="true">
+                                @@
+                            </span>
+
+                            <InputText id="admin-email"
+                                       class="admin-form-input"
+                                       @bind-Value="loginModel.Email"
+                                       autocomplete="username"
+                                       placeholder="admin@siteads.local" />
+
+                        </div>
+
+                        <ValidationMessage
+                            For="@(() => loginModel.Email)" />
+
+                    </div>
+
+
+                    <!-- Password -->
+
+                    <div class="admin-form-group">
+
+                        <div class="admin-password-label-row">
+
+                            <label for="admin-password">
+                                Password
+                            </label>
+
+                        </div>
+
+
+                        <div class="admin-input-wrapper">
+
+                            <span class="admin-input-icon"
+                                  aria-hidden="true">
+                                •
+                            </span>
+
+                            <InputText id="admin-password"
+                                       class="admin-form-input admin-password-input"
+                                       type="@passwordInputType"
+                                       @bind-Value="loginModel.Password"
+                                       autocomplete="current-password"
+                                       placeholder="Enter your password" />
+
+
+                            <button type="button"
+                                    class="admin-password-toggle"
+                                    @onclick="TogglePassword"
+                                    aria-label="Show or hide password">
+
+                                @if (showPassword)
+                                {
+                                    <span>Hide</span>
+                                }
+                                else
+                                {
+                                    <span>Show</span>
+                                }
+
+                            </button>
+
+                        </div>
+
+                        <ValidationMessage
+                            For="@(() => loginModel.Password)" />
+
+                    </div>
+
+
+                    <!-- Sign In -->
+
+                    <button type="submit"
+                            class="admin-login-button"
+                            disabled="@isLoading">
+
+                        @if (isLoading)
+                        {
+                            <span class="admin-login-spinner"></span>
+
+                            <span>
+                                Signing in...
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                Sign in to administration
+                            </span>
+
+                            <span class="admin-login-arrow">
+                                →
+                            </span>
+                        }
+
+                    </button>
+
+                </EditForm>
+
+
+                <!-- Security -->
+
+                <div class="admin-security-message">
+
+                    <div class="admin-security-icon">
+                        ✓
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Secure administrator area
+                        </strong>
+
+                        <span>
+                            Authorized administrators only
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Back -->
+
+                <div class="admin-login-back">
+
+                    <a href="/">
+                        <span>←</span>
+                        Return to HR INFO ADs
+                    </a>
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+
+@code
+{
+    // ============================================================
+    // LOGIN MODEL
+    // ============================================================
+
+    private readonly AdminLoginModel loginModel = new();
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private bool isLoading;
+
+    private bool showPassword;
+
+    private string? errorMessage;
+
+
+    // ============================================================
+    // PASSWORD INPUT TYPE
+    // ============================================================
+
+    private string passwordInputType =>
+        showPassword
+            ? "text"
+            : "password";
+
+
+    // ============================================================
+    // TOGGLE PASSWORD
+    // ============================================================
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    private async Task HandleLogin()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        isLoading = true;
+
+        try
+        {
+            var email =
+                loginModel.Email.Trim();
+
+            var password =
+                loginModel.Password;
+
+
+            // ----------------------------------------------------
+            // Call API
+            // ----------------------------------------------------
+
+            var result =
+                await AuthApiService.LoginAsync(
+                    email,
+                    password);
+
+
+            // ----------------------------------------------------
+            // API unavailable
+            // ----------------------------------------------------
+
+            if (result == null)
+            {
+                errorMessage =
+                    "Unable to connect to the authentication service.";
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // Login failed
+            // ----------------------------------------------------
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Invalid email address or password."
+                        : result.Message;
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // Verify administrator role
+            // ----------------------------------------------------
+
+            var isAdministrator =
+                result.Roles.Any(role =>
+                    string.Equals(
+                        role,
+                        "Admin",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    string.Equals(
+                        role,
+                        "SuperAdmin",
+                        StringComparison.OrdinalIgnoreCase));
+
+
+            if (!isAdministrator)
+            {
+                errorMessage =
+                    "Your account does not have administrator access.";
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // Store authentication state
+            // ----------------------------------------------------
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+
+            // ----------------------------------------------------
+            // Redirect to administrator dashboard
+            // ----------------------------------------------------
+
+            await InvokeAsync(() =>
+{
+    Navigation.NavigateTo(
+        "/admin/dashboard",
+        replace: true);
+});
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "The authentication service is currently unavailable.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                $"Login failed: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOGIN MODEL
+    // ============================================================
+
+    private sealed class AdminLoginModel
+    {
+        [Required(
+            ErrorMessage = "Email address is required.")]
+
+        [EmailAddress(
+            ErrorMessage = "Please enter a valid email address.")]
+
+        public string Email { get; set; } =
+            string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Password is required.")]
+
+        public string Password { get; set; } =
+            string.Empty;
+    }
+}

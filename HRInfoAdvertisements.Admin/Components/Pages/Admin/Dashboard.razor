@@ -1,0 +1,472 @@
+@page "/admin/dashboard"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard | HR INFO ADs</PageTitle>
+
+<div class="admin-dashboard">
+
+    <!-- =========================================================
+         DASHBOARD HEADER
+         ========================================================= -->
+
+    <div class="admin-dashboard-header">
+
+        <div>
+
+            <div class="admin-dashboard-eyebrow">
+                ADMINISTRATION
+            </div>
+
+            <h1>
+                Dashboard
+            </h1>
+
+            <p>
+                Welcome back. Here's an overview of your
+                HR INFO ADs administration platform.
+            </p>
+
+        </div>
+
+        <div class="admin-dashboard-date">
+            @DateTime.Now.ToString("dd MMM yyyy")
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         STATISTICS
+         ========================================================= -->
+
+    <div class="admin-dashboard-cards">
+
+        <!-- Advertisements -->
+
+        <div class="dashboard-stat-card">
+
+            <div class="dashboard-stat-icon">
+                AD
+            </div>
+
+            <div class="dashboard-stat-content">
+
+                <span>
+                    Advertisements
+                </span>
+
+                <strong>
+                    —
+                </strong>
+
+                <small>
+                    Total advertisements
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Users -->
+
+        <div class="dashboard-stat-card">
+
+            <div class="dashboard-stat-icon">
+                US
+            </div>
+
+            <div class="dashboard-stat-content">
+
+                <span>
+                    Users
+                </span>
+
+                <strong>
+                    —
+                </strong>
+
+                <small>
+                    Registered users
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Enquiries -->
+
+        <div class="dashboard-stat-card">
+
+            <div class="dashboard-stat-icon">
+                EN
+            </div>
+
+            <div class="dashboard-stat-content">
+
+                <span>
+                    Enquiries
+                </span>
+
+                <strong>
+                    —
+                </strong>
+
+                <small>
+                    Pending enquiries
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <!-- Reports -->
+
+        <div class="dashboard-stat-card">
+
+            <div class="dashboard-stat-icon">
+                RP
+            </div>
+
+            <div class="dashboard-stat-content">
+
+                <span>
+                    Reports
+                </span>
+
+                <strong>
+                    —
+                </strong>
+
+                <small>
+                    Reports requiring review
+                </small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MAIN DASHBOARD CONTENT
+         ========================================================= -->
+
+    <div class="admin-dashboard-grid">
+
+        <!-- =====================================================
+             ADMINISTRATION / QUICK ACTIONS
+             ===================================================== -->
+
+        <section class="admin-dashboard-panel">
+
+            <div class="admin-panel-header">
+
+                <div>
+
+                    <h2>
+                        Administration
+                    </h2>
+
+                    <p>
+                        Manage the HR INFO ADs platform.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-quick-actions">
+
+                <!-- Advertisements -->
+
+                <button type="button"
+                        @onclick='() => NavigateTo("/admin/advertisements")'>
+
+                    <span class="quick-action-icon">
+                        AD
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Advertisements
+                        </strong>
+
+                        <small>
+                            Review and manage advertisements
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </button>
+
+
+                <!-- Users -->
+
+                <button type="button"
+                        @onclick='() => NavigateTo("/admin/users")'>
+
+                    <span class="quick-action-icon">
+                        US
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Users
+                        </strong>
+
+                        <small>
+                            Manage registered users
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </button>
+
+
+                <!-- Reports -->
+
+                <button type="button"
+                        @onclick='() => NavigateTo("/admin/reports")'>
+
+                    <span class="quick-action-icon">
+                        RP
+                    </span>
+
+                    <span>
+
+                        <strong>
+                            Reports
+                        </strong>
+
+                        <small>
+                            Review submitted reports
+                        </small>
+
+                    </span>
+
+                    <span class="quick-action-arrow">
+                        →
+                    </span>
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================================
+             CURRENT ADMINISTRATOR
+             ===================================================== -->
+
+        <section class="admin-dashboard-panel">
+
+            <div class="admin-panel-header">
+
+                <div>
+
+                    <h2>
+                        Account
+                    </h2>
+
+                    <p>
+                        Current administrator session.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="admin-account-summary">
+
+                <!-- Avatar -->
+
+                <div class="admin-account-avatar">
+                    @GetInitials()
+                </div>
+
+
+                <!-- User information -->
+
+                <div class="admin-account-info">
+
+                    <strong>
+                        @userName
+                    </strong>
+
+                    @if (!string.IsNullOrWhiteSpace(userEmail))
+                    {
+                        <span>
+                            @userEmail
+                        </span>
+                    }
+
+
+                    <!-- Roles -->
+
+                    @if (roles.Count > 0)
+                    {
+                        <div class="admin-account-roles">
+
+                            @foreach (var role in roles)
+                            {
+                                <span class="admin-role-badge">
+                                    @role
+                                </span>
+                            }
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // USER INFORMATION
+    // ============================================================
+
+    private string userName = "Administrator";
+
+    private string userEmail = string.Empty;
+
+    private List<string> roles = new();
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+{
+    var authenticationState =
+        await AuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+
+    var user =
+        authenticationState.User;
+
+    if (user.Identity?.IsAuthenticated != true)
+    {
+        await InvokeAsync(() =>
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+        });
+
+        return;
+    }
+
+    userName =
+        user.Identity?.Name
+        ?? "Administrator";
+
+    userEmail =
+        user.FindFirst(
+            ClaimTypes.Email)
+        ?.Value
+        ?? string.Empty;
+
+    roles =
+        user.FindAll(
+                ClaimTypes.Role)
+            .Select(x => x.Value)
+            .Distinct(
+                StringComparer.OrdinalIgnoreCase)
+            .OrderBy(x => x)
+            .ToList();
+}
+
+
+    // ============================================================
+    // GET USER INITIALS
+    // ============================================================
+
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            return "AD";
+        }
+
+
+        var parts =
+            userName
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+
+        // --------------------------------------------------------
+        // Single name
+        // --------------------------------------------------------
+
+        if (parts.Length == 1)
+        {
+            return parts[0]
+                .Substring(
+                    0,
+                    Math.Min(
+                        2,
+                        parts[0].Length))
+                .ToUpperInvariant();
+        }
+
+
+        // --------------------------------------------------------
+        // First + last name
+        // --------------------------------------------------------
+
+        return string.Concat(
+                parts[0][0],
+                parts[^1][0])
+            .ToUpperInvariant();
+    }
+
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void NavigateTo(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(url);
+    }
+
+}
