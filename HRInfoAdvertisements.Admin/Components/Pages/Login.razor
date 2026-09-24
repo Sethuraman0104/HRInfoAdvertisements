@@ -1,292 +1,179 @@
 @page "/login"
 
-@using HRInfoAdvertisements.Admin.Services
+@using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
 
-@inject AuthApiService AuthApiService
-@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject HRInfoAdvertisements.Admin.Services.AuthApiService AuthApiService
+@inject HRInfoAdvertisements.Admin.Services.PublicAuthenticationStateProvider PublicAuthenticationStateProvider
 @inject NavigationManager Navigation
 
 <PageTitle>Sign In | HR INFO ADs</PageTitle>
 
-<div class="login-page">
+<div class="public-auth-page">
 
-    <!-- Background -->
-    <div class="login-background">
+    <div class="public-auth-card">
 
-        <div class="login-background-gradient"></div>
+        <div class="public-auth-header">
 
-        <div class="login-background-shape shape-one"></div>
-        <div class="login-background-shape shape-two"></div>
-        <div class="login-background-shape shape-three"></div>
-
-        <div class="login-background-grid"></div>
-
-    </div>
-
-
-    <!-- Main Login Area -->
-    <main class="login-main">
-
-        <div class="login-card">
-
-            <!-- Close -->
-            <button type="button"
-                    class="login-close"
-                    title="Back to HR INFO ADs"
-                    aria-label="Back to HR INFO ADs"
-                    @onclick="CloseLogin">
-
-                <span>×</span>
-
-            </button>
-
-
-            <!-- Brand -->
-            <div class="login-brand">
-
-                <div class="login-logo">
-                    <span>HR</span>
-                </div>
-
-                <div class="login-brand-content">
-
-                    <div class="login-brand-name">
-                        HR INFO <strong>ADs</strong>
-                    </div>
-
-                    <div class="login-brand-subtitle">
-                        Advertisement Management Platform
-                    </div>
-
-                </div>
-
+            <div class="public-auth-logo">
+                HR
             </div>
 
-
-            <!-- Heading -->
-            <div class="login-heading">
-
-                <div class="login-welcome-icon">
-                    <span>→</span>
-                </div>
-
-                <div>
-                    <h1>
-                        Welcome back
-                    </h1>
-
-                    <p>
-                        Sign in to manage your advertisements and account.
-                    </p>
-                </div>
-
-            </div>
-
-
-            <!-- Login Form -->
-            <EditForm Model="@loginModel"
-                      OnValidSubmit="@HandleLogin"
-                      FormName="AdminLoginForm">
-
-                <DataAnnotationsValidator />
-
-
-                <!-- Email -->
-                <div class="login-field">
-
-                    <label for="email">
-                        Email Address
-                    </label>
-
-                    <div class="login-input-wrapper">
-
-                        <span class="login-input-icon email-icon">
-                            &#64;
-                        </span>
-
-                        <InputText id="email"
-                                   class="login-input"
-                                   @bind-Value="loginModel.Email"
-                                   autocomplete="username"
-                                   placeholder="Enter your email address" />
-
-                    </div>
-
-                    <ValidationMessage For="@(() => loginModel.Email)" />
-
-                </div>
-
-
-                <!-- Password -->
-                <div class="login-field">
-
-                    <div class="login-label-row">
-
-                        <label for="password">
-                            Password
-                        </label>
-
-                    </div>
-
-                    <div class="login-input-wrapper">
-
-                        <span class="login-input-icon password-icon">
-                            ●
-                        </span>
-
-                        <InputText id="password"
-                                   class="login-input"
-                                   type="password"
-                                   @bind-Value="loginModel.Password"
-                                   autocomplete="current-password"
-                                   placeholder="Enter your password" />
-
-                    </div>
-
-                    <ValidationMessage For="@(() => loginModel.Password)" />
-
-                </div>
-
-
-                <!-- Error -->
-                @if (!string.IsNullOrWhiteSpace(errorMessage))
-                {
-                    <div class="login-error"
-                         role="alert">
-
-                        <span class="login-error-icon">
-                            !
-                        </span>
-
-                        <div class="login-error-content">
-
-                            <strong>
-                                Sign in failed
-                            </strong>
-
-                            <span>
-                                @errorMessage
-                            </span>
-
-                        </div>
-
-                        <button type="button"
-                                class="login-error-close"
-                                aria-label="Close error"
-                                @onclick="ClearError">
-
-                            ×
-
-                        </button>
-
-                    </div>
-                }
-
-
-                <!-- Submit -->
-                <button type="submit"
-                        class="login-submit"
-                        disabled="@isLoading">
-
-                    @if (isLoading)
-                    {
-                        <span class="login-spinner"></span>
-
-                        <span>
-                            Signing in...
-                        </span>
-                    }
-                    else
-                    {
-                        <span>
-                            Sign In
-                        </span>
-
-                        <span class="login-arrow">
-                            →
-                        </span>
-                    }
-
-                </button>
-
-            </EditForm>
-
-
-            <!-- Security -->
-            <div class="login-security">
-
-                <div class="login-security-icon">
-                    ✓
-                </div>
-
-                <div class="login-security-text">
-
-                    <strong>
-                        Secure administrator access
-                    </strong>
-
-                    <span>
-                        Your credentials are transmitted securely.
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Footer -->
-            <div class="login-footer">
-
-                <span>
-                    © @DateTime.Now.Year HR INFO ADs
-                </span>
-
-                <span class="login-footer-dot">
-                    •
-                </span>
-
-                <button type="button"
-                        @onclick="CloseLogin">
-
-                    Return to marketplace
-
-                </button>
-
+            <div class="public-auth-brand">
+                <strong>HR INFO</strong>
+                <span>ADs</span>
             </div>
 
         </div>
 
-    </main>
+        <div class="public-auth-heading">
+
+            <span class="public-auth-eyebrow">
+                ACCOUNT ACCESS
+            </span>
+
+            <h1>
+                Welcome back
+            </h1>
+
+            <p>
+                Sign in to manage your advertisements,
+                enquiries, favorites and messages.
+            </p>
+
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="public-auth-error"
+                 role="alert">
+
+                @errorMessage
+
+            </div>
+        }
+
+        <EditForm Model="@loginModel"
+                  OnValidSubmit="@HandleLogin"
+                  FormName="PublicLoginForm">
+
+            <DataAnnotationsValidator />
+
+            <div class="public-form-group">
+
+                <label for="login-email">
+                    Email address
+                </label>
+
+                <InputText id="login-email"
+                           class="public-form-input"
+                           @bind-Value="loginModel.Email"
+                           autocomplete="username"
+                           placeholder="Enter your email address" />
+
+                <ValidationMessage
+                    For="@(() => loginModel.Email)" />
+
+            </div>
+
+            <div class="public-form-group">
+
+                <label for="login-password">
+                    Password
+                </label>
+
+                <InputText id="login-password"
+                           class="public-form-input"
+                           type="password"
+                           @bind-Value="loginModel.Password"
+                           autocomplete="current-password"
+                           placeholder="Enter your password" />
+
+                <ValidationMessage
+                    For="@(() => loginModel.Password)" />
+
+            </div>
+
+            <button type="submit"
+                    class="public-auth-submit"
+                    disabled="@isLoading">
+
+                @if (isLoading)
+                {
+                    <span>
+                        Signing in...
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        Sign in
+                    </span>
+
+                    <span>
+                        →
+                    </span>
+                }
+
+            </button>
+
+        </EditForm>
+
+        <div class="public-auth-register">
+
+            <span>
+                Don't have an account?
+            </span>
+
+            <a href="/register">
+                Create an account
+            </a>
+
+        </div>
+
+        <div class="public-auth-back">
+
+            <a href="/">
+                ← Return to HR INFO ADs
+            </a>
+
+        </div>
+
+    </div>
 
 </div>
 
-
-@code {
-
+@code
+{
     private readonly LoginModel loginModel = new();
 
     private bool isLoading;
 
     private string? errorMessage;
 
-
     private async Task HandleLogin()
     {
-        errorMessage = null;
+        if (isLoading)
+        {
+            return;
+        }
 
+        errorMessage = null;
         isLoading = true;
 
         try
         {
-            var result = await AuthApiService.LoginAsync(
-                loginModel.Email,
-                loginModel.Password);
+            var result =
+                await AuthApiService.LoginAsync(
+                    loginModel.Email.Trim(),
+                    loginModel.Password);
 
-            if (result is null)
+            if (result == null)
             {
                 errorMessage =
-                    "Invalid email address or password.";
+                    "The authentication service is currently unavailable.";
 
                 return;
             }
@@ -295,13 +182,35 @@
             {
                 errorMessage =
                     string.IsNullOrWhiteSpace(result.Message)
-                        ? "Login failed."
+                        ? "Invalid email address or password."
                         : result.Message;
 
                 return;
             }
 
-            AuthenticationStateProvider.SignIn(
+            // Prevent administrators from using
+            // the public user portal.
+            var isAdministrator =
+                result.Roles.Any(role =>
+                    string.Equals(
+                        role,
+                        "Admin",
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    string.Equals(
+                        role,
+                        "SuperAdmin",
+                        StringComparison.OrdinalIgnoreCase));
+
+            if (isAdministrator)
+            {
+                errorMessage =
+                    "Administrator accounts must use the administration portal.";
+
+                return;
+            }
+
+            PublicAuthenticationStateProvider.SignIn(
                 result.UserID,
                 result.UserName,
                 result.Email,
@@ -311,18 +220,19 @@
                 result.RefreshToken,
                 result.ExpiresAt);
 
-            Navigation.NavigateTo("/");
-
+            Navigation.NavigateTo(
+                "/",
+                replace: true);
         }
         catch (HttpRequestException)
         {
             errorMessage =
-                "Unable to connect to the API. Please try again.";
+                "The authentication service is currently unavailable.";
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             errorMessage =
-                "An unexpected error occurred while signing in.";
+                $"Sign-in failed: {ex.Message}";
         }
         finally
         {
@@ -330,31 +240,21 @@
         }
     }
 
-
-    private void ClearError()
-    {
-        errorMessage = null;
-    }
-
-
-    private void CloseLogin()
-    {
-        Navigation.NavigateTo("/");
-    }
-
-
     private sealed class LoginModel
     {
-        [System.ComponentModel.DataAnnotations.Required(
+        [Required(
             ErrorMessage = "Email address is required.")]
-        [System.ComponentModel.DataAnnotations.EmailAddress(
+
+        [EmailAddress(
             ErrorMessage = "Please enter a valid email address.")]
-        public string Email { get; set; } = string.Empty;
 
+        public string Email { get; set; } =
+            string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(
+        [Required(
             ErrorMessage = "Password is required.")]
-        public string Password { get; set; } = string.Empty;
-    }
 
+        public string Password { get; set; } =
+            string.Empty;
+    }
 }

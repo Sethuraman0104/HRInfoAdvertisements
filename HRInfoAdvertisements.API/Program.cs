@@ -136,6 +136,8 @@ builder.Services.AddScoped<
     IAdvertisementService,
     AdvertisementService>();
 
+builder.Services.AddScoped< IAdvertisementLookupService, AdvertisementLookupService>();
+
 builder.Services.AddScoped<
     IAdvertisementMediaService,
     AdvertisementMediaService>();
@@ -317,6 +319,15 @@ options.AddPolicy("AUDIT_VIEW", policy =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var lookupService =
+        scope.ServiceProvider
+            .GetRequiredService<IAdvertisementLookupService>();
+
+    Console.WriteLine(
+        $"DI CHECK: {lookupService.GetType().FullName}");
+}
 
 // ------------------------------------------------------------
 // Database Migration / Seeding
@@ -361,7 +372,7 @@ if (app.Environment.IsDevelopment())
 // HTTP Pipeline
 // ------------------------------------------------------------
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 

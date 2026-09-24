@@ -1,0 +1,1332 @@
+/* ============================================================
+   HR INFO ADs
+   CREATE ADVERTISEMENT - MARKETPLACE FORM
+   ============================================================ */
+
+.post-ad-page {
+    --primary: #4991F9;
+    --primary-dark: #2061C5;
+    --navy: #0A2C6A;
+
+    --text: #172B4D;
+    --muted: #667085;
+    --light-text: #8996A8;
+
+    --border: #D5DEEA;
+    --border-light: #E8EDF4;
+
+    --background: #F5F8FC;
+    --white: #FFFFFF;
+
+    --focus: rgba(73, 145, 249, .15);
+
+    --danger: #DC2626;
+    --success: #16A34A;
+
+    width: 100%;
+    min-height: 100vh;
+
+    padding-bottom: 80px;
+
+    background:
+        radial-gradient(
+            circle at 92% 0%,
+            rgba(73, 145, 249, .10),
+            transparent 26%
+        ),
+        linear-gradient(
+            180deg,
+            #F8FAFD 0%,
+            #F4F7FB 100%
+        );
+
+    color: var(--text);
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+}
+
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.post-ad-page .marketplace-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    min-height: 64px;
+
+    padding: 0 34px;
+
+    background: #FFFFFF;
+
+    border-bottom: 1px solid #E1E7EF;
+
+    box-shadow:
+        0 2px 10px rgba(7, 31, 77, .035);
+}
+
+.post-ad-page .marketplace-brand {
+    display: flex;
+    align-items: baseline;
+
+    gap: 5px;
+
+    color: var(--navy);
+
+    letter-spacing: -.5px;
+}
+
+.post-ad-page .marketplace-brand strong {
+    font-size: 20px;
+    font-weight: 850;
+}
+
+.post-ad-page .marketplace-brand span {
+    color: var(--primary);
+
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.post-ad-page .marketplace-caption {
+    color: #78869A;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   MAIN CONTAINER
+   ============================================================ */
+
+.post-ad-page .post-ad-container {
+    width: min(1180px, calc(100% - 48px));
+
+    margin: 0 auto;
+}
+
+
+/* ============================================================
+   PAGE HEADER
+   ============================================================ */
+
+.post-ad-page .post-ad-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    margin: 34px 0 22px;
+
+    padding: 28px 30px;
+
+    background: #FFFFFF;
+
+    border: 1px solid var(--border);
+
+    border-radius: 18px;
+
+    box-shadow:
+        0 7px 25px rgba(7, 31, 77, .055);
+}
+
+.post-ad-page .eyebrow {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 8px;
+
+    color: var(--primary-dark);
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+
+    text-transform: uppercase;
+}
+
+.post-ad-page .eyebrow::before {
+    content: "";
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+
+    box-shadow:
+        0 0 0 4px rgba(73, 145, 249, .12);
+}
+
+.post-ad-page .post-ad-header h1 {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 32px;
+    line-height: 1.15;
+
+    font-weight: 800;
+
+    letter-spacing: -.7px;
+}
+
+.post-ad-page .post-ad-header p {
+    margin: 9px 0 0;
+
+    color: var(--muted);
+
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+
+/* ============================================================
+   BACK BUTTON
+   ============================================================ */
+
+.post-ad-page .back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    flex-shrink: 0;
+
+    height: 43px;
+
+    padding: 0 17px;
+
+    border: 1px solid #D2DDEB;
+
+    border-radius: 9px;
+
+    background: #FFFFFF;
+
+    color: var(--navy);
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        border-color .18s ease,
+        background-color .18s ease,
+        box-shadow .18s ease,
+        transform .18s ease;
+}
+
+.post-ad-page .back-button:hover {
+    border-color: #AFC4DE;
+
+    background: #F7FAFE;
+
+    box-shadow:
+        0 4px 12px rgba(7, 31, 77, .07);
+
+    transform: translateY(-1px);
+}
+
+.post-ad-page .back-icon {
+    font-size: 17px;
+}
+
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
+.post-ad-page .alert {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 11px;
+
+    margin-bottom: 18px;
+
+    padding: 13px 15px;
+
+    border-radius: 10px;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.post-ad-page .alert-error {
+    border: 1px solid #F0BABA;
+
+    background: #FFF7F7;
+
+    color: #A61B1B;
+}
+
+.post-ad-page .alert-success {
+    border: 1px solid #B8E1C6;
+
+    background: #F4FBF6;
+
+    color: #18753A;
+}
+
+.post-ad-page .alert-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 21px;
+
+    width: 21px;
+    height: 21px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+
+    color: #FFFFFF;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   FORM
+   ============================================================ */
+
+.post-ad-page form {
+    display: flex;
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+/* ============================================================
+   FORM SECTION
+   ============================================================ */
+
+.post-ad-page .form-section {
+    position: relative;
+
+    padding: 28px 30px 31px;
+
+    background: #FFFFFF;
+
+    border: 1px solid var(--border);
+
+    border-radius: 17px;
+
+    box-shadow:
+        0 5px 20px rgba(7, 31, 77, .045);
+}
+
+.post-ad-page .form-section::before {
+    content: "";
+
+    position: absolute;
+
+    top: 22px;
+    bottom: 22px;
+    left: 0;
+
+    width: 3px;
+
+    border-radius: 0 4px 4px 0;
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+}
+
+
+/* ============================================================
+   SECTION HEADER
+   ============================================================ */
+
+.post-ad-page .section-heading {
+    display: flex;
+    align-items: center;
+
+    gap: 13px;
+
+    margin-bottom: 25px;
+
+    padding-bottom: 17px;
+
+    border-bottom: 1px solid var(--border-light);
+}
+
+.post-ad-page .section-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 40px;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    color: #FFFFFF;
+
+    font-size: 11px;
+    font-weight: 850;
+
+    box-shadow:
+        0 5px 13px rgba(32, 97, 197, .20);
+}
+
+.post-ad-page .section-heading h2 {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 16px;
+
+    font-weight: 800;
+}
+
+.post-ad-page .section-heading p {
+    margin: 3px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   GRID
+   ============================================================ */
+
+.post-ad-page .form-grid {
+    display: grid;
+
+    width: 100%;
+
+    gap: 20px;
+}
+
+.post-ad-page .form-grid.two-columns {
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+}
+
+.post-ad-page .form-grid.three-columns {
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+}
+
+.post-ad-page .form-grid.four-columns {
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+}
+
+
+/* ============================================================
+   FORM GROUP
+   ============================================================ */
+
+.post-ad-page .form-group {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    margin-bottom: 19px;
+}
+
+.post-ad-page .form-grid .form-group {
+    margin-bottom: 0;
+}
+
+
+/* ============================================================
+   LABEL
+   ============================================================ */
+
+.post-ad-page .form-group > label {
+    display: block;
+
+    margin: 0 0 8px;
+
+    color: #344563;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    line-height: 1.4;
+}
+
+.post-ad-page .form-group > label > span {
+    margin-left: 3px;
+
+    color: var(--danger);
+
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   IMPORTANT:
+   BLAZOR COMPONENT CONTROLS
+   ::deep allows the isolated stylesheet to style the
+   <input>, <select>, <textarea> generated by:
+   InputText / InputSelect / InputNumber / InputTextArea
+   ============================================================ */
+
+.post-ad-page ::deep .form-control {
+    display: block;
+
+    width: 100%;
+
+    height: 48px;
+    min-height: 48px;
+
+    margin: 0;
+
+    padding: 0 14px;
+
+    border: 1px solid #CBD7E5;
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background: #FFFFFF;
+
+    color: #172B4D;
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+
+    font-weight: 500;
+
+    line-height: normal;
+
+    box-shadow:
+        0 1px 2px rgba(7, 31, 77, .025);
+
+    transition:
+        border-color .18s ease,
+        box-shadow .18s ease,
+        background-color .18s ease,
+        transform .18s ease;
+}
+
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
+
+.post-ad-page ::deep input.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.post-ad-page ::deep input.form-control:hover {
+    border-color: #AEBFD3;
+}
+
+
+/* ============================================================
+   SELECTS
+   ============================================================ */
+
+.post-ad-page ::deep select.form-control {
+    appearance: none;
+    -webkit-appearance: none;
+
+    padding-right: 42px;
+
+    background-color: #FFFFFF;
+
+    background-image:
+        linear-gradient(
+            45deg,
+            transparent 50%,
+            #687A91 50%
+        ),
+        linear-gradient(
+            135deg,
+            #687A91 50%,
+            transparent 50%
+        );
+
+    background-position:
+        calc(100% - 18px) 21px,
+        calc(100% - 13px) 21px;
+
+    background-size:
+        5px 5px,
+        5px 5px;
+
+    background-repeat: no-repeat;
+
+    cursor: pointer;
+}
+
+.post-ad-page ::deep select.form-control:hover {
+    border-color: #A9BBD0;
+}
+
+
+/* ============================================================
+   TEXTAREA
+   ============================================================ */
+
+.post-ad-page ::deep textarea.form-control {
+    height: auto;
+
+    min-height: 132px;
+
+    padding: 13px 14px;
+
+    line-height: 1.55;
+
+    resize: vertical;
+}
+
+.post-ad-page ::deep textarea.form-control.textarea {
+    min-height: 132px;
+}
+
+
+/* ============================================================
+   PLACEHOLDER
+   ============================================================ */
+
+.post-ad-page ::deep .form-control::placeholder {
+    color: #9AA7B8;
+
+    opacity: 1;
+
+    font-weight: 400;
+}
+
+
+/* ============================================================
+   FOCUS
+   ============================================================ */
+
+.post-ad-page ::deep .form-control:focus {
+    border-color: var(--primary);
+
+    background: #FFFFFF;
+
+    box-shadow:
+        0 0 0 3px var(--focus),
+        0 3px 10px rgba(7, 31, 77, .035);
+}
+
+
+/* ============================================================
+   DISABLED
+   ============================================================ */
+
+.post-ad-page ::deep .form-control:disabled {
+    background: #F3F6FA;
+
+    border-color: #DCE3EC;
+
+    color: #98A2B3;
+
+    opacity: 1;
+
+    cursor: not-allowed;
+
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   READONLY
+   ============================================================ */
+
+.post-ad-page ::deep .form-control[readonly] {
+    background: #F5F7FA;
+
+    color: #607089;
+
+    border-color: #D7E0EA;
+
+    cursor: default;
+}
+
+
+/* ============================================================
+   NUMBER
+   ============================================================ */
+
+.post-ad-page ::deep input[type="number"].form-control {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.post-ad-page ::deep input[type="number"].form-control::-webkit-inner-spin-button,
+.post-ad-page ::deep input[type="number"].form-control::-webkit-outer-spin-button {
+    appearance: none;
+    -webkit-appearance: none;
+
+    margin: 0;
+}
+
+
+/* ============================================================
+   DATE
+   ============================================================ */
+
+.post-ad-page ::deep input[type="date"].form-control {
+    line-height: normal;
+}
+
+
+/* ============================================================
+   VALIDATION
+   ============================================================ */
+
+.post-ad-page ::deep .validation-message {
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--danger);
+
+    font-size: 10.5px;
+
+    font-weight: 650;
+}
+
+
+/* ============================================================
+   HELPER TEXT
+   ============================================================ */
+
+.post-ad-page .form-group small {
+    display: block;
+
+    margin-top: 6px;
+
+    color: var(--light-text);
+
+    font-size: 10.5px;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   CHECKBOX
+   ============================================================ */
+
+.post-ad-page .checkbox-group {
+    justify-content: flex-end;
+
+    margin-bottom: 0 !important;
+}
+
+.post-ad-page .checkbox-label {
+    display: flex !important;
+
+    align-items: center;
+
+    gap: 10px;
+
+    min-height: 48px;
+
+    margin: 0 !important;
+
+    padding: 0 14px;
+
+    border: 1px solid #CBD7E5;
+
+    border-radius: 9px;
+
+    background: #FAFCFF;
+
+    color: #40516A !important;
+
+    font-size: 12px !important;
+
+    font-weight: 650 !important;
+
+    cursor: pointer;
+
+    transition:
+        border-color .18s ease,
+        background-color .18s ease,
+        box-shadow .18s ease;
+}
+
+.post-ad-page .checkbox-label:hover {
+    border-color: #AFC0D4;
+
+    background: #F7FAFE;
+}
+
+.post-ad-page ::deep .checkbox-label input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+
+    margin: 0;
+
+    accent-color: var(--primary);
+
+    cursor: pointer;
+}
+
+
+/* ============================================================
+   PHOTO UPLOAD
+   ============================================================ */
+
+.post-ad-page .upload-area {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+
+    min-height: 220px;
+
+    padding: 28px;
+
+    border: 2px dashed #B9CBE2;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            180deg,
+            #FCFDFF 0%,
+            #F5F9FF 100%
+        );
+
+    text-align: center;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    transition:
+        border-color .2s ease,
+        background-color .2s ease,
+        box-shadow .2s ease;
+}
+
+.post-ad-page .upload-area:hover {
+    border-color: var(--primary);
+
+    background:
+        linear-gradient(
+            180deg,
+            #FAFCFF 0%,
+            #EEF5FF 100%
+        );
+
+    box-shadow:
+        0 8px 24px rgba(32, 97, 197, .07);
+}
+
+
+/* ============================================================
+   HIDE NATIVE INPUT
+   ============================================================ */
+
+.post-ad-page ::deep .upload-file-input {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    cursor: pointer;
+
+    z-index: 5;
+}
+
+
+/* ============================================================
+   UPLOAD CONTENT
+   ============================================================ */
+
+.post-ad-page .upload-content {
+    position: relative;
+
+    z-index: 2;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 5px;
+
+    pointer-events: none;
+}
+
+.post-ad-page .upload-icon {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 50px;
+    height: 50px;
+
+    margin-bottom: 7px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #EAF3FF,
+            #DCEBFF
+        );
+
+    color: var(--primary-dark);
+
+    font-size: 27px;
+
+    font-weight: 400;
+
+    box-shadow:
+        0 5px 14px rgba(32, 97, 197, .08);
+}
+
+.post-ad-page .upload-content strong {
+    color: var(--navy);
+
+    font-size: 14px;
+
+    font-weight: 750;
+}
+
+.post-ad-page .upload-content > span:not(.upload-icon):not(.upload-hint) {
+    color: #718096;
+
+    font-size: 11px;
+}
+
+.post-ad-page .upload-content .upload-hint {
+    margin-top: 3px;
+
+    color: #9AA7B8;
+
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   SELECTED FILES
+   ============================================================ */
+
+.post-ad-page .selected-files {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 10px;
+
+    margin-top: 13px;
+}
+
+.post-ad-page .selected-file {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    min-width: 0;
+
+    min-height: 45px;
+
+    padding: 8px 12px;
+
+    border: 1px solid #DEE6F0;
+
+    border-radius: 9px;
+
+    background: #FFFFFF;
+
+    color: #52627A;
+
+    font-size: 10.5px;
+
+    box-shadow:
+        0 2px 7px rgba(7, 31, 77, .035);
+}
+
+.post-ad-page .selected-file span:first-child {
+    overflow: hidden;
+
+    white-space: nowrap;
+
+    text-overflow: ellipsis;
+}
+
+.post-ad-page .selected-file span:last-child {
+    flex-shrink: 0;
+
+    color: #8A97A8;
+}
+
+
+/* ============================================================
+   ACTION BAR
+   ============================================================ */
+
+.post-ad-page .form-actions {
+    position: sticky;
+
+    bottom: 15px;
+
+    z-index: 30;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    padding: 11px;
+
+    border: 1px solid #DCE5F0;
+
+    border-radius: 13px;
+
+    background: rgba(255, 255, 255, .95);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+
+    box-shadow:
+        0 12px 30px rgba(7, 31, 77, .11);
+}
+
+
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
+.post-ad-page .form-actions .button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    height: 43px;
+
+    padding: 0 19px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        background-color .18s ease;
+}
+
+.post-ad-page .form-actions .button:disabled {
+    opacity: .55;
+
+    cursor: not-allowed;
+}
+
+.post-ad-page .form-actions .button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+
+/* Cancel */
+
+.post-ad-page .form-actions .secondary {
+    border: 1px solid #D2DDEB;
+
+    background: #FFFFFF;
+
+    color: #40516A;
+}
+
+.post-ad-page .form-actions .secondary:hover:not(:disabled) {
+    border-color: #B5C5D8;
+
+    background: #F7F9FC;
+}
+
+
+/* Save */
+
+.post-ad-page .form-actions .primary {
+    border: 1px solid var(--primary-dark);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-dark)
+        );
+
+    color: #FFFFFF;
+
+    box-shadow:
+        0 5px 12px rgba(32, 97, 197, .20);
+}
+
+.post-ad-page .form-actions .primary:hover:not(:disabled) {
+    box-shadow:
+        0 7px 16px rgba(32, 97, 197, .27);
+}
+
+
+/* Submit */
+
+.post-ad-page .form-actions .submit-button {
+    border: 1px solid var(--navy);
+
+    background: var(--navy);
+
+    color: #FFFFFF;
+
+    box-shadow:
+        0 5px 12px rgba(10, 44, 106, .17);
+}
+
+.post-ad-page .form-actions .submit-button:hover:not(:disabled) {
+    background: #123A7D;
+
+    box-shadow:
+        0 7px 16px rgba(10, 44, 106, .24);
+}
+
+
+/* ============================================================
+   SPINNER
+   ============================================================ */
+
+.post-ad-page .spinner {
+    display: inline-block;
+
+    width: 13px;
+    height: 13px;
+
+    border: 2px solid rgba(255, 255, 255, .45);
+
+    border-top-color: #FFFFFF;
+
+    border-radius: 50%;
+
+    animation:
+        post-ad-spin .7s linear infinite;
+}
+
+@keyframes post-ad-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .post-ad-page .form-grid.four-columns {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .post-ad-page .form-grid.three-columns {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 720px) {
+
+    .post-ad-page .marketplace-bar {
+        min-height: 56px;
+
+        padding: 0 17px;
+    }
+
+    .post-ad-page .marketplace-brand strong {
+        font-size: 17px;
+    }
+
+    .post-ad-page .marketplace-brand span {
+        font-size: 15px;
+    }
+
+    .post-ad-page .marketplace-caption {
+        display: none;
+    }
+
+    .post-ad-page .post-ad-container {
+        width: calc(100% - 24px);
+    }
+
+    .post-ad-page .post-ad-header {
+        flex-direction: column;
+
+        align-items: stretch;
+
+        margin-top: 18px;
+
+        padding: 21px 19px;
+
+        border-radius: 14px;
+    }
+
+    .post-ad-page .post-ad-header h1 {
+        font-size: 27px;
+    }
+
+    .post-ad-page .back-button {
+        width: 100%;
+    }
+
+    .post-ad-page .form-section {
+        padding: 22px 18px 23px;
+
+        border-radius: 14px;
+    }
+
+    .post-ad-page .form-section::before {
+        top: 18px;
+        bottom: 18px;
+    }
+
+    .post-ad-page .form-grid.two-columns,
+    .post-ad-page .form-grid.three-columns,
+    .post-ad-page .form-grid.four-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .post-ad-page .selected-files {
+        grid-template-columns: 1fr;
+    }
+
+    .post-ad-page .form-actions {
+        position: static;
+
+        flex-direction: column-reverse;
+    }
+
+    .post-ad-page .form-actions .button {
+        width: 100%;
+    }
+
+    .post-ad-page .upload-area {
+        min-height: 200px;
+    }
+}
+
+
+/* ============================================================
+   SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 430px) {
+
+    .post-ad-page {
+        padding-bottom: 40px;
+    }
+
+    .post-ad-page .post-ad-container {
+        width: calc(100% - 16px);
+    }
+
+    .post-ad-page .form-section {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .post-ad-page .section-heading {
+        gap: 10px;
+    }
+
+    .post-ad-page .section-number {
+        width: 36px;
+        height: 36px;
+
+        flex-basis: 36px;
+    }
+
+    .post-ad-page .section-heading h2 {
+        font-size: 15px;
+    }
+
+    .post-ad-page ::deep .form-control {
+        height: 46px;
+        min-height: 46px;
+    }
+}

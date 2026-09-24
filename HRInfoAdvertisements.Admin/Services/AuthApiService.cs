@@ -61,4 +61,54 @@ public class AuthApiService
         return await response.Content
             .ReadFromJsonAsync<AuthResponse>();
     }
+
+    public async Task<AuthResponse?> GetCurrentUserAsync(
+    string accessToken)
+{
+    var client =
+        _httpClientFactory.CreateClient(
+            "HRInfoAdvertisementsAPI");
+
+    using var request =
+        new HttpRequestMessage(
+            HttpMethod.Get,
+            "api/v1/Auth/me");
+
+    request.Headers.Authorization =
+        new System.Net.Http.Headers.AuthenticationHeaderValue(
+            "Bearer",
+            accessToken);
+
+    var response =
+        await client.SendAsync(request);
+
+    if (!response.IsSuccessStatusCode)
+    {
+        return null;
+    }
+
+    return await response.Content
+        .ReadFromJsonAsync<AuthResponse>();
+}
+
+public async Task<bool> LogoutAsync(
+    string refreshToken)
+{
+    var client =
+        _httpClientFactory.CreateClient(
+            "HRInfoAdvertisementsAPI");
+
+    var request =
+        new
+        {
+            RefreshToken = refreshToken
+        };
+
+    var response =
+        await client.PostAsJsonAsync(
+            "api/v1/Auth/logout",
+            request);
+
+    return response.IsSuccessStatusCode;
+}
 }

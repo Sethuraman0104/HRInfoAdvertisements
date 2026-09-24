@@ -1,7 +1,12 @@
 @page "/admin/dashboard"
 
 @using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.Authorization
+
+@attribute [Authorize(Roles = "Admin,SuperAdmin")]
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation

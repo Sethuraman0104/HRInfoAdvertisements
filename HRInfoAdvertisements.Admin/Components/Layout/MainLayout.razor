@@ -1,4 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <div class="hr-app-shell">
 
@@ -61,27 +65,27 @@
 
                 <div class="hr-user-summary">
 
-                    <div class="hr-user-avatar">
-                        S
-                    </div>
+    <div class="hr-user-avatar">
+        @GetInitials()
+    </div>
 
-                    <div class="hr-user-details">
+    <div class="hr-user-details">
 
-                        <span class="hr-user-name">
-                            Administrator
-                        </span>
+        <span class="hr-user-name">
+            @CurrentUserName
+        </span>
 
-                        <span class="hr-user-role">
-                            System Administrator
-                        </span>
+        <span class="hr-user-role">
+            @CurrentUserRole
+        </span>
 
-                    </div>
+    </div>
 
-                    <span class="hr-user-chevron">
-                        ▾
-                    </span>
+    <span class="hr-user-chevron">
+        ▾
+    </span>
 
-                </div>
+</div>
 
             </div>
 
@@ -155,16 +159,60 @@
 
     private bool sidebarOpen;
 
+    private string CurrentUserName { get; set; } = "Administrator";
+
+    private string CurrentUserRole { get; set; } = "Administrator";
+
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(CurrentUserName))
+            return "A";
+
+        var parts = CurrentUserName
+            .Trim()
+            .Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+            return parts[0][0].ToString().ToUpperInvariant();
+
+        return (
+            parts[0][0].ToString() +
+            parts[^1][0].ToString()
+        ).ToUpperInvariant();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        var user = authenticationState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            CurrentUserName =
+                user.Identity.Name
+                ?? user.FindFirst(ClaimTypes.Email)?.Value
+                ?? "Administrator";
+
+            CurrentUserRole =
+                user.FindFirst(ClaimTypes.Role)?.Value
+                ?? "Administrator";
+        }
+    }
 
     private void ToggleSidebar()
     {
         sidebarOpen = !sidebarOpen;
     }
 
-
     private void CloseSidebar()
     {
         sidebarOpen = false;
     }
+}
 
 }

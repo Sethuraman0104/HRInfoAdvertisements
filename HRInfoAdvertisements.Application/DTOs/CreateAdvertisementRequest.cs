@@ -4,10 +4,12 @@ namespace HRInfoAdvertisements.Application.DTOs.Advertisements;
 
 public class CreateAdvertisementRequest
 {
-    [Required]
+    [Range(1, int.MaxValue,
+    ErrorMessage = "Please select a category.")]
     public int CategoryID { get; set; }
 
-    [Required]
+    [Range(1, int.MaxValue,
+    ErrorMessage = "Please select an advertisement type.")]
     public int AdvertisementTypeID { get; set; }
 
     [Required]

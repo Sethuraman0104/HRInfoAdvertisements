@@ -1,0 +1,1155 @@
+@page "/my-ads/create"
+
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using Microsoft.AspNetCore.Components.Forms
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Post Advertisement | HR INFO ADs</PageTitle>
+
+@if (!isAuthenticated)
+{
+    <div class="post-ad-page">
+        <div class="post-ad-container">
+            <div class="alert alert-error">
+                Please sign in to post an advertisement.
+            </div>
+        </div>
+    </div>
+}
+else
+{
+<div class="post-ad-page">
+
+    <div class="marketplace-bar">
+    <div class="marketplace-brand">
+        <strong>HR INFO</strong>
+        <span>ADs</span>
+    </div>
+
+    <div class="marketplace-caption">
+        Advertisement Marketplace
+    </div>
+</div>
+
+    <div class="post-ad-container">
+
+        <!-- ===================================================== -->
+        <!-- PAGE HEADER -->
+        <!-- ===================================================== -->
+
+        <div class="post-ad-header">
+
+            <div>
+                <div class="eyebrow">
+                    HR INFO ADs
+                </div>
+
+                <h1>
+                    Post Your Advertisement
+                </h1>
+
+                <p>
+                    Create your advertisement and reach
+                    the right audience.
+                </p>
+            </div>
+
+            <button type="button"
+                    class="back-button"
+                    @onclick="Cancel">
+                <span class="back-icon">←</span>
+                My Advertisements
+            </button>
+
+        </div>
+
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-error">
+                <span class="alert-icon">!</span>
+
+                <div>
+                    @errorMessage
+                </div>
+            </div>
+        }
+
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="alert alert-success">
+                <span class="alert-icon">✓</span>
+
+                <div>
+                    @successMessage
+                </div>
+            </div>
+        }
+
+
+        <EditForm Model="model"
+                  OnValidSubmit="SaveDraft">
+
+            <DataAnnotationsValidator />
+
+            <!-- ================================================= -->
+            <!-- STEP 01 - BASIC INFORMATION -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="section-heading">
+
+                    <div class="section-number">
+                        01
+                    </div>
+
+                    <div>
+                        <h2>Basic Information</h2>
+
+                        <p>
+                            Tell buyers what you are advertising.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid two-columns">
+
+                    <div class="form-group">
+
+                        <label>
+                            Advertisement Type
+                            <span>*</span>
+                        </label>
+
+                        <InputSelect
+                            class="form-control"
+                            @bind-Value="model.AdvertisementTypeID">
+
+                            <option value="0">
+                                Select advertisement type
+                            </option>
+
+                            @foreach (var item in advertisementTypes)
+                            {
+                                <option value="@item.ID">
+                                    @item.Name
+                                </option>
+                            }
+
+                        </InputSelect>
+
+                        <ValidationMessage
+                            For="@(() => model.AdvertisementTypeID)" />
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Category
+                            <span>*</span>
+                        </label>
+
+                        <InputSelect
+                            class="form-control"
+                            @bind-Value="model.CategoryID">
+
+                            <option value="0">
+                                Select category
+                            </option>
+
+                            @foreach (var item in categories)
+                            {
+                                <option value="@item.ID">
+                                    @item.Name
+                                </option>
+                            }
+
+                        </InputSelect>
+
+                        <ValidationMessage
+                            For="@(() => model.CategoryID)" />
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Advertisement Title
+                        <span>*</span>
+                    </label>
+
+                    <InputText
+                        class="form-control"
+                        @bind-Value="model.Title"
+                        placeholder="Enter a clear and attractive title" />
+
+                    <ValidationMessage
+                        For="@(() => model.Title)" />
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Arabic Title
+                    </label>
+
+                    <InputText
+                        class="form-control"
+                        @bind-Value="model.TitleAr"
+                        placeholder="أدخل عنوان الإعلان"
+                        dir="rtl" />
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Description
+                        <span>*</span>
+                    </label>
+
+                    <InputTextArea
+                        class="form-control textarea"
+                        @bind-Value="model.Description"
+                        placeholder="Provide detailed information about your advertisement"
+                        rows="6" />
+
+                    <ValidationMessage
+                        For="@(() => model.Description)" />
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>
+                        Arabic Description
+                    </label>
+
+                    <InputTextArea
+                        class="form-control textarea"
+                        @bind-Value="model.DescriptionAr"
+                        placeholder="اكتب وصفاً تفصيلياً للإعلان"
+                        rows="5"
+                        dir="rtl" />
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- STEP 02 - PRICING -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="section-heading">
+
+                    <div class="section-number">
+                        02
+                    </div>
+
+                    <div>
+                        <h2>Pricing</h2>
+
+                        <p>
+                            Set your asking price and negotiation preference.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid three-columns">
+
+                    <div class="form-group">
+
+                        <label>
+                            Price
+                        </label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.Price"
+                            placeholder="0.000" />
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>
+                            Currency
+                        </label>
+
+                        <InputText
+                            class="form-control"
+                            @bind-Value="model.CurrencyCode"
+                            readonly />
+
+                    </div>
+
+
+                    <div class="form-group checkbox-group">
+
+                        <label class="checkbox-label">
+
+                            <InputCheckbox
+                                @bind-Value="model.IsNegotiable" />
+
+                            <span>
+                                Price is negotiable
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- STEP 03 - LOCATION -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="section-heading">
+
+                    <div class="section-number">
+                        03
+                    </div>
+
+                    <div>
+                        <h2>Location</h2>
+
+                        <p>
+                            Help potential buyers find your advertisement.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid two-columns">
+
+                    <div class="form-group">
+
+                        <label>Country</label>
+
+<InputSelect
+    TValue="int"
+    class="form-control"
+    Value="@selectedCountryId"
+    ValueChanged="@OnCountryChanged"
+    ValueExpression="@(() => selectedCountryId)">
+
+    <option value="0">Select country</option>
+
+    @foreach (var item in countries)
+    {
+        <option value="@item.ID">
+            @item.Name
+        </option>
+    }
+
+</InputSelect>
+
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>State / Province</label>
+
+<InputSelect
+    TValue="int"
+    class="form-control"
+    Value="@selectedStateId"
+    ValueChanged="@OnStateChanged"
+    ValueExpression="@(() => selectedStateId)"
+    disabled="@(selectedCountryId <= 0)">
+
+    <option value="0">Select state</option>
+
+    @foreach (var item in states)
+    {
+        <option value="@item.ID">
+            @item.Name
+        </option>
+    }
+
+</InputSelect>
+
+
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>City</label>
+
+<InputSelect
+    TValue="int"
+    class="form-control"
+    Value="@selectedCityId"
+    ValueChanged="@OnCityChanged"
+    ValueExpression="@(() => selectedCityId)"
+    disabled="@(selectedCountryId <= 0)">
+
+    <option value="0">Select city</option>
+
+    @foreach (var item in cities)
+    {
+        <option value="@item.ID">
+            @item.Name
+        </option>
+    }
+
+</InputSelect>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Area</label>
+
+                        <InputSelect
+                            class="form-control"
+                            @bind-Value="selectedAreaId"
+                            disabled="@(selectedCountryId == 0)">
+
+                            <option value="0">
+                                Select area
+                            </option>
+
+                            @foreach (var item in areas)
+                            {
+                                <option value="@item.ID">
+                                    @item.Name
+                                </option>
+                            }
+
+                        </InputSelect>
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid two-columns">
+
+                    <div class="form-group">
+
+                        <label>Address</label>
+
+                        <InputText
+                            class="form-control"
+                            @bind-Value="model.AddressLine"
+                            placeholder="Building, road or address" />
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Plot Number</label>
+
+                        <InputText
+                            class="form-control"
+                            @bind-Value="model.PlotNumber"
+                            placeholder="Optional plot number" />
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- STEP 04 - PROPERTY DETAILS -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="section-heading">
+
+                    <div class="section-number">
+                        04
+                    </div>
+
+                    <div>
+                        <h2>Property Details</h2>
+
+                        <p>
+                            Add additional information about the property.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid four-columns">
+
+                    <div class="form-group">
+
+                        <label>Land Area</label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.LandArea" />
+
+                        <small>
+                            Square metres
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Built-up Area</label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.BuiltUpArea" />
+
+                        <small>
+                            Square metres
+                        </small>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Bedrooms</label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.Bedrooms" />
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label>Bathrooms</label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.Bathrooms" />
+
+                    </div>
+
+                </div>
+
+
+                <div class="form-grid four-columns">
+
+                    <div class="form-group">
+
+                        <label>Property Age</label>
+
+                        <InputNumber
+                            class="form-control"
+                            @bind-Value="model.PropertyAge" />
+
+                        <small>
+                            Years
+                        </small>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- STEP 05 - PHOTOS -->
+            <!-- ================================================= -->
+
+            <section class="form-section">
+
+                <div class="section-heading">
+
+                    <div class="section-number">
+                        05
+                    </div>
+
+                    <div>
+                        <h2>Photos & Media</h2>
+
+                        <p>
+                            Add photos to make your advertisement more attractive.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <label class="upload-area">
+
+    <InputFile
+        class="upload-file-input"
+        OnChange="HandleImageSelection"
+        multiple
+        accept="image/*" />
+
+    <span class="upload-content">
+
+        <span class="upload-icon">
+            +
+        </span>
+
+        <strong>
+            Add photos
+        </strong>
+
+        <span>
+            Click anywhere here to choose photos
+        </span>
+
+        <span class="upload-hint">
+            JPG, PNG or WEBP • Maximum 10 MB per image
+        </span>
+
+    </span>
+
+</label>
+
+
+                @if (selectedImages.Count > 0)
+                {
+                    <div class="selected-files">
+
+                        @foreach (var image in selectedImages)
+                        {
+                            <div class="selected-file">
+
+                                <span>
+                                    @image.Name
+                                </span>
+
+                                <span>
+                                    @FormatFileSize(image.Size)
+                                </span>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </section>
+
+
+            <!-- ================================================= -->
+            <!-- ACTIONS -->
+            <!-- ================================================= -->
+
+            <div class="form-actions">
+
+                <button type="button"
+                        class="button secondary"
+                        @onclick="Cancel"
+                        disabled="@isSaving">
+
+                    Cancel
+
+                </button>
+
+
+                <button type="submit"
+                        class="button primary"
+                        disabled="@isSaving">
+
+                    @if (isSaving)
+                    {
+                        <span class="spinner"></span>
+
+                        <span>
+                            Saving...
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            Save as Draft
+                        </span>
+                    }
+
+                </button>
+
+
+                @if (draftAdvertisementId.HasValue)
+                {
+                    <button type="button"
+                            class="button submit-button"
+                            @onclick="SubmitForApproval"
+                            disabled="@isSubmitting">
+
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner"></span>
+
+                            <span>
+                                Submitting...
+                            </span>
+                        }
+                        else
+                        {
+                            <span>
+                                Submit for Approval
+                            </span>
+                        }
+
+                    </button>
+                }
+
+            </div>
+
+        </EditForm>
+
+    </div>
+
+</div>
+
+
+@code {
+    private bool isAuthenticated;
+    private readonly CreateAdvertisementRequest model =
+        new()
+        {
+            CurrencyCode = "BHD"
+        };
+
+
+    private List<LookupItemResponse> categories =
+        new();
+
+    private List<LookupItemResponse> advertisementTypes =
+        new();
+
+    private List<LookupItemResponse> countries =
+        new();
+
+    private List<LookupItemResponse> states =
+        new();
+
+    private List<LookupItemResponse> cities =
+        new();
+
+    private List<LookupItemResponse> areas =
+        new();
+
+
+    private int selectedCountryId;
+
+    private int selectedStateId;
+
+    private int selectedCityId;
+
+    private int selectedAreaId;
+
+
+    private readonly List<IBrowserFile> selectedImages =
+        new();
+
+
+    private long? draftAdvertisementId;
+
+    private bool isSaving;
+
+    private bool isSubmitting;
+
+    private string? errorMessage;
+
+    private string? successMessage;
+
+
+    protected override async Task OnInitializedAsync()
+{
+    var authenticationState =
+        await AuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+
+    isAuthenticated =
+        authenticationState.User.Identity?.IsAuthenticated == true;
+
+    if (!isAuthenticated)
+    {
+        Navigation.NavigateTo("/");
+        return;
+    }
+
+    await LoadLookupsAsync();
+}
+
+
+    // ============================================================
+    // LOAD LOOKUPS
+    // ============================================================
+private async Task LoadLookupsAsync()
+{
+    errorMessage = null;
+
+    try
+    {
+        categories =
+            await AdvertisementApiService
+                .GetCategoriesAsync();
+
+        advertisementTypes =
+            await AdvertisementApiService
+                .GetAdvertisementTypesAsync();
+
+        countries =
+            await AdvertisementApiService
+                .GetCountriesAsync();
+    }
+    catch (Exception ex)
+    {
+        errorMessage =
+            $"Unable to load advertisement options. {ex.Message}";
+    }
+}
+
+
+    // ============================================================
+    // COUNTRY
+    // ============================================================
+
+private async Task OnCountryChanged(int value)
+{
+    selectedCountryId = value;
+
+    selectedStateId = 0;
+    selectedCityId = 0;
+    selectedAreaId = 0;
+
+    states.Clear();
+    cities.Clear();
+    areas.Clear();
+
+    if (selectedCountryId <= 0)
+        return;
+
+    errorMessage = null;
+
+    try
+    {
+        states = await AdvertisementApiService
+            .GetStatesAsync(selectedCountryId);
+    }
+    catch
+    {
+        errorMessage = "Unable to load states.";
+    }
+}
+
+private async Task OnStateChanged(int value)
+{
+    selectedStateId = value;
+
+    selectedCityId = 0;
+    selectedAreaId = 0;
+
+    cities.Clear();
+    areas.Clear();
+
+    if (selectedCountryId <= 0)
+        return;
+
+    errorMessage = null;
+
+    try
+    {
+        cities = await AdvertisementApiService
+            .GetCitiesAsync(
+                selectedCountryId,
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null);
+    }
+    catch
+    {
+        errorMessage = "Unable to load cities.";
+    }
+}
+
+private async Task OnCityChanged(int value)
+{
+    selectedCityId = value;
+
+    selectedAreaId = 0;
+
+    areas.Clear();
+
+    if (selectedCountryId <= 0)
+        return;
+
+    errorMessage = null;
+
+    try
+    {
+        areas = await AdvertisementApiService
+            .GetAreasAsync(
+                selectedCountryId,
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null,
+                selectedCityId > 0
+                    ? selectedCityId
+                    : null);
+    }
+    catch
+    {
+        errorMessage = "Unable to load areas.";
+    }
+}
+
+    // ============================================================
+    // SAVE DRAFT
+    // ============================================================
+
+    private async Task SaveDraft()
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        isSaving = true;
+
+        try
+        {
+            model.CountryID =
+                selectedCountryId > 0
+                    ? selectedCountryId
+                    : null;
+
+            model.StateID =
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null;
+
+            model.CityID =
+                selectedCityId > 0
+                    ? selectedCityId
+                    : null;
+
+            model.AreaID =
+                selectedAreaId > 0
+                    ? selectedAreaId
+                    : null;
+
+
+            var result =
+                await AdvertisementApiService
+                    .CreateAdvertisementAsync(model);
+
+            if (result is null)
+            {
+                errorMessage =
+                    "Unable to save the advertisement. Please try again.";
+
+                return;
+            }
+
+            draftAdvertisementId =
+                result.AdvertisementID;
+
+            successMessage =
+                $"Advertisement {result.AdvertisementNumber} has been saved as a draft.";
+
+            await UploadSelectedImagesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "An unexpected error occurred."
+                    : ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE SELECTION
+    // ============================================================
+
+    private void HandleImageSelection(
+        InputFileChangeEventArgs e)
+    {
+        selectedImages.Clear();
+
+        foreach (var file in e.GetMultipleFiles(20))
+        {
+            selectedImages.Add(file);
+        }
+    }
+
+
+    // ============================================================
+    // UPLOAD IMAGES
+    // ============================================================
+
+    private async Task UploadSelectedImagesAsync()
+    {
+        if (!draftAdvertisementId.HasValue)
+        {
+            return;
+        }
+
+        if (selectedImages.Count == 0)
+        {
+            return;
+        }
+
+        var firstImage = true;
+
+        foreach (var image in selectedImages)
+        {
+            try
+            {
+                await using var stream =
+                    image.OpenReadStream(
+                        maxAllowedSize: 10 * 1024 * 1024);
+
+                var success =
+                    await AdvertisementApiService
+                        .UploadAdvertisementImageAsync(
+                            draftAdvertisementId.Value,
+                            stream,
+                            image.Name,
+                            image.ContentType,
+                            firstImage);
+
+                if (success)
+                {
+                    firstImage = false;
+                }
+            }
+            catch
+            {
+                errorMessage =
+                    "The advertisement was saved, but one or more images could not be uploaded.";
+
+                return;
+            }
+        }
+
+        selectedImages.Clear();
+    }
+
+
+    // ============================================================
+    // SUBMIT FOR APPROVAL
+    // ============================================================
+
+    private async Task SubmitForApproval()
+    {
+        if (!draftAdvertisementId.HasValue)
+        {
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        isSubmitting = true;
+
+        try
+        {
+            var success =
+                await AdvertisementApiService
+                    .SubmitAdvertisementAsync(
+                        draftAdvertisementId.Value);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The advertisement could not be submitted. Please make sure the required information is complete.";
+                return;
+            }
+
+            successMessage =
+                "Your advertisement has been submitted for approval.";
+
+            await Task.Delay(1200);
+
+            Navigation.NavigateTo("/");
+        }
+        catch
+        {
+            errorMessage =
+                "Unable to submit the advertisement. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // CANCEL
+    // ============================================================
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    // ============================================================
+    // FILE SIZE
+    // ============================================================
+
+    private static string FormatFileSize(
+        long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return $"{bytes / 1024d:0.0} KB";
+        }
+
+        return $"{bytes / 1024d / 1024d:0.0} MB";
+    }
+}
+}

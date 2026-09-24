@@ -1,88 +1,118 @@
 using HRInfoAdvertisements.Admin.Components;
 using HRInfoAdvertisements.Admin.Services;
-using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ------------------------------------------------------------
-// Authorization
-// ------------------------------------------------------------
+// ============================================================
+// AUTHENTICATION / AUTHORIZATION
+// ============================================================
 
+builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
-
 builder.Services.AddCascadingAuthenticationState();
-
-// ------------------------------------------------------------
-// Razor Components
-// ------------------------------------------------------------
 
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// ------------------------------------------------------------
-// Admin Authentication State
-// ------------------------------------------------------------
+
+// ============================================================
+// AUTHENTICATION STATE PROVIDERS
+// ============================================================
 
 builder.Services.AddScoped<
     AdminAuthenticationStateProvider>();
 
-builder.Services.AddScoped<AuthenticationStateProvider>(
-    provider =>
-        provider.GetRequiredService<
-            AdminAuthenticationStateProvider>());
+builder.Services.AddScoped<
+    PublicAuthenticationStateProvider>();
 
-// ------------------------------------------------------------
-// JWT Handler
-// ------------------------------------------------------------
 
-builder.Services.AddTransient<AdminJwtHandler>();
+// ============================================================
+// JWT HANDLERS
+// ============================================================
 
-// ------------------------------------------------------------
-// API HttpClient
-// ------------------------------------------------------------
+builder.Services.AddTransient<
+    AdminJwtHandler>();
+
+builder.Services.AddTransient<
+    PublicJwtHandler>();
+
+
+// ============================================================
+// API BASE URL
+// ============================================================
+
+var apiBaseUrl =
+    builder.Configuration[
+        "ApiSettings:BaseUrl"];
+
+if (string.IsNullOrWhiteSpace(apiBaseUrl))
+{
+    throw new InvalidOperationException(
+        "ApiSettings:BaseUrl is not configured.");
+}
+
+
+// ============================================================
+// ADMIN API CLIENT
+// ============================================================
 
 builder.Services.AddHttpClient(
     "HRInfoAdvertisementsAPI",
     client =>
     {
-        var baseUrl =
-            builder.Configuration[
-                "ApiSettings:BaseUrl"];
-
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            throw new InvalidOperationException(
-                "ApiSettings:BaseUrl is not configured.");
-        }
-
         client.BaseAddress =
-            new Uri(baseUrl);
+            new Uri(apiBaseUrl);
 
         client.Timeout =
             TimeSpan.FromSeconds(30);
     })
-    .AddHttpMessageHandler<AdminJwtHandler>();
+    .AddHttpMessageHandler<
+        AdminJwtHandler>();
 
-// ------------------------------------------------------------
-// Application Services
-// ------------------------------------------------------------
 
-builder.Services.AddScoped<DashboardApiService>();
+// ============================================================
+// PUBLIC AUTHENTICATED API CLIENT
+// ============================================================
 
-builder.Services.AddScoped<AuthApiService>();
+builder.Services.AddHttpClient(
+    "HRInfoAdvertisementsPublicAPI",
+    client =>
+    {
+        client.BaseAddress =
+            new Uri(apiBaseUrl);
 
-builder.Services.AddScoped<AdvertisementApiService>();
+        client.Timeout =
+            TimeSpan.FromSeconds(60);
+    })
+    .AddHttpMessageHandler<
+        PublicJwtHandler>();
 
-// ------------------------------------------------------------
-// Build
-// ------------------------------------------------------------
+
+// ============================================================
+// APPLICATION SERVICES
+// ============================================================
+
+builder.Services.AddScoped<
+    DashboardApiService>();
+
+builder.Services.AddScoped<
+    AuthApiService>();
+
+builder.Services.AddScoped<
+    AdvertisementApiService>();
+
+
+// ============================================================
+// BUILD
+// ============================================================
 
 var app = builder.Build();
 
-// ------------------------------------------------------------
-// HTTP Pipeline
-// ------------------------------------------------------------
+
+// ============================================================
+// HTTP PIPELINE
+// ============================================================
 
 if (!app.Environment.IsDevelopment())
 {
@@ -93,21 +123,9 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-// ------------------------------------------------------------
-// Antiforgery
-// ------------------------------------------------------------
-
 app.UseAntiforgery();
 
-// ------------------------------------------------------------
-// Static Assets
-// ------------------------------------------------------------
-
 app.MapStaticAssets();
-
-// ------------------------------------------------------------
-// Blazor
-// ------------------------------------------------------------
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

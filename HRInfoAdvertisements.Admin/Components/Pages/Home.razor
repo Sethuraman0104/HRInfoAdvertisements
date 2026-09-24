@@ -1,6 +1,6 @@
 ﻿@page "/"
+
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
-@rendermode InteractiveServer
 
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
@@ -10,7 +10,7 @@
 
 @inject AdvertisementApiService AdvertisementApiService
 @inject AuthApiService AuthApiService
-@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 <PageTitle>HR INFO ADs - Find What You Need</PageTitle>
@@ -93,63 +93,101 @@
 
 
                 <!-- Sign In -->
-                <button type="button"
-                        class="header-login-button"
-                        @onclick="OpenLogin">
+                @if (isAuthenticated)
+{
+    <button type="button"
+            class="header-login-button"
+            @onclick="OpenAccount">
 
-                    <span class="action-icon">
+        <span class="action-icon">
 
-                        <svg viewBox="0 0 24 24"
-                             aria-hidden="true">
+            <svg viewBox="0 0 24 24"
+                 aria-hidden="true">
 
-                            <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
+                <circle cx="12"
+                        cy="8"
+                        r="4" />
 
-                            <path d="M10 12h10" />
+                <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
 
-                            <path d="m17 8 4 4-4 4" />
+            </svg>
 
-                        </svg>
+        </span>
 
-                    </span>
+        <span>
+            @currentUserName
+        </span>
 
-                    <span>
-                        Sign In
-                    </span>
+    </button>
 
-                </button>
+    <button type="button"
+            class="header-signup-button"
+            @onclick="HandleSignOut">
 
+        <span>
+            Sign Out
+        </span>
 
-                <!-- Sign Up -->
-                <button type="button"
-                        class="header-signup-button"
-                        @onclick="OpenSignup">
+    </button>
+}
+else
+{
+    <button type="button"
+            class="header-login-button"
+            @onclick="OpenLogin">
 
-                    <svg viewBox="0 0 24 24"
-                         aria-hidden="true">
+        <span class="action-icon">
 
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+            <svg viewBox="0 0 24 24"
+                 aria-hidden="true">
 
-                        <circle cx="9"
-                                cy="7"
-                                r="4" />
+                <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
 
-                        <path d="M19 8v6" />
+                <path d="M10 12h10" />
 
-                        <path d="M22 11h-6" />
+                <path d="m17 8 4 4-4 4" />
 
-                    </svg>
+            </svg>
 
-                    <span>
-                        Sign Up
-                    </span>
+        </span>
 
-                </button>
+        <span>
+            Sign In
+        </span>
+
+    </button>
+
+    <button type="button"
+            class="header-signup-button"
+            @onclick="OpenSignup">
+
+        <svg viewBox="0 0 24 24"
+             aria-hidden="true">
+
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+
+            <circle cx="9"
+                    cy="7"
+                    r="4" />
+
+            <path d="M19 8v6" />
+
+            <path d="M22 11h-6" />
+
+        </svg>
+
+        <span>
+            Sign Up
+        </span>
+
+    </button>
+}
 
 
                 <!-- Post Advertisement -->
                 <button type="button"
-                        class="post-ad-button"
-                        @onclick="OpenLogin">
+        class="post-ad-button"
+        @onclick="HandlePostAdvertisement">
 
                     <svg viewBox="0 0 24 24"
                          aria-hidden="true">
@@ -1456,21 +1494,30 @@
                     </h4>
 
 
-                    <button type="button"
-                            @onclick="OpenLogin">
+                   @if (isAuthenticated)
+{
+    <button type="button"
+            @onclick="OpenAccount">
+        My Account
+    </button>
 
-                        Sign In
+    <button type="button"
+            @onclick="HandleSignOut">
+        Sign Out
+    </button>
+}
+else
+{
+    <button type="button"
+            @onclick="OpenLogin">
+        Sign In
+    </button>
 
-                    </button>
-
-
-                    <button type="button"
-                            @onclick="OpenSignup">
-
-                        Create Account
-
-                    </button>
-
+    <button type="button"
+            @onclick="OpenSignup">
+        Sign Up
+    </button>
+}
 
                     <button type="button"
                             @onclick="OpenLogin">
@@ -2265,17 +2312,53 @@
 
     private readonly SignupModel signupModel = new();
 
+    private bool isAuthenticated;
+
+private string currentUserName = string.Empty;
+
 
     // ============================================================
     // INITIALIZE
     // ============================================================
 
     protected override async Task OnInitializedAsync()
+{
+    await LoadAuthenticationStateAsync();
+
+    await LoadAdvertisementsAsync();
+}
+
+
+private async Task LoadAuthenticationStateAsync()
+{
+    var authenticationState =
+        await AuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+
+    var user = authenticationState.User;
+
+    isAuthenticated =
+        user.Identity?.IsAuthenticated == true;
+
+    currentUserName =
+        user.Identity?.Name ?? string.Empty;
+}
+
+private void HandlePostAdvertisement()
+{
+    if (isAuthenticated)
     {
-        await LoadAdvertisementsAsync();
+        Navigation.NavigateTo("/my-ads/create");
+        return;
     }
 
+    OpenLogin();
+}
 
+private void OpenAccount()
+{
+    Navigation.NavigateTo("/account");
+}
     // ============================================================
     // LOAD ADVERTISEMENTS
     // ============================================================
@@ -2769,77 +2852,69 @@
     // ============================================================
 
     private async Task HandleLogin()
+{
+    errorMessage = null;
+    isLoginLoading = true;
+
+    try
     {
+        var result =
+            await AuthApiService.LoginAsync(
+                loginModel.Email,
+                loginModel.Password);
+
+        if (result is null)
+        {
+            errorMessage =
+                "Invalid email address or password.";
+
+            return;
+        }
+
+        if (!result.Success)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "Login failed. Please check your credentials."
+                    : result.Message;
+
+            return;
+        }
+
+        AuthenticationStateProvider.SignIn(
+            result.UserID,
+            result.UserName,
+            result.Email,
+            result.Roles,
+            result.Permissions,
+            result.AccessToken,
+            result.RefreshToken,
+            result.ExpiresAt);
+
+        isAuthenticated = true;
+        currentUserName = result.UserName;
+
+        showAuthModal = false;
         errorMessage = null;
+        showPassword = false;
 
-        isLoginLoading = true;
-
-        try
-        {
-            var result =
-                await AuthApiService.LoginAsync(
-                    loginModel.Email,
-                    loginModel.Password);
-
-
-            if (result is null)
-            {
-                errorMessage =
-                    "Invalid email address or password.";
-
-                return;
-            }
-
-
-            if (!result.Success)
-            {
-                errorMessage =
-                    string.IsNullOrWhiteSpace(
-                        result.Message)
-                            ? "Login failed. Please check your credentials."
-                            : result.Message;
-
-                return;
-            }
-
-
-            AuthenticationStateProvider.SignIn(
-                result.UserID,
-                result.UserName,
-                result.Email,
-                result.Roles,
-                result.Permissions,
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt);
-
-
-            showAuthModal = false;
-
-            errorMessage = null;
-
-            showPassword = false;
-
-
-            Navigation.NavigateTo("/");
-
-        }
-        catch (HttpRequestException)
-        {
-            errorMessage =
-                "Unable to connect to the authentication service. Please try again.";
-        }
-        catch
-        {
-            errorMessage =
-                "An unexpected error occurred while signing in.";
-        }
-        finally
-        {
-            isLoginLoading = false;
-        }
+        StateHasChanged();
     }
-
+    catch (HttpRequestException)
+    {
+        errorMessage =
+            "Unable to connect to the authentication service. Please try again.";
+    }
+    catch
+    {
+        errorMessage =
+            "An unexpected error occurred while signing in.";
+    }
+    finally
+    {
+        isLoginLoading = false;
+    }
+}
 
     // ============================================================
     // CLEAR LOGIN ERROR
@@ -2861,7 +2936,18 @@
             "Please contact the HR INFO ADs administrator to reset your password.";
     }
 
+private void HandleSignOut()
+{
+    AuthenticationStateProvider.SignOut();
 
+    isAuthenticated = false;
+    currentUserName = string.Empty;
+
+    showAuthModal = false;
+    errorMessage = null;
+    signupMessage = null;
+    showPassword = false;
+}
     // ============================================================
     // SIGN-UP REQUEST
     // ============================================================
