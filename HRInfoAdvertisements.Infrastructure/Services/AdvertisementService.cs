@@ -1,4 +1,5 @@
 using HRInfoAdvertisements.Application.DTOs.Advertisements;
+using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
@@ -215,6 +216,7 @@ public class AdvertisementService : IAdvertisementService
                 .Include(x => x.Category)
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
+                .Include(x => x.Images)
                 .Where(x =>
                     x.AdvertisementID == advertisementId);
 
@@ -272,6 +274,7 @@ public class AdvertisementService : IAdvertisementService
                 .Include(x => x.Category)
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
+                .Include(x => x.Images)
                 .Where(x =>
                     x.UserID == userId);
 
@@ -342,6 +345,7 @@ public class AdvertisementService : IAdvertisementService
                 .Include(x => x.Category)
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
+                .Include(x => x.Images)
                 .Where(x =>
                     x.Status.StatusCode == "PUBLISHED" &&
                     x.Status.IsActive);
@@ -954,7 +958,50 @@ public class AdvertisementService : IAdvertisementService
                 advertisement.CreatedDate,
 
             ModifiedDate =
-                advertisement.ModifiedDate
+                advertisement.ModifiedDate,
+
+            // ----------------------------------------------------
+            // Advertisement Images
+            // ----------------------------------------------------
+            // ContentType is intentionally not mapped here because
+            // AdvertisementImage does not contain a ContentType
+            // property and the database table does not have a
+            // ContentType column.
+            // ----------------------------------------------------
+
+            Images =
+                advertisement.Images
+                    .OrderBy(x => x.DisplayOrder)
+                    .Select(x => new AdvertisementImageResponse
+                    {
+                        AdvertisementImageID =
+                            x.AdvertisementImageID,
+
+                        AdvertisementID =
+                            x.AdvertisementID,
+
+                        FileName =
+                            x.FileName,
+
+                        FileURL =
+                            x.FileURL ?? string.Empty,
+
+                        ContentType =
+                            null,
+
+                        FileSize =
+                            x.FileSize,
+
+                        IsPrimary =
+                            x.IsPrimary,
+
+                        DisplayOrder =
+                            x.DisplayOrder,
+
+                        CreatedDate =
+                            x.CreatedDate
+                    })
+                    .ToList()
         };
     }
 }

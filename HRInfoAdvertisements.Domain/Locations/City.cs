@@ -4,8 +4,6 @@ public class City
 {
     public int CityID { get; set; }
 
-    public int CountryID { get; set; }
-
     public int? StateID { get; set; }
 
     public string CityName { get; set; } = string.Empty;
@@ -14,11 +12,10 @@ public class City
 
     public bool IsActive { get; set; } = true;
 
-    public Country Country { get; set; } = null!;
-
     public State? State { get; set; }
 
-    public ICollection<Area> Areas { get; set; } = new List<Area>();
+    public ICollection<Area> Areas { get; set; }
+        = new List<Area>();
 
     public ICollection<Advertisement> Advertisements { get; set; }
         = new List<Advertisement>();

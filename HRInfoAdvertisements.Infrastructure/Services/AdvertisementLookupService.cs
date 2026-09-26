@@ -90,14 +90,20 @@ public class AdvertisementLookupService
     {
         var query = _context.Cities
             .AsNoTracking()
-            .Where(x =>
-                x.IsActive &&
-                x.CountryID == countryId);
+            .Where(x => x.IsActive);
 
         if (stateId.HasValue)
         {
             query = query.Where(x =>
                 x.StateID == stateId.Value);
+        }
+        else
+        {
+            // If no state is selected, return cities
+            // belonging to states in the selected country.
+            query = query.Where(x =>
+                x.State != null &&
+                x.State.CountryID == countryId);
         }
 
         return await query
@@ -112,37 +118,42 @@ public class AdvertisementLookupService
     }
 
     public async Task<List<LookupItemResponse>>
-        GetAreasAsync(
-            int countryId,
-            int? stateId = null,
-            int? cityId = null)
+    GetAreasAsync(
+        int countryId,
+        int? stateId = null,
+        int? cityId = null)
+{
+    var query = _context.Areas
+        .AsNoTracking()
+        .Where(x => x.IsActive);
+
+    if (cityId.HasValue)
     {
-        var query = _context.Areas
-            .AsNoTracking()
-            .Where(x =>
-                x.IsActive &&
-                x.CountryID == countryId);
-
-        if (stateId.HasValue)
-        {
-            query = query.Where(x =>
-                x.StateID == stateId.Value);
-        }
-
-        if (cityId.HasValue)
-        {
-            query = query.Where(x =>
-                x.CityID == cityId.Value);
-        }
-
-        return await query
-            .OrderBy(x => x.AreaName)
-            .Select(x => new LookupItemResponse
-            {
-                ID = x.AreaID,
-                Name = x.AreaName,
-                NameAr = x.AreaNameAr
-            })
-            .ToListAsync();
+        query = query.Where(x =>
+            x.CityID == cityId.Value);
     }
+    else if (stateId.HasValue)
+    {
+        query = query.Where(x =>
+            x.City != null &&
+            x.City.StateID == stateId.Value);
+    }
+    else
+    {
+        query = query.Where(x =>
+            x.City != null &&
+            x.City.State != null &&
+            x.City.State.CountryID == countryId);
+    }
+
+    return await query
+        .OrderBy(x => x.AreaName)
+        .Select(x => new LookupItemResponse
+        {
+            ID = x.AreaID,
+            Name = x.AreaName,
+            NameAr = x.AreaNameAr
+        })
+        .ToListAsync();
+}
 }

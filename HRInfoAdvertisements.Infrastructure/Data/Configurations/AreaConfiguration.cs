@@ -19,16 +19,6 @@ public class AreaConfiguration : IEntityTypeConfiguration<Area>
         builder.Property(x => x.AreaNameAr)
             .HasMaxLength(150);
 
-        builder.HasOne(x => x.Country)
-            .WithMany(x => x.Areas)
-            .HasForeignKey(x => x.CountryID)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(x => x.State)
-            .WithMany(x => x.Areas)
-            .HasForeignKey(x => x.StateID)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.City)
             .WithMany(x => x.Areas)
             .HasForeignKey(x => x.CityID)
@@ -36,10 +26,9 @@ public class AreaConfiguration : IEntityTypeConfiguration<Area>
 
         builder.HasIndex(x => new
         {
-            x.CountryID,
-            x.StateID,
             x.CityID,
             x.AreaName
-        }).IsUnique();
+        })
+        .IsUnique();
     }
 }

@@ -6,15 +6,15 @@ public class AdvertisementVideo
 
     public long AdvertisementID { get; set; }
 
-    public string FileName { get; set; } = string.Empty;
+    public string? FileName { get; set; }
 
-    public string FileURL { get; set; } = string.Empty;
+    public string? S3Key { get; set; }
 
-    public string? StorageKey { get; set; }
+    public string? VideoURL { get; set; }
 
-    public string? ContentType { get; set; }
+    public string? ThumbnailURL { get; set; }
 
-    public long? FileSize { get; set; }
+    public int? DurationSeconds { get; set; }
 
     public int DisplayOrder { get; set; }
 

@@ -295,11 +295,12 @@ public class ProfileService : IProfileService
                 "User was not found.");
         }
 
-        // If this is the first address, automatically make it primary.
         var hasExistingAddress = await _context.UserAddresses
             .AnyAsync(x => x.UserID == userId);
 
-        var makePrimary = request.IsPrimary || !hasExistingAddress;
+        var makePrimary =
+            request.IsPrimary ||
+            !hasExistingAddress;
 
         if (makePrimary)
         {
@@ -331,7 +332,9 @@ public class ProfileService : IProfileService
 
         await _context.SaveChangesAsync();
 
-        return await GetAddressAsync(userId, address.UserAddressID)
+        return await GetAddressAsync(
+                userId,
+                address.UserAddressID)
             ?? throw new InvalidOperationException(
                 "The address could not be retrieved after creation.");
     }
@@ -379,8 +382,6 @@ public class ProfileService : IProfileService
         }
         else if (address.IsPrimary)
         {
-            // Do not allow an existing primary address to become
-            // non-primary without another primary address.
             throw new ArgumentException(
                 "The primary address cannot be unset. " +
                 "Set another address as primary instead.");
@@ -403,7 +404,9 @@ public class ProfileService : IProfileService
 
         await _context.SaveChangesAsync();
 
-        return await GetAddressAsync(userId, addressId);
+        return await GetAddressAsync(
+            userId,
+            addressId);
     }
 
     public async Task<bool> DeleteAddressAsync(
@@ -422,17 +425,19 @@ public class ProfileService : IProfileService
 
         if (address.IsPrimary)
         {
-            var replacementAddress = await _context.UserAddresses
-                .Where(x =>
-                    x.UserID == userId &&
-                    x.UserAddressID != addressId)
-                .OrderByDescending(x => x.CreatedDate)
-                .FirstOrDefaultAsync();
+            var replacementAddress =
+                await _context.UserAddresses
+                    .Where(x =>
+                        x.UserID == userId &&
+                        x.UserAddressID != addressId)
+                    .OrderByDescending(x => x.CreatedDate)
+                    .FirstOrDefaultAsync();
 
             if (replacementAddress != null)
             {
                 replacementAddress.IsPrimary = true;
-                replacementAddress.ModifiedDate = DateTime.UtcNow;
+                replacementAddress.ModifiedDate =
+                    DateTime.UtcNow;
             }
         }
 
@@ -484,46 +489,59 @@ public class ProfileService : IProfileService
         int? cityId,
         int? areaId)
     {
-        if (stateId.HasValue && !countryId.HasValue)
+        if (stateId.HasValue &&
+            !countryId.HasValue)
         {
             throw new ArgumentException(
                 "Country is required when State is specified.");
         }
 
-        if (cityId.HasValue && !stateId.HasValue)
+        if (cityId.HasValue &&
+            !stateId.HasValue)
         {
             throw new ArgumentException(
                 "State is required when City is specified.");
         }
 
-        if (areaId.HasValue && !cityId.HasValue)
+        if (areaId.HasValue &&
+            !cityId.HasValue)
         {
             throw new ArgumentException(
                 "City is required when Area is specified.");
         }
 
+        // --------------------------------------------------------
+        // Country
+        // --------------------------------------------------------
+
         if (countryId.HasValue)
         {
-            var country = await _context.Countries
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.CountryID == countryId.Value &&
-                    x.IsActive);
+            var countryExists =
+                await _context.Countries
+                    .AsNoTracking()
+                    .AnyAsync(x =>
+                        x.CountryID == countryId.Value &&
+                        x.IsActive);
 
-            if (country == null)
+            if (!countryExists)
             {
                 throw new ArgumentException(
                     "The selected country was not found or is inactive.");
             }
         }
 
+        // --------------------------------------------------------
+        // State
+        // --------------------------------------------------------
+
         if (stateId.HasValue)
         {
-            var state = await _context.States
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.StateID == stateId.Value &&
-                    x.IsActive);
+            var state =
+                await _context.States
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x =>
+                        x.StateID == stateId.Value &&
+                        x.IsActive);
 
             if (state == null)
             {
@@ -539,13 +557,34 @@ public class ProfileService : IProfileService
             }
         }
 
+        // --------------------------------------------------------
+        // City
+        //
+        // Cities do NOT have CountryID.
+        // The relationship is:
+        //
+        // City.StateID -> State.StateID
+        // State.CountryID -> Country.CountryID
+        // --------------------------------------------------------
+
         if (cityId.HasValue)
         {
-            var city = await _context.Cities
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.CityID == cityId.Value &&
-                    x.IsActive);
+            var city =
+                await _context.Cities
+                    .AsNoTracking()
+                    .Where(x =>
+                        x.CityID == cityId.Value &&
+                        x.IsActive)
+                    .Select(x => new
+                    {
+                        x.CityID,
+                        x.StateID,
+                        StateCountryID =
+                            x.State != null
+                                ? x.State.CountryID
+                                : (int?)null
+                    })
+                    .FirstOrDefaultAsync();
 
             if (city == null)
             {
@@ -553,56 +592,88 @@ public class ProfileService : IProfileService
                     "The selected city was not found or is inactive.");
             }
 
-            if (countryId.HasValue &&
-                city.CountryID != countryId.Value)
+            if (!city.StateID.HasValue)
             {
                 throw new ArgumentException(
-                    "The selected city does not belong to the selected country.");
+                    "The selected city is not associated with a state.");
             }
 
             if (stateId.HasValue &&
-                city.StateID != stateId.Value)
+                city.StateID.Value != stateId.Value)
             {
                 throw new ArgumentException(
                     "The selected city does not belong to the selected state.");
             }
-        }
-
-        if (areaId.HasValue)
-        {
-            var area = await _context.Areas
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x =>
-                    x.AreaID == areaId.Value &&
-                    x.IsActive);
-
-            if (area == null)
-            {
-                throw new ArgumentException(
-                    "The selected area was not found or is inactive.");
-            }
 
             if (countryId.HasValue &&
-                area.CountryID != countryId.Value)
+                city.StateCountryID != countryId.Value)
             {
                 throw new ArgumentException(
-                    "The selected area does not belong to the selected country.");
-            }
-
-            if (stateId.HasValue &&
-                area.StateID != stateId.Value)
-            {
-                throw new ArgumentException(
-                    "The selected area does not belong to the selected state.");
-            }
-
-            if (cityId.HasValue &&
-                area.CityID != cityId.Value)
-            {
-                throw new ArgumentException(
-                    "The selected area does not belong to the selected city.");
+                    "The selected city does not belong to the selected country.");
             }
         }
+
+        // --------------------------------------------------------
+        // Area
+        // --------------------------------------------------------
+
+        if (areaId.HasValue)
+{
+    var area =
+        await _context.Areas
+            .AsNoTracking()
+            .Where(x =>
+                x.AreaID == areaId.Value &&
+                x.IsActive)
+            .Select(x => new
+            {
+                x.AreaID,
+                x.CityID,
+                CityStateID =
+                    x.City != null
+                        ? x.City.StateID
+                        : (int?)null,
+                CityStateCountryID =
+                    x.City != null &&
+                    x.City.State != null
+                        ? x.City.State.CountryID
+                        : (int?)null
+            })
+            .FirstOrDefaultAsync();
+
+    if (area == null)
+    {
+        throw new ArgumentException(
+            "The selected area was not found or is inactive.");
+    }
+
+    if (cityId.HasValue &&
+        area.CityID != cityId.Value)
+    {
+        throw new ArgumentException(
+            "The selected area does not belong to the selected city.");
+    }
+
+    if (!area.CityStateID.HasValue)
+    {
+        throw new ArgumentException(
+            "The selected area is not associated with a state.");
+    }
+
+    if (stateId.HasValue &&
+        area.CityStateID.Value != stateId.Value)
+    {
+        throw new ArgumentException(
+            "The selected area does not belong to the selected state.");
+    }
+
+    if (countryId.HasValue &&
+        area.CityStateCountryID != countryId.Value)
+    {
+        throw new ArgumentException(
+            "The selected area does not belong to the selected country.");
+    }
+}
     }
 
     // ------------------------------------------------------------
@@ -662,13 +733,14 @@ public class ProfileService : IProfileService
         long userId,
         long? exceptAddressId = null)
     {
-        var primaryAddresses = await _context.UserAddresses
-            .Where(x =>
-                x.UserID == userId &&
-                x.IsPrimary &&
-                (!exceptAddressId.HasValue ||
-                 x.UserAddressID != exceptAddressId.Value))
-            .ToListAsync();
+        var primaryAddresses =
+            await _context.UserAddresses
+                .Where(x =>
+                    x.UserID == userId &&
+                    x.IsPrimary &&
+                    (!exceptAddressId.HasValue ||
+                     x.UserAddressID != exceptAddressId.Value))
+                .ToListAsync();
 
         foreach (var address in primaryAddresses)
         {

@@ -95,6 +95,38 @@
                 <!-- Sign In -->
                 @if (isAuthenticated)
 {
+    <!-- My Advertisements -->
+    <button type="button"
+            class="my-ads-header-button"
+            @onclick="OpenMyAdvertisements">
+
+        <span class="action-icon">
+
+            <svg viewBox="0 0 24 24"
+                 aria-hidden="true">
+
+                <path d="M4 5h16v12H4z" />
+
+                <path d="M8 21h8" />
+
+                <path d="M12 17v4" />
+
+                <path d="M8 9h8" />
+
+                <path d="M8 12h5" />
+
+            </svg>
+
+        </span>
+
+        <span>
+            My Advertisements
+        </span>
+
+    </button>
+
+
+    <!-- User Account -->
     <button type="button"
             class="header-login-button"
             @onclick="OpenAccount">
@@ -120,6 +152,8 @@
 
     </button>
 
+
+    <!-- Sign Out -->
     <button type="button"
             class="header-signup-button"
             @onclick="HandleSignOut">
@@ -1497,25 +1531,40 @@ else
                    @if (isAuthenticated)
 {
     <button type="button"
+            @onclick="OpenMyAdvertisements">
+
+        My Advertisements
+
+    </button>
+
+    <button type="button"
             @onclick="OpenAccount">
+
         My Account
+
     </button>
 
     <button type="button"
             @onclick="HandleSignOut">
+
         Sign Out
+
     </button>
 }
 else
 {
     <button type="button"
             @onclick="OpenLogin">
+
         Sign In
+
     </button>
 
     <button type="button"
             @onclick="OpenSignup">
+
         Sign Up
+
     </button>
 }
 
@@ -2359,6 +2408,11 @@ private void OpenAccount()
 {
     Navigation.NavigateTo("/account");
 }
+
+private void OpenMyAdvertisements()
+{
+    Navigation.NavigateTo("/my-ads");
+}
     // ============================================================
     // LOAD ADVERTISEMENTS
     // ============================================================
@@ -2890,6 +2944,14 @@ private void OpenAccount()
             result.AccessToken,
             result.RefreshToken,
             result.ExpiresAt);
+
+            Console.WriteLine(
+    $"HOME AFTER SIGN-IN TOKEN AVAILABLE: " +
+    $"{!string.IsNullOrWhiteSpace(AuthenticationStateProvider.AccessToken)}");
+
+Console.WriteLine(
+    $"HOME AFTER SIGN-IN TOKEN LENGTH: " +
+    $"{AuthenticationStateProvider.AccessToken?.Length ?? 0}");
 
         isAuthenticated = true;
         currentUserName = result.UserName;

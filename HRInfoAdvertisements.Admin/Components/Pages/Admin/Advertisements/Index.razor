@@ -1,0 +1,1917 @@
+@page "/admin/advertisements"
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Admin
+@using HRInfoAdvertisements.Application.Interfaces
+
+@inject IAdvertisementModerationService AdvertisementModerationService
+@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+<PageTitle>Advertisements | HR INFO ADs</PageTitle>
+
+<div class="hr-ad-management">
+
+    <!-- =========================================================
+         PAGE HEADER
+         ========================================================= -->
+
+    <div class="hr-ad-page-header">
+
+        <div class="hr-ad-page-heading">
+
+            <div class="hr-ad-page-icon">
+                <i class="bi bi-megaphone-fill"></i>
+            </div>
+
+            <div>
+                <h1>Advertisements</h1>
+
+                <p>
+                    Review, manage and moderate advertisements
+                    submitted by users.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="hr-ad-page-actions">
+
+            <button type="button"
+                    class="hr-ad-refresh-button"
+                    @onclick="LoadAdvertisementsAsync"
+                    disabled="@_isLoading">
+
+                <i class="bi @(_isLoading
+                    ? "bi-arrow-repeat hr-spin"
+                    : "bi-arrow-clockwise")"></i>
+
+                <span>Refresh</span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         SUMMARY
+         ========================================================= -->
+
+    <div class="hr-ad-summary-grid">
+
+        <!-- ALL -->
+
+        <button type="button"
+                class="hr-ad-summary-card @GetSummaryClass(null)"
+                @onclick='() => SetStatusFilter(null)'>
+
+            <div class="hr-ad-summary-icon all">
+                <i class="bi bi-grid-fill"></i>
+            </div>
+
+            <div class="hr-ad-summary-content">
+
+                <span class="hr-ad-summary-label">
+                    All Advertisements
+                </span>
+
+                <strong>
+                    @_advertisements.Count
+                </strong>
+
+            </div>
+
+        </button>
+
+
+        <!-- PENDING REVIEW -->
+
+        <button type="button"
+                class="hr-ad-summary-card @GetSummaryClass("PENDING_REVIEW")"
+                @onclick='() => SetStatusFilter("PENDING_REVIEW")'>
+
+            <div class="hr-ad-summary-icon pending">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+
+            <div class="hr-ad-summary-content">
+
+                <span class="hr-ad-summary-label">
+                    Pending Approval
+                </span>
+
+                <strong>
+                    @GetStatusCount("PENDING_REVIEW")
+                </strong>
+
+            </div>
+
+        </button>
+
+
+        <!-- PUBLISHED -->
+
+        <button type="button"
+                class="hr-ad-summary-card @GetSummaryClass("PUBLISHED")"
+                @onclick='() => SetStatusFilter("PUBLISHED")'>
+
+            <div class="hr-ad-summary-icon approved">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+
+            <div class="hr-ad-summary-content">
+
+                <span class="hr-ad-summary-label">
+                    Approved
+                </span>
+
+                <strong>
+                    @GetStatusCount("PUBLISHED")
+                </strong>
+
+            </div>
+
+        </button>
+
+
+        <!-- REJECTED -->
+
+        <button type="button"
+                class="hr-ad-summary-card @GetSummaryClass("REJECTED")"
+                @onclick='() => SetStatusFilter("REJECTED")'>
+
+            <div class="hr-ad-summary-icon rejected">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+
+            <div class="hr-ad-summary-content">
+
+                <span class="hr-ad-summary-label">
+                    Rejected
+                </span>
+
+                <strong>
+                    @GetStatusCount("REJECTED")
+                </strong>
+
+            </div>
+
+        </button>
+
+
+        <!-- SUSPENDED -->
+
+        <button type="button"
+                class="hr-ad-summary-card @GetSummaryClass("SUSPENDED")"
+                @onclick='() => SetStatusFilter("SUSPENDED")'>
+
+            <div class="hr-ad-summary-icon suspended">
+                <i class="bi bi-pause-circle-fill"></i>
+            </div>
+
+            <div class="hr-ad-summary-content">
+
+                <span class="hr-ad-summary-label">
+                    Suspended
+                </span>
+
+                <strong>
+                    @GetStatusCount("SUSPENDED")
+                </strong>
+
+            </div>
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================================================
+         FILTER BAR
+         ========================================================= -->
+
+    <div class="hr-ad-filter-card">
+
+        <div class="hr-ad-search-box">
+
+            <i class="bi bi-search"></i>
+
+            <input @bind="_searchText"
+                   @bind:event="oninput"
+                   @onkeydown="HandleSearchKeyDown"
+                   placeholder="Search by advertisement number, title or user..."
+                   type="text" />
+
+            @if (!string.IsNullOrWhiteSpace(_searchText))
+            {
+                <button type="button"
+                        class="hr-ad-search-clear"
+                        @onclick="ClearSearch">
+
+                    <i class="bi bi-x"></i>
+
+                </button>
+            }
+
+        </div>
+
+
+        <div class="hr-ad-filter-group">
+
+            <label>Status</label>
+
+            <select @bind="_statusFilter">
+
+                <option value="">
+                    All Statuses
+                </option>
+
+                <option value="PENDING_REVIEW">
+                    Pending Approval
+                </option>
+
+                <option value="PUBLISHED">
+                    Approved
+                </option>
+
+                <option value="REJECTED">
+                    Rejected
+                </option>
+
+                <option value="SUSPENDED">
+                    Suspended
+                </option>
+
+                <option value="DRAFT">
+                    Draft
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <button type="button"
+                class="hr-ad-filter-button"
+                @onclick="ApplyFiltersAsync"
+                disabled="@_isLoading">
+
+            <i class="bi bi-funnel-fill"></i>
+
+            Apply Filters
+
+        </button>
+
+
+        <button type="button"
+                class="hr-ad-reset-button"
+                @onclick="ResetFilters"
+                disabled="@_isLoading">
+
+            <i class="bi bi-arrow-counterclockwise"></i>
+
+            Reset
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================================================
+         SUCCESS MESSAGE
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(_successMessage))
+    {
+        <div class="hr-ad-alert hr-ad-alert-success">
+
+            <div class="hr-ad-alert-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+
+            <div class="hr-ad-alert-content">
+
+                <strong>
+                    Action completed
+                </strong>
+
+                <span>
+                    @_successMessage
+                </span>
+
+            </div>
+
+            <button type="button"
+                    @onclick="ClearMessages"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         ERROR MESSAGE
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <div class="hr-ad-alert hr-ad-alert-error">
+
+            <div class="hr-ad-alert-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="hr-ad-alert-content">
+
+                <strong>
+                    Unable to process request
+                </strong>
+
+                <span>
+                    @_errorMessage
+                </span>
+
+            </div>
+
+            <button type="button"
+                    @onclick="ClearMessages"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         TABLE
+         ========================================================= -->
+
+    <div class="hr-ad-table-card">
+
+        <div class="hr-ad-table-header">
+
+            <div>
+
+                <h2>
+                    Advertisement List
+                </h2>
+
+                <span>
+                    @GetResultDescription()
+                </span>
+
+            </div>
+
+        </div>
+
+
+        @if (_isLoading)
+        {
+            <div class="hr-ad-loading">
+
+                <div class="hr-ad-loading-spinner">
+                    <i class="bi bi-arrow-repeat hr-spin"></i>
+                </div>
+
+                <strong>
+                    Loading advertisements...
+                </strong>
+
+                <span>
+                    Please wait while the latest records are retrieved.
+                </span>
+
+            </div>
+        }
+        else if (_advertisements.Count == 0)
+        {
+            <div class="hr-ad-empty">
+
+                <div class="hr-ad-empty-icon">
+                    <i class="bi bi-megaphone"></i>
+                </div>
+
+                <h3>
+                    No advertisements found
+                </h3>
+
+                <p>
+                    There are no advertisements matching the
+                    current search and filter criteria.
+                </p>
+
+                <button type="button"
+                        @onclick="ResetFilters">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                    Clear Filters
+
+                </button>
+
+            </div>
+        }
+        else
+        {
+            <div class="hr-ad-table-wrapper">
+
+                <table class="hr-ad-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="col-number">
+                                Advertisement
+                            </th>
+
+                            <th class="col-title">
+                                Details
+                            </th>
+
+                            <th>
+                                User
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Price
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th class="col-actions">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var advertisement in _advertisements)
+                        {
+                            <tr @key="advertisement.AdvertisementID">
+
+                                <!-- ADVERTISEMENT -->
+
+                                <td>
+
+                                    <div class="hr-ad-number">
+
+                                        <span class="hr-ad-number-icon">
+                                            <i class="bi bi-megaphone-fill"></i>
+                                        </span>
+
+                                        <div>
+
+                                            <strong>
+                                                @advertisement.AdvertisementNumber
+                                            </strong>
+
+                                            <small>
+                                                ID @advertisement.AdvertisementID
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- DETAILS -->
+
+                                <td>
+
+                                    <div class="hr-ad-title-cell">
+
+                                        <strong title="@advertisement.Title">
+                                            @advertisement.Title
+                                        </strong>
+
+                                        <span>
+                                            @advertisement.AdvertisementTypeName
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- USER -->
+
+                                <td>
+
+                                    <div class="hr-ad-user-cell">
+
+                                        <div class="hr-ad-user-avatar">
+                                            @GetInitials(advertisement.UserName)
+                                        </div>
+
+                                        <div>
+
+                                            <strong>
+                                                @advertisement.UserName
+                                            </strong>
+
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                advertisement.Email))
+                                            {
+                                                <small>
+                                                    @advertisement.Email
+                                                </small>
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- CATEGORY -->
+
+                                <td>
+
+                                    <span class="hr-ad-category">
+                                        @advertisement.CategoryName
+                                    </span>
+
+                                </td>
+
+
+                                <!-- PRICE -->
+
+                                <td>
+
+                                    <span class="hr-ad-price">
+                                        @FormatPrice(
+                                            advertisement.Price,
+                                            advertisement.CurrencyCode)
+                                    </span>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="@GetStatusBadgeClass(
+                                        advertisement.StatusCode)">
+
+                                        <span class="hr-ad-status-dot"></span>
+
+                                        @GetStatusDisplayName(advertisement)
+
+                                    </span>
+
+                                </td>
+
+
+                                <!-- CREATED -->
+
+                                <td>
+
+                                    <div class="hr-ad-date">
+    <strong>
+        @(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))
+    </strong>
+
+    <small>
+        @(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))
+    </small>
+</div>
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td>
+
+                                    <div class="hr-ad-row-actions">
+
+                                        <!-- VIEW -->
+
+                                        <button type="button"
+                                                class="hr-ad-action view"
+                                                title="View advertisement"
+                                                @onclick="() => ViewAdvertisement(
+                                                    advertisement.AdvertisementID)">
+
+                                            <i class="bi bi-eye-fill"></i>
+
+                                        </button>
+
+
+                                        <!-- PENDING ACTIONS -->
+
+                                        @if (IsPending(advertisement))
+                                        {
+                                            <button type="button"
+                                                    class="hr-ad-action approve"
+                                                    title="Approve advertisement"
+                                                    disabled="@IsAdvertisementProcessing(
+                                                        advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenApproveModal(
+                                                        advertisement)">
+
+                                                <i class="bi bi-check-lg"></i>
+
+                                            </button>
+
+
+                                            <button type="button"
+                                                    class="hr-ad-action reject"
+                                                    title="Reject advertisement"
+                                                    disabled="@IsAdvertisementProcessing(
+                                                        advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenRejectModal(
+                                                        advertisement)">
+
+                                                <i class="bi bi-x-lg"></i>
+
+                                            </button>
+                                        }
+
+
+                                        <!-- PUBLISHED ACTION -->
+
+                                        @if (IsApproved(advertisement))
+                                        {
+                                            <button type="button"
+                                                    class="hr-ad-action suspend"
+                                                    title="Suspend advertisement"
+                                                    disabled="@IsAdvertisementProcessing(
+                                                        advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenSuspendModal(
+                                                        advertisement)">
+
+                                                <i class="bi bi-pause-fill"></i>
+
+                                            </button>
+                                        }
+
+
+                                        <!-- SUSPENDED ACTION -->
+
+                                        @if (IsSuspended(advertisement))
+                                        {
+                                            <button type="button"
+                                                    class="hr-ad-action reactivate"
+                                                    title="Reactivate advertisement"
+                                                    disabled="@IsAdvertisementProcessing(
+                                                        advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenReactivateModal(
+                                                        advertisement)">
+
+                                                <i class="bi bi-play-fill"></i>
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<!-- =============================================================
+     MODERATION MODAL
+     ============================================================= -->
+
+@if (_showModerationModal)
+{
+    <div class="hr-ad-modal-backdrop"
+         @onclick="HandleModalBackdropClick">
+
+        <div class="hr-ad-modal"
+             @onclick:stopPropagation="true">
+
+            <!-- MODAL HEADER -->
+
+            <div class="hr-ad-modal-header">
+
+                <div class="hr-ad-modal-title">
+
+                    <div class="hr-ad-modal-icon @GetModalIconClass()">
+                        <i class="@GetModalIcon()"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            @GetModalTitle()
+                        </h3>
+
+                        <span>
+                            @_selectedAdvertisement?.AdvertisementNumber
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <button type="button"
+                        class="hr-ad-modal-close"
+                        disabled="@_isModerationProcessing"
+                        @onclick="CloseModerationModal">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+
+            <!-- MODAL BODY -->
+
+            <div class="hr-ad-modal-body">
+
+                @if (_selectedAdvertisement is not null)
+                {
+                    <div class="hr-ad-modal-advertisement">
+
+                        <div class="hr-ad-modal-ad-icon">
+                            <i class="bi bi-megaphone-fill"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                @_selectedAdvertisement.Title
+                            </strong>
+
+                            <span>
+                                @_selectedAdvertisement.UserName
+                            </span>
+
+                        </div>
+
+                    </div>
+                }
+
+
+                <!-- REJECTION REASON -->
+
+                @if (_moderationAction == ModerationAction.Reject)
+                {
+                    <div class="hr-ad-modal-field">
+
+                        <label>
+                            Rejection Reason
+                            <span>*</span>
+                        </label>
+
+                        <select @bind="_selectedRejectionReasonId"
+                                disabled="@_isModerationProcessing">
+
+                            <option value="">
+                                Select a rejection reason
+                            </option>
+
+                            @foreach (var reason in _rejectionReasons)
+                            {
+                                if (reason.IsActive)
+                                {
+                                    <option value="@reason.RejectionReasonID">
+                                        @reason.ReasonName
+                                    </option>
+                                }
+                            }
+
+                        </select>
+
+                        @if (_showValidationMessage &&
+                             !_selectedRejectionReasonId.HasValue)
+                        {
+                            <small class="hr-ad-modal-validation">
+                                Please select a rejection reason.
+                            </small>
+                        }
+
+                    </div>
+                }
+
+
+                <!-- COMMENTS -->
+
+                <div class="hr-ad-modal-field">
+
+                    <label>
+
+                        Comments
+
+                        @if (_moderationAction == ModerationAction.Reject)
+                        {
+                            <span class="hr-ad-optional">
+                                Optional
+                            </span>
+                        }
+
+                    </label>
+
+                    <textarea @bind="_moderationComments"
+                              disabled="@_isModerationProcessing"
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="@GetCommentsPlaceholder()"></textarea>
+
+                    <div class="hr-ad-character-count">
+                        @_moderationComments.Length / 1000
+                    </div>
+
+                </div>
+
+
+                <!-- INFORMATION -->
+
+                @if (_moderationAction == ModerationAction.Approve)
+                {
+                    <div class="hr-ad-modal-information approve">
+
+                        <i class="bi bi-info-circle-fill"></i>
+
+                        <span>
+                            This advertisement will be approved and made
+                            available according to its configured publishing
+                            rules.
+                        </span>
+
+                    </div>
+                }
+                else if (_moderationAction == ModerationAction.Reject)
+                {
+                    <div class="hr-ad-modal-information reject">
+
+                        <i class="bi bi-exclamation-circle-fill"></i>
+
+                        <span>
+                            The advertisement will be marked as rejected.
+                            The selected reason will be recorded in the
+                            moderation history.
+                        </span>
+
+                    </div>
+                }
+                else if (_moderationAction == ModerationAction.Suspend)
+                {
+                    <div class="hr-ad-modal-information suspend">
+
+                        <i class="bi bi-pause-circle-fill"></i>
+
+                        <span>
+                            The advertisement will be suspended and will no
+                            longer be available as an active advertisement.
+                        </span>
+
+                    </div>
+                }
+                else if (_moderationAction == ModerationAction.Reactivate)
+                {
+                    <div class="hr-ad-modal-information reactivate">
+
+                        <i class="bi bi-play-circle-fill"></i>
+
+                        <span>
+                            The advertisement will be reactivated.
+                        </span>
+
+                    </div>
+                }
+
+            </div>
+
+
+            <!-- MODAL FOOTER -->
+
+            <div class="hr-ad-modal-footer">
+
+                <button type="button"
+                        class="hr-ad-modal-cancel"
+                        disabled="@_isModerationProcessing"
+                        @onclick="CloseModerationModal">
+
+                    Cancel
+
+                </button>
+
+
+                <button type="button"
+                        class="hr-ad-modal-confirm @GetModalConfirmClass()"
+                        disabled="@_isModerationProcessing"
+                        @onclick="ExecuteModerationAsync">
+
+                    @if (_isModerationProcessing)
+                    {
+                        <i class="bi bi-arrow-repeat hr-spin"></i>
+
+                        <span>
+                            Processing...
+                        </span>
+                    }
+                    else
+                    {
+                        <i class="@GetModalIcon()"></i>
+
+                        <span>
+                            @GetModalConfirmText()
+                        </span>
+                    }
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
+@code {
+
+    // =============================================================
+    // DATA
+    // =============================================================
+
+    private List<AdminAdvertisementListResponse>
+        _advertisements = new();
+
+    private List<RejectionReasonResponse>
+        _rejectionReasons = new();
+
+
+    // =============================================================
+    // FILTERS
+    // =============================================================
+
+    private string _searchText = string.Empty;
+
+    private string? _statusFilter;
+
+
+    // =============================================================
+    // PAGE STATE
+    // =============================================================
+
+    private bool _isLoading;
+
+    private bool _isModerationProcessing;
+
+    private string? _errorMessage;
+
+    private string? _successMessage;
+
+
+    // =============================================================
+    // MODERATION STATE
+    // =============================================================
+
+    private AdminAdvertisementListResponse?
+        _selectedAdvertisement;
+
+    private ModerationAction _moderationAction =
+        ModerationAction.None;
+
+    private long? _selectedRejectionReasonId;
+
+    private string _moderationComments =
+        string.Empty;
+
+    private bool _showModerationModal;
+
+    private bool _showValidationMessage;
+
+
+    // =============================================================
+    // INITIALIZATION
+    // =============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAdvertisementsAsync();
+    }
+
+
+    // =============================================================
+    // LOAD
+    // =============================================================
+
+    private async Task LoadAdvertisementsAsync()
+    {
+        if (_isLoading)
+        {
+            return;
+        }
+
+        try
+        {
+            _isLoading = true;
+
+            _errorMessage = null;
+
+            var result =
+                await AdvertisementModerationService
+                    .GetAdvertisementsAsync(
+                        statusCode:
+                            string.IsNullOrWhiteSpace(
+                                _statusFilter)
+                                ? null
+                                : _statusFilter.Trim(),
+
+                        search:
+                            string.IsNullOrWhiteSpace(
+                                _searchText)
+                                ? null
+                                : _searchText.Trim(),
+
+                        pageNumber: 1,
+
+                        pageSize: 500);
+
+            _advertisements =
+                result ??
+                new List<AdminAdvertisementListResponse>();
+        }
+        catch (Exception ex)
+        {
+            _advertisements.Clear();
+
+            _errorMessage =
+                ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+
+    // =============================================================
+    // FILTER ACTIONS
+    // =============================================================
+
+    private async Task ApplyFiltersAsync()
+    {
+        await LoadAdvertisementsAsync();
+    }
+
+
+    private async Task ResetFilters()
+    {
+        _searchText = string.Empty;
+
+        _statusFilter = null;
+
+        await LoadAdvertisementsAsync();
+    }
+
+
+    private async Task ClearSearch()
+    {
+        _searchText = string.Empty;
+
+        await LoadAdvertisementsAsync();
+    }
+
+
+    private async Task HandleSearchKeyDown(
+        KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await LoadAdvertisementsAsync();
+        }
+    }
+
+
+    private async Task SetStatusFilter(
+        string? status)
+    {
+        _statusFilter = status;
+
+        await LoadAdvertisementsAsync();
+    }
+
+
+    // =============================================================
+    // SUMMARY
+    // =============================================================
+
+    private string GetSummaryClass(
+        string? status)
+    {
+        return string.Equals(
+            _statusFilter,
+            status,
+            StringComparison.OrdinalIgnoreCase)
+            ? "selected"
+            : string.Empty;
+    }
+
+
+    private int GetStatusCount(
+        string statusCode)
+    {
+        return _advertisements.Count(
+            x => string.Equals(
+                x.StatusCode,
+                statusCode,
+                StringComparison.OrdinalIgnoreCase));
+    }
+
+
+    // =============================================================
+    // STATUS HELPERS
+    // =============================================================
+
+    private static bool IsPending(
+        AdminAdvertisementListResponse advertisement)
+    {
+        return string.Equals(
+            advertisement.StatusCode,
+            "PENDING_REVIEW",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private static bool IsApproved(
+        AdminAdvertisementListResponse advertisement)
+    {
+        return string.Equals(
+            advertisement.StatusCode,
+            "PUBLISHED",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private static bool IsSuspended(
+        AdminAdvertisementListResponse advertisement)
+    {
+        return string.Equals(
+            advertisement.StatusCode,
+            "SUSPENDED",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private static string GetStatusBadgeClass(
+        string? statusCode)
+    {
+        return statusCode?
+            .Trim()
+            .ToUpperInvariant() switch
+        {
+            "PENDING_REVIEW" =>
+                "hr-ad-status pending",
+
+            "PUBLISHED" =>
+                "hr-ad-status approved",
+
+            "REJECTED" =>
+                "hr-ad-status rejected",
+
+            "SUSPENDED" =>
+                "hr-ad-status suspended",
+
+            "DRAFT" =>
+                "hr-ad-status draft",
+
+            _ =>
+                "hr-ad-status"
+        };
+    }
+
+
+    private static string GetStatusDisplayName(
+        AdminAdvertisementListResponse advertisement)
+    {
+        if (!string.IsNullOrWhiteSpace(
+            advertisement.StatusName))
+        {
+            return advertisement.StatusName;
+        }
+
+        return advertisement.StatusCode switch
+        {
+            "PENDING_REVIEW" =>
+                "Pending Approval",
+
+            "PUBLISHED" =>
+                "Approved",
+
+            "REJECTED" =>
+                "Rejected",
+
+            "SUSPENDED" =>
+                "Suspended",
+
+            "DRAFT" =>
+                "Draft",
+
+            _ =>
+                advertisement.StatusCode
+        };
+    }
+
+
+    private static string GetFriendlyStatusName(
+        string? statusCode)
+    {
+        return statusCode?
+            .Trim()
+            .ToUpperInvariant() switch
+        {
+            "PENDING_REVIEW" =>
+                "pending approval",
+
+            "PUBLISHED" =>
+                "approved",
+
+            "REJECTED" =>
+                "rejected",
+
+            "SUSPENDED" =>
+                "suspended",
+
+            "DRAFT" =>
+                "draft",
+
+            _ =>
+                "advertisement"
+        };
+    }
+
+
+    // =============================================================
+    // DISPLAY HELPERS
+    // =============================================================
+
+    private static string FormatPrice(
+        decimal? price,
+        string? currency)
+    {
+        if (!price.HasValue)
+        {
+            return "—";
+        }
+
+        var currencyCode =
+            string.IsNullOrWhiteSpace(currency)
+                ? "BHD"
+                : currency.Trim();
+
+        return $"{price.Value:N3} {currencyCode}";
+    }
+
+
+    private static string GetInitials(
+        string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "?";
+        }
+
+        var parts =
+            name.Trim()
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0]
+                .Substring(
+                    0,
+                    Math.Min(
+                        2,
+                        parts[0].Length))
+                .ToUpperInvariant();
+        }
+
+        return string.Concat(
+                parts[0][0],
+                parts[^1][0])
+            .ToUpperInvariant();
+    }
+
+
+    private string GetResultDescription()
+    {
+        if (!string.IsNullOrWhiteSpace(
+            _searchText))
+        {
+            return $"{_advertisements.Count} result(s) for \"{_searchText}\"";
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            _statusFilter))
+        {
+            return $"{_advertisements.Count} {GetFriendlyStatusName(_statusFilter)} advertisement(s)";
+        }
+
+        return $"{_advertisements.Count} advertisement(s)";
+    }
+
+
+    // =============================================================
+    // NAVIGATION
+    // =============================================================
+
+    private void ViewAdvertisement(
+        long advertisementId)
+    {
+        Navigation.NavigateTo(
+            $"/admin/advertisements/{advertisementId}");
+    }
+
+
+    // =============================================================
+    // MODERATION - OPEN MODALS
+    // =============================================================
+
+    private void OpenApproveModal(
+        AdminAdvertisementListResponse advertisement)
+    {
+        OpenModerationModal(
+            advertisement,
+            ModerationAction.Approve);
+    }
+
+
+    private async Task OpenRejectModal(
+        AdminAdvertisementListResponse advertisement)
+    {
+        var loaded =
+            await EnsureRejectionReasonsLoadedAsync();
+
+        if (!loaded)
+        {
+            return;
+        }
+
+        OpenModerationModal(
+            advertisement,
+            ModerationAction.Reject);
+    }
+
+
+    private void OpenSuspendModal(
+        AdminAdvertisementListResponse advertisement)
+    {
+        OpenModerationModal(
+            advertisement,
+            ModerationAction.Suspend);
+    }
+
+
+    private void OpenReactivateModal(
+        AdminAdvertisementListResponse advertisement)
+    {
+        OpenModerationModal(
+            advertisement,
+            ModerationAction.Reactivate);
+    }
+
+
+    private void OpenModerationModal(
+        AdminAdvertisementListResponse advertisement,
+        ModerationAction action)
+    {
+        _selectedAdvertisement =
+            advertisement;
+
+        _moderationAction =
+            action;
+
+        _selectedRejectionReasonId =
+            null;
+
+        _moderationComments =
+            string.Empty;
+
+        _showValidationMessage =
+            false;
+
+        _errorMessage =
+            null;
+
+        _successMessage =
+            null;
+
+        _showModerationModal =
+            true;
+    }
+
+
+    private void CloseModerationModal()
+{
+    _showModerationModal = false;
+
+    _selectedAdvertisement = null;
+
+    _moderationAction =
+        ModerationAction.None;
+
+    _selectedRejectionReasonId = null;
+
+    _moderationComments =
+        string.Empty;
+
+    _showValidationMessage = false;
+}
+
+    // =============================================================
+    // REJECTION REASONS
+    // =============================================================
+
+    private async Task<bool>
+        EnsureRejectionReasonsLoadedAsync()
+    {
+        if (_rejectionReasons.Count > 0)
+        {
+            return true;
+        }
+
+        try
+        {
+            _errorMessage = null;
+
+            _rejectionReasons =
+                await AdvertisementModerationService
+                    .GetRejectionReasonsAsync()
+                ?? new List<RejectionReasonResponse>();
+
+            if (_rejectionReasons.Count == 0)
+            {
+                _errorMessage =
+                    "No active rejection reasons are configured. Please configure at least one rejection reason before rejecting an advertisement.";
+
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _rejectionReasons.Clear();
+
+            _errorMessage =
+                $"Unable to load rejection reasons: {ex.Message}";
+
+            return false;
+        }
+    }
+
+
+    // =============================================================
+    // EXECUTE MODERATION
+    // =============================================================
+
+    private async Task ExecuteModerationAsync()
+    {
+        if (_selectedAdvertisement is null ||
+            _isModerationProcessing)
+        {
+            return;
+        }
+
+        if (_moderationAction ==
+                ModerationAction.Reject &&
+            !_selectedRejectionReasonId.HasValue)
+        {
+            _showValidationMessage =
+                true;
+
+            return;
+        }
+
+        var adminUserId =
+            GetCurrentAdminUserId();
+
+        if (!adminUserId.HasValue)
+        {
+            _errorMessage =
+                "The current administrator identity could not be determined. Please sign in again.";
+
+            return;
+        }
+
+        try
+        {
+            _isModerationProcessing =
+                true;
+
+            _errorMessage =
+                null;
+
+            _successMessage =
+                null;
+
+            var advertisementId =
+                _selectedAdvertisement.AdvertisementID;
+
+            var success =
+                false;
+
+            switch (_moderationAction)
+            {
+                case ModerationAction.Approve:
+
+                    success =
+                        await AdvertisementModerationService
+                            .ApproveAdvertisementAsync(
+                                adminUserId.Value,
+                                advertisementId,
+                                new ApproveAdvertisementRequest
+                                {
+                                    Comments =
+                                        NormalizeComments(
+                                            _moderationComments)
+                                });
+
+                    break;
+
+
+                case ModerationAction.Reject:
+
+                    success =
+                        await AdvertisementModerationService
+                            .RejectAdvertisementAsync(
+                                adminUserId.Value,
+                                advertisementId,
+                                new RejectAdvertisementRequest
+                                {
+                                    RejectionReasonID =
+                                        _selectedRejectionReasonId,
+
+                                    Comments =
+                                        NormalizeComments(
+                                            _moderationComments)
+                                });
+
+                    break;
+
+
+                case ModerationAction.Suspend:
+
+                    success =
+                        await AdvertisementModerationService
+                            .SuspendAdvertisementAsync(
+                                adminUserId.Value,
+                                advertisementId,
+                                new SuspendAdvertisementRequest
+                                {
+                                    Comments =
+                                        NormalizeComments(
+                                            _moderationComments)
+                                });
+
+                    break;
+
+
+                case ModerationAction.Reactivate:
+
+                    success =
+                        await AdvertisementModerationService
+                            .ReactivateAdvertisementAsync(
+                                adminUserId.Value,
+                                advertisementId,
+                                NormalizeComments(
+                                    _moderationComments));
+
+                    break;
+            }
+
+
+            if (!success)
+            {
+                _errorMessage =
+                    $"The {GetModalActionName().ToLowerInvariant()} operation was not completed. The advertisement may have changed or the operation may have been rejected by the server.";
+
+                return;
+            }
+
+
+            var actionName =
+                GetModalActionName();
+
+            var advertisementNumber =
+                _selectedAdvertisement
+                    .AdvertisementNumber;
+
+
+            CloseModerationModal();
+
+
+            _successMessage =
+                $"{actionName} completed successfully for advertisement {advertisementNumber}.";
+
+
+            await LoadAdvertisementsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage =
+                ex.Message;
+        }
+        finally
+        {
+            _isModerationProcessing =
+                false;
+        }
+    }
+
+
+    // =============================================================
+    // AUTHENTICATION
+    // =============================================================
+
+    private long? GetCurrentAdminUserId()
+    {
+        var user =
+            GetCurrentPrincipal();
+
+        var value =
+            user.FindFirstValue(
+                ClaimTypes.NameIdentifier);
+
+        if (long.TryParse(
+            value,
+            out var userId))
+        {
+            return userId;
+        }
+
+        return null;
+    }
+
+
+    private ClaimsPrincipal GetCurrentPrincipal()
+    {
+        return AuthenticationStateProvider
+            .GetAuthenticationStateAsync()
+            .GetAwaiter()
+            .GetResult()
+            .User;
+    }
+
+
+    // =============================================================
+    // MODERATION HELPERS
+    // =============================================================
+
+    private static string NormalizeComments(
+        string? comments)
+    {
+        return string.IsNullOrWhiteSpace(comments)
+            ? string.Empty
+            : comments.Trim();
+    }
+
+
+    private bool IsAdvertisementProcessing(
+        long advertisementId)
+    {
+        return _isModerationProcessing &&
+               _selectedAdvertisement?
+                   .AdvertisementID ==
+               advertisementId;
+    }
+
+
+    private string GetModalTitle()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approve Advertisement",
+
+            ModerationAction.Reject =>
+                "Reject Advertisement",
+
+            ModerationAction.Suspend =>
+                "Suspend Advertisement",
+
+            ModerationAction.Reactivate =>
+                "Reactivate Advertisement",
+
+            _ =>
+                "Advertisement Moderation"
+        };
+    }
+
+
+    private string GetModalActionName()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approval",
+
+            ModerationAction.Reject =>
+                "Rejection",
+
+            ModerationAction.Suspend =>
+                "Suspension",
+
+            ModerationAction.Reactivate =>
+                "Reactivation",
+
+            _ =>
+                "Moderation"
+        };
+    }
+
+
+    private string GetModalConfirmText()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approve",
+
+            ModerationAction.Reject =>
+                "Reject",
+
+            ModerationAction.Suspend =>
+                "Suspend",
+
+            ModerationAction.Reactivate =>
+                "Reactivate",
+
+            _ =>
+                "Confirm"
+        };
+    }
+
+
+    private string GetModalIcon()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "bi bi-check-lg",
+
+            ModerationAction.Reject =>
+                "bi bi-x-lg",
+
+            ModerationAction.Suspend =>
+                "bi bi-pause-fill",
+
+            ModerationAction.Reactivate =>
+                "bi bi-play-fill",
+
+            _ =>
+                "bi bi-check-lg"
+        };
+    }
+
+
+    private string GetModalIconClass()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "approve",
+
+            ModerationAction.Reject =>
+                "reject",
+
+            ModerationAction.Suspend =>
+                "suspend",
+
+            ModerationAction.Reactivate =>
+                "reactivate",
+
+            _ =>
+                string.Empty
+        };
+    }
+
+
+    private string GetModalConfirmClass()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "approve",
+
+            ModerationAction.Reject =>
+                "reject",
+
+            ModerationAction.Suspend =>
+                "suspend",
+
+            ModerationAction.Reactivate =>
+                "reactivate",
+
+            _ =>
+                string.Empty
+        };
+    }
+
+
+    private string GetCommentsPlaceholder()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Optional approval comments...",
+
+            ModerationAction.Reject =>
+                "Optional comments about the rejection...",
+
+            ModerationAction.Suspend =>
+                "Enter the reason or comments for suspending this advertisement...",
+
+            ModerationAction.Reactivate =>
+                "Optional comments about reactivating this advertisement...",
+
+            _ =>
+                "Enter comments..."
+        };
+    }
+
+
+    // =============================================================
+    // MODAL EVENTS
+    // =============================================================
+
+    private void HandleModalBackdropClick(
+        MouseEventArgs _)
+    {
+        if (!_isModerationProcessing)
+        {
+            CloseModerationModal();
+        }
+    }
+
+
+    private void ClearMessages()
+    {
+        _errorMessage = null;
+
+        _successMessage = null;
+    }
+
+
+    // =============================================================
+    // ENUM
+    // =============================================================
+
+    private enum ModerationAction
+    {
+        None,
+
+        Approve,
+
+        Reject,
+
+        Suspend,
+
+        Reactivate
+    }
+}

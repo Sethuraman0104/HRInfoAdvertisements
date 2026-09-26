@@ -122,6 +122,59 @@ public class AdvertisementController : ControllerBase
     }
 
     // ============================================================
+// SET PRIMARY IMAGE
+// ============================================================
+
+[HttpPut("{advertisementId:long}/media/images/{imageId:long}/primary")]
+[Authorize]
+public async Task<IActionResult> SetPrimaryImage(
+    long advertisementId,
+    long imageId,
+    [FromServices] IAdvertisementMediaService mediaService)
+{
+    if (!TryGetUserId(out var userId))
+    {
+        return Unauthorized(new
+        {
+            Success = false,
+            Message = "Invalid user identity."
+        });
+    }
+
+    try
+    {
+        var result =
+            await mediaService.SetPrimaryImageAsync(
+                userId,
+                advertisementId,
+                imageId);
+
+        if (!result)
+        {
+            return NotFound(new
+            {
+                Success = false,
+                Message = "Advertisement image not found."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Main advertisement photo updated successfully."
+        });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
+
+    // ============================================================
     // CREATE
     // ============================================================
 

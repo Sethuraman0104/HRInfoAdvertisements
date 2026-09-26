@@ -13,6 +13,17 @@ public class ApprovalRequestConfiguration
 
         builder.HasKey(x => x.ApprovalRequestID);
 
+        // Database column mappings
+        builder.Property(x => x.SubmittedByUserID)
+            .HasColumnName("SubmittedBy")
+            .IsRequired();
+
+        builder.Property(x => x.AssignedToUserID)
+            .HasColumnName("AssignedTo");
+
+        builder.Property(x => x.CompletedDate)
+            .HasColumnName("ReviewedDate");
+
         builder.Property(x => x.Status)
             .HasMaxLength(30)
             .IsRequired();

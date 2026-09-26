@@ -1,3 +1,5 @@
+using System.Net.Mime;
+
 using HRInfoAdvertisements.Application.DTOs.Admin;
 using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
 using HRInfoAdvertisements.Application.Interfaces;
@@ -30,97 +32,114 @@ public class AdvertisementModerationService
             int pageNumber = 1,
             int pageSize = 20)
     {
-        pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        pageSize = pageSize < 1 ? 20 : Math.Min(pageSize, 100);
+        pageNumber =
+            pageNumber < 1
+                ? 1
+                : pageNumber;
 
-        var query = _context.Advertisements
-            .AsNoTracking()
-            .Include(x => x.Category)
-            .Include(x => x.AdvertisementType)
-            .Include(x => x.Status)
-            .Include(x => x.User)
-            .AsQueryable();
+        pageSize =
+            pageSize < 1
+                ? 20
+                : Math.Min(pageSize, 100);
+
+        var query =
+            _context.Advertisements
+                .AsNoTracking()
+                .Include(x => x.Category)
+                .Include(x => x.AdvertisementType)
+                .Include(x => x.Status)
+                .Include(x => x.User)
+                .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(statusCode))
         {
-            var status = statusCode.Trim();
+            var status =
+                statusCode.Trim();
 
-            query = query.Where(x =>
-                x.Status.StatusCode == status);
+            query =
+                query.Where(x =>
+                    x.Status.StatusCode == status);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var searchText = search.Trim();
+            var searchText =
+                search.Trim();
 
-            query = query.Where(x =>
-                x.Title.Contains(searchText) ||
-                x.AdvertisementNumber.Contains(searchText) ||
-                x.User.UserName.Contains(searchText) ||
-                (x.User.Email != null &&
-                 x.User.Email.Contains(searchText)));
+            query =
+                query.Where(x =>
+                    x.Title.Contains(searchText) ||
+                    x.AdvertisementNumber.Contains(searchText) ||
+                    x.User.UserName.Contains(searchText) ||
+                    (x.User.Email != null &&
+                     x.User.Email.Contains(searchText)));
         }
 
-        var advertisements = await query
-            .OrderByDescending(x => x.CreatedDate)
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+        var advertisements =
+            await query
+                .OrderByDescending(x =>
+                    x.CreatedDate)
+                .Skip(
+                    (pageNumber - 1) *
+                    pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
         return advertisements
-            .Select(x => new AdminAdvertisementListResponse
-            {
-                AdvertisementID =
-                    x.AdvertisementID,
+            .Select(x =>
+                new AdminAdvertisementListResponse
+                {
+                    AdvertisementID =
+                        x.AdvertisementID,
 
-                AdvertisementNumber =
-                    x.AdvertisementNumber,
+                    AdvertisementNumber =
+                        x.AdvertisementNumber,
 
-                Title =
-                    x.Title,
+                    Title =
+                        x.Title,
 
-                TitleAr =
-                    x.TitleAr,
+                    TitleAr =
+                        x.TitleAr,
 
-                Price =
-                    x.Price,
+                    Price =
+                        x.Price,
 
-                CurrencyCode =
-                    x.CurrencyCode,
+                    CurrencyCode =
+                        x.CurrencyCode,
 
-                CategoryName =
-                    x.Category.CategoryName,
+                    CategoryName =
+                        x.Category.CategoryName,
 
-                AdvertisementTypeName =
-                    x.AdvertisementType.TypeName,
+                    AdvertisementTypeName =
+                        x.AdvertisementType.TypeName,
 
-                StatusCode =
-                    x.Status.StatusCode,
+                    StatusCode =
+                        x.Status.StatusCode,
 
-                StatusName =
-                    x.Status.StatusName,
+                    StatusName =
+                        x.Status.StatusName,
 
-                UserID =
-                    x.UserID,
+                    UserID =
+                        x.UserID,
 
-                UserName =
-                    x.User.UserName,
+                    UserName =
+                        x.User.UserName,
 
-                Email =
-                    x.User.Email,
+                    Email =
+                        x.User.Email,
 
-                MobileNo =
-                    x.User.MobileNo,
+                    MobileNo =
+                        x.User.MobileNo,
 
-                CreatedDate =
-                    x.CreatedDate,
+                    CreatedDate =
+                        x.CreatedDate,
 
-                PublishedDate =
-                    x.PublishedDate,
+                    PublishedDate =
+                        x.PublishedDate,
 
-                ExpiryDate =
-                    x.ExpiryDate
-            })
+                    ExpiryDate =
+                        x.ExpiryDate
+                })
             .ToList();
     }
 
@@ -132,17 +151,19 @@ public class AdvertisementModerationService
         GetAdvertisementAsync(
             long advertisementId)
     {
-        var advertisement = await _context.Advertisements
-            .AsNoTracking()
-            .Include(x => x.User)
-            .Include(x => x.Category)
-            .Include(x => x.AdvertisementType)
-            .Include(x => x.Status)
-            .Include(x => x.Images)
-            .Include(x => x.Videos)
-            .Include(x => x.Documents)
-            .FirstOrDefaultAsync(x =>
-                x.AdvertisementID == advertisementId);
+        var advertisement =
+            await _context.Advertisements
+                .AsNoTracking()
+                .Include(x => x.User)
+                .Include(x => x.Category)
+                .Include(x => x.AdvertisementType)
+                .Include(x => x.Status)
+                .Include(x => x.Images)
+                .Include(x => x.Videos)
+                .Include(x => x.Documents)
+                .FirstOrDefaultAsync(x =>
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (advertisement == null)
         {
@@ -150,7 +171,8 @@ public class AdvertisementModerationService
         }
 
         var history =
-            await GetApprovalHistoryAsync(advertisementId);
+            await GetApprovalHistoryAsync(
+                advertisementId);
 
         return new AdminAdvertisementDetailResponse
         {
@@ -247,97 +269,118 @@ public class AdvertisementModerationService
             ModifiedDate =
                 advertisement.ModifiedDate,
 
+            // ====================================================
+            // IMAGES
+            // ====================================================
+
             Images =
                 advertisement.Images
-                    .OrderBy(x => x.DisplayOrder)
-                    .Select(x => new AdvertisementImageResponse
-                    {
-                        AdvertisementImageID =
-                            x.AdvertisementImageID,
+                    .OrderBy(x =>
+                        x.DisplayOrder)
+                    .Select(x =>
+                        new AdvertisementImageResponse
+                        {
+                            AdvertisementImageID =
+                                x.AdvertisementImageID,
 
-                        AdvertisementID =
-                            x.AdvertisementID,
+                            AdvertisementID =
+                                x.AdvertisementID,
 
-                        FileName =
-                            x.FileName,
+                            FileName =
+                                x.FileName,
 
-                        FileURL =
-                            x.FileURL,
+                            FileURL =
+                                x.FileURL,
 
-                        ContentType =
-                            x.ContentType,
+                            ContentType =
+                                GetContentType(
+                                    x.FileName),
 
-                        FileSize =
-                            x.FileSize,
+                            FileSize =
+                                x.FileSize,
 
-                        IsPrimary =
-                            x.IsPrimary,
+                            IsPrimary =
+                                x.IsPrimary,
 
-                        DisplayOrder =
-                            x.DisplayOrder,
+                            DisplayOrder =
+                                x.DisplayOrder,
 
-                        CreatedDate =
-                            x.CreatedDate
-                    })
+                            CreatedDate =
+                                x.CreatedDate
+                        })
                     .ToList(),
+
+            // ====================================================
+            // VIDEOS
+            // ====================================================
 
             Videos =
                 advertisement.Videos
-                    .OrderBy(x => x.DisplayOrder)
-                    .Select(x => new AdvertisementVideoResponse
-                    {
-                        AdvertisementVideoID =
-                            x.AdvertisementVideoID,
+                    .OrderBy(x =>
+                        x.DisplayOrder)
+                    .Select(x =>
+                        new AdvertisementVideoResponse
+                        {
+                            AdvertisementVideoID =
+                                x.AdvertisementVideoID,
 
-                        AdvertisementID =
-                            x.AdvertisementID,
+                            AdvertisementID =
+                                x.AdvertisementID,
 
-                        FileName =
-                            x.FileName,
+                            FileName =
+                                x.FileName,
 
-                        FileURL =
-                            x.FileURL,
+                            FileURL =
+                                x.VideoURL,
 
-                        ContentType =
-                            x.ContentType,
+                            ContentType =
+                                GetContentType(
+                                    x.FileName),
 
-                        FileSize =
-                            x.FileSize,
+                            FileSize =
+                                null,
 
-                        DisplayOrder =
-                            x.DisplayOrder,
+                            DisplayOrder =
+                                x.DisplayOrder,
 
-                        CreatedDate =
-                            x.CreatedDate
-                    })
+                            CreatedDate =
+                                x.CreatedDate
+                        })
                     .ToList(),
+
+            // ====================================================
+            // DOCUMENTS
+            // ====================================================
 
             Documents =
                 advertisement.Documents
-                    .OrderByDescending(x => x.CreatedDate)
-                    .Select(x => new AdvertisementDocumentResponse
-                    {
-                        AdvertisementDocumentID =
-                            x.AdvertisementDocumentID,
+                    .OrderByDescending(x =>
+                        x.CreatedDate)
+                    .Select(x =>
+                        new AdvertisementDocumentResponse
+                        {
+                            AdvertisementDocumentID =
+                                x.AdvertisementDocumentID,
 
-                        AdvertisementID =
-                            x.AdvertisementID,
+                            AdvertisementID =
+                                x.AdvertisementID,
 
-                        DocumentName =
-                            x.DocumentName,
+                            DocumentName =
+                                x.FileName,
 
-                        FileURL =
-                            x.FileURL,
+                            FileURL =
+                                x.FileURL,
 
-                        ContentType =
-                            x.ContentType,
+                            ContentType =
+                                GetContentType(
+                                    x.FileName),
 
-                        FileSize =
-                            x.FileSize,
+                            FileSize =
+                                null,
 
-                        CreatedDate =
-                            x.CreatedDate
-                    })
+                            CreatedDate =
+                                x.CreatedDate
+                        })
                     .ToList(),
 
             ApprovalHistory =
@@ -376,9 +419,11 @@ public class AdvertisementModerationService
                 adminUserId);
 
         var publishedStatus =
-            await GetStatusAsync("PUBLISHED");
+            await GetStatusAsync(
+                "PUBLISHED");
 
-        var now = DateTime.UtcNow;
+        var now =
+            DateTime.UtcNow;
 
         advertisement.StatusID =
             publishedStatus.StatusID;
@@ -450,7 +495,8 @@ public class AdvertisementModerationService
                 "Only advertisements pending review can be rejected.");
         }
 
-        string? rejectionReasonText = null;
+        string? rejectionReasonText =
+            null;
 
         if (request.RejectionReasonID.HasValue)
         {
@@ -473,9 +519,11 @@ public class AdvertisementModerationService
         }
 
         var rejectedStatus =
-            await GetStatusAsync("REJECTED");
+            await GetStatusAsync(
+                "REJECTED");
 
-        var now = DateTime.UtcNow;
+        var now =
+            DateTime.UtcNow;
 
         advertisement.StatusID =
             rejectedStatus.StatusID;
@@ -555,9 +603,11 @@ public class AdvertisementModerationService
         }
 
         var suspendedStatus =
-            await GetStatusAsync("SUSPENDED");
+            await GetStatusAsync(
+                "SUSPENDED");
 
-        var now = DateTime.UtcNow;
+        var now =
+            DateTime.UtcNow;
 
         advertisement.StatusID =
             suspendedStatus.StatusID;
@@ -568,11 +618,6 @@ public class AdvertisementModerationService
         advertisement.ModifiedBy =
             adminUserId;
 
-        /*
-         * Suspension is also recorded against the latest
-         * approval request because ApprovalHistory belongs
-         * to ApprovalRequest in the current database model.
-         */
         var approvalRequest =
             await GetOrCreateApprovalRequestAsync(
                 advertisement,
@@ -628,9 +673,11 @@ public class AdvertisementModerationService
         }
 
         var publishedStatus =
-            await GetStatusAsync("PUBLISHED");
+            await GetStatusAsync(
+                "PUBLISHED");
 
-        var now = DateTime.UtcNow;
+        var now =
+            DateTime.UtcNow;
 
         advertisement.StatusID =
             publishedStatus.StatusID;
@@ -681,8 +728,10 @@ public class AdvertisementModerationService
         var history =
             await _context.ApprovalHistories
                 .AsNoTracking()
-                .Include(x => x.ActionedByUser)
-                .Include(x => x.ApprovalRequest)
+                .Include(x =>
+                    x.ActionedByUser)
+                .Include(x =>
+                    x.ApprovalRequest)
                 .Where(x =>
                     EF.Property<long>(
                         x.ApprovalRequest,
@@ -693,38 +742,39 @@ public class AdvertisementModerationService
                 .ToListAsync();
 
         return history
-            .Select(x => new ApprovalHistoryResponse
-            {
-                ApprovalHistoryID =
-                    x.ApprovalHistoryID,
+            .Select(x =>
+                new ApprovalHistoryResponse
+                {
+                    ApprovalHistoryID =
+                        x.ApprovalHistoryID,
 
-                AdvertisementID =
-                    advertisementId,
+                    AdvertisementID =
+                        advertisementId,
 
-                Action =
-                    x.Action,
+                    Action =
+                        x.Action,
 
-                Comments =
-                    x.Comments,
+                    Comments =
+                        x.Comments,
 
-                ActionByUserID =
-                    x.ActionedByUserID,
+                    ActionByUserID =
+                        x.ActionedByUserID,
 
-                ActionByUserName =
-                    x.ActionedByUser != null
-                        ? x.ActionedByUser.UserName
-                        : null,
+                    ActionByUserName =
+                        x.ActionedByUser != null
+                            ? x.ActionedByUser.UserName
+                            : null,
 
-                ActionDate =
-                    x.ActionDate,
+                    ActionDate =
+                        x.ActionDate,
 
-                RejectionReasonID =
-                    null,
+                    RejectionReasonID =
+                        null,
 
-                RejectionReason =
-                    ExtractRejectionReason(
-                        x.Comments)
-            })
+                    RejectionReason =
+                        ExtractRejectionReason(
+                            x.Comments)
+                })
             .ToList();
     }
 
@@ -737,26 +787,30 @@ public class AdvertisementModerationService
     {
         return await _context.RejectionReasons
             .AsNoTracking()
-            .Where(x => x.IsActive)
-            .OrderBy(x => x.DisplayOrder)
-            .ThenBy(x => x.ReasonText)
-            .Select(x => new RejectionReasonResponse
-            {
-                RejectionReasonID =
-                    x.RejectionReasonID,
+            .Where(x =>
+                x.IsActive)
+            .OrderBy(x =>
+                x.DisplayOrder)
+            .ThenBy(x =>
+                x.ReasonText)
+            .Select(x =>
+                new RejectionReasonResponse
+                {
+                    RejectionReasonID =
+                        x.RejectionReasonID,
 
-                ReasonCode =
-                    x.ReasonCode,
+                    ReasonCode =
+                        x.ReasonCode,
 
-                ReasonName =
-                    x.ReasonText,
+                    ReasonName =
+                        x.ReasonText,
 
-                ReasonNameAr =
-                    x.ReasonTextAr,
+                    ReasonNameAr =
+                        x.ReasonTextAr,
 
-                IsActive =
-                    x.IsActive
-            })
+                    IsActive =
+                        x.IsActive
+                })
             .ToListAsync();
     }
 
@@ -769,7 +823,8 @@ public class AdvertisementModerationService
             long advertisementId)
     {
         return await _context.Advertisements
-            .Include(x => x.Status)
+            .Include(x =>
+                x.Status)
             .FirstOrDefaultAsync(x =>
                 x.AdvertisementID ==
                 advertisementId);
@@ -786,7 +841,8 @@ public class AdvertisementModerationService
     {
         var approvalRequest =
             await _context.ApprovalRequests
-                .Include(x => x.ApprovalHistory)
+                .Include(x =>
+                    x.ApprovalHistory)
                 .Where(x =>
                     EF.Property<long>(
                         x,
@@ -801,21 +857,22 @@ public class AdvertisementModerationService
             return approvalRequest;
         }
 
-        approvalRequest = new ApprovalRequest
-        {
-            SubmittedByUserID =
-                advertisement.UserID,
+        approvalRequest =
+            new ApprovalRequest
+            {
+                SubmittedByUserID =
+                    advertisement.UserID,
 
-            AssignedToUserID =
-                actionedByUserId,
+                AssignedToUserID =
+                    actionedByUserId,
 
-            Status =
-                "Pending",
+                Status =
+                    "Pending",
 
-            SubmittedDate =
-                advertisement.ModifiedDate
-                ?? advertisement.CreatedDate
-        };
+                SubmittedDate =
+                    advertisement.ModifiedDate
+                    ?? advertisement.CreatedDate
+            };
 
         /*
          * AdvertisementID is currently a shadow property
@@ -823,7 +880,8 @@ public class AdvertisementModerationService
          * but not in ApprovalRequest.cs.
          */
         _context.Entry(approvalRequest)
-            .Property<long>("AdvertisementID")
+            .Property<long>(
+                "AdvertisementID")
             .CurrentValue =
                 advertisement.AdvertisementID;
 
@@ -844,7 +902,8 @@ public class AdvertisementModerationService
         var status =
             await _context.AdvertisementStatuses
                 .FirstOrDefaultAsync(x =>
-                    x.StatusCode == statusCode &&
+                    x.StatusCode ==
+                    statusCode &&
                     x.IsActive);
 
         if (status == null)
@@ -854,6 +913,68 @@ public class AdvertisementModerationService
         }
 
         return status;
+    }
+
+    // ============================================================
+    // CONTENT TYPE
+    // ============================================================
+
+    /*
+     * ContentType is not stored in the current media tables.
+     *
+     * The API response DTOs still expose ContentType, so derive
+     * it from the stored filename instead of reading a nonexistent
+     * database column.
+     */
+    private static string?
+        GetContentType(
+            string? fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return null;
+        }
+
+        var extension =
+            Path.GetExtension(
+                fileName)
+                .ToLowerInvariant();
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" =>
+                "image/jpeg",
+
+            ".png" =>
+                "image/png",
+
+            ".webp" =>
+                "image/webp",
+
+            ".gif" =>
+                "image/gif",
+
+            ".mp4" =>
+                "video/mp4",
+
+            ".webm" =>
+                "video/webm",
+
+            ".mov" =>
+                "video/quicktime",
+
+            ".pdf" =>
+                "application/pdf",
+
+            ".doc" =>
+                "application/msword",
+
+            ".docx" =>
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+            _ =>
+                null
+        };
     }
 
     // ============================================================
@@ -878,7 +999,8 @@ public class AdvertisementModerationService
 
         if (string.IsNullOrWhiteSpace(comments))
         {
-            return $"Rejection reason: {reasonText.Trim()}";
+            return
+                $"Rejection reason: {reasonText.Trim()}";
         }
 
         return
@@ -913,7 +1035,8 @@ public class AdvertisementModerationService
         }
 
         var start =
-            index + prefix.Length;
+            index +
+            prefix.Length;
 
         var end =
             comments.IndexOf(
@@ -923,11 +1046,13 @@ public class AdvertisementModerationService
 
         if (end < 0)
         {
-            end = comments.Length;
+            end =
+                comments.Length;
         }
 
         var reason =
-            comments[start..end].Trim();
+            comments[start..end]
+                .Trim();
 
         return string.IsNullOrWhiteSpace(reason)
             ? null

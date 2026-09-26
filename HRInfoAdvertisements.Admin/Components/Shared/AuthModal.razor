@@ -3,8 +3,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 @inject AuthApiService AuthApiService
-@inject AdminAuthenticationStateProvider AuthenticationStateProvider
-@inject NavigationManager Navigation
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
 
 @if (IsOpen)
 {
@@ -34,7 +33,6 @@
 
             </button>
 
-
             <!-- HEADER -->
             <div class="auth-modal-header">
 
@@ -57,7 +55,6 @@
                     </div>
 
                 </div>
-
 
                 <div class="auth-welcome">
 
@@ -86,6 +83,7 @@
                     <div>
 
                         <h2 id="auth-modal-title">
+
                             @if (Mode == AuthMode.SignIn)
                             {
                                 @:Welcome back
@@ -94,9 +92,11 @@
                             {
                                 @:Create your account
                             }
+
                         </h2>
 
                         <p>
+
                             @if (Mode == AuthMode.SignIn)
                             {
                                 @:Sign in to manage your HR advertisements.
@@ -105,6 +105,7 @@
                             {
                                 @:Join HR INFO ADs and manage your advertisements.
                             }
+
                         </p>
 
                     </div>
@@ -112,7 +113,6 @@
                 </div>
 
             </div>
-
 
             <!-- TABS -->
             <div class="auth-tabs">
@@ -131,7 +131,6 @@
 
                 </button>
 
-
                 <button type="button"
                         class="auth-tab @(Mode == AuthMode.SignUp ? "active" : "")"
                         @onclick="ShowSignUp">
@@ -148,7 +147,6 @@
                 </button>
 
             </div>
-
 
             @if (Mode == AuthMode.SignIn)
             {
@@ -173,6 +171,7 @@
                                 <span class="auth-input-icon">
 
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                         <rect x="3"
                                               y="5"
                                               width="18"
@@ -180,6 +179,7 @@
                                               rx="2" />
 
                                         <path d="M3 7l9 6 9-6" />
+
                                     </svg>
 
                                 </span>
@@ -195,7 +195,6 @@
                             <ValidationMessage For="@(() => loginModel.Email)" />
 
                         </div>
-
 
                         <!-- PASSWORD -->
                         <div class="auth-field">
@@ -216,12 +215,12 @@
 
                             </div>
 
-
                             <div class="auth-input-box">
 
                                 <span class="auth-input-icon">
 
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                         <rect x="4"
                                               y="10"
                                               width="16"
@@ -229,10 +228,10 @@
                                               rx="2" />
 
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
                                     </svg>
 
                                 </span>
-
 
                                 <InputText id="auth-password"
                                            class="auth-input auth-password-input"
@@ -240,7 +239,6 @@
                                            @bind-Value="loginModel.Password"
                                            autocomplete="current-password"
                                            placeholder="Enter your password" />
-
 
                                 <button type="button"
                                         class="auth-password-toggle"
@@ -251,17 +249,27 @@
                                     @if (showPassword)
                                     {
                                         <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                             <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-                                            <circle cx="12" cy="12" r="3" />
+
+                                            <circle cx="12"
+                                                    cy="12"
+                                                    r="3" />
+
                                         </svg>
                                     }
                                     else
                                     {
                                         <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                             <path d="M3 3l18 18" />
+
                                             <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+
                                             <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
+
                                             <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
                                         </svg>
                                     }
 
@@ -272,7 +280,6 @@
                             <ValidationMessage For="@(() => loginModel.Password)" />
 
                         </div>
-
 
                         <!-- ERROR -->
                         @if (!string.IsNullOrWhiteSpace(errorMessage))
@@ -308,7 +315,6 @@
                             </div>
                         }
 
-
                         <!-- SUBMIT -->
                         <button type="submit"
                                 class="auth-submit"
@@ -336,14 +342,14 @@
 
                         </button>
 
-
                         <!-- DIVIDER -->
                         <div class="auth-divider">
 
-                            <span>Secure access</span>
+                            <span>
+                                Secure access
+                            </span>
 
                         </div>
-
 
                         <!-- SECURITY -->
                         <div class="auth-security">
@@ -351,8 +357,11 @@
                             <div class="auth-security-icon">
 
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                     <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3z" />
+
                                     <path d="M9 12l2 2 4-4" />
+
                                 </svg>
 
                             </div>
@@ -385,9 +394,15 @@
                         <div class="auth-signup-message-icon">
 
                             <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                 <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4z" />
+
                                 <path d="M12 8v5" />
-                                <circle cx="12" cy="16.5" r=".8" />
+
+                                <circle cx="12"
+                                        cy="16.5"
+                                        r=".8" />
+
                             </svg>
 
                         </div>
@@ -407,7 +422,6 @@
 
                     </div>
 
-
                     <!-- NAME -->
                     <div class="auth-field">
 
@@ -420,8 +434,13 @@
                             <span class="auth-input-icon">
 
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-                                    <circle cx="12" cy="8" r="4" />
+
+                                    <circle cx="12"
+                                            cy="8"
+                                            r="4" />
+
                                     <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+
                                 </svg>
 
                             </span>
@@ -435,7 +454,6 @@
 
                     </div>
 
-
                     <!-- EMAIL -->
                     <div class="auth-field">
 
@@ -448,6 +466,7 @@
                             <span class="auth-input-icon">
 
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
+
                                     <rect x="3"
                                           y="5"
                                           width="18"
@@ -455,6 +474,7 @@
                                           rx="2" />
 
                                     <path d="M3 7l9 6 9-6" />
+
                                 </svg>
 
                             </span>
@@ -468,7 +488,6 @@
 
                     </div>
 
-
                     <!-- SIGN UP BUTTON -->
                     <button type="button"
                             class="auth-submit"
@@ -479,12 +498,14 @@
                         </span>
 
                         <svg viewBox="0 0 24 24" aria-hidden="true">
+
                             <path d="M5 12h13" />
+
                             <path d="M13 6l6 6-6 6" />
+
                         </svg>
 
                     </button>
-
 
                     <div class="auth-signup-note">
 
@@ -501,7 +522,6 @@
 
                 </div>
             }
-
 
             <!-- FOOTER -->
             <div class="auth-modal-footer">
@@ -528,7 +548,6 @@
     </div>
 }
 
-
 @code {
 
     [Parameter]
@@ -538,11 +557,11 @@
     public EventCallback<bool> IsOpenChanged { get; set; }
 
     [Parameter]
-    public AuthMode Mode { get; set; } = AuthMode.SignIn;
+    public AuthMode Mode { get; set; } =
+        AuthMode.SignIn;
 
     [Parameter]
     public EventCallback<AuthMode> ModeChanged { get; set; }
-
 
     private readonly LoginModel loginModel = new();
 
@@ -552,10 +571,10 @@
 
     private string? errorMessage;
 
-
     private string PasswordInputType =>
-        showPassword ? "text" : "password";
-
+        showPassword
+            ? "text"
+            : "password";
 
     private async Task ShowSignIn()
     {
@@ -566,7 +585,6 @@
         await ModeChanged.InvokeAsync(Mode);
     }
 
-
     private async Task ShowSignUp()
     {
         errorMessage = null;
@@ -576,12 +594,11 @@
         await ModeChanged.InvokeAsync(Mode);
     }
 
-
     private void TogglePassword()
     {
-        showPassword = !showPassword;
+        showPassword =
+            !showPassword;
     }
-
 
     private async Task HandleLogin()
     {
@@ -591,9 +608,10 @@
 
         try
         {
-            var result = await AuthApiService.LoginAsync(
-                loginModel.Email,
-                loginModel.Password);
+            var result =
+                await AuthApiService.LoginAsync(
+                    loginModel.Email,
+                    loginModel.Password);
 
             if (result is null)
             {
@@ -602,7 +620,6 @@
 
                 return;
             }
-
 
             if (!result.Success)
             {
@@ -614,6 +631,9 @@
                 return;
             }
 
+            // ====================================================
+            // PUBLIC USER AUTHENTICATION
+            // ====================================================
 
             AuthenticationStateProvider.SignIn(
                 result.UserID,
@@ -625,20 +645,34 @@
                 result.RefreshToken,
                 result.ExpiresAt);
 
+            // ====================================================
+            // VERIFY TOKEN IS NOW AVAILABLE
+            // ====================================================
+
+            Console.WriteLine(
+                $"AUTH MODAL PUBLIC TOKEN AVAILABLE: " +
+                $"{!string.IsNullOrWhiteSpace(AuthenticationStateProvider.AccessToken)}");
+
+            Console.WriteLine(
+                $"AUTH MODAL PUBLIC TOKEN LENGTH: " +
+                $"{AuthenticationStateProvider.AccessToken?.Length ?? 0}");
+
+            // ====================================================
+            // CLOSE MODAL
+            // ====================================================
 
             await Close();
-
-
-            Navigation.NavigateTo("/");
-
         }
         catch (HttpRequestException)
         {
             errorMessage =
                 "Unable to connect to the authentication service. Please try again.";
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Console.WriteLine(
+                $"PUBLIC LOGIN ERROR: {ex}");
+
             errorMessage =
                 "An unexpected error occurred while signing in.";
         }
@@ -648,37 +682,31 @@
         }
     }
 
-
     private void ClearError()
     {
         errorMessage = null;
     }
 
-
     private async Task Close()
     {
         errorMessage = null;
+
         showPassword = false;
 
         await IsOpenChanged.InvokeAsync(false);
     }
 
-
     private void ForgotPassword()
     {
-        // Keep this available for your future password-reset implementation.
         errorMessage =
             "Please contact the HR INFO ADs administrator to reset your password.";
     }
 
-
     private void RequestRegistration()
     {
-        // Registration API is not present in the supplied code.
         errorMessage =
             "Account registration is currently handled by the HR INFO ADs administration team.";
     }
-
 
     public enum AuthMode
     {
@@ -686,18 +714,21 @@
         SignUp
     }
 
-
     private sealed class LoginModel
     {
         [Required(
-            ErrorMessage = "Email address is required.")]
+            ErrorMessage =
+                "Email address is required.")]
         [EmailAddress(
-            ErrorMessage = "Please enter a valid email address.")]
-        public string Email { get; set; } = string.Empty;
-
+            ErrorMessage =
+                "Please enter a valid email address.")]
+        public string Email { get; set; } =
+            string.Empty;
 
         [Required(
-            ErrorMessage = "Password is required.")]
-        public string Password { get; set; } = string.Empty;
+            ErrorMessage =
+                "Password is required.")]
+        public string Password { get; set; } =
+            string.Empty;
     }
 }

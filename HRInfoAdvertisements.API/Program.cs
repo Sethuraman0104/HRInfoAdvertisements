@@ -262,6 +262,77 @@ builder.Services
                 ClockSkew =
                     TimeSpan.FromSeconds(30)
             };
+
+        options.Events =
+            new JwtBearerEvents
+            {
+                OnAuthenticationFailed =
+                    context =>
+                    {
+                        Console.WriteLine(
+                            "================================================");
+
+                        Console.WriteLine(
+                            "JWT AUTHENTICATION FAILED");
+
+                        Console.WriteLine(
+                            $"ERROR: {context.Exception.Message}");
+
+                        Console.WriteLine(
+                            $"EXCEPTION TYPE: " +
+                            $"{context.Exception.GetType().Name}");
+
+                        Console.WriteLine(
+                            "================================================");
+
+                        return Task.CompletedTask;
+                    },
+
+                OnTokenValidated =
+                    context =>
+                    {
+                        Console.WriteLine(
+                            "================================================");
+
+                        Console.WriteLine(
+                            "JWT TOKEN VALIDATED SUCCESSFULLY");
+
+                        Console.WriteLine(
+                            $"USER: " +
+                            $"{context.Principal?.Identity?.Name}");
+
+                        Console.WriteLine(
+                            $"AUTHENTICATED: " +
+                            $"{context.Principal?.Identity?.IsAuthenticated}");
+
+                        Console.WriteLine(
+                            "================================================");
+
+                        return Task.CompletedTask;
+                    },
+
+                OnChallenge =
+                    context =>
+                    {
+                        Console.WriteLine(
+                            "================================================");
+
+                        Console.WriteLine(
+                            "JWT AUTHENTICATION CHALLENGE");
+
+                        Console.WriteLine(
+                            $"ERROR: {context.Error}");
+
+                        Console.WriteLine(
+                            $"DESCRIPTION: " +
+                            $"{context.ErrorDescription}");
+
+                        Console.WriteLine(
+                            "================================================");
+
+                        return Task.CompletedTask;
+                    }
+            };
     });
 
 

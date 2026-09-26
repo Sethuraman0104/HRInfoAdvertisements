@@ -1,3 +1,5 @@
+using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
+
 namespace HRInfoAdvertisements.Application.DTOs.Advertisements;
 
 public class AdvertisementResponse
@@ -73,4 +75,11 @@ public class AdvertisementResponse
     public DateTime CreatedDate { get; set; }
 
     public DateTime? ModifiedDate { get; set; }
+
+    // ============================================================
+    // MEDIA
+    // ============================================================
+
+    public List<AdvertisementImageResponse> Images { get; set; }
+        = new();
 }

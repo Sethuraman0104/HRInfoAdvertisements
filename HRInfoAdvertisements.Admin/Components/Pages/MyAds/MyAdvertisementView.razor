@@ -1,0 +1,1401 @@
+@page "/my-ads/{AdvertisementId:long}"
+
+@using System.Globalization
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>
+    @(advertisement is null
+        ? "Advertisement | HR Info Advertisements"
+        : $"{advertisement.Title} | HR Info Advertisements")
+</PageTitle>
+
+<div class="my-ad-view-page">
+
+    <!-- ============================================================
+         TOP BAR
+         ============================================================ -->
+
+    <div class="my-ad-view-topbar">
+
+        <div class="my-ad-view-topbar-inner">
+
+            <!-- BRAND -->
+            <div class="my-ad-view-brand">
+
+                <div class="my-ad-view-logo-wrapper">
+                    <img src="images/hr-info-ads-logo.png"
+                         alt="HR INFO ADs"
+                         class="my-ad-view-logo" />
+                </div>
+
+                <div class="my-ad-view-brand-text">
+
+                    <div class="my-ad-view-app-title">
+                        HR INFO ADs
+                    </div>
+
+                    <div class="my-ad-view-app-subtitle">
+                        Advertisement Marketplace
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PAGE TITLE -->
+            <div class="my-ad-view-page-title">
+
+                <span class="my-ad-view-page-icon">
+                    <i class="bi bi-megaphone"></i>
+                </span>
+
+                <div>
+
+                    <div class="my-ad-view-page-heading">
+                        Advertisement Details
+                    </div>
+
+                    <div class="my-ad-view-page-description">
+                        View your advertisement
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- BACK -->
+            <button type="button"
+                    class="my-ad-view-back-button"
+                    @onclick="BackToMyAdvertisements">
+
+                <i class="bi bi-arrow-left"></i>
+
+                <span>
+                    My Advertisements
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         CONTENT
+         ============================================================ -->
+
+    <main class="my-ad-view-container">
+
+        @if (isLoading)
+        {
+            <div class="my-ad-view-loading">
+
+                <div class="my-ad-view-spinner"></div>
+
+                <strong>
+                    Loading advertisement...
+                </strong>
+
+                <span>
+                    Please wait while we retrieve the advertisement details.
+                </span>
+
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="my-ad-view-error">
+
+                <div class="my-ad-view-error-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <div class="my-ad-view-error-content">
+
+                    <strong>
+                        Advertisement unavailable
+                    </strong>
+
+                    <span>
+                        @errorMessage
+                    </span>
+
+                </div>
+
+                <button type="button"
+                        class="my-ad-view-error-button"
+                        @onclick="BackToMyAdvertisements">
+
+                    Back to My Advertisements
+
+                </button>
+
+            </div>
+        }
+        else if (advertisement is not null)
+        {
+            <!-- ====================================================
+                 HEADER
+                 ==================================================== -->
+
+            <section class="my-ad-view-header">
+
+                <div class="my-ad-view-header-left">
+
+                    <div class="my-ad-view-eyebrow">
+
+                        <i class="bi bi-megaphone"></i>
+
+                        My Advertisement
+
+                    </div>
+
+                    <h1>
+                        @advertisement.Title
+                    </h1>
+
+                    <div class="my-ad-view-reference">
+
+                        <span>
+                            Advertisement No.
+                        </span>
+
+                        <strong>
+                            @GetAdvertisementNumber()
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="@GetStatusBadgeClass()">
+
+                    <span class="status-dot"></span>
+
+                    @GetDisplayStatusName()
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================================
+                 MAIN GRID
+                 ==================================================== -->
+
+            <div class="my-ad-view-grid">
+
+                <!-- =================================================
+                     LEFT COLUMN
+                     ================================================= -->
+
+                <div class="my-ad-view-main">
+
+
+                    <!-- =================================================
+                         IMAGE GALLERY
+                         ================================================= -->
+
+                    <section class="my-ad-view-card my-ad-view-gallery-card">
+
+                        @if (HasImages)
+                        {
+                            <div class="my-ad-view-gallery">
+
+                                <div class="my-ad-view-main-image">
+
+                                    <img src="@SelectedImageUrl"
+                                         alt="@advertisement.Title"
+                                         @key="SelectedImageUrl" />
+
+                                    @if (advertisement.IsFeatured)
+                                    {
+                                        <div class="my-ad-view-featured">
+
+                                            <i class="bi bi-star-fill"></i>
+
+                                            Featured
+
+                                        </div>
+                                    }
+
+                                    @if (ImageCount > 1)
+                                    {
+                                        <button type="button"
+                                                class="gallery-nav gallery-prev"
+                                                @onclick="PreviousImage"
+                                                aria-label="Previous image">
+
+                                            <i class="bi bi-chevron-left"></i>
+
+                                        </button>
+
+                                        <button type="button"
+                                                class="gallery-nav gallery-next"
+                                                @onclick="NextImage"
+                                                aria-label="Next image">
+
+                                            <i class="bi bi-chevron-right"></i>
+
+                                        </button>
+                                    }
+
+                                </div>
+
+
+                                @if (ImageCount > 1)
+                                {
+                                    <div class="my-ad-view-thumbnails">
+
+                                        @for (var i = 0; i < advertisement.Images.Count; i++)
+                                        {
+                                            var index = i;
+                                            var image = advertisement.Images
+                                                .OrderBy(x => x.DisplayOrder)
+                                                .ElementAt(index);
+
+                                            <button type="button"
+                                                    class="my-ad-view-thumbnail @(index == selectedImageIndex ? "active" : "")"
+                                                    @onclick="@(() => SelectImage(index))">
+
+                                                <img src="@image.FileURL"
+                                                     alt="Advertisement image @(index + 1)" />
+
+                                            </button>
+                                        }
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="my-ad-view-no-image">
+
+                                <div class="my-ad-view-no-image-icon">
+                                    <i class="bi bi-image"></i>
+                                </div>
+
+                                <strong>
+                                    No photos available
+                                </strong>
+
+                                <span>
+                                    This advertisement does not have any photos.
+                                </span>
+
+                            </div>
+                        }
+
+                    </section>
+
+
+                    <!-- =================================================
+                         DESCRIPTION
+                         ================================================= -->
+
+                    <section class="my-ad-view-card">
+
+                        <div class="my-ad-view-section-heading">
+
+                            <div class="section-heading-icon">
+                                <i class="bi bi-text-paragraph"></i>
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    Description
+                                </h2>
+
+                                <span>
+                                    Advertisement details
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        @if (!string.IsNullOrWhiteSpace(advertisement.Description))
+                        {
+                            <div class="my-ad-view-description">
+
+                                @foreach (var paragraph in GetDescriptionParagraphs())
+                                {
+                                    <p>
+                                        @paragraph
+                                    </p>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="my-ad-view-empty-value">
+                                No description provided.
+                            </div>
+                        }
+
+                    </section>
+
+
+                    <!-- =================================================
+                         PROPERTY DETAILS
+                         ================================================= -->
+
+                    @if (HasPropertyDetails)
+                    {
+                        <section class="my-ad-view-card">
+
+                            <div class="my-ad-view-section-heading">
+
+                                <div class="section-heading-icon">
+                                    <i class="bi bi-building"></i>
+                                </div>
+
+                                <div>
+
+                                    <h2>
+                                        Property Details
+                                    </h2>
+
+                                    <span>
+                                        Additional information
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="my-ad-view-details-grid">
+
+                                @if (advertisement.PlotNumber is not null)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Plot Number
+                                        </span>
+
+                                        <strong>
+                                            @advertisement.PlotNumber
+                                        </strong>
+
+                                    </div>
+                                }
+
+
+                                @if (advertisement.LandArea.HasValue)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Land Area
+                                        </span>
+
+                                        <strong>
+                                            @FormatArea(advertisement.LandArea.Value)
+                                        </strong>
+
+                                    </div>
+                                }
+
+
+                                @if (advertisement.BuiltUpArea.HasValue)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Built-up Area
+                                        </span>
+
+                                        <strong>
+                                            @FormatArea(advertisement.BuiltUpArea.Value)
+                                        </strong>
+
+                                    </div>
+                                }
+
+
+                                @if (advertisement.Bedrooms.HasValue)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Bedrooms
+                                        </span>
+
+                                        <strong>
+                                            @advertisement.Bedrooms
+                                        </strong>
+
+                                    </div>
+                                }
+
+
+                                @if (advertisement.Bathrooms.HasValue)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Bathrooms
+                                        </span>
+
+                                        <strong>
+                                            @advertisement.Bathrooms
+                                        </strong>
+
+                                    </div>
+                                }
+
+
+                                @if (advertisement.PropertyAge.HasValue)
+                                {
+                                    <div class="my-ad-view-detail">
+
+                                        <span>
+                                            Property Age
+                                        </span>
+
+                                        <strong>
+                                            @advertisement.PropertyAge years
+                                        </strong>
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </section>
+                    }
+
+
+                    <!-- =================================================
+                         LOCATION
+                         ================================================= -->
+
+                    <section class="my-ad-view-card">
+
+                        <div class="my-ad-view-section-heading">
+
+                            <div class="section-heading-icon">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    Location
+                                </h2>
+
+                                <span>
+                                    Advertisement location
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="my-ad-view-location">
+
+                            <div class="location-icon">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    @(string.IsNullOrWhiteSpace(advertisement.AddressLine)
+                                        ? "Location not specified"
+                                        : advertisement.AddressLine)
+                                </strong>
+
+                                @if (advertisement.Latitude.HasValue &&
+                                     advertisement.Longitude.HasValue)
+                                {
+                                    <span>
+                                        @advertisement.Latitude.Value.ToString("0.######"),
+                                        @advertisement.Longitude.Value.ToString("0.######")
+                                    </span>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+
+                <!-- =================================================
+                     RIGHT COLUMN
+                     ================================================= -->
+
+                <aside class="my-ad-view-sidebar">
+
+
+                    <!-- =================================================
+                         PRICE CARD
+                         ================================================= -->
+
+                    <section class="my-ad-view-price-card">
+
+                        <span class="price-label">
+                            Asking Price
+                        </span>
+
+                        <strong class="price-value">
+                            @FormatPrice()
+                        </strong>
+
+                        @if (advertisement.IsNegotiable)
+                        {
+                            <span class="price-negotiable">
+
+                                <i class="bi bi-check-circle-fill"></i>
+
+                                Price is negotiable
+
+                            </span>
+                        }
+
+                    </section>
+
+
+                    <!-- =================================================
+                         BASIC INFORMATION
+                         ================================================= -->
+
+                    <section class="my-ad-view-card">
+
+                        <div class="my-ad-view-section-heading">
+
+                            <div class="section-heading-icon">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    Advertisement Information
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="my-ad-view-info-list">
+
+                            <div class="info-row">
+
+                                <span>
+                                    Category
+                                </span>
+
+                                <strong>
+                                    @DisplayValue(advertisement.CategoryName)
+                                </strong>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <span>
+                                    Type
+                                </span>
+
+                                <strong>
+                                    @DisplayValue(advertisement.AdvertisementTypeName)
+                                </strong>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <span>
+                                    Status
+                                </span>
+
+                                <strong>
+                                    @GetDisplayStatusName()
+                                </strong>
+
+                            </div>
+
+
+                            <div class="info-row">
+
+                                <span>
+                                    Created
+                                </span>
+
+                                <strong>
+                                    @FormatDate(advertisement.CreatedDate)
+                                </strong>
+
+                            </div>
+
+
+                            @if (advertisement.ModifiedDate.HasValue)
+                            {
+                                <div class="info-row">
+
+                                    <span>
+                                        Last Modified
+                                    </span>
+
+                                    <strong>
+                                        @FormatDate(advertisement.ModifiedDate.Value)
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (advertisement.PublishedDate.HasValue)
+                            {
+                                <div class="info-row">
+
+                                    <span>
+                                        Published
+                                    </span>
+
+                                    <strong>
+                                        @FormatDate(advertisement.PublishedDate.Value)
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (advertisement.ExpiryDate.HasValue)
+                            {
+                                <div class="info-row">
+
+                                    <span>
+                                        Expires
+                                    </span>
+
+                                    <strong>
+                                        @FormatDate(advertisement.ExpiryDate.Value)
+                                    </strong>
+
+                                </div>
+                            }
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         ACTIONS
+                         ================================================= -->
+
+                    <section class="my-ad-view-card my-ad-view-actions-card">
+
+                        <div class="my-ad-view-section-heading">
+
+                            <div class="section-heading-icon">
+                                <i class="bi bi-lightning"></i>
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    Actions
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        @if (CanEdit)
+                        {
+                            <button type="button"
+                                    class="view-page-action primary-action"
+                                    @onclick="EditAdvertisement">
+
+                                <i class="bi bi-pencil"></i>
+
+                                <span>
+                                    Edit Advertisement
+                                </span>
+
+                                <i class="bi bi-arrow-right"></i>
+
+                            </button>
+                        }
+
+
+                        @if (CanManagePhotos)
+                        {
+                            <button type="button"
+                                    class="view-page-action secondary-action"
+                                    @onclick="ManagePhotos">
+
+                                <i class="bi bi-images"></i>
+
+                                <span>
+                                    Manage Photos
+                                </span>
+
+                                <i class="bi bi-arrow-right"></i>
+
+                            </button>
+                        }
+
+
+                        @if (CanSubmit)
+                        {
+                            <button type="button"
+                                    class="view-page-action secondary-action"
+                                    @onclick="SubmitAdvertisementAsync"
+                                    disabled="@isSubmitting">
+
+                                @if (isSubmitting)
+                                {
+                                    <span class="small-spinner"></span>
+
+                                    <span>
+                                        Submitting...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-send"></i>
+
+                                    <span>
+                                        @(IsRejected
+                                            ? "Resubmit for Approval"
+                                            : "Submit for Approval")
+                                    </span>
+
+                                    <i class="bi bi-arrow-right"></i>
+                                }
+
+                            </button>
+                        }
+
+
+                        <button type="button"
+                                class="view-page-action back-action"
+                                @onclick="BackToMyAdvertisements">
+
+                            <i class="bi bi-arrow-left"></i>
+
+                            <span>
+                                Back to My Advertisements
+                            </span>
+
+                        </button>
+
+                    </section>
+
+
+                    <!-- =================================================
+                         STATUS INFORMATION
+                         ================================================= -->
+
+                    @if (IsRejected)
+                    {
+                        <section class="my-ad-view-notice rejected-notice">
+
+                            <div class="notice-icon">
+                                <i class="bi bi-exclamation-circle"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Advertisement Rejected
+                                </strong>
+
+                                <span>
+                                    Please edit your advertisement and
+                                    make the required corrections before
+                                    resubmitting it for approval.
+                                </span>
+
+                            </div>
+
+                        </section>
+                    }
+                    else if (IsDraft)
+                    {
+                        <section class="my-ad-view-notice draft-notice">
+
+                            <div class="notice-icon">
+                                <i class="bi bi-file-earmark"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Draft Advertisement
+                                </strong>
+
+                                <span>
+                                    This advertisement has not yet been
+                                    submitted for approval.
+                                </span>
+
+                            </div>
+
+                        </section>
+                    }
+                    else if (IsPending)
+                    {
+                        <section class="my-ad-view-notice pending-notice">
+
+                            <div class="notice-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Under Review
+                                </strong>
+
+                                <span>
+                                    Your advertisement has been submitted
+                                    and is currently awaiting approval.
+                                </span>
+
+                            </div>
+
+                        </section>
+                    }
+
+                </aside>
+
+            </div>
+
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    [Parameter]
+    public long AdvertisementId { get; set; }
+
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private AdvertisementResponse? advertisement;
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private bool isLoading;
+
+    private bool isSubmitting;
+
+    private bool isAuthenticated;
+
+    private string? errorMessage;
+
+    private int selectedImageIndex;
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        isAuthenticated =
+            authenticationState.User.Identity?.IsAuthenticated
+            == true;
+
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadAdvertisementAsync();
+    }
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadAdvertisementAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var advertisements =
+                await AdvertisementApiService
+                    .GetMyAdvertisementsAsync();
+
+            advertisement =
+                advertisements?
+                    .FirstOrDefault(x =>
+                        x.AdvertisementID ==
+                        AdvertisementId);
+
+            if (advertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be found, or it may no longer be available.";
+            }
+
+            selectedImageIndex = 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "VIEW ADVERTISEMENT LOAD ERROR");
+
+            Console.WriteLine(
+                ex.ToString());
+
+            Console.WriteLine(
+                "================================================");
+
+            errorMessage =
+                "We couldn’t load this advertisement right now. " +
+                "Please return to My Advertisements and try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATUS
+    // ============================================================
+
+    private string NormalizedStatus =>
+        NormalizeStatus(
+            advertisement?.StatusCode);
+
+    private bool IsDraft =>
+        NormalizedStatus == "DRAFT";
+
+    private bool IsRejected =>
+        NormalizedStatus == "REJECTED";
+
+    private bool IsPending =>
+        NormalizedStatus == "PENDING"
+        || NormalizedStatus == "PENDINGREVIEW"
+        || NormalizedStatus == "UNDERREVIEW";
+
+    private bool CanEdit =>
+        IsDraft || IsRejected;
+
+    private bool CanManagePhotos =>
+        IsDraft || IsRejected;
+
+    private bool CanSubmit =>
+        IsDraft || IsRejected;
+
+
+    private string GetDisplayStatusName()
+    {
+        if (advertisement is null)
+        {
+            return "Unknown";
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            advertisement.StatusName))
+        {
+            return advertisement.StatusName;
+        }
+
+        return FormatStatusName(
+            advertisement.StatusCode);
+    }
+
+
+    private string GetStatusBadgeClass()
+    {
+        return NormalizedStatus switch
+        {
+            "DRAFT" =>
+                "my-ad-view-status status-draft",
+
+            "REJECTED" =>
+                "my-ad-view-status status-rejected",
+
+            "PUBLISHED" =>
+                "my-ad-view-status status-published",
+
+            "EXPIRED" =>
+                "my-ad-view-status status-expired",
+
+            "PENDING" =>
+                "my-ad-view-status status-pending",
+
+            "PENDINGREVIEW" =>
+                "my-ad-view-status status-pending",
+
+            "UNDERREVIEW" =>
+                "my-ad-view-status status-pending",
+
+            _ =>
+                "my-ad-view-status status-default"
+        };
+    }
+
+
+    private static string NormalizeStatus(
+        string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Trim()
+            .Replace("_", string.Empty)
+            .Replace("-", string.Empty)
+            .Replace(" ", string.Empty)
+            .ToUpperInvariant();
+    }
+
+
+    private static string FormatStatusName(
+        string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return "Unknown";
+        }
+
+        var value =
+            status
+                .Replace("_", " ")
+                .Replace("-", " ")
+                .Trim();
+
+        return value switch
+        {
+            "PENDINGREVIEW" =>
+                "Pending Review",
+
+            "UNDERREVIEW" =>
+                "Under Review",
+
+            _ =>
+                CultureInfo.CurrentCulture
+                    .TextInfo
+                    .ToTitleCase(
+                        value.ToLower())
+        };
+    }
+
+
+    // ============================================================
+    // IMAGES
+    // ============================================================
+
+    private bool HasImages =>
+        advertisement?.Images is not null &&
+        advertisement.Images.Count > 0;
+
+    private int ImageCount =>
+        advertisement?.Images?.Count ?? 0;
+
+
+    private string? SelectedImageUrl
+    {
+        get
+        {
+            if (!HasImages)
+            {
+                return null;
+            }
+
+            var images =
+                advertisement!.Images
+                    .OrderBy(x => x.DisplayOrder)
+                    .ToList();
+
+            if (selectedImageIndex < 0 ||
+                selectedImageIndex >= images.Count)
+            {
+                selectedImageIndex = 0;
+            }
+
+            return images[selectedImageIndex].FileURL;
+        }
+    }
+
+
+    private void SelectImage(int index)
+    {
+        if (!HasImages)
+        {
+            return;
+        }
+
+        if (index < 0 ||
+            index >= ImageCount)
+        {
+            return;
+        }
+
+        selectedImageIndex = index;
+    }
+
+
+    private void PreviousImage()
+    {
+        if (ImageCount <= 1)
+        {
+            return;
+        }
+
+        selectedImageIndex--;
+
+        if (selectedImageIndex < 0)
+        {
+            selectedImageIndex =
+                ImageCount - 1;
+        }
+    }
+
+
+    private void NextImage()
+    {
+        if (ImageCount <= 1)
+        {
+            return;
+        }
+
+        selectedImageIndex++;
+
+        if (selectedImageIndex >= ImageCount)
+        {
+            selectedImageIndex = 0;
+        }
+    }
+
+
+    // ============================================================
+    // ACTIONS
+    // ============================================================
+
+    private void BackToMyAdvertisements()
+    {
+        Navigation.NavigateTo(
+            "/my-ads");
+    }
+
+
+    private void EditAdvertisement()
+    {
+        if (advertisement is null ||
+            !CanEdit)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(
+            $"/my-ads/{advertisement.AdvertisementID}/edit");
+    }
+
+
+    private void ManagePhotos()
+    {
+        if (advertisement is null ||
+            !CanManagePhotos)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(
+            $"/my-ads/{advertisement.AdvertisementID}/edit?section=photos");
+    }
+
+
+    private async Task SubmitAdvertisementAsync()
+    {
+        if (advertisement is null ||
+            isSubmitting ||
+            !CanSubmit)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var result =
+                await AdvertisementApiService
+                    .SubmitAdvertisementAsync(
+                        advertisement.AdvertisementID);
+
+            if (result)
+            {
+                await LoadAdvertisementAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "SUBMIT FROM VIEW ERROR");
+
+            Console.WriteLine(
+                ex.ToString());
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // FORMATTING
+    // ============================================================
+
+    private string GetAdvertisementNumber()
+    {
+        if (advertisement is null)
+        {
+            return string.Empty;
+        }
+
+        return !string.IsNullOrWhiteSpace(
+            advertisement.AdvertisementNumber)
+            ? advertisement.AdvertisementNumber
+            : $"ID #{advertisement.AdvertisementID}";
+    }
+
+
+    private string FormatPrice()
+    {
+        if (advertisement?.Price is null)
+        {
+            return "Price on request";
+        }
+
+        var currency =
+            string.IsNullOrWhiteSpace(
+                advertisement.CurrencyCode)
+                ? "BHD"
+                : advertisement.CurrencyCode;
+
+        return $"{currency} " +
+               $"{advertisement.Price.Value:N0}";
+    }
+
+
+    private static string FormatDate(
+        DateTime date)
+    {
+        return date.ToString(
+            "dd MMM yyyy");
+    }
+
+
+    private static string FormatArea(
+        decimal area)
+    {
+        return $"{area:N2} m²";
+    }
+
+
+    private static string DisplayValue(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "Not specified"
+            : value;
+    }
+
+
+    private IEnumerable<string>
+        GetDescriptionParagraphs()
+    {
+        if (advertisement is null ||
+            string.IsNullOrWhiteSpace(
+                advertisement.Description))
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        return advertisement.Description
+            .Split(
+                new[] { "\r\n", "\n" },
+                StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .Where(x => !string.IsNullOrWhiteSpace(x));
+    }
+
+
+    private bool HasPropertyDetails =>
+        advertisement is not null
+        &&
+        (
+            !string.IsNullOrWhiteSpace(
+                advertisement.PlotNumber)
+            ||
+            advertisement.LandArea.HasValue
+            ||
+            advertisement.BuiltUpArea.HasValue
+            ||
+            advertisement.Bedrooms.HasValue
+            ||
+            advertisement.Bathrooms.HasValue
+            ||
+            advertisement.PropertyAge.HasValue
+        );
+}

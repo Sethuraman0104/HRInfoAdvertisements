@@ -213,36 +213,60 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                 {
                     b.Property<long>("AdvertisementDocumentID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementDocumentID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementDocumentID"));
 
                     b.Property<long>("AdvertisementID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementID");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedDate");
 
-                    b.Property<string>("DocumentName")
+                    b.Property<string>("DocumentType")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("DocumentType");
 
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint");
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("FileName");
 
                     b.Property<string>("FileURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("FileURL");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("RejectionReason");
+
+                    b.Property<string>("S3Key")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("S3Key");
 
-                    b.Property<string>("StorageKey")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("VerificationStatus");
+
+                    b.Property<long?>("VerifiedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("VerifiedBy");
+
+                    b.Property<DateTime?>("VerifiedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("VerifiedDate");
 
                     b.HasKey("AdvertisementDocumentID");
 
@@ -451,46 +475,59 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                 {
                     b.Property<long>("AdvertisementImageID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementImageID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementImageID"));
 
                     b.Property<long>("AdvertisementID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementID");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedDate");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("DisplayOrder");
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("FileName");
 
                     b.Property<long?>("FileSize")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("FileSize");
 
                     b.Property<string>("FileURL")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("FileURL");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("int")
+                        .HasColumnName("Height");
 
                     b.Property<bool>("IsPrimary")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasColumnName("IsPrimary");
 
-                    b.Property<string>("StorageKey")
+                    b.Property<string>("S3Key")
+                        .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("S3Key");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("int")
+                        .HasColumnName("Width");
 
                     b.HasKey("AdvertisementImageID");
 
-                    b.HasIndex("AdvertisementID", "DisplayOrder");
+                    b.HasIndex("AdvertisementID");
 
                     b.ToTable("AdvertisementImages", (string)null);
                 });
@@ -574,39 +611,46 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                 {
                     b.Property<long>("AdvertisementVideoID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementVideoID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementVideoID"));
 
                     b.Property<long>("AdvertisementID")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("bigint")
+                        .HasColumnName("AdvertisementID");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreatedDate");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("DisplayOrder");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int")
+                        .HasColumnName("DurationSeconds");
 
                     b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("FileName");
 
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("FileURL")
-                        .IsRequired()
+                    b.Property<string>("S3Key")
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("S3Key");
 
-                    b.Property<string>("StorageKey")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                    b.Property<string>("ThumbnailURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("ThumbnailURL");
+
+                    b.Property<string>("VideoURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("VideoURL");
 
                     b.HasKey("AdvertisementVideoID");
 
@@ -746,10 +790,10 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int?>("CityID")
+                    b.Property<int>("CityID")
                         .HasColumnType("int");
 
-                    b.Property<int>("CountryID")
+                    b.Property<int?>("CountryID")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -760,13 +804,12 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     b.HasKey("AreaID");
 
-                    b.HasIndex("CityID");
+                    b.HasIndex("CountryID");
 
                     b.HasIndex("StateID");
 
-                    b.HasIndex("CountryID", "StateID", "CityID", "AreaName")
-                        .IsUnique()
-                        .HasFilter("[StateID] IS NOT NULL AND [CityID] IS NOT NULL");
+                    b.HasIndex("CityID", "AreaName")
+                        .IsUnique();
 
                     b.ToTable("Areas", (string)null);
                 });
@@ -840,7 +883,7 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
-                    b.Property<int>("CountryID")
+                    b.Property<int?>("CountryID")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
@@ -851,9 +894,9 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     b.HasKey("CityID");
 
-                    b.HasIndex("StateID");
+                    b.HasIndex("CountryID");
 
-                    b.HasIndex("CountryID", "StateID", "CityName")
+                    b.HasIndex("StateID", "CityName")
                         .IsUnique()
                         .HasFilter("[StateID] IS NOT NULL");
 
@@ -2116,24 +2159,18 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.City", "City")
                         .WithMany("Areas")
                         .HasForeignKey("CityID")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
-                        .WithMany("Areas")
-                        .HasForeignKey("CountryID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", null)
                         .WithMany("Areas")
-                        .HasForeignKey("StateID")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("CountryID");
+
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.State", null)
+                        .WithMany("Areas")
+                        .HasForeignKey("StateID");
 
                     b.Navigation("City");
-
-                    b.Navigation("Country");
-
-                    b.Navigation("State");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AuditLog", b =>
@@ -2148,18 +2185,14 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.City", b =>
                 {
-                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", null)
                         .WithMany("Cities")
-                        .HasForeignKey("CountryID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("CountryID");
 
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
                         .WithMany("Cities")
                         .HasForeignKey("StateID")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Country");
 
                     b.Navigation("State");
                 });

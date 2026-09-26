@@ -1,421 +1,2127 @@
-/* =========================================================
-   HR INFO ADs - APPLICATION SHELL
-   ========================================================= */
+/* ============================================================
+   HR INFO ADs
+   ADMINISTRATION APPLICATION SHELL
+   ============================================================ */
 
-.hr-app-shell {
-    min-height: 100vh;
-    display: flex;
-    background: #F6F8FC;
+:root {
+    --hr-primary: #0A2C6A;
+    --hr-primary-dark: #071F4D;
+    --hr-primary-light: #2061C5;
+    --hr-accent: #4991F9;
+
+    --hr-background: #F6F8FC;
+    --hr-surface: #FFFFFF;
+
+    --hr-border: #E2E8F0;
+    --hr-border-light: #EDF1F7;
+
+    --hr-text: #071F4D;
+    --hr-text-secondary: #667085;
+    --hr-text-muted: #98A2B3;
+
+    --hr-danger: #DC2626;
+    --hr-success: #28C76F;
+
+    --hr-sidebar-width: 260px;
+    --hr-topbar-height: 76px;
+    --hr-footer-height: 54px;
 }
 
 
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
-
-.hr-sidebar {
-    width: 260px;
-    min-width: 260px;
-    min-height: 100vh;
-
-    background: #0A2C6A;
-
-    position: sticky;
-    top: 0;
-
-    z-index: 100;
-
-    box-shadow: 4px 0 18px rgba(7, 31, 77, 0.08);
-}
-
-
-/* =========================================================
-   MAIN
-   ========================================================= */
-
-.hr-main {
-    min-width: 0;
-    flex: 1;
-
-    display: flex;
-    flex-direction: column;
-
-    min-height: 100vh;
-}
-
-
-/* =========================================================
-   TOP BAR
-   ========================================================= */
-
-.hr-topbar {
-    height: 76px;
-
-    background: #FFFFFF;
-
-    border-bottom: 1px solid #DDE5F2;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    padding: 0 32px;
-
-    position: sticky;
-
-    top: 0;
-
-    z-index: 80;
-}
-
-
-.hr-topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
-
-
-.hr-page-context {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-
-.hr-page-context-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #071F4D;
-}
-
-
-.hr-page-context-subtitle {
-    font-size: 12px;
-    color: #667085;
-}
-
-
-.hr-topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 18px;
-}
-
-
-.hr-topbar-divider {
-    width: 1px;
-    height: 34px;
-    background: #DDE5F2;
-}
-
-
-.hr-icon-button {
-    width: 40px;
-    height: 40px;
-
-    border: 1px solid #DDE5F2;
-
-    border-radius: 10px;
-
-    background: #FFFFFF;
-
-    cursor: pointer;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    color: #2061C5;
-}
-
-
-.hr-icon-button:hover {
-    background: #F6F8FC;
-}
-
-
-.hr-notification-icon {
-    font-size: 10px;
-    color: #4991F9;
-}
-
-
-.hr-user-summary {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-
-.hr-user-avatar {
-    width: 40px;
-    height: 40px;
-
-    border-radius: 50%;
-
-    background: linear-gradient(
-        135deg,
-        #4991F9,
-        #2061C5
-    );
-
-    color: #FFFFFF;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-weight: 700;
-
-    font-size: 14px;
-}
-
-
-.hr-user-details {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-
-.hr-user-name {
-    font-size: 13px;
-    font-weight: 600;
-    color: #071F4D;
-}
-
-
-.hr-user-role {
-    font-size: 11px;
-    color: #667085;
-}
-
-
-.hr-user-chevron {
-    color: #667085;
-    font-size: 14px;
-}
-
-
-/* =========================================================
-   CONTENT
-   ========================================================= */
-
-.hr-content {
-    flex: 1;
-
-    padding: 32px;
-
-    width: 100%;
-
+/* ============================================================
+   GLOBAL BOX SIZING
+   ============================================================ */
+
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 
-/* =========================================================
+/* ============================================================
+   APPLICATION SHELL
+   ============================================================ */
+
+.hr-app-shell {
+    width: 100%;
+
+    height: 100vh;
+    height: 100dvh;
+
+    min-height: 100vh;
+    min-height: 100dvh;
+
+    display: flex;
+
+    overflow: hidden;
+
+    background:
+        var(--hr-background);
+
+    color:
+        var(--hr-text);
+}
+
+
+/* ============================================================
+   SIDEBAR SHELL
+   IMPORTANT:
+   ------------------------------------------------------------
+   Desktop:
+       Sidebar is a NORMAL FLEX ITEM.
+
+   Do NOT use position: fixed on desktop.
+
+   This guarantees that the main page content starts AFTER
+   the sidebar and never goes underneath it.
+   ============================================================ */
+
+.hr-sidebar {
+    position: relative;
+
+    width:
+        var(--hr-sidebar-width);
+
+    min-width:
+        var(--hr-sidebar-width);
+
+    max-width:
+        var(--hr-sidebar-width);
+
+    height: 100%;
+    min-height: 100%;
+
+    flex:
+        0 0 var(--hr-sidebar-width);
+
+    box-sizing: border-box;
+
+    z-index: 1000;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            180deg,
+            #0B3275 0%,
+            #092A65 48%,
+            #071F4D 100%
+        );
+
+    border-right:
+        1px solid rgba(255, 255, 255, 0.08);
+
+    box-shadow:
+        5px 0 22px rgba(7, 31, 77, 0.14);
+}
+
+/* ============================================================
+   SIDEBAR INTERNAL LAYOUT
+   ============================================================ */
+
+.hr-sidebar > .hr-sidebar-container {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+/* ============================================================
+   MAIN APPLICATION AREA
+   ============================================================ */
+
+.hr-main {
+    flex:
+        1 1 auto;
+
+    width:
+        auto;
+
+    min-width:
+        0;
+
+    max-width:
+        none;
+
+    height:
+        100%;
+
+    min-height:
+        100%;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    box-sizing:
+        border-box;
+
+    overflow:
+        hidden;
+
+    background:
+        var(--hr-background);
+}
+
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.hr-topbar {
+    width:
+        100%;
+
+    height:
+        var(--hr-topbar-height);
+
+    min-height:
+        var(--hr-topbar-height);
+
+    flex:
+        0 0 var(--hr-topbar-height);
+
+    box-sizing:
+        border-box;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        20px;
+
+    padding:
+        0 30px;
+
+    position:
+        relative;
+
+    z-index:
+        900;
+
+    background:
+        rgba(255, 255, 255, 0.98);
+
+    border-bottom:
+        1px solid var(--hr-border);
+
+    box-shadow:
+        0 2px 12px rgba(7, 31, 77, 0.035);
+}
+
+
+/* ============================================================
+   TOP BAR LEFT
+   ============================================================ */
+
+.hr-topbar-left {
+    min-width:
+        0;
+
+    flex:
+        1 1 auto;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        16px;
+}
+
+
+/* ============================================================
+   PAGE CONTEXT
+   ============================================================ */
+
+.hr-page-context {
+    min-width:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+}
+
+
+/* ============================================================
+   TOP BAR BRAND
+   ============================================================ */
+
+.hr-topbar-brand {
+    min-width:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        11px;
+}
+
+
+/* ============================================================
+   TOP BAR LOGO
+   ============================================================ */
+
+.hr-topbar-logo {
+    width:
+        38px;
+
+    height:
+        38px;
+
+    min-width:
+        38px;
+
+    min-height:
+        38px;
+
+    display:
+        block;
+
+    object-fit:
+        contain;
+
+    object-position:
+        center;
+
+    flex:
+        0 0 38px;
+}
+
+
+/* ============================================================
+   TOP BAR BRAND TEXT
+   ============================================================ */
+
+.hr-topbar-brand-text {
+    min-width:
+        0;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        2px;
+}
+
+
+/* ============================================================
+   TOP BAR TITLE
+   ============================================================ */
+
+.hr-page-context-title {
+    display:
+        block;
+
+    max-width:
+        420px;
+
+    color:
+        var(--hr-primary-dark);
+
+    font-size:
+        15px;
+
+    line-height:
+        1.3;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   TOP BAR SUBTITLE
+   ============================================================ */
+
+.hr-page-context-subtitle {
+    display:
+        block;
+
+    color:
+        var(--hr-text-secondary);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.2;
+
+    font-weight:
+        500;
+
+    letter-spacing:
+        0.3px;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   TOP BAR RIGHT
+   ============================================================ */
+
+.hr-topbar-right {
+    flex:
+        0 0 auto;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        14px;
+
+    position:
+        relative;
+}
+
+
+/* ============================================================
+   NOTIFICATION BUTTON
+   ============================================================ */
+
+.hr-icon-button {
+    position:
+        relative;
+
+    width:
+        40px;
+
+    height:
+        40px;
+
+    min-width:
+        40px;
+
+    padding:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    box-sizing:
+        border-box;
+
+    border:
+        1px solid var(--hr-border);
+
+    border-radius:
+        10px;
+
+    background:
+        #FFFFFF;
+
+    color:
+        var(--hr-primary-light);
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.hr-icon-button:hover {
+    background:
+        #F5F8FD;
+
+    border-color:
+        #C9D6E8;
+
+    color:
+        var(--hr-primary);
+
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 4px 10px rgba(7, 31, 77, 0.06);
+}
+
+
+.hr-icon-button i {
+    font-size:
+        16px;
+
+    line-height:
+        1;
+}
+
+
+/* ============================================================
+   NOTIFICATION BADGE
+   ============================================================ */
+
+.hr-notification-badge {
+    position:
+        absolute;
+
+    top:
+        5px;
+
+    right:
+        5px;
+
+    min-width:
+        14px;
+
+    height:
+        14px;
+
+    padding:
+        0 3px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    box-sizing:
+        border-box;
+
+    border-radius:
+        20px;
+
+    background:
+        var(--hr-danger);
+
+    color:
+        #FFFFFF;
+
+    font-size:
+        7px;
+
+    line-height:
+        1;
+
+    font-weight:
+        700;
+}
+
+
+/* ============================================================
+   TOP BAR DIVIDER
+   ============================================================ */
+
+.hr-topbar-divider {
+    width:
+        1px;
+
+    height:
+        34px;
+
+    flex:
+        0 0 1px;
+
+    background:
+        var(--hr-border);
+}
+
+
+/* ============================================================
+   USER MENU
+   ============================================================ */
+
+.hr-user-menu {
+    position:
+        relative;
+
+    z-index:
+        2000;
+}
+
+
+/* ============================================================
+   USER SUMMARY BUTTON
+   ============================================================ */
+
+.hr-user-summary {
+    margin:
+        0;
+
+    padding:
+        5px 7px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    border:
+        0;
+
+    border-radius:
+        12px;
+
+    background:
+        transparent;
+
+    color:
+        inherit;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.hr-user-summary:hover,
+.hr-user-summary[aria-expanded="true"] {
+    background:
+        #F5F7FB;
+}
+
+
+/* ============================================================
+   USER AVATAR
+   ============================================================ */
+
+.hr-user-avatar {
+    width:
+        40px;
+
+    height:
+        40px;
+
+    min-width:
+        40px;
+
+    min-height:
+        40px;
+
+    flex:
+        0 0 40px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4991F9,
+            #2061C5
+        );
+
+    color:
+        #FFFFFF;
+
+    font-size:
+        13px;
+
+    line-height:
+        1;
+
+    font-weight:
+        700;
+
+    box-shadow:
+        0 3px 10px rgba(32, 97, 197, 0.20);
+}
+
+
+/* ============================================================
+   USER DETAILS
+   ============================================================ */
+
+.hr-user-details {
+    min-width:
+        100px;
+
+    max-width:
+        180px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        flex-start;
+
+    gap:
+        2px;
+}
+
+
+/* ============================================================
+   USER NAME
+   ============================================================ */
+
+.hr-user-name {
+    display:
+        block;
+
+    max-width:
+        170px;
+
+    color:
+        var(--hr-primary-dark);
+
+    font-size:
+        12px;
+
+    line-height:
+        1.2;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   USER ROLE
+   ============================================================ */
+
+.hr-user-role {
+    display:
+        block;
+
+    color:
+        var(--hr-text-secondary);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.2;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   USER CHEVRON
+   ============================================================ */
+
+.hr-user-chevron {
+    color:
+        var(--hr-text-secondary);
+
+    font-size:
+        11px;
+
+    line-height:
+        1;
+
+    transition:
+        transform 0.18s ease;
+}
+
+
+/* ============================================================
+   USER DROPDOWN
+   ============================================================ */
+
+.hr-user-dropdown {
+    position:
+        absolute;
+
+    top:
+        calc(100% + 10px);
+
+    right:
+        0;
+
+    width:
+        260px;
+
+    max-width:
+        calc(100vw - 24px);
+
+    padding:
+        8px;
+
+    box-sizing:
+        border-box;
+
+    background:
+        #FFFFFF;
+
+    border:
+        1px solid var(--hr-border);
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 16px 40px rgba(7, 31, 77, 0.16);
+
+    z-index:
+        5000;
+
+    animation:
+        hr-dropdown-enter 0.16s ease-out;
+}
+
+
+@keyframes hr-dropdown-enter {
+
+    from {
+        opacity:
+            0;
+
+        transform:
+            translateY(-5px);
+    }
+
+    to {
+        opacity:
+            1;
+
+        transform:
+            translateY(0);
+    }
+}
+
+
+/* ============================================================
+   DROPDOWN HEADER
+   ============================================================ */
+
+.hr-user-dropdown-header {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        10px;
+}
+
+
+.hr-user-dropdown-avatar {
+    width:
+        38px;
+
+    height:
+        38px;
+
+    min-width:
+        38px;
+
+    min-height:
+        38px;
+
+    flex:
+        0 0 38px;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-radius:
+        50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4991F9,
+            #2061C5
+        );
+
+    color:
+        #FFFFFF;
+
+    font-size:
+        12px;
+
+    line-height:
+        1;
+
+    font-weight:
+        700;
+}
+
+
+.hr-user-dropdown-header > div:last-child {
+    min-width:
+        0;
+
+    flex:
+        1 1 auto;
+}
+
+
+/* ============================================================
+   DROPDOWN USER NAME
+   ============================================================ */
+
+.hr-user-dropdown-name {
+    color:
+        var(--hr-primary-dark);
+
+    font-size:
+        12px;
+
+    line-height:
+        1.2;
+
+    font-weight:
+        700;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   DROPDOWN EMAIL
+   ============================================================ */
+
+.hr-user-dropdown-email {
+    margin-top:
+        2px;
+
+    color:
+        var(--hr-text-secondary);
+
+    font-size:
+        10px;
+
+    line-height:
+        1.2;
+
+    white-space:
+        nowrap;
+
+    overflow:
+        hidden;
+
+    text-overflow:
+        ellipsis;
+}
+
+
+/* ============================================================
+   DROPDOWN DIVIDER
+   ============================================================ */
+
+.hr-user-dropdown-divider {
+    height:
+        1px;
+
+    margin:
+        5px 2px;
+
+    background:
+        var(--hr-border-light);
+}
+
+
+/* ============================================================
+   DROPDOWN ITEM
+   ============================================================ */
+
+.hr-user-dropdown-item {
+    width:
+        100%;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        10px 11px;
+
+    border:
+        0;
+
+    border-radius:
+        9px;
+
+    background:
+        transparent;
+
+    color:
+        #344054;
+
+    font-family:
+        inherit;
+
+    font-size:
+        12px;
+
+    font-weight:
+        500;
+
+    line-height:
+        1.2;
+
+    text-align:
+        left;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+}
+
+
+.hr-user-dropdown-item:hover {
+    background:
+        #F3F6FB;
+
+    color:
+        var(--hr-primary-light);
+}
+
+
+.hr-user-dropdown-item i {
+    width:
+        18px;
+
+    flex:
+        0 0 18px;
+
+    font-size:
+        14px;
+
+    line-height:
+        1;
+
+    text-align:
+        center;
+}
+
+
+/* ============================================================
+   DANGER ITEM
+   ============================================================ */
+
+.hr-user-dropdown-danger {
+    color:
+        var(--hr-danger);
+}
+
+
+.hr-user-dropdown-danger:hover {
+    background:
+        #FEF2F2;
+
+    color:
+        #B91C1C;
+}
+
+
+/* ============================================================
+   PAGE CONTENT
+   ============================================================ */
+
+.hr-content {
+    width:
+        100%;
+
+    flex:
+        1 1 auto;
+
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    box-sizing:
+        border-box;
+
+    padding:
+        30px;
+
+    overflow-y:
+        auto;
+
+    overflow-x:
+        hidden;
+
+    background:
+        var(--hr-background);
+
+    scrollbar-width:
+        thin;
+
+    scrollbar-color:
+        #CBD5E1
+        transparent;
+}
+
+
+/* ============================================================
+   CONTENT SCROLLBAR
+   ============================================================ */
+
+.hr-content::-webkit-scrollbar {
+    width:
+        7px;
+}
+
+
+.hr-content::-webkit-scrollbar-track {
+    background:
+        transparent;
+}
+
+
+.hr-content::-webkit-scrollbar-thumb {
+    background:
+        #CBD5E1;
+
+    border-radius:
+        20px;
+}
+
+
+.hr-content::-webkit-scrollbar-thumb:hover {
+    background:
+        #94A3B8;
+}
+
+/* ============================================================
    FOOTER
-   ========================================================= */
+   ============================================================ */
 
 .hr-footer {
-    min-height: 54px;
-
-    background: #FFFFFF;
-
-    border-top: 1px solid #DDE5F2;
+    width: 100%;
+    height: var(--hr-footer-height);
+    min-height: var(--hr-footer-height);
+    flex: 0 0 var(--hr-footer-height);
 
     display: flex;
-
+    align-items: center;
     justify-content: space-between;
 
-    align-items: center;
+    gap: 20px;
+    padding: 0 30px;
 
-    padding: 0 32px;
+    box-sizing: border-box;
+
+    position: relative;
+
+    background:
+        linear-gradient(
+            180deg,
+            #FFFFFF 0%,
+            #F9FBFE 100%
+        );
+
+    border-top: 1px solid #E2E8F0;
+
+    box-shadow:
+        0 -3px 14px rgba(7, 31, 77, 0.045);
+
+    color: #667085;
+
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
 
     font-size: 11px;
+    line-height: 1.2;
 
-    color: #667085;
+    z-index: 10;
 }
 
 
-/* =========================================================
-   MOBILE MENU
-   ========================================================= */
+/* ------------------------------------------------------------
+   LEFT
+   ------------------------------------------------------------ */
 
-.hr-mobile-menu {
-    display: none;
-
-    width: 40px;
-    height: 40px;
-
-    border: 1px solid #DDE5F2;
-
-    border-radius: 10px;
-
-    background: #FFFFFF;
-
-    cursor: pointer;
-
-    padding: 9px;
-}
-
-
-.hr-mobile-menu span {
-    display: block;
-
-    height: 2px;
-
-    margin: 4px 0;
-
-    background: #0A2C6A;
-
-    border-radius: 2px;
-}
-
-
-/* =========================================================
-   MOBILE OVERLAY
-   ========================================================= */
-
-.hr-mobile-overlay {
-    display: none;
-}
-
-
-/* =========================================================
-   ERROR
-   ========================================================= */
-
-#blazor-error-ui {
-    display: none;
-
-    position: fixed;
-
-    bottom: 0;
-
-    left: 0;
-
-    right: 0;
-
-    z-index: 9999;
-
-    padding: 12px 20px;
-
-    background: #FFFFFF;
-
-    border-top: 3px solid #DC2626;
-
-    box-shadow: 0 -4px 20px rgba(7, 31, 77, 0.12);
-}
-
-
-.hr-error-message {
-    max-width: 1200px;
-
-    margin: 0 auto;
-
+.hr-footer-left {
     display: flex;
-
     align-items: center;
 
-    gap: 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
 
-    font-size: 13px;
+
+.hr-footer-brand {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    min-width: 0;
 
     color: #071F4D;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    white-space: nowrap;
 }
 
 
-.hr-error-message strong {
-    color: #DC2626;
+/* Small brand indicator */
+
+.hr-footer-brand-dot {
+    width: 17px;
+    height: 17px;
+
+    min-width: 17px;
+
+    display: inline-block;
+
+    border-radius: 5px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #4991F9 0%,
+            #2061C5 100%
+        );
+
+    box-shadow:
+        0 3px 7px rgba(32, 97, 197, 0.20);
+
+    position: relative;
 }
 
 
-.hr-error-reload {
-    color: #2061C5;
+/* White inner mark */
 
+.hr-footer-brand-dot::after {
+    content: "";
+
+    position: absolute;
+
+    width: 5px;
+    height: 5px;
+
+    top: 50%;
+    left: 50%;
+
+    border-radius: 50%;
+
+    background: #FFFFFF;
+
+    transform: translate(-50%, -50%);
+}
+
+
+/* ------------------------------------------------------------
+   RIGHT
+   ------------------------------------------------------------ */
+
+.hr-footer-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    min-width: 0;
+
+    flex: 0 0 auto;
+}
+
+
+/* System status */
+
+.hr-footer-status {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: #475467;
+
+    font-size: 10px;
     font-weight: 600;
 
-    text-decoration: none;
+    white-space: nowrap;
 }
 
 
-.hr-error-dismiss {
-    margin-left: auto;
+/* Green online indicator */
 
-    border: 0;
+.hr-footer-status-dot {
+    width: 6px;
+    height: 6px;
 
-    background: transparent;
+    min-width: 6px;
 
-    font-size: 22px;
+    border-radius: 50%;
 
-    color: #667085;
+    background: #28C76F;
 
-    cursor: pointer;
+    box-shadow:
+        0 0 0 3px rgba(40, 199, 111, 0.10);
 }
 
 
-/* =========================================================
-   RESPONSIVE
-   ========================================================= */
+/* Divider */
+
+.hr-footer-divider {
+    width: 1px;
+    height: 14px;
+
+    flex: 0 0 1px;
+
+    background: #D9E1EC;
+}
+
+
+/* Description */
+
+.hr-footer-description {
+    color: #98A2B3;
+
+    font-size: 10px;
+    font-weight: 500;
+
+    letter-spacing: 0.1px;
+
+    white-space: nowrap;
+}
+
+
+/* ------------------------------------------------------------
+   HOVER / SUBTLE INTERACTION
+   ------------------------------------------------------------ */
+
+.hr-footer-brand {
+    transition:
+        color 180ms ease,
+        transform 180ms ease;
+}
+
+.hr-footer-brand:hover {
+    color: #2061C5;
+
+    transform: translateX(1px);
+}
+
+
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
+
+@media (max-width: 1100px) {
+
+    .hr-footer {
+        padding: 0 24px;
+    }
+}
+
 
 @media (max-width: 900px) {
 
-    .hr-sidebar {
-        width: 230px;
-        min-width: 230px;
+    .hr-footer {
+        padding: 0 20px;
     }
-
-    .hr-content {
-        padding: 24px;
-    }
-
 }
 
 
 @media (max-width: 700px) {
 
-    .hr-sidebar {
-        position: fixed;
+    .hr-footer {
+        height: 44px;
+        min-height: 44px;
+        flex-basis: 44px;
 
-        left: -270px;
+        padding: 0 16px;
 
-        top: 0;
-
-        width: 260px;
-
-        min-width: 260px;
-
-        transition: left 0.25s ease;
+        gap: 10px;
     }
 
-    .hr-sidebar:has(+ .hr-main) {
-        left: -270px;
+    .hr-footer-right {
+        gap: 7px;
     }
 
-    .hr-mobile-menu {
-        display: block;
-    }
-
-    .hr-topbar {
-        padding: 0 18px;
-    }
-
-    .hr-content {
-        padding: 20px 16px;
-    }
-
-    .hr-user-details,
-    .hr-user-chevron {
+    .hr-footer-description,
+    .hr-footer-divider {
         display: none;
     }
 
-    .hr-footer {
-        padding: 0 16px;
+    .hr-footer-status {
+        font-size: 9px;
     }
 
+    .hr-footer-brand {
+        font-size: 10px;
+    }
+
+    .hr-footer-brand-dot {
+        width: 15px;
+        height: 15px;
+        min-width: 15px;
+        border-radius: 4px;
+    }
+
+    .hr-footer-brand-dot::after {
+        width: 4px;
+        height: 4px;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .hr-footer {
+        padding: 0 12px;
+    }
+
+    .hr-footer-status {
+        display: none;
+    }
+
+    .hr-footer-brand {
+        font-size: 9px;
+    }
+}
+/* ============================================================
+   MOBILE MENU BUTTON
+   ============================================================ */
+
+.hr-mobile-menu {
+    width:
+        40px;
+
+    height:
+        40px;
+
+    min-width:
+        40px;
+
+    min-height:
+        40px;
+
+    padding:
+        8px;
+
+    display:
+        none;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    flex-direction:
+        column;
+
+    gap:
+        4px;
+
+    box-sizing:
+        border-box;
+
+    border:
+        1px solid var(--hr-border);
+
+    border-radius:
+        10px;
+
+    background:
+        #FFFFFF;
+
+    cursor:
+        pointer;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.hr-mobile-menu:hover {
+    background:
+        #F5F8FD;
+
+    border-color:
+        #C9D6E8;
+
+    box-shadow:
+        0 3px 8px rgba(7, 31, 77, 0.06);
+}
+
+
+.hr-mobile-menu span {
+    display:
+        block;
+
+    width:
+        18px;
+
+    height:
+        2px;
+
+    margin:
+        0;
+
+    border-radius:
+        2px;
+
+    background:
+        var(--hr-primary);
+
+    transition:
+        transform 0.18s ease,
+        opacity 0.18s ease;
+}
+
+
+/* ============================================================
+   MOBILE OVERLAY
+   ============================================================ */
+
+.hr-mobile-overlay {
+    display:
+        none;
+
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        950;
+
+    background:
+        rgba(7, 31, 77, 0.40);
+
+    backdrop-filter:
+        blur(2px);
+}
+
+
+/* ============================================================
+   ERROR UI
+   ============================================================ */
+
+#blazor-error-ui {
+    display:
+        none;
+
+    position:
+        fixed;
+
+    left:
+        0;
+
+    right:
+        0;
+
+    bottom:
+        0;
+
+    z-index:
+        9999;
+
+    padding:
+        12px 20px;
+
+    background:
+        #FFFFFF;
+
+    border-top:
+        3px solid var(--hr-danger);
+
+    box-shadow:
+        0 -4px 20px rgba(7, 31, 77, 0.12);
+}
+
+
+.hr-error-message {
+    max-width:
+        1200px;
+
+    margin:
+        0 auto;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    color:
+        var(--hr-primary-dark);
+
+    font-size:
+        13px;
+
+    line-height:
+        1.4;
+}
+
+
+.hr-error-message strong {
+    color:
+        var(--hr-danger);
+}
+
+
+.hr-error-reload {
+    color:
+        var(--hr-primary-light);
+
+    font-weight:
+        600;
+
+    text-decoration:
+        none;
+}
+
+
+.hr-error-reload:hover {
+    text-decoration:
+        underline;
+}
+
+
+.hr-error-dismiss {
+    margin-left:
+        auto;
+
+    border:
+        0;
+
+    background:
+        transparent;
+
+    color:
+        var(--hr-text-secondary);
+
+    font-size:
+        22px;
+
+    line-height:
+        1;
+
+    cursor:
+        pointer;
+}
+
+
+/* ============================================================
+   TABLET
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    :root {
+        --hr-sidebar-width:
+            245px;
+    }
+
+
+    .hr-topbar {
+        padding:
+            0 24px;
+    }
+
+
+    .hr-content {
+        padding:
+            24px;
+    }
+
+
+    .hr-footer {
+        padding:
+            0 24px;
+    }
+
+
+    .hr-user-details {
+        min-width:
+            80px;
+    }
+}
+
+
+/* ============================================================
+   SMALL TABLET
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    :root {
+        --hr-sidebar-width:
+            250px;
+    }
+
+
+    .hr-topbar {
+        padding:
+            0 20px;
+    }
+
+
+    .hr-content {
+        padding:
+            22px;
+    }
+
+
+    .hr-footer {
+        padding:
+            0 20px;
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 700px) {
+
+    :root {
+        --hr-sidebar-width:
+            260px;
+    }
+
+
+    /* --------------------------------------------------------
+       Sidebar becomes an overlay ONLY on mobile
+       -------------------------------------------------------- */
+
+    .hr-sidebar {
+        position:
+            fixed;
+
+        top:
+            0;
+
+        left:
+            calc(var(--hr-sidebar-width) * -1);
+
+        bottom:
+            0;
+
+        width:
+            var(--hr-sidebar-width);
+
+        min-width:
+            var(--hr-sidebar-width);
+
+        max-width:
+            var(--hr-sidebar-width);
+
+        height:
+            100vh;
+
+        height:
+            100dvh;
+
+        min-height:
+            100vh;
+
+        min-height:
+            100dvh;
+
+        flex:
+            none;
+
+        transition:
+            left 0.25s ease;
+
+        box-shadow:
+            10px 0 35px rgba(7, 31, 77, 0.25);
+    }
+
+
+    .hr-sidebar.hr-sidebar-open {
+        left:
+            0;
+    }
+
+
+    /* --------------------------------------------------------
+       Main area
+       -------------------------------------------------------- */
+
+    .hr-main {
+        width:
+            100%;
+
+        min-width:
+            0;
+
+        margin:
+            0;
+
+        min-height:
+            100vh;
+
+        min-height:
+            100dvh;
+    }
+
+
+    /* --------------------------------------------------------
+       Mobile menu button
+       -------------------------------------------------------- */
+
+    .hr-mobile-menu {
+        display:
+            flex;
+    }
+
+
+    /* --------------------------------------------------------
+       Top bar
+       -------------------------------------------------------- */
+
+    .hr-topbar {
+        height:
+            68px;
+
+        min-height:
+            68px;
+
+        flex:
+            0 0 68px;
+
+        padding:
+            0 16px;
+
+        gap:
+            10px;
+    }
+
+
+    .hr-topbar-left {
+        gap:
+            10px;
+    }
+
+
+    .hr-page-context-title {
+        max-width:
+            230px;
+
+        font-size:
+            13px;
+    }
+
+
+    .hr-page-context-subtitle {
+        display:
+            none;
+    }
+
+
+    .hr-topbar-logo {
+        width:
+            34px;
+
+        height:
+            34px;
+
+        min-width:
+            34px;
+
+        min-height:
+            34px;
+
+        flex-basis:
+            34px;
+    }
+
+
+    .hr-topbar-brand {
+        gap:
+            8px;
+    }
+
+
+    /* --------------------------------------------------------
+       Content
+       -------------------------------------------------------- */
+
+    .hr-content {
+        padding:
+            20px 16px;
+    }
+
+
+    /* --------------------------------------------------------
+       User information
+       -------------------------------------------------------- */
+
+    .hr-user-details,
+    .hr-user-chevron {
+        display:
+            none;
+    }
+
+
+    .hr-user-summary {
+        padding:
+            4px;
+    }
+
+
+    .hr-user-avatar {
+        width:
+            36px;
+
+        height:
+            36px;
+
+        min-width:
+            36px;
+
+        min-height:
+            36px;
+
+        flex-basis:
+            36px;
+    }
+
+
+    .hr-topbar-divider {
+        height:
+            28px;
+    }
+
+
+    /* --------------------------------------------------------
+       Footer
+       -------------------------------------------------------- */
+
+    .hr-footer {
+        height:
+            44px;
+
+        min-height:
+            44px;
+
+        flex-basis:
+            44px;
+
+        padding:
+            0 16px;
+
+        gap:
+            10px;
+    }
+
+
+    .hr-footer span:last-child {
+        display:
+            none;
+    }
+
+
+    /* --------------------------------------------------------
+       Overlay
+       -------------------------------------------------------- */
+
+    .hr-mobile-overlay {
+        display:
+            block;
+    }
+
+
+    /* --------------------------------------------------------
+       User dropdown
+       -------------------------------------------------------- */
+
+    .hr-user-dropdown {
+        right:
+            -4px;
+
+        width:
+            245px;
+
+        max-width:
+            calc(100vw - 20px);
+    }
+}
+
+
+/* ============================================================
+   VERY SMALL MOBILE
+   ============================================================ */
+
+@media (max-width: 480px) {
+
+    .hr-topbar {
+        padding:
+            0 12px;
+    }
+
+
+    .hr-content {
+        padding:
+            16px 12px;
+    }
+
+
+    .hr-page-context-title {
+        max-width:
+            180px;
+
+        font-size:
+            12px;
+    }
+
+
+    .hr-topbar-logo {
+        width:
+            32px;
+
+        height:
+            32px;
+
+        min-width:
+            32px;
+
+        min-height:
+            32px;
+
+        flex-basis:
+            32px;
+    }
+
+
+    .hr-icon-button {
+        width:
+            36px;
+
+        height:
+            36px;
+
+        min-width:
+            36px;
+
+        min-height:
+            36px;
+    }
+
+
+    .hr-topbar-divider {
+        display:
+            none;
+    }
+
+
+    .hr-footer {
+        padding:
+            0 12px;
+    }
 }

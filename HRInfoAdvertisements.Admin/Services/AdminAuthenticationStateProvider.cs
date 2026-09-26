@@ -1,4 +1,5 @@
 using System.Security.Claims;
+
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace HRInfoAdvertisements.Admin.Services;
@@ -18,14 +19,18 @@ public class AdminAuthenticationStateProvider
 
     private DateTime _expiresAt;
 
+
     public string? AccessToken =>
         _accessToken;
+
 
     public string? RefreshToken =>
         _refreshToken;
 
+
     public DateTime ExpiresAt =>
         _expiresAt;
+
 
     public override Task<AuthenticationState>
         GetAuthenticationStateAsync()
@@ -35,9 +40,6 @@ public class AdminAuthenticationStateProvider
                 _currentUser));
     }
 
-    // ============================================================
-    // SIGN IN
-    // ============================================================
 
     public void SignIn(
         long userId,
@@ -49,6 +51,14 @@ public class AdminAuthenticationStateProvider
         string refreshToken,
         DateTime expiresAt)
     {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new ArgumentException(
+                "Access token cannot be empty.",
+                nameof(accessToken));
+        }
+
+
         var claims =
             new List<Claim>
             {
@@ -58,14 +68,15 @@ public class AdminAuthenticationStateProvider
 
                 new(
                     ClaimTypes.Name,
-                    userName),
+                    userName ?? string.Empty),
 
                 new(
                     ClaimTypes.Email,
-                    email)
+                    email ?? string.Empty)
             };
 
-        foreach (var role in roles)
+
+        foreach (var role in roles ?? Enumerable.Empty<string>())
         {
             if (!string.IsNullOrWhiteSpace(role))
             {
@@ -76,7 +87,10 @@ public class AdminAuthenticationStateProvider
             }
         }
 
-        foreach (var permission in permissions)
+
+        foreach (
+            var permission
+            in permissions ?? Enumerable.Empty<string>())
         {
             if (!string.IsNullOrWhiteSpace(permission))
             {
@@ -87,22 +101,62 @@ public class AdminAuthenticationStateProvider
             }
         }
 
+
         var identity =
             new ClaimsIdentity(
                 claims,
                 authenticationType: "AdminJwt");
 
+
         _currentUser =
             new ClaimsPrincipal(identity);
+
 
         _accessToken =
             accessToken;
 
+
         _refreshToken =
             refreshToken;
 
+
         _expiresAt =
             expiresAt;
+
+
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "ADMIN AUTHENTICATION STATE PROVIDER");
+
+        Console.WriteLine(
+            "SIGN IN");
+
+        Console.WriteLine(
+            $"USER ID: {userId}");
+
+        Console.WriteLine(
+            $"USER NAME: {userName}");
+
+        Console.WriteLine(
+            $"AUTHENTICATED: " +
+            $"{_currentUser.Identity?.IsAuthenticated}");
+
+        Console.WriteLine(
+            $"ACCESS TOKEN AVAILABLE: " +
+            $"{!string.IsNullOrWhiteSpace(_accessToken)}");
+
+        Console.WriteLine(
+            $"ACCESS TOKEN LENGTH: " +
+            $"{_accessToken?.Length ?? 0}");
+
+        Console.WriteLine(
+            $"EXPIRES AT: {_expiresAt}");
+
+        Console.WriteLine(
+            "================================================");
+
 
         NotifyAuthenticationStateChanged(
             Task.FromResult(
@@ -110,20 +164,21 @@ public class AdminAuthenticationStateProvider
                     _currentUser)));
     }
 
-    // ============================================================
-    // SIGN OUT
-    // ============================================================
 
     public void SignOut()
     {
         _currentUser =
             Anonymous;
 
-        _accessToken = null;
+        _accessToken =
+            null;
 
-        _refreshToken = null;
+        _refreshToken =
+            null;
 
-        _expiresAt = default;
+        _expiresAt =
+            default;
+
 
         NotifyAuthenticationStateChanged(
             Task.FromResult(

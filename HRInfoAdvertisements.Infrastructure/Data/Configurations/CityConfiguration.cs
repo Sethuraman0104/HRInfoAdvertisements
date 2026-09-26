@@ -19,11 +19,6 @@ public class CityConfiguration : IEntityTypeConfiguration<City>
         builder.Property(x => x.CityNameAr)
             .HasMaxLength(150);
 
-        builder.HasOne(x => x.Country)
-            .WithMany(x => x.Cities)
-            .HasForeignKey(x => x.CountryID)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.HasOne(x => x.State)
             .WithMany(x => x.Cities)
             .HasForeignKey(x => x.StateID)
@@ -31,9 +26,9 @@ public class CityConfiguration : IEntityTypeConfiguration<City>
 
         builder.HasIndex(x => new
         {
-            x.CountryID,
             x.StateID,
             x.CityName
-        }).IsUnique();
+        })
+        .IsUnique();
     }
 }

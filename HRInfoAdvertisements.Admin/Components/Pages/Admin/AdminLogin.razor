@@ -2,6 +2,7 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
+@using System.Security.Claims
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
@@ -201,8 +202,9 @@
                      ================================================= -->
 
                 <EditForm Model="@loginModel"
-                          OnValidSubmit="@HandleLogin"
-                          FormName="AdminLoginForm">
+          OnValidSubmit="@HandleLogin"
+          FormName="AdminLoginForm"
+          Enhance="false">
 
                     <DataAnnotationsValidator />
 
@@ -407,130 +409,156 @@
     // ============================================================
 
     private async Task HandleLogin()
+{
+    if (isLoading)
     {
-        if (isLoading)
+        Console.WriteLine(
+            "LOGIN IGNORED: Login is already in progress.");
+
+        return;
+    }
+
+    errorMessage = null;
+    isLoading = true;
+
+    Console.WriteLine(
+        "==================================================");
+
+    Console.WriteLine(
+        "ADMIN LOGIN HANDLER STARTED");
+
+    try
+    {
+        var email =
+            loginModel.Email?.Trim() ?? string.Empty;
+
+        var password =
+            loginModel.Password ?? string.Empty;
+
+        Console.WriteLine(
+            $"ADMIN LOGIN EMAIL: {email}");
+
+        var result =
+            await AuthApiService.LoginAsync(
+                email,
+                password);
+
+        if (result == null)
         {
+            Console.WriteLine(
+                "ADMIN LOGIN FAILED: Authentication service returned null.");
+
+            errorMessage =
+                "Unable to connect to the authentication service.";
+
             return;
         }
 
-        errorMessage = null;
+        Console.WriteLine(
+            $"ADMIN LOGIN RESULT: Success={result.Success}");
 
-        isLoading = true;
-
-        try
-        {
-            var email =
-                loginModel.Email.Trim();
-
-            var password =
-                loginModel.Password;
-
-
-            // ----------------------------------------------------
-            // Call API
-            // ----------------------------------------------------
-
-            var result =
-                await AuthApiService.LoginAsync(
-                    email,
-                    password);
-
-
-            // ----------------------------------------------------
-            // API unavailable
-            // ----------------------------------------------------
-
-            if (result == null)
-            {
-                errorMessage =
-                    "Unable to connect to the authentication service.";
-
-                return;
-            }
-
-
-            // ----------------------------------------------------
-            // Login failed
-            // ----------------------------------------------------
-
-            if (!result.Success)
-            {
-                errorMessage =
-                    string.IsNullOrWhiteSpace(result.Message)
-                        ? "Invalid email address or password."
-                        : result.Message;
-
-                return;
-            }
-
-
-            // ----------------------------------------------------
-            // Verify administrator role
-            // ----------------------------------------------------
-
-            var isAdministrator =
-                result.Roles.Any(role =>
-                    string.Equals(
-                        role,
-                        "Admin",
-                        StringComparison.OrdinalIgnoreCase)
-                    ||
-                    string.Equals(
-                        role,
-                        "SuperAdmin",
-                        StringComparison.OrdinalIgnoreCase));
-
-
-            if (!isAdministrator)
-            {
-                errorMessage =
-                    "Your account does not have administrator access.";
-
-                return;
-            }
-
-
-            // ----------------------------------------------------
-            // Store authentication state
-            // ----------------------------------------------------
-
-            AuthenticationStateProvider.SignIn(
-                result.UserID,
-                result.UserName,
-                result.Email,
-                result.Roles,
-                result.Permissions,
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt);
-
-
-            // ----------------------------------------------------
-            // Redirect to administrator dashboard
-            // ----------------------------------------------------
-
-            await InvokeAsync(() =>
-{
-    Navigation.NavigateTo(
-        "/admin/dashboard",
-        replace: true);
-});
-        }
-        catch (HttpRequestException)
+        if (!result.Success)
         {
             errorMessage =
-                "The authentication service is currently unavailable.";
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "Invalid email address or password."
+                    : result.Message;
+
+            Console.WriteLine(
+                $"ADMIN LOGIN FAILED: {errorMessage}");
+
+            return;
         }
-        catch (Exception ex)
+
+        var isAdministrator =
+            result.Roles.Any(role =>
+                string.Equals(
+                    role,
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase)
+                ||
+                string.Equals(
+                    role,
+                    "SuperAdmin",
+                    StringComparison.OrdinalIgnoreCase));
+
+        Console.WriteLine(
+            $"ADMIN LOGIN ROLE CHECK: {isAdministrator}");
+
+        if (!isAdministrator)
         {
             errorMessage =
-                $"Login failed: {ex.Message}";
+                "Your account does not have administrator access.";
+
+            return;
         }
-        finally
-        {
-            isLoading = false;
-        }
+
+        Console.WriteLine(
+            "ADMIN LOGIN: Calling AuthenticationStateProvider.SignIn()");
+
+        AuthenticationStateProvider.SignIn(
+            result.UserID,
+            result.UserName,
+            result.Email,
+            result.Roles,
+            result.Permissions,
+            result.AccessToken,
+            result.RefreshToken,
+            result.ExpiresAt);
+
+        Console.WriteLine(
+            "ADMIN LOGIN: SignIn() completed.");
+
+        var authState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        Console.WriteLine(
+            $"ADMIN LOGIN: IsAuthenticated = {authState.User.Identity?.IsAuthenticated}");
+
+        Console.WriteLine(
+            $"ADMIN LOGIN: User = {authState.User.Identity?.Name}");
+
+        Console.WriteLine(
+            $"ADMIN LOGIN: Roles = {string.Join(", ", authState.User.FindAll(ClaimTypes.Role).Select(x => x.Value))}");
+
+        Console.WriteLine(
+            "ADMIN LOGIN: Navigating to /admin/dashboard");
+
+        Navigation.NavigateTo(
+            "/admin/dashboard",
+            replace: true);
+
+        Console.WriteLine(
+            "ADMIN LOGIN: NavigateTo() called.");
     }
+    catch (HttpRequestException ex)
+    {
+        Console.WriteLine(
+            $"ADMIN LOGIN HTTP ERROR: {ex}");
+
+        errorMessage =
+            "The authentication service is currently unavailable.";
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"ADMIN LOGIN ERROR: {ex}");
+
+        errorMessage =
+            $"Login failed: {ex.Message}";
+    }
+    finally
+    {
+        isLoading = false;
+
+        Console.WriteLine(
+            "ADMIN LOGIN HANDLER FINISHED");
+
+        Console.WriteLine(
+            "==================================================");
+    }
+}
 
 
     // ============================================================

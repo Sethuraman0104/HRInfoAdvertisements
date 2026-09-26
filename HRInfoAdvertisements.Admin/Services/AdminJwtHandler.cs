@@ -4,12 +4,14 @@ namespace HRInfoAdvertisements.Admin.Services;
 
 public class AdminJwtHandler : DelegatingHandler
 {
-    private readonly AdminAuthenticationStateProvider _authenticationStateProvider;
+    private readonly AdminAuthenticationStateProvider
+        _authenticationStateProvider;
 
     public AdminJwtHandler(
         AdminAuthenticationStateProvider authenticationStateProvider)
     {
-        _authenticationStateProvider = authenticationStateProvider;
+        _authenticationStateProvider =
+            authenticationStateProvider;
     }
 
     protected override async Task<HttpResponseMessage> SendAsync(
@@ -19,16 +21,52 @@ public class AdminJwtHandler : DelegatingHandler
         var accessToken =
             _authenticationStateProvider.AccessToken;
 
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "ADMIN JWT HANDLER");
+
+        Console.WriteLine(
+            $"REQUEST: {request.Method} {request.RequestUri}");
+
+        Console.WriteLine(
+            $"ACCESS TOKEN AVAILABLE: " +
+            $"{!string.IsNullOrWhiteSpace(accessToken)}");
+
+        Console.WriteLine(
+            $"ACCESS TOKEN LENGTH: " +
+            $"{accessToken?.Length ?? 0}");
+
         if (!string.IsNullOrWhiteSpace(accessToken))
         {
             request.Headers.Authorization =
                 new AuthenticationHeaderValue(
                     "Bearer",
                     accessToken);
+
+            Console.WriteLine(
+                "AUTHORIZATION HEADER: Bearer token attached.");
+        }
+        else
+        {
+            Console.WriteLine(
+                "AUTHORIZATION HEADER: NO TOKEN AVAILABLE.");
         }
 
-        return await base.SendAsync(
-            request,
-            cancellationToken);
+        Console.WriteLine(
+            "================================================");
+
+        var response =
+            await base.SendAsync(
+                request,
+                cancellationToken);
+
+        Console.WriteLine(
+            $"ADMIN JWT HANDLER RESPONSE: " +
+            $"{(int)response.StatusCode} " +
+            $"{response.StatusCode}");
+
+        return response;
     }
 }

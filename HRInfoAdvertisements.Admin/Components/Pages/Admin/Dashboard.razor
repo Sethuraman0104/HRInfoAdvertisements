@@ -1,14 +1,18 @@
 @page "/admin/dashboard"
 
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Authorization
+@using System.Globalization
 @using Microsoft.AspNetCore.Components.Authorization
 
-@attribute [Authorize(Roles = "Admin,SuperAdmin")]
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Application.DTOs.Admin
+@using HRInfoAdvertisements.Application.Interfaces
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IAdvertisementModerationService AdvertisementModerationService
 @inject NavigationManager Navigation
 
 <PageTitle>Dashboard | HR INFO ADs</PageTitle>
@@ -16,341 +20,918 @@
 <div class="admin-dashboard">
 
     <!-- =========================================================
-         DASHBOARD HEADER
+         PAGE HEADER
          ========================================================= -->
 
-    <div class="admin-dashboard-header">
+    <section class="dashboard-welcome">
 
-        <div>
+        <div class="dashboard-welcome-content">
 
-            <div class="admin-dashboard-eyebrow">
+            <span class="dashboard-eyebrow">
                 ADMINISTRATION
-            </div>
+            </span>
 
             <h1>
                 Dashboard
             </h1>
 
             <p>
-                Welcome back. Here's an overview of your
-                HR INFO ADs administration platform.
+                Welcome back, <strong>@userName</strong>.
+                Here is an overview of the HR INFO ADs platform.
             </p>
 
         </div>
 
-        <div class="admin-dashboard-date">
-            @DateTime.Now.ToString("dd MMM yyyy")
-        </div>
+        <div class="dashboard-header-actions">
 
-    </div>
-
-
-    <!-- =========================================================
-         STATISTICS
-         ========================================================= -->
-
-    <div class="admin-dashboard-cards">
-
-        <!-- Advertisements -->
-
-        <div class="dashboard-stat-card">
-
-            <div class="dashboard-stat-icon">
-                AD
-            </div>
-
-            <div class="dashboard-stat-content">
-
-                <span>
-                    Advertisements
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
-                <small>
-                    Total advertisements
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <!-- Users -->
-
-        <div class="dashboard-stat-card">
-
-            <div class="dashboard-stat-icon">
-                US
-            </div>
-
-            <div class="dashboard-stat-content">
-
-                <span>
-                    Users
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
-                <small>
-                    Registered users
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <!-- Enquiries -->
-
-        <div class="dashboard-stat-card">
-
-            <div class="dashboard-stat-icon">
-                EN
-            </div>
-
-            <div class="dashboard-stat-content">
-
-                <span>
-                    Enquiries
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
-                <small>
-                    Pending enquiries
-                </small>
-
-            </div>
-
-        </div>
-
-
-        <!-- Reports -->
-
-        <div class="dashboard-stat-card">
-
-            <div class="dashboard-stat-icon">
-                RP
-            </div>
-
-            <div class="dashboard-stat-content">
-
-                <span>
-                    Reports
-                </span>
-
-                <strong>
-                    —
-                </strong>
-
-                <small>
-                    Reports requiring review
-                </small>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <!-- =========================================================
-         MAIN DASHBOARD CONTENT
-         ========================================================= -->
-
-    <div class="admin-dashboard-grid">
-
-        <!-- =====================================================
-             ADMINISTRATION / QUICK ACTIONS
-             ===================================================== -->
-
-        <section class="admin-dashboard-panel">
-
-            <div class="admin-panel-header">
+            <div class="dashboard-date-card">
+                <i class="bi bi-calendar3"></i>
 
                 <div>
+                    <small>Today</small>
 
-                    <h2>
-                        Administration
-                    </h2>
+                    <strong>
+                        @DateTime.Now.ToString(
+                            "dd MMM yyyy",
+                            CultureInfo.CurrentCulture)
+                    </strong>
+                </div>
+            </div>
 
-                    <p>
-                        Manage the HR INFO ADs platform.
-                    </p>
+            <button type="button"
+                    class="dashboard-refresh-button"
+                    @onclick="RefreshDashboardAsync"
+                    disabled="@isLoading">
+
+                @if (isLoading)
+                {
+                    <span class="dashboard-spinner"></span>
+                    <span>Refreshing</span>
+                }
+                else
+                {
+                    <i class="bi bi-arrow-clockwise"></i>
+                    <span>Refresh</span>
+                }
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERROR
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="dashboard-error">
+
+            <div class="dashboard-error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="dashboard-error-content">
+
+                <strong>
+                    Unable to load dashboard
+                </strong>
+
+                <span>
+                    @errorMessage
+                </span>
+
+            </div>
+
+            <button type="button"
+                    @onclick="RefreshDashboardAsync"
+                    disabled="@isLoading">
+
+                Retry
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         LOADING
+         ========================================================= -->
+
+    @if (isLoading && !hasLoaded)
+    {
+        <div class="dashboard-loading">
+
+            <div class="dashboard-loading-spinner"></div>
+
+            <strong>
+                Loading administration dashboard
+            </strong>
+
+            <span>
+                Retrieving the latest advertisement information...
+            </span>
+
+        </div>
+    }
+    else
+    {
+        <!-- =====================================================
+             PRIMARY STATISTICS
+             ===================================================== -->
+
+        <section class="dashboard-stat-grid">
+
+            <!-- TOTAL -->
+
+            <button type="button"
+                    class="dashboard-stat-card total"
+                    @onclick='() => NavigateTo("/admin/advertisements")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-megaphone"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Total Advertisements
+                    </span>
+
+                    <strong>
+                        @totalAdvertisements.ToString("N0")
+                    </strong>
+
+                    <small>
+                        Loaded advertisements
+                    </small>
 
                 </div>
 
-            </div>
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
 
 
-            <div class="admin-quick-actions">
+            <!-- PENDING -->
 
-                <!-- Advertisements -->
+            <button type="button"
+                    class="dashboard-stat-card pending"
+                    @onclick='() => NavigateTo("/admin/advertisements?status=pending")'>
 
-                <button type="button"
-                        @onclick='() => NavigateTo("/admin/advertisements")'>
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
 
-                    <span class="quick-action-icon">
-                        AD
-                    </span>
-
-                    <span>
-
-                        <strong>
-                            Advertisements
-                        </strong>
-
-                        <small>
-                            Review and manage advertisements
-                        </small>
-
-                    </span>
-
-                    <span class="quick-action-arrow">
-                        →
-                    </span>
-
-                </button>
-
-
-                <!-- Users -->
-
-                <button type="button"
-                        @onclick='() => NavigateTo("/admin/users")'>
-
-                    <span class="quick-action-icon">
-                        US
-                    </span>
+                <div class="dashboard-stat-content">
 
                     <span>
-
-                        <strong>
-                            Users
-                        </strong>
-
-                        <small>
-                            Manage registered users
-                        </small>
-
+                        Pending Review
                     </span>
 
-                    <span class="quick-action-arrow">
-                        →
-                    </span>
+                    <strong>
+                        @pendingAdvertisements.ToString("N0")
+                    </strong>
 
-                </button>
+                    <small>
+                        Awaiting administrator action
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
 
 
-                <!-- Reports -->
+            <!-- PUBLISHED -->
 
-                <button type="button"
-                        @onclick='() => NavigateTo("/admin/reports")'>
+            <button type="button"
+                    class="dashboard-stat-card published"
+                    @onclick='() => NavigateTo("/admin/advertisements?status=published")'>
 
-                    <span class="quick-action-icon">
-                        RP
-                    </span>
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
 
                     <span>
-
-                        <strong>
-                            Reports
-                        </strong>
-
-                        <small>
-                            Review submitted reports
-                        </small>
-
+                        Published
                     </span>
 
-                    <span class="quick-action-arrow">
-                        →
+                    <strong>
+                        @publishedAdvertisements.ToString("N0")
+                    </strong>
+
+                    <small>
+                        Currently visible
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
+
+
+            <!-- REJECTED -->
+
+            <button type="button"
+                    class="dashboard-stat-card rejected"
+                    @onclick='() => NavigateTo("/admin/advertisements?status=rejected")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-x-circle"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Rejected
                     </span>
 
-                </button>
+                    <strong>
+                        @rejectedAdvertisements.ToString("N0")
+                    </strong>
 
-            </div>
+                    <small>
+                        Returned to advertiser
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
+
+
+            <!-- DRAFT -->
+
+            <button type="button"
+                    class="dashboard-stat-card draft"
+                    @onclick='() => NavigateTo("/admin/advertisements?status=draft")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-file-earmark"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Drafts
+                    </span>
+
+                    <strong>
+                        @draftAdvertisements.ToString("N0")
+                    </strong>
+
+                    <small>
+                        Not yet submitted
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
+
+
+            <!-- EXPIRED -->
+
+            <button type="button"
+                    class="dashboard-stat-card expired"
+                    @onclick='() => NavigateTo("/admin/advertisements?status=expired")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-calendar-x"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Expired
+                    </span>
+
+                    <strong>
+                        @expiredAdvertisements.ToString("N0")
+                    </strong>
+
+                    <small>
+                        Past expiry date
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
+
+
+            <!-- FEATURED -->
+
+            <button type="button"
+                    class="dashboard-stat-card featured"
+                    @onclick='() => NavigateTo("/admin/advertisements?featured=true")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-star"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Featured
+                    </span>
+
+                    <strong>
+                        @featuredAdvertisementsDisplay
+                    </strong>
+
+                    <small>
+                        Featured advertisements
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
+
+
+            <!-- USERS -->
+
+            <button type="button"
+                    class="dashboard-stat-card users"
+                    @onclick='() => NavigateTo("/admin/users")'>
+
+                <div class="dashboard-stat-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div class="dashboard-stat-content">
+
+                    <span>
+                        Registered Users
+                    </span>
+
+                    <strong>
+                        @registeredUsersDisplay
+                    </strong>
+
+                    <small>
+                        Platform accounts
+                    </small>
+
+                </div>
+
+                <i class="bi bi-arrow-up-right dashboard-stat-arrow"></i>
+
+            </button>
 
         </section>
 
 
         <!-- =====================================================
-             CURRENT ADMINISTRATOR
+             MAIN DASHBOARD
              ===================================================== -->
 
-        <section class="admin-dashboard-panel">
+        <div class="dashboard-main-grid">
 
-            <div class="admin-panel-header">
+            <!-- =================================================
+                 APPROVAL QUEUE
+                 ================================================= -->
 
-                <div>
+            <section class="dashboard-panel dashboard-approval-panel">
 
-                    <h2>
-                        Account
-                    </h2>
+                <div class="dashboard-panel-header">
 
-                    <p>
-                        Current administrator session.
-                    </p>
+                    <div class="dashboard-panel-title">
+
+                        <div class="dashboard-panel-icon pending-icon">
+                            <i class="bi bi-shield-exclamation"></i>
+                        </div>
+
+                        <div>
+                            <h2>
+                                Approval Queue
+                            </h2>
+
+                            <p>
+                                Advertisements requiring administrator attention.
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            class="dashboard-view-all"
+                            @onclick='() => NavigateTo("/admin/advertisements?status=pending")'>
+
+                        View All
+
+                        <i class="bi bi-arrow-right"></i>
+
+                    </button>
 
                 </div>
+
+
+                @if (pendingAdvertisementsList.Count == 0)
+                {
+                    <div class="dashboard-empty">
+
+                        <div class="dashboard-empty-icon success">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+
+                        <strong>
+                            Approval queue is clear
+                        </strong>
+
+                        <span>
+                            There are no advertisements waiting for review.
+                        </span>
+
+                    </div>
+                }
+                else
+                {
+                    <div class="dashboard-approval-list">
+
+                        @foreach (var item in pendingAdvertisementsList)
+                        {
+                            <button type="button"
+                                    class="dashboard-approval-item"
+                                    @onclick='() => OpenAdvertisement(item.AdvertisementID)'>
+
+                                <div class="dashboard-approval-number">
+                                    @GetAdvertisementNumber(item)
+                                </div>
+
+                                <div class="dashboard-approval-details">
+
+                                    <strong>
+                                        @DisplayText(item.Title)
+                                    </strong>
+
+                                    <span>
+                                        @DisplayText(item.CategoryName)
+                                        <b>•</b>
+                                        @DisplayText(item.AdvertisementTypeName)
+                                    </span>
+
+                                    <small>
+                                        Submitted by
+                                        @DisplayText(item.UserName)
+                                        ·
+                                        @FormatDate(item.CreatedDate)
+                                    </small>
+
+                                </div>
+
+                                <div class="dashboard-approval-right">
+
+                                    <span class="dashboard-status pending-status">
+                                        @GetStatusName(item)
+                                    </span>
+
+                                    <i class="bi bi-chevron-right"></i>
+
+                                </div>
+
+                            </button>
+                        }
+
+                    </div>
+                }
+
+            </section>
+
+
+            <!-- =================================================
+                 QUICK ADMINISTRATION
+                 ================================================= -->
+
+            <section class="dashboard-panel">
+
+                <div class="dashboard-panel-header">
+
+                    <div class="dashboard-panel-title">
+
+                        <div class="dashboard-panel-icon">
+                            <i class="bi bi-grid"></i>
+                        </div>
+
+                        <div>
+                            <h2>
+                                Administration
+                            </h2>
+
+                            <p>
+                                Common administration tasks.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="dashboard-admin-actions">
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/advertisements")'>
+
+                        <span class="admin-action-icon blue">
+                            <i class="bi bi-megaphone"></i>
+                        </span>
+
+                        <span>
+                            <strong>Advertisements</strong>
+                            <small>Review and manage listings</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/users")'>
+
+                        <span class="admin-action-icon purple">
+                            <i class="bi bi-people"></i>
+                        </span>
+
+                        <span>
+                            <strong>Users</strong>
+                            <small>Manage platform accounts</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/categories")'>
+
+                        <span class="admin-action-icon orange">
+                            <i class="bi bi-tags"></i>
+                        </span>
+
+                        <span>
+                            <strong>Categories</strong>
+                            <small>Manage advertisement categories</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/advertisement-types")'>
+
+                        <span class="admin-action-icon green">
+                            <i class="bi bi-ui-checks-grid"></i>
+                        </span>
+
+                        <span>
+                            <strong>Advertisement Types</strong>
+                            <small>Manage listing types</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/reports")'>
+
+                        <span class="admin-action-icon red">
+                            <i class="bi bi-bar-chart"></i>
+                        </span>
+
+                        <span>
+                            <strong>Reports</strong>
+                            <small>Review platform activity</small>
+                        </span>
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </div>
+
+
+        <!-- =====================================================
+             RECENT ADVERTISEMENTS
+             ===================================================== -->
+
+        <section class="dashboard-panel dashboard-recent-panel">
+
+            <div class="dashboard-panel-header">
+
+                <div class="dashboard-panel-title">
+
+                    <div class="dashboard-panel-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+
+                    <div>
+                        <h2>
+                            Recent Advertisements
+                        </h2>
+
+                        <p>
+                            Latest advertisement activity across the platform.
+                        </p>
+                    </div>
+
+                </div>
+
+                <button type="button"
+                        class="dashboard-view-all"
+                        @onclick='() => NavigateTo("/admin/advertisements")'>
+
+                    View All
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
 
             </div>
 
 
-            <div class="admin-account-summary">
+            @if (recentAdvertisements.Count == 0)
+            {
+                <div class="dashboard-empty compact">
 
-                <!-- Avatar -->
+                    <i class="bi bi-inbox"></i>
 
-                <div class="admin-account-avatar">
-                    @GetInitials()
+                    <span>
+                        No advertisements found.
+                    </span>
+
+                </div>
+            }
+            else
+            {
+                <div class="dashboard-table-wrapper">
+
+                    <table class="dashboard-table">
+
+                        <thead>
+                            <tr>
+                                <th>Advertisement</th>
+                                <th>Advertiser</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var item in recentAdvertisements)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <button type="button"
+                                                class="dashboard-ad-link"
+                                                @onclick='() => OpenAdvertisement(item.AdvertisementID)'>
+
+                                            <strong>
+                                                @DisplayText(item.Title)
+                                            </strong>
+
+                                            <small>
+                                                @GetAdvertisementNumber(item)
+                                            </small>
+
+                                        </button>
+                                    </td>
+
+                                    <td>
+                                        <span class="dashboard-user-name">
+                                            @DisplayText(item.UserName)
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Email))
+                                        {
+                                            <small class="dashboard-user-email">
+                                                @item.Email
+                                            </small>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @DisplayText(item.CategoryName)
+                                    </td>
+
+                                    <td>
+                                        <span class="@GetStatusBadgeClass(item)">
+                                            <span></span>
+                                            @GetStatusName(item)
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @FormatDate(item.CreatedDate)
+                                    </td>
+
+                                    <td>
+                                        <button type="button"
+                                                class="dashboard-row-action"
+                                                title="Open advertisement"
+                                                @onclick='() => OpenAdvertisement(item.AdvertisementID)'>
+
+                                            <i class="bi bi-arrow-up-right"></i>
+
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </section>
+
+
+        <!-- =====================================================
+             ACTIVITY SUMMARY
+             ===================================================== -->
+
+        <div class="dashboard-bottom-grid">
+
+            <!-- ADVERTISEMENT OVERVIEW -->
+
+            <section class="dashboard-panel">
+
+                <div class="dashboard-panel-header">
+
+                    <div class="dashboard-panel-title">
+
+                        <div class="dashboard-panel-icon">
+                            <i class="bi bi-pie-chart"></i>
+                        </div>
+
+                        <div>
+                            <h2>
+                                Advertisement Overview
+                            </h2>
+
+                            <p>
+                                Current distribution by status.
+                            </p>
+                        </div>
+
+                    </div>
+
                 </div>
 
 
-                <!-- User information -->
+                <div class="dashboard-overview-list">
 
-                <div class="admin-account-info">
+                    @RenderOverviewRow(
+                        "Published",
+                        publishedAdvertisements,
+                        totalAdvertisements,
+                        "published")
 
-                    <strong>
-                        @userName
-                    </strong>
+                    @RenderOverviewRow(
+                        "Pending Review",
+                        pendingAdvertisements,
+                        totalAdvertisements,
+                        "pending")
 
-                    @if (!string.IsNullOrWhiteSpace(userEmail))
-                    {
+                    @RenderOverviewRow(
+                        "Draft",
+                        draftAdvertisements,
+                        totalAdvertisements,
+                        "draft")
+
+                    @RenderOverviewRow(
+                        "Rejected",
+                        rejectedAdvertisements,
+                        totalAdvertisements,
+                        "rejected")
+
+                    @RenderOverviewRow(
+                        "Expired",
+                        expiredAdvertisements,
+                        totalAdvertisements,
+                        "expired")
+
+                </div>
+
+            </section>
+
+
+            <!-- ADMIN ACCOUNT -->
+
+            <section class="dashboard-panel">
+
+                <div class="dashboard-panel-header">
+
+                    <div class="dashboard-panel-title">
+
+                        <div class="dashboard-panel-icon">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+
+                        <div>
+                            <h2>
+                                Administrator Account
+                            </h2>
+
+                            <p>
+                                Current administrator session.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="dashboard-account">
+
+                    <div class="dashboard-account-avatar">
+                        @GetInitials()
+                    </div>
+
+                    <div class="dashboard-account-details">
+
+                        <strong>
+                            @userName
+                        </strong>
+
                         <span>
                             @userEmail
                         </span>
-                    }
 
-
-                    <!-- Roles -->
-
-                    @if (roles.Count > 0)
-                    {
-                        <div class="admin-account-roles">
+                        <div class="dashboard-role-list">
 
                             @foreach (var role in roles)
                             {
-                                <span class="admin-role-badge">
+                                <span>
+                                    <i class="bi bi-shield-check"></i>
                                     @role
                                 </span>
                             }
 
                         </div>
-                    }
+
+                    </div>
 
                 </div>
 
-            </div>
 
-        </section>
+                <div class="dashboard-account-actions">
 
-    </div>
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/profile")'>
+
+                        <i class="bi bi-person"></i>
+                        My Profile
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+                    <button type="button"
+                            @onclick='() => NavigateTo("/admin/settings")'>
+
+                        <i class="bi bi-gear"></i>
+                        Administration Settings
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        </div>
+
+    }
 
 </div>
 
@@ -358,7 +939,7 @@
 @code {
 
     // ============================================================
-    // USER INFORMATION
+    // ADMINISTRATOR
     // ============================================================
 
     private string userName = "Administrator";
@@ -369,73 +950,636 @@
 
 
     // ============================================================
+    // ADVERTISEMENTS
+    // ============================================================
+
+    private List<AdminAdvertisementListResponse>
+        advertisements = new();
+
+    private List<AdminAdvertisementListResponse>
+        pendingAdvertisementsList = new();
+
+    private List<AdminAdvertisementListResponse>
+        recentAdvertisements = new();
+
+
+    // ============================================================
+    // STATISTICS
+    // ============================================================
+
+    private int totalAdvertisements;
+
+    private int pendingAdvertisements;
+
+    private int publishedAdvertisements;
+
+    private int rejectedAdvertisements;
+
+    private int draftAdvertisements;
+
+    private int expiredAdvertisements;
+
+
+    /*
+     * The current AdminAdvertisementListResponse DTO does not
+     * contain IsFeatured.
+     *
+     * Therefore Featured cannot be calculated reliably from the
+     * current moderation list response.
+     *
+     * We will add this properly later through the API contract.
+     */
+
+    private string featuredAdvertisementsDisplay = "—";
+
+
+    /*
+     * Registered-user statistics are not currently provided by
+     * the moderation API.
+     *
+     * Keep the placeholder until the Admin Users API is connected.
+     */
+
+    private string registeredUsersDisplay = "—";
+
+
+    // ============================================================
+    // PAGE STATE
+    // ============================================================
+
+    private bool isLoading;
+
+    private bool hasLoaded;
+
+    private string? errorMessage;
+
+
+    // ============================================================
     // INITIALIZATION
     // ============================================================
 
     protected override async Task OnInitializedAsync()
 {
-    var authenticationState =
-        await AuthenticationStateProvider
-            .GetAuthenticationStateAsync();
+    Console.WriteLine(
+        "================================================");
 
-    var user =
-        authenticationState.User;
+    Console.WriteLine(
+        "ADMIN DASHBOARD INITIALIZATION STARTED");
 
-    if (user.Identity?.IsAuthenticated != true)
+    var authenticated =
+        await LoadAdministratorAsync();
+
+    if (!authenticated)
     {
-        await InvokeAsync(() =>
-        {
-            Navigation.NavigateTo(
-                "/admin",
-                replace: true);
-        });
+        Console.WriteLine(
+            "ADMIN DASHBOARD: Authentication failed.");
+
+        Console.WriteLine(
+            "================================================");
 
         return;
     }
 
-    userName =
-        user.Identity?.Name
-        ?? "Administrator";
+    Console.WriteLine(
+        "ADMIN DASHBOARD: Authentication passed.");
 
-    userEmail =
-        user.FindFirst(
-            ClaimTypes.Email)
-        ?.Value
-        ?? string.Empty;
+    await LoadDashboardAsync();
 
-    roles =
-        user.FindAll(
-                ClaimTypes.Role)
-            .Select(x => x.Value)
-            .Distinct(
-                StringComparer.OrdinalIgnoreCase)
-            .OrderBy(x => x)
-            .ToList();
+    Console.WriteLine(
+        "ADMIN DASHBOARD INITIALIZATION FINISHED");
+
+    Console.WriteLine(
+        "================================================");
 }
 
 
     // ============================================================
-    // GET USER INITIALS
+    // ADMINISTRATOR AUTHENTICATION
+    // ============================================================
+
+    private async Task<bool> LoadAdministratorAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        var user =
+            authenticationState.User;
+
+        Console.WriteLine(
+            $"DASHBOARD AUTHENTICATED: " +
+            $"{user.Identity?.IsAuthenticated}");
+
+        Console.WriteLine(
+            $"DASHBOARD USER: " +
+            $"{user.Identity?.Name}");
+
+
+        if (user.Identity?.IsAuthenticated != true)
+{
+    Console.WriteLine(
+        "DASHBOARD: User is not authenticated.");
+
+    Navigation.NavigateTo(
+        "/admin",
+        replace: true);
+
+    return false;
+}
+
+
+        var userRoles =
+            user.FindAll(ClaimTypes.Role)
+                .Select(x => x.Value)
+                .Distinct(
+                    StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+
+        Console.WriteLine(
+            $"DASHBOARD ROLES: " +
+            $"{string.Join(", ", userRoles)}");
+
+
+        var isAdministrator =
+            user.IsInRole("Admin") ||
+            user.IsInRole("SuperAdmin");
+
+
+        if (!isAdministrator)
+        {
+            Console.WriteLine(
+                "DASHBOARD: User is not an administrator.");
+
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+
+            return false;
+        }
+
+
+        userName =
+            user.Identity?.Name
+            ?? "Administrator";
+
+
+        userEmail =
+            user.FindFirst(
+                ClaimTypes.Email)
+            ?.Value
+            ?? string.Empty;
+
+
+        roles =
+            userRoles
+                .OrderBy(x => x)
+                .ToList();
+
+
+        return true;
+    }
+
+
+    // ============================================================
+    // LOAD DASHBOARD
+    // ============================================================
+
+    private async Task LoadDashboardAsync()
+    {
+        if (isLoading)
+        {
+            Console.WriteLine(
+                "DASHBOARD: Load already in progress.");
+
+            return;
+        }
+
+
+        isLoading = true;
+
+        errorMessage = null;
+
+
+        try
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "ADMIN DASHBOARD - LOADING ADVERTISEMENTS");
+
+            Console.WriteLine(
+                "Calling IAdvertisementModerationService");
+
+            Console.WriteLine(
+                "Page Number: 1");
+
+            Console.WriteLine(
+                "Page Size: 500");
+
+            Console.WriteLine(
+                "================================================");
+
+
+            var result =
+                await AdvertisementModerationService
+                    .GetAdvertisementsAsync(
+                        pageNumber: 1,
+                        pageSize: 500);
+
+
+            advertisements =
+                result
+                ?? new List<AdminAdvertisementListResponse>();
+
+
+            Console.WriteLine(
+                $"ADMIN DASHBOARD: " +
+                $"Advertisements returned = " +
+                $"{advertisements.Count}");
+
+
+            CalculateStatistics();
+
+            BuildDashboardLists();
+
+
+            hasLoaded = true;
+
+
+            Console.WriteLine(
+                "ADMIN DASHBOARD: Data loaded successfully.");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                "ADMIN DASHBOARD HTTP ERROR");
+
+            Console.WriteLine(ex);
+
+
+            errorMessage =
+                "The advertisement service could not be reached. " +
+                "Please check that the API is running and try again.";
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine(
+                "ADMIN DASHBOARD AUTHORIZATION ERROR");
+
+            Console.WriteLine(ex);
+
+
+            errorMessage =
+                "Your administrator session is no longer valid. " +
+                "Please sign in again.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "ADMIN DASHBOARD ERROR");
+
+            Console.WriteLine(ex);
+
+            Console.WriteLine(
+                "================================================");
+
+
+            errorMessage =
+                "The dashboard information could not be loaded. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATISTICS
+    // ============================================================
+
+    private void CalculateStatistics()
+    {
+        totalAdvertisements =
+            advertisements.Count;
+
+
+        pendingAdvertisements =
+            advertisements.Count(IsPending);
+
+
+        publishedAdvertisements =
+            advertisements.Count(IsPublished);
+
+
+        rejectedAdvertisements =
+            advertisements.Count(IsRejected);
+
+
+        draftAdvertisements =
+            advertisements.Count(IsDraft);
+
+
+        expiredAdvertisements =
+            advertisements.Count(IsExpired);
+
+
+        /*
+         * Featured is intentionally not calculated here because
+         * AdminAdvertisementListResponse currently does not
+         * expose an IsFeatured property.
+         */
+        featuredAdvertisementsDisplay = "—";
+
+
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "ADMIN DASHBOARD STATISTICS");
+
+        Console.WriteLine(
+            $"TOTAL: {totalAdvertisements}");
+
+        Console.WriteLine(
+            $"PENDING: {pendingAdvertisements}");
+
+        Console.WriteLine(
+            $"PUBLISHED: {publishedAdvertisements}");
+
+        Console.WriteLine(
+            $"REJECTED: {rejectedAdvertisements}");
+
+        Console.WriteLine(
+            $"DRAFT: {draftAdvertisements}");
+
+        Console.WriteLine(
+            $"EXPIRED: {expiredAdvertisements}");
+
+        Console.WriteLine(
+            "FEATURED: Not available in current DTO");
+
+        Console.WriteLine(
+            "================================================");
+    }
+
+
+    // ============================================================
+    // DASHBOARD LISTS
+    // ============================================================
+
+    private void BuildDashboardLists()
+    {
+        pendingAdvertisementsList =
+            advertisements
+                .Where(IsPending)
+                .OrderByDescending(
+                    x => x.CreatedDate)
+                .Take(6)
+                .ToList();
+
+
+        recentAdvertisements =
+            advertisements
+                .OrderByDescending(
+                    x => x.CreatedDate)
+                .Take(10)
+                .ToList();
+    }
+
+
+    // ============================================================
+    // STATUS HELPERS
+    // ============================================================
+
+    private static bool IsDraft(
+        AdminAdvertisementListResponse item)
+    {
+        return NormalizeStatus(
+            item.StatusCode)
+            == "DRAFT";
+    }
+
+
+    private static bool IsRejected(
+        AdminAdvertisementListResponse item)
+    {
+        return NormalizeStatus(
+            item.StatusCode)
+            == "REJECTED";
+    }
+
+
+    private static bool IsPublished(
+        AdminAdvertisementListResponse item)
+    {
+        return NormalizeStatus(
+            item.StatusCode)
+            == "PUBLISHED";
+    }
+
+
+    private static bool IsExpired(
+        AdminAdvertisementListResponse item)
+    {
+        var status =
+            NormalizeStatus(
+                item.StatusCode);
+
+
+        if (status == "EXPIRED")
+        {
+            return true;
+        }
+
+
+        /*
+         * Some systems may not have a dedicated EXPIRED status
+         * and instead determine expiration from ExpiryDate.
+         *
+         * We therefore also check ExpiryDate when available.
+         */
+
+        return item.ExpiryDate.HasValue &&
+               item.ExpiryDate.Value < DateTime.Now &&
+               status != "PUBLISHED";
+    }
+
+
+    private static bool IsPending(
+        AdminAdvertisementListResponse item)
+    {
+        var status =
+            NormalizeStatus(
+                item.StatusCode);
+
+
+        return status == "PENDING"
+            || status == "PENDINGREVIEW"
+            || status == "UNDERREVIEW";
+    }
+
+
+    private static string NormalizeStatus(
+        string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+
+        return value
+            .Trim()
+            .Replace(
+                "_",
+                string.Empty)
+            .Replace(
+                "-",
+                string.Empty)
+            .Replace(
+                " ",
+                string.Empty)
+            .ToUpperInvariant();
+    }
+
+
+    // ============================================================
+    // STATUS DISPLAY
+    // ============================================================
+
+    private static string GetStatusName(
+        AdminAdvertisementListResponse item)
+    {
+        if (!string.IsNullOrWhiteSpace(
+                item.StatusName))
+        {
+            return item.StatusName;
+        }
+
+
+        return NormalizeStatus(
+            item.StatusCode) switch
+        {
+            "PENDING" =>
+                "Pending",
+
+            "PENDINGREVIEW" =>
+                "Pending Review",
+
+            "UNDERREVIEW" =>
+                "Under Review",
+
+            "PUBLISHED" =>
+                "Published",
+
+            "REJECTED" =>
+                "Rejected",
+
+            "DRAFT" =>
+                "Draft",
+
+            "EXPIRED" =>
+                "Expired",
+
+            "SUSPENDED" =>
+                "Suspended",
+
+            _ =>
+                "Unknown"
+        };
+    }
+
+
+    private static string GetStatusBadgeClass(
+        AdminAdvertisementListResponse item)
+    {
+        return NormalizeStatus(
+            item.StatusCode) switch
+        {
+            "PUBLISHED" =>
+                "dashboard-status published-status",
+
+            "PENDING"
+                or "PENDINGREVIEW"
+                or "UNDERREVIEW" =>
+                "dashboard-status pending-status",
+
+            "REJECTED" =>
+                "dashboard-status rejected-status",
+
+            "DRAFT" =>
+                "dashboard-status draft-status",
+
+            "EXPIRED" =>
+                "dashboard-status expired-status",
+
+            "SUSPENDED" =>
+                "dashboard-status suspended-status",
+
+            _ =>
+                "dashboard-status"
+        };
+    }
+
+
+    // ============================================================
+    // DISPLAY HELPERS
+    // ============================================================
+
+    private static string GetAdvertisementNumber(
+        AdminAdvertisementListResponse item)
+    {
+        return !string.IsNullOrWhiteSpace(
+            item.AdvertisementNumber)
+            ? item.AdvertisementNumber
+            : $"ID #{item.AdvertisementID}";
+    }
+
+
+    private static string DisplayText(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(
+            value)
+            ? "Not specified"
+            : value;
+    }
+
+
+    private static string FormatDate(
+        DateTime date)
+    {
+        return date.ToString(
+            "dd MMM yyyy",
+            CultureInfo.CurrentCulture);
+    }
+
+
+    // ============================================================
+    // ADMIN INITIALS
     // ============================================================
 
     private string GetInitials()
     {
-        if (string.IsNullOrWhiteSpace(userName))
+        if (string.IsNullOrWhiteSpace(
+                userName))
         {
             return "AD";
         }
 
 
         var parts =
-            userName
-                .Split(
-                    ' ',
-                    StringSplitOptions.RemoveEmptyEntries);
+            userName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
 
-
-        // --------------------------------------------------------
-        // Single name
-        // --------------------------------------------------------
 
         if (parts.Length == 1)
         {
@@ -449,10 +1593,6 @@
         }
 
 
-        // --------------------------------------------------------
-        // First + last name
-        // --------------------------------------------------------
-
         return string.Concat(
                 parts[0][0],
                 parts[^1][0])
@@ -461,17 +1601,149 @@
 
 
     // ============================================================
+    // OVERVIEW ROW
+    // ============================================================
+
+    private RenderFragment RenderOverviewRow(
+        string title,
+        int value,
+        int total,
+        string cssClass)
+    {
+        var percentage =
+            total == 0
+                ? 0
+                : Math.Round(
+                    (double)value /
+                    total *
+                    100,
+                    1);
+
+
+        return builder =>
+        {
+            builder.OpenElement(
+                0,
+                "div");
+
+
+            builder.AddAttribute(
+                1,
+                "class",
+                "dashboard-overview-row");
+
+
+            builder.OpenElement(
+                2,
+                "div");
+
+
+            builder.AddAttribute(
+                3,
+                "class",
+                "dashboard-overview-label");
+
+
+            builder.AddContent(
+                4,
+                title);
+
+
+            builder.CloseElement();
+
+
+            builder.OpenElement(
+                5,
+                "strong");
+
+
+            builder.AddContent(
+                6,
+                $"{value:N0}");
+
+
+            builder.CloseElement();
+
+
+            builder.OpenElement(
+                7,
+                "div");
+
+
+            builder.AddAttribute(
+                8,
+                "class",
+                "dashboard-progress");
+
+
+            builder.OpenElement(
+                9,
+                "span");
+
+
+            builder.AddAttribute(
+                10,
+                "class",
+                cssClass);
+
+
+            builder.AddAttribute(
+                11,
+                "style",
+                $"width:{percentage}%");
+
+
+            builder.CloseElement();
+
+            builder.CloseElement();
+
+            builder.CloseElement();
+        };
+    }
+
+
+    // ============================================================
     // NAVIGATION
     // ============================================================
 
-    private void NavigateTo(string url)
+    private void OpenAdvertisement(
+        long advertisementId)
     {
-        if (string.IsNullOrWhiteSpace(url))
+        if (advertisementId <= 0)
         {
             return;
         }
 
-        Navigation.NavigateTo(url);
+
+        Navigation.NavigateTo(
+            $"/admin/advertisements/{advertisementId}");
     }
 
+
+    private void NavigateTo(
+        string url)
+    {
+        if (!string.IsNullOrWhiteSpace(
+                url))
+        {
+            Navigation.NavigateTo(
+                url);
+        }
+    }
+
+
+    // ============================================================
+    // REFRESH
+    // ============================================================
+
+    private async Task RefreshDashboardAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+
+        await LoadDashboardAsync();
+    }
 }

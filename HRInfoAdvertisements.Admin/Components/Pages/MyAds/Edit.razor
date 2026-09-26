@@ -1,0 +1,4005 @@
+@page "/my-ads/{AdvertisementId:long}/edit"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using Microsoft.AspNetCore.Components.Forms
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Advertisement | HR INFO ADs</PageTitle>
+
+<style>
+
+    /* ============================================================
+       PAGE
+       ============================================================ */
+
+    .my-ad-edit-page {
+        min-height: calc(100vh - 70px);
+        background:
+            linear-gradient(
+                180deg,
+                #f6f8fc 0%,
+                #ffffff 45%,
+                #f7f9fc 100%
+            );
+        padding-bottom: 70px;
+        color: #172033;
+    }
+
+
+    /* ============================================================
+       TOP BAR
+       ============================================================ */
+
+    .my-ad-edit-topbar {
+        width: 100%;
+        background: rgba(255,255,255,.96);
+        border-bottom: 1px solid #e5eaf2;
+        box-shadow: 0 4px 20px rgba(20,38,70,.06);
+        position: relative;
+        z-index: 10;
+    }
+
+    .my-ad-edit-topbar-inner {
+        width: 100%;
+        max-width: 1450px;
+        min-height: 82px;
+        margin: 0 auto;
+        padding: 12px 28px;
+        box-sizing: border-box;
+
+        display: grid;
+
+        grid-template-columns:
+            minmax(240px, 1fr)
+            auto
+            minmax(240px, 1fr);
+
+        align-items: center;
+        column-gap: 28px;
+    }
+
+    .my-ad-edit-brand {
+        justify-self: start;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .my-ad-edit-brand-logo {
+        width: 48px;
+        height: 48px;
+        object-fit: contain;
+        flex: 0 0 48px;
+    }
+
+    .my-ad-edit-brand-text {
+        min-width: 0;
+    }
+
+    .my-ad-edit-brand-title {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.2;
+        font-weight: 800;
+        color: #0A2C6A;
+        letter-spacing: -.2px;
+    }
+
+    .my-ad-edit-brand-subtitle {
+        display: block;
+        margin-top: 3px;
+        color: #718096;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .my-ad-edit-page-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 11px;
+
+        margin: 0;
+        justify-self: center;
+        min-width: max-content;
+
+        color: #13264A;
+        font-size: 22px;
+        font-weight: 850;
+        letter-spacing: -.4px;
+        white-space: nowrap;
+    }
+
+    .my-ad-edit-page-title-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        color: #ffffff;
+
+        background:
+            linear-gradient(
+                135deg,
+                #0A2C6A,
+                #1B5FC7
+            );
+
+        box-shadow:
+            0 7px 18px rgba(27,95,199,.22);
+    }
+
+    .my-ad-edit-page-title-icon i {
+        font-size: 18px;
+    }
+
+    .my-ad-edit-back-button {
+        justify-self: end;
+
+        min-height: 44px;
+        padding: 0 17px;
+
+        border: 1px solid #dce3ee;
+        border-radius: 12px;
+
+        background: #ffffff;
+        color: #31415c;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        font-size: 13px;
+        font-weight: 750;
+
+        cursor: pointer;
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            border-color .2s ease,
+            color .2s ease;
+    }
+
+    .my-ad-edit-back-button:hover {
+        transform: translateY(-2px);
+        border-color: #b8c7df;
+        color: #0A2C6A;
+        box-shadow: 0 8px 20px rgba(25,50,90,.10);
+    }
+
+
+    /* ============================================================
+       MAIN
+       ============================================================ */
+
+    .my-ad-edit-main {
+        width: 100%;
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 34px 24px 0;
+        box-sizing: border-box;
+    }
+
+    .my-ad-edit-intro {
+        margin-bottom: 24px;
+    }
+
+    .my-ad-edit-intro h2 {
+        margin: 0;
+        color: #172033;
+        font-size: 26px;
+        font-weight: 850;
+        letter-spacing: -.6px;
+    }
+
+    .my-ad-edit-intro p {
+        margin: 7px 0 0;
+        color: #718096;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+
+    /* ============================================================
+       ALERTS
+       ============================================================ */
+
+    .edit-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+
+        padding: 14px 16px;
+        margin-bottom: 18px;
+
+        border-radius: 13px;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .edit-alert i {
+        margin-top: 2px;
+        font-size: 17px;
+        flex: 0 0 auto;
+    }
+
+    .edit-alert-error {
+        background: #fff4f4;
+        border: 1px solid #f4cccc;
+        color: #a32929;
+    }
+
+    .edit-alert-success {
+        background: #f0fbf5;
+        border: 1px solid #c8ead6;
+        color: #23784a;
+    }
+
+
+    /* ============================================================
+       LOADING
+       ============================================================ */
+
+    .edit-loading-card {
+        background: #ffffff;
+        border: 1px solid #e5eaf2;
+        border-radius: 18px;
+        padding: 55px 25px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(30,50,90,.06);
+    }
+
+    .edit-loading-spinner {
+        width: 44px;
+        height: 44px;
+        margin: 0 auto 15px;
+
+        border: 4px solid #e4ebf5;
+        border-top-color: #1B5FC7;
+        border-radius: 50%;
+
+        animation: editSpin .8s linear infinite;
+    }
+
+    @@keyframes editSpin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .edit-loading-card strong {
+        display: block;
+        color: #26344d;
+        font-size: 15px;
+    }
+
+    .edit-loading-card span {
+        display: block;
+        margin-top: 5px;
+        color: #8190a6;
+        font-size: 12px;
+    }
+
+
+    /* ============================================================
+       FORM SECTION
+       ============================================================ */
+
+    .edit-form-section {
+        background: #ffffff;
+        border: 1px solid #e4e9f1;
+        border-radius: 19px;
+        margin-bottom: 20px;
+        padding: 25px;
+
+        box-shadow:
+            0 9px 30px rgba(31,52,90,.055);
+    }
+
+    .edit-section-heading {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+
+        padding-bottom: 18px;
+        margin-bottom: 22px;
+
+        border-bottom: 1px solid #edf0f5;
+    }
+
+    .edit-section-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #edf4ff;
+        color: #175ab8;
+
+        flex: 0 0 42px;
+    }
+
+    .edit-section-icon i {
+        font-size: 18px;
+    }
+
+    .edit-section-heading h3 {
+        margin: 0;
+        color: #1d2a40;
+        font-size: 17px;
+        font-weight: 800;
+    }
+
+    .edit-section-heading p {
+        margin: 3px 0 0;
+        color: #8490a3;
+        font-size: 12px;
+    }
+
+
+    /* ============================================================
+       FORM GRID
+       ============================================================ */
+
+    .edit-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 19px;
+    }
+
+    .edit-form-grid.three {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+
+    .edit-form-group {
+        min-width: 0;
+    }
+
+    .edit-form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    .edit-form-group label {
+        display: block;
+        margin-bottom: 7px;
+
+        color: #3d4a60;
+        font-size: 12px;
+        font-weight: 750;
+    }
+
+    .edit-required {
+        color: #d44949;
+        margin-left: 2px;
+    }
+
+    .edit-input-wrap {
+        position: relative;
+    }
+
+    .edit-input-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        color: #7e8da5;
+        font-size: 15px;
+
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .edit-input,
+    .edit-select,
+    .edit-textarea {
+        width: 100%;
+        box-sizing: border-box;
+
+        border: 1px solid #dce3ed !important;
+        border-radius: 11px !important;
+
+        background:
+            linear-gradient(
+                180deg,
+                #ffffff,
+                #fbfcfe
+            ) !important;
+
+        color: #202d42 !important;
+
+        font-size: 13px !important;
+        font-weight: 550 !important;
+
+        outline: none !important;
+
+        transition:
+            border-color .2s ease,
+            box-shadow .2s ease,
+            background .2s ease;
+    }
+
+    .edit-input,
+    .edit-select {
+        min-height: 48px;
+        padding: 0 14px 0 42px !important;
+    }
+
+    .edit-input:focus,
+    .edit-select:focus,
+    .edit-textarea:focus {
+        border-color: #4b86d9 !important;
+
+        box-shadow:
+            0 0 0 4px rgba(27,95,199,.09) !important;
+
+        background: #ffffff !important;
+    }
+
+    .edit-textarea {
+        min-height: 135px;
+        padding: 14px !important;
+        resize: vertical;
+        line-height: 1.65;
+    }
+
+    .edit-select-wrap {
+        position: relative;
+    }
+
+    .edit-select-wrap::after {
+        content: "\F282";
+        font-family: "bootstrap-icons";
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        color: #718096;
+        font-size: 12px;
+        pointer-events: none;
+    }
+
+    .edit-select {
+        appearance: none;
+        padding-right: 38px !important;
+    }
+
+    .edit-input.rtl,
+    .edit-textarea.rtl {
+        direction: rtl;
+        text-align: right;
+    }
+
+    .edit-input-icon-right {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+
+        color: #7e8da5;
+        pointer-events: none;
+    }
+
+    .edit-input.rtl {
+        padding-left: 14px !important;
+        padding-right: 42px !important;
+    }
+
+    .edit-help {
+        display: block;
+        margin-top: 6px;
+
+        color: #8a96a8;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .validation-message {
+        margin-top: 5px;
+        color: #c53636;
+        font-size: 11px;
+    }
+
+
+    /* ============================================================
+       CURRENCY
+       ============================================================ */
+
+    .currency-readonly {
+        background: #f5f7fa !important;
+        color: #536176 !important;
+        cursor: not-allowed;
+    }
+
+
+    /* ============================================================
+       NEGOTIABLE
+       ============================================================ */
+
+    .edit-negotiable-card {
+        grid-column: 1 / -1;
+
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        padding: 14px 16px;
+
+        border: 1px solid #e3e9f2;
+        border-radius: 13px;
+
+        background: #fafbfd;
+
+        cursor: pointer;
+
+        transition:
+            background .2s ease,
+            border-color .2s ease,
+            transform .2s ease;
+    }
+
+    .edit-negotiable-card:hover {
+        background: #f5f8fd;
+        border-color: #cbd8eb;
+        transform: translateY(-1px);
+    }
+
+    .edit-negotiable-card input {
+        width: 18px;
+        height: 18px;
+        accent-color: #1B5FC7;
+        flex: 0 0 auto;
+    }
+
+    .edit-negotiable-content strong {
+        display: block;
+        color: #334057;
+        font-size: 13px;
+    }
+
+    .edit-negotiable-content span {
+        display: block;
+        margin-top: 2px;
+        color: #8894a7;
+        font-size: 11px;
+    }
+
+
+    /* ============================================================
+       PHOTOS
+       ============================================================ */
+
+    .edit-photo-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        margin-bottom: 18px;
+        padding: 12px 14px;
+
+        border-radius: 12px;
+        background: #f7f9fc;
+        border: 1px solid #e6ebf2;
+    }
+
+    .edit-photo-summary-left {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+
+        color: #4e5c72;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .edit-photo-summary-left i {
+        color: #1B5FC7;
+        font-size: 16px;
+    }
+
+    .edit-photo-count {
+        color: #0A2C6A;
+        font-weight: 850;
+    }
+
+    .edit-photo-grid {
+        display: grid;
+        grid-template-columns:
+            repeat(4, minmax(0, 1fr));
+        gap: 15px;
+        margin-bottom: 18px;
+    }
+
+    .edit-photo-card {
+        position: relative;
+        overflow: hidden;
+
+        border: 1px solid #e0e6ef;
+        border-radius: 14px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 5px 16px rgba(28,47,80,.05);
+    }
+
+    .edit-photo-image-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        background: #f0f3f8;
+        overflow: hidden;
+    }
+
+    .edit-photo-image {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        transition: transform .3s ease;
+    }
+
+    .edit-photo-card:hover .edit-photo-image {
+        transform: scale(1.035);
+    }
+
+    .edit-primary-badge {
+        position: absolute;
+        left: 9px;
+        top: 9px;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+
+        padding: 5px 8px;
+        border-radius: 999px;
+
+        background: rgba(10,44,106,.93);
+        color: #ffffff;
+
+        font-size: 10px;
+        font-weight: 800;
+
+        box-shadow: 0 4px 10px rgba(0,0,0,.15);
+    }
+
+    .edit-photo-card-body {
+        padding: 11px;
+    }
+
+    .edit-photo-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
+        color: #3b485e;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .edit-photo-actions {
+        display: flex;
+        gap: 7px;
+        margin-top: 9px;
+    }
+
+    .edit-photo-action {
+        min-height: 32px;
+        padding: 0 9px;
+
+        border-radius: 8px;
+        border: 1px solid #dce3ed;
+
+        background: #ffffff;
+        color: #536176;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+
+        font-size: 10px;
+        font-weight: 750;
+
+        cursor: pointer;
+
+        transition:
+            .2s ease;
+    }
+
+    .edit-photo-action:hover {
+        border-color: #9fb6d8;
+        color: #0A2C6A;
+        background: #f6f9fd;
+    }
+
+    .edit-photo-action.delete:hover {
+        color: #bd3838;
+        border-color: #edbcbc;
+        background: #fff6f6;
+    }
+
+    .edit-photo-action:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+    }
+
+
+    /* ============================================================
+       NEW PHOTO CARDS
+       ============================================================ */
+
+    .edit-new-photo {
+        position: relative;
+        overflow: hidden;
+
+        border: 1px solid #dbe5f2;
+        border-radius: 14px;
+
+        background: #f9fbfe;
+    }
+
+    .edit-new-photo .edit-photo-image-wrap {
+        background: #eef4fb;
+    }
+
+    .edit-new-photo-badge {
+        position: absolute;
+        left: 9px;
+        top: 9px;
+
+        padding: 5px 8px;
+        border-radius: 999px;
+
+        background: rgba(27,95,199,.93);
+        color: #ffffff;
+
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+
+    /* ============================================================
+       UPLOAD
+       ============================================================ */
+
+    .edit-upload-area {
+        position: relative;
+
+        min-height: 155px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        padding: 22px;
+
+        border: 2px dashed #c9d7ea;
+        border-radius: 15px;
+
+        background:
+            linear-gradient(
+                180deg,
+                #fbfdff,
+                #f6f9fd
+            );
+
+        cursor: pointer;
+
+        transition:
+            border-color .2s ease,
+            background .2s ease,
+            transform .2s ease;
+    }
+
+    .edit-upload-area:hover {
+        border-color: #79a4dc;
+        background: #f3f8ff;
+        transform: translateY(-1px);
+    }
+
+    .edit-upload-file-input {
+        position: absolute;
+        inset: 0;
+
+        width: 100%;
+        height: 100%;
+
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    .edit-upload-content {
+        text-align: center;
+        pointer-events: none;
+    }
+
+    .edit-upload-icon {
+        width: 50px;
+        height: 50px;
+        margin: 0 auto 10px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 14px;
+
+        background: #eaf2ff;
+        color: #1B5FC7;
+    }
+
+    .edit-upload-icon i {
+        font-size: 22px;
+    }
+
+    .edit-upload-content strong {
+        display: block;
+        color: #31415a;
+        font-size: 13px;
+    }
+
+    .edit-upload-content span {
+        display: block;
+        margin-top: 5px;
+        color: #8995a8;
+        font-size: 11px;
+    }
+
+
+    /* ============================================================
+       UPLOAD PROGRESS
+       ============================================================ */
+
+    .edit-upload-progress {
+        margin-top: 16px;
+        padding: 14px 16px;
+
+        border-radius: 13px;
+
+        background: #f3f8ff;
+        border: 1px solid #d6e4f8;
+    }
+
+    .edit-upload-progress-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .edit-upload-progress-icon {
+        width: 34px;
+        height: 34px;
+
+        border-radius: 9px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #dceaff;
+        color: #1B5FC7;
+    }
+
+    .edit-upload-progress-content {
+        flex: 1;
+    }
+
+    .edit-upload-progress-content strong {
+        display: block;
+        color: #30415c;
+        font-size: 12px;
+    }
+
+    .edit-upload-progress-content span {
+        display: block;
+        margin-top: 2px;
+        color: #8090a6;
+        font-size: 10px;
+    }
+
+    .edit-upload-progress-count {
+        color: #175ab8;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .edit-progress-track {
+        width: 100%;
+        height: 6px;
+        margin-top: 12px;
+
+        border-radius: 999px;
+        background: #dfe8f5;
+        overflow: hidden;
+    }
+
+    .edit-progress-value {
+        height: 100%;
+
+        border-radius: inherit;
+
+        background:
+            linear-gradient(
+                90deg,
+                #0A2C6A,
+                #1B5FC7
+            );
+
+        transition: width .25s ease;
+    }
+
+
+    /* ============================================================
+       ACTION BAR
+       ============================================================ */
+
+    .edit-action-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 20;
+
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+
+        padding: 16px 20px;
+
+        background: rgba(255,255,255,.96);
+        border: 1px solid #e1e7f0;
+        border-radius: 17px;
+
+        box-shadow:
+            0 -8px 30px rgba(25,46,82,.08);
+
+        backdrop-filter: blur(12px);
+    }
+
+    .edit-action-left {
+        color: #8792a5;
+        font-size: 11px;
+    }
+
+    .edit-action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+
+    .edit-button {
+        min-height: 44px;
+        padding: 0 16px;
+
+        border-radius: 10px;
+        border: 1px solid transparent;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+
+        font-size: 12px;
+        font-weight: 800;
+
+        cursor: pointer;
+
+        transition:
+            transform .2s ease,
+            box-shadow .2s ease,
+            background .2s ease;
+    }
+
+    .edit-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+    }
+
+    .edit-button:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    .edit-button-cancel {
+        border-color: #dce3ed;
+        background: #ffffff;
+        color: #556277;
+    }
+
+    .edit-button-cancel:hover:not(:disabled) {
+        background: #f7f9fc;
+        box-shadow: 0 5px 15px rgba(30,50,90,.07);
+    }
+
+    .edit-button-save {
+        background:
+            linear-gradient(
+                135deg,
+                #0A2C6A,
+                #1B5FC7
+            );
+
+        color: #ffffff;
+
+        box-shadow:
+            0 7px 17px rgba(27,95,199,.22);
+    }
+
+    .edit-button-submit {
+        background:
+            linear-gradient(
+                135deg,
+                #137844,
+                #20a65e
+            );
+
+        color: #ffffff;
+
+        box-shadow:
+            0 7px 17px rgba(32,166,94,.20);
+    }
+
+    .edit-button-save:hover:not(:disabled),
+    .edit-button-submit:hover:not(:disabled) {
+        box-shadow:
+            0 10px 23px rgba(27,95,199,.28);
+    }
+
+    .edit-button-spinner {
+        width: 14px;
+        height: 14px;
+
+        border: 2px solid rgba(255,255,255,.45);
+        border-top-color: #ffffff;
+        border-radius: 50%;
+
+        animation: editSpin .7s linear infinite;
+    }
+
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+
+    @@media (max-width: 1050px) {
+
+        .edit-photo-grid {
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+        }
+
+        .edit-form-grid.three {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+    }
+
+
+    @@media (max-width: 800px) {
+
+        .my-ad-edit-topbar-inner {
+            min-height: auto;
+            padding: 12px 18px;
+
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .my-ad-edit-brand {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .my-ad-edit-page-title {
+            width: 100%;
+            order: 3;
+
+            justify-content: flex-start;
+
+            min-width: 0;
+
+            padding-top: 4px;
+
+            white-space: normal;
+            text-align: left;
+        }
+
+        .my-ad-edit-back-button {
+            width: 42px;
+            min-width: 42px;
+            padding: 0;
+
+            justify-content: center;
+        }
+
+        .my-ad-edit-back-button span {
+            display: none;
+        }
+
+        .my-ad-edit-main {
+            padding: 24px 15px 0;
+        }
+
+        .edit-form-section {
+            padding: 20px 17px;
+            border-radius: 16px;
+        }
+
+        .edit-form-grid,
+        .edit-form-grid.three {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-form-group.full,
+        .edit-negotiable-card {
+            grid-column: auto;
+        }
+
+        .edit-photo-grid {
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+        }
+
+        .edit-action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .edit-action-left {
+            text-align: center;
+        }
+
+        .edit-action-buttons {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .edit-button {
+            flex: 1;
+        }
+    }
+
+
+    @@media (max-width: 500px) {
+
+        .my-ad-edit-brand-subtitle {
+            display: none;
+        }
+
+        .my-ad-edit-brand-logo {
+            width: 42px;
+            height: 42px;
+            flex-basis: 42px;
+        }
+
+        .my-ad-edit-brand-title {
+            font-size: 14px;
+        }
+
+        .my-ad-edit-page-title {
+            font-size: 19px;
+        }
+
+        .my-ad-edit-page-title-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+        }
+
+        .edit-photo-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .edit-action-buttons {
+            flex-direction: column;
+        }
+
+        .edit-button {
+            width: 100%;
+        }
+    }
+
+</style>
+
+
+<div class="my-ad-edit-page">
+
+    <!-- =========================================================
+         TOP BAR
+         ========================================================= -->
+
+    <header class="my-ad-edit-topbar">
+
+        <div class="my-ad-edit-topbar-inner">
+
+            <div class="my-ad-edit-brand">
+
+                <img src="images/hr-info-ads-logo.png"
+                     class="my-ad-edit-brand-logo"
+                     alt="HR INFO ADs" />
+
+                <div class="my-ad-edit-brand-text">
+
+                    <div class="my-ad-edit-brand-title">
+                        HR INFO ADs
+                    </div>
+
+                    <span class="my-ad-edit-brand-subtitle">
+                        Advertisement Marketplace
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <h1 class="my-ad-edit-page-title">
+
+                <span class="my-ad-edit-page-title-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </span>
+
+                <span>
+                    Edit Advertisement
+                </span>
+
+            </h1>
+
+
+            <button type="button"
+                    class="my-ad-edit-back-button"
+                    @onclick="GoBack"
+                    disabled="@IsBusy">
+
+                <i class="bi bi-arrow-left"></i>
+
+                <span>
+                    Back to Advertisement
+                </span>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+         MAIN
+         ========================================================= -->
+
+    <main class="my-ad-edit-main">
+
+        <div class="my-ad-edit-intro">
+
+            <h2>
+                Update your advertisement
+            </h2>
+
+            <p>
+                Review your information, update the details or manage
+                your photos before saving the advertisement.
+            </p>
+
+        </div>
+
+
+        <!-- =====================================================
+             ALERTS
+             ===================================================== -->
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="edit-alert edit-alert-error">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                <div>
+                    @errorMessage
+                </div>
+
+            </div>
+        }
+
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="edit-alert edit-alert-success">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                <div>
+                    @successMessage
+                </div>
+
+            </div>
+        }
+
+
+        <!-- =====================================================
+             LOADING
+             ===================================================== -->
+
+        @if (isLoading)
+        {
+            <div class="edit-loading-card">
+
+                <div class="edit-loading-spinner"></div>
+
+                <strong>
+                    Loading advertisement
+                </strong>
+
+                <span>
+                    Please wait while we load your advertisement details.
+                </span>
+
+            </div>
+        }
+        else if (advertisementLoaded)
+        {
+
+            <EditForm Model="model"
+                      OnValidSubmit="SaveChanges">
+
+                <DataAnnotationsValidator />
+
+
+                <!-- =================================================
+                     BASIC INFORMATION
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-card-text"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Basic Information
+                            </h3>
+
+                            <p>
+                                Update the main information of your advertisement.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid">
+
+
+                        <!-- CATEGORY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Category
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap edit-select-wrap">
+
+                                <i class="bi bi-grid input-icon edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="model.CategoryID">
+
+                                    <option value="0">
+                                        Select category
+                                    </option>
+
+                                    @foreach (var item in categories)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.CategoryID)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ADVERTISEMENT TYPE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Advertisement Type
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap edit-select-wrap">
+
+                                <i class="bi bi-megaphone edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="model.AdvertisementTypeID">
+
+                                    <option value="0">
+                                        Select advertisement type
+                                    </option>
+
+                                    @foreach (var item in advertisementTypes)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.AdvertisementTypeID)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ENGLISH TITLE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Advertisement Title
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-type edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.Title"
+                                           placeholder="Enter a clear advertisement title" />
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.Title)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ARABIC TITLE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Arabic Title
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputText class="edit-input rtl"
+                                           @bind-Value="model.TitleAr"
+                                           placeholder="أدخل عنوان الإعلان"
+                                           dir="rtl" />
+
+                                <i class="bi bi-translate edit-input-icon-right"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ENGLISH DESCRIPTION -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Description
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputTextArea class="edit-textarea"
+                                               @bind-Value="model.Description"
+                                               rows="6"
+                                               placeholder="Provide detailed information about your advertisement" />
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.Description)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ARABIC DESCRIPTION -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Arabic Description
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputTextArea class="edit-textarea rtl"
+                                               @bind-Value="model.DescriptionAr"
+                                               rows="6"
+                                               placeholder="أدخل وصفاً تفصيلياً للإعلان"
+                                               dir="rtl" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PRICE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Price
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-cash-stack edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Price"
+                                             placeholder="Enter price" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CURRENCY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Currency
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-currency-exchange edit-input-icon"></i>
+
+                                <InputText class="edit-input currency-readonly"
+                                           @bind-Value="model.CurrencyCode"
+                                           readonly />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Currency is controlled by the advertisement system.
+                            </small>
+
+                        </div>
+
+
+                        <!-- NEGOTIABLE -->
+
+                        <label class="edit-negotiable-card">
+
+                            <InputCheckbox @bind-Value="model.IsNegotiable" />
+
+                            <div class="edit-negotiable-content">
+
+                                <strong>
+                                    Price is negotiable
+                                </strong>
+
+                                <span>
+                                    Let buyers know that the listed price can be discussed.
+                                </span>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     LOCATION
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Location
+                            </h3>
+
+                            <p>
+                                Update the location and address information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid">
+
+
+                        <!-- COUNTRY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Country
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-globe2 edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+             class="edit-select"
+             Value="selectedCountryId"
+             ValueChanged="OnCountryChanged"
+             ValueExpression="@(() => selectedCountryId)">
+
+                                    <option value="0">
+                                        Select country
+                                    </option>
+
+                                    @foreach (var item in countries)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STATE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                State / Governorate
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-map edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+             class="edit-select"
+             Value="selectedStateId"
+             ValueChanged="OnStateChanged"
+             ValueExpression="@(() => selectedStateId)"
+             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select state
+                                    </option>
+
+                                    @foreach (var item in states)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CITY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                City
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-buildings edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+             class="edit-select"
+             Value="selectedCityId"
+             ValueChanged="OnCityChanged"
+             ValueExpression="@(() => selectedCityId)"
+             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select city
+                                    </option>
+
+                                    @foreach (var item in cities)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- AREA -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Area
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-pin-map edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="selectedAreaId"
+                                             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select area
+                                    </option>
+
+                                    @foreach (var item in areas)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Address
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-signpost-2 edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.AddressLine"
+                                           placeholder="Building, road, block or other address details" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PLOT -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Plot Number
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-hash edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.PlotNumber"
+                                           placeholder="Enter plot number" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LATITUDE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Latitude
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-crosshair edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Latitude"
+                                             placeholder="Latitude" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LONGITUDE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Longitude
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-crosshair2 edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Longitude"
+                                             placeholder="Longitude" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     PROPERTY DETAILS
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-house-door"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Property Details
+                            </h3>
+
+                            <p>
+                                Update property specifications where applicable.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid three">
+
+
+                        <!-- LAND AREA -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Land Area
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-bounding-box edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.LandArea"
+                                             placeholder="Land area" />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Enter the land area in square metres.
+                            </small>
+
+                        </div>
+
+
+                        <!-- BUILT UP -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Built-up Area
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-aspect-ratio edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.BuiltUpArea"
+                                             placeholder="Built-up area" />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Enter the built-up area in square metres.
+                            </small>
+
+                        </div>
+
+
+                        <!-- BEDROOMS -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Bedrooms
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-door-open edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Bedrooms"
+                                             placeholder="Bedrooms" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BATHROOMS -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Bathrooms
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-droplet edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Bathrooms"
+                                             placeholder="Bathrooms" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PROPERTY AGE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Property Age
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-calendar3 edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.PropertyAge"
+                                             placeholder="Age in years" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EXPIRY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Expiry Date
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-calendar-event edit-input-icon"></i>
+
+                                <InputDate class="edit-input"
+                                            @bind-Value="model.ExpiryDate" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     PHOTOS
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-images"></i>
+                        </div>
+
+                        <div>
+
+                            <h3>
+                                Advertisement Photos
+                            </h3>
+
+                            <p>
+                                Manage existing photos or add new photos to your advertisement.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-photo-summary">
+
+                        <div class="edit-photo-summary-left">
+
+                            <i class="bi bi-images"></i>
+
+                            <span>
+                                Photos
+                            </span>
+
+                            <span class="edit-photo-count">
+                                @TotalPhotoCount / @MaxImages
+                            </span>
+
+                        </div>
+
+                        <span>
+                            Maximum 10 MB per photo
+                        </span>
+
+                    </div>
+
+
+                    @if (savedImages.Count > 0)
+                    {
+                        <div class="edit-photo-grid">
+
+                            @foreach (var image in savedImages)
+                            {
+                                <div class="edit-photo-card">
+
+                                    <div class="edit-photo-image-wrap">
+
+                                        <img src="@image.FileURL"
+                                             class="edit-photo-image"
+                                             alt="@image.FileName" />
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="edit-primary-badge">
+
+                                                <i class="bi bi-star-fill"></i>
+
+                                                Main Photo
+
+                                            </div>
+                                        }
+
+                                    </div>
+
+
+                                    <div class="edit-photo-card-body">
+
+                                        <div class="edit-photo-name"
+                                             title="@image.FileName">
+
+                                            @image.FileName
+
+                                        </div>
+
+
+                                        <div class="edit-photo-actions">
+
+                                            @if (!image.IsPrimary)
+                                            {
+                                                <button type="button"
+                                                        class="edit-photo-action"
+                                                        @onclick="() => SetPrimarySavedImage(image)"
+                                                        disabled="@IsBusy">
+
+                                                    <i class="bi bi-star"></i>
+
+                                                    Main
+
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button"
+                                                        class="edit-photo-action"
+                                                        disabled>
+
+                                                    <i class="bi bi-star-fill"></i>
+
+                                                    Main
+
+                                                </button>
+                                            }
+
+
+                                            <button type="button"
+                                                    class="edit-photo-action delete"
+                                                    @onclick="() => DeleteSavedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi bi-trash3"></i>
+
+                                                Delete
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="edit-upload-area"
+                             style="margin-bottom:18px;">
+
+                            <span class="edit-upload-content">
+
+                                <span class="edit-upload-icon">
+
+                                    <i class="bi bi-images"></i>
+
+                                </span>
+
+                                <strong>
+                                    No photos uploaded yet
+                                </strong>
+
+                                <span>
+                                    Add photos below to make your advertisement more attractive.
+                                </span>
+
+                            </span>
+
+                        </div>
+                    }
+
+
+                    <!-- NEW SELECTED PHOTOS -->
+
+                    @if (selectedImages.Count > 0)
+                    {
+                        <div class="edit-photo-grid">
+
+                            @foreach (var image in selectedImages)
+                            {
+                                <div class="edit-new-photo">
+
+                                    <div class="edit-photo-image-wrap">
+
+                                        <img src="@image.PreviewUrl"
+                                             class="edit-photo-image"
+                                             alt="@image.FileName" />
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="edit-primary-badge">
+
+                                                <i class="bi bi-star-fill"></i>
+
+                                                Main Photo
+
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="edit-new-photo-badge">
+                                                New
+                                            </div>
+                                        }
+
+                                    </div>
+
+
+                                    <div class="edit-photo-card-body">
+
+                                        <div class="edit-photo-name"
+                                             title="@image.FileName">
+
+                                            @image.FileName
+
+                                        </div>
+
+
+                                        <div class="edit-photo-actions">
+
+                                            <button type="button"
+                                                    class="edit-photo-action"
+                                                    @onclick="() => SetPrimarySelectedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi @(image.IsPrimary ? "bi-star-fill" : "bi-star")"></i>
+
+                                                @(image.IsPrimary ? "Main" : "Set Main")
+
+                                            </button>
+
+
+                                            <button type="button"
+                                                    class="edit-photo-action delete"
+                                                    @onclick="() => RemoveSelectedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi bi-x-lg"></i>
+
+                                                Remove
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+
+
+                    <!-- UPLOAD AREA -->
+
+                    @if (RemainingPhotoSlots > 0)
+                    {
+                        <label class="edit-upload-area">
+
+                            <InputFile class="edit-upload-file-input"
+                                       OnChange="HandleImageSelection"
+                                       multiple
+                                       accept="image/jpeg,image/png,image/webp" />
+
+                            <span class="edit-upload-content">
+
+                                <span class="edit-upload-icon">
+
+                                    <i class="bi bi-cloud-arrow-up"></i>
+
+                                </span>
+
+                                <strong>
+                                    Add more photos
+                                </strong>
+
+                                <span>
+                                    JPG, PNG or WEBP · Maximum 10 MB per photo
+                                </span>
+
+                            </span>
+
+                        </label>
+                    }
+
+
+                    @if (RemainingPhotoSlots == 0)
+                    {
+                        <div class="edit-alert edit-alert-success"
+                             style="margin-top:16px;margin-bottom:0;">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            <div>
+                                You have reached the maximum of @MaxImages photos.
+                            </div>
+
+                        </div>
+                    }
+
+
+                    @if (isUploadingImages)
+                    {
+                        <div class="edit-upload-progress">
+
+                            <div class="edit-upload-progress-top">
+
+                                <div class="edit-upload-progress-icon">
+
+                                    <i class="bi bi-cloud-arrow-up"></i>
+
+                                </div>
+
+                                <div class="edit-upload-progress-content">
+
+                                    <strong>
+                                        Uploading your photos
+                                    </strong>
+
+                                    <span>
+                                        Please keep this page open while the upload completes.
+                                    </span>
+
+                                </div>
+
+                                <div class="edit-upload-progress-count">
+
+                                    @uploadedImageCount /
+                                    @totalImagesToUpload
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="edit-progress-track">
+
+                                <div class="edit-progress-value"
+                                     style="width:@GetUploadProgressPercentage()%;">
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTION BAR
+                     ================================================= -->
+
+                <div class="edit-action-bar">
+
+                    <div class="edit-action-left">
+
+                        <i class="bi bi-shield-check"></i>
+
+                        Your changes will be saved securely.
+
+                    </div>
+
+
+                    <div class="edit-action-buttons">
+
+
+                        <button type="button"
+                                class="edit-button edit-button-cancel"
+                                @onclick="GoBack"
+                                disabled="@IsBusy">
+
+                            <i class="bi bi-x-lg"></i>
+
+                            Cancel
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="edit-button edit-button-save"
+                                disabled="@IsBusy">
+
+                            @if (isSaving || isUploadingImages)
+                            {
+                                <span class="edit-button-spinner"></span>
+
+                                <span>
+                                    Saving...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check2-circle"></i>
+
+                                <span>
+                                    Save Changes
+                                </span>
+                            }
+
+                        </button>
+
+
+                        <button type="button"
+                                class="edit-button edit-button-submit"
+                                @onclick="SaveAndSubmit"
+                                disabled="@IsBusy">
+
+                            @if (isSubmitting)
+                            {
+                                <span class="edit-button-spinner"></span>
+
+                                <span>
+                                    Submitting...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send"></i>
+
+                                <span>
+                                    Save & Submit
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </EditForm>
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // ROUTE
+    // ============================================================
+
+    [Parameter]
+    public long AdvertisementId { get; set; }
+
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+
+    private bool isAuthenticated;
+
+
+    // ============================================================
+    // LOADING
+    // ============================================================
+
+    private bool isLoading = true;
+
+    private bool advertisementLoaded;
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private readonly UpdateAdvertisementRequest model =
+        new()
+        {
+            CurrencyCode = "BHD"
+        };
+
+
+    // ============================================================
+    // LOOKUPS
+    // ============================================================
+
+    private List<LookupItemResponse> categories =
+        new();
+
+    private List<LookupItemResponse> advertisementTypes =
+        new();
+
+    private List<LookupItemResponse> countries =
+        new();
+
+    private List<LookupItemResponse> states =
+        new();
+
+    private List<LookupItemResponse> cities =
+        new();
+
+    private List<LookupItemResponse> areas =
+        new();
+
+
+    // ============================================================
+    // LOCATION
+    // ============================================================
+
+    private int selectedCountryId;
+
+    private int selectedStateId;
+
+    private int selectedCityId;
+
+    private int selectedAreaId;
+
+
+    // ============================================================
+    // IMAGES
+    // ============================================================
+
+    private readonly List<SelectedImage> selectedImages =
+        new();
+
+    private readonly List<SavedAdvertisementImage> savedImages =
+        new();
+
+
+    // ============================================================
+    // FORM STATE
+    // ============================================================
+
+    private bool isSaving;
+
+    private bool isUploadingImages;
+
+    private bool isSubmitting;
+
+    private string? errorMessage;
+
+    private string? successMessage;
+
+
+    private bool IsBusy =>
+        isSaving ||
+        isUploadingImages ||
+        isSubmitting;
+
+
+    // ============================================================
+    // UPLOAD STATE
+    // ============================================================
+
+    private int uploadedImageCount;
+
+    private int totalImagesToUpload;
+
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+
+    private const long MaxImageSize =
+        10 * 1024 * 1024;
+
+    private const int MaxImages =
+        20;
+
+
+    // ============================================================
+    // PHOTO COUNTERS
+    // ============================================================
+
+    private int TotalPhotoCount =>
+        savedImages.Count +
+        selectedImages.Count;
+
+    private int RemainingPhotoSlots =>
+        Math.Max(
+            0,
+            MaxImages - TotalPhotoCount);
+
+
+    // ============================================================
+    // SELECTED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SelectedImage
+    {
+        public string FileName { get; init; } =
+            string.Empty;
+
+        public string ContentType { get; init; } =
+            string.Empty;
+
+        public byte[] FileBytes { get; init; } =
+            Array.Empty<byte>();
+
+        public string PreviewUrl { get; set; } =
+            string.Empty;
+
+        public bool IsPrimary { get; set; }
+
+        public long FileSize =>
+            FileBytes.LongLength;
+    }
+
+
+    // ============================================================
+    // SAVED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SavedAdvertisementImage
+    {
+        public long AdvertisementImageID { get; init; }
+
+        public long AdvertisementID { get; init; }
+
+        public string FileName { get; init; } =
+            string.Empty;
+
+        public string FileURL { get; init; } =
+            string.Empty;
+
+        public long? FileSize { get; init; }
+
+        public bool IsPrimary { get; set; }
+
+        public int DisplayOrder { get; init; }
+
+        public DateTime CreatedDate { get; init; }
+    }
+
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            isAuthenticated =
+                authenticationState.User.Identity?.IsAuthenticated == true;
+
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/");
+                return;
+            }
+
+
+            await LoadLookupsAsync();
+
+            await LoadAdvertisementAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"EDIT PAGE INITIALIZATION ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement right now. " +
+                "Please refresh the page and try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD LOOKUPS
+    // ============================================================
+
+    private async Task LoadLookupsAsync()
+    {
+        categories =
+            await AdvertisementApiService
+                .GetCategoriesAsync();
+
+        advertisementTypes =
+            await AdvertisementApiService
+                .GetAdvertisementTypesAsync();
+
+        countries =
+            await AdvertisementApiService
+                .GetCountriesAsync();
+    }
+
+
+    // ============================================================
+    // LOAD ADVERTISEMENT
+    // ============================================================
+
+    private async Task LoadAdvertisementAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(
+                        AdvertisementId);
+
+            if (advertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be found.";
+
+                advertisementLoaded = false;
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // BASIC INFORMATION
+            // ----------------------------------------------------
+
+            model.CategoryID =
+                advertisement.CategoryID;
+
+            model.AdvertisementTypeID =
+                advertisement.AdvertisementTypeID;
+
+            model.Title =
+                advertisement.Title ?? string.Empty;
+
+            model.TitleAr =
+                advertisement.TitleAr;
+
+            model.Description =
+                advertisement.Description ?? string.Empty;
+
+            model.DescriptionAr =
+                advertisement.DescriptionAr;
+
+            model.Price =
+                advertisement.Price;
+
+            model.CurrencyCode =
+                string.IsNullOrWhiteSpace(
+                    advertisement.CurrencyCode)
+                    ? "BHD"
+                    : advertisement.CurrencyCode;
+
+            model.IsNegotiable =
+                advertisement.IsNegotiable;
+
+
+            // ----------------------------------------------------
+            // LOCATION
+            // ----------------------------------------------------
+
+            selectedCountryId =
+                advertisement.CountryID ?? 0;
+
+            selectedStateId =
+                advertisement.StateID ?? 0;
+
+            selectedCityId =
+                advertisement.CityID ?? 0;
+
+            selectedAreaId =
+                advertisement.AreaID ?? 0;
+
+
+            model.CountryID =
+                advertisement.CountryID;
+
+            model.StateID =
+                advertisement.StateID;
+
+            model.CityID =
+                advertisement.CityID;
+
+            model.AreaID =
+                advertisement.AreaID;
+
+            model.AddressLine =
+                advertisement.AddressLine;
+
+            model.PlotNumber =
+                advertisement.PlotNumber;
+
+            model.Latitude =
+                advertisement.Latitude;
+
+            model.Longitude =
+                advertisement.Longitude;
+
+
+            // ----------------------------------------------------
+            // PROPERTY DETAILS
+            // ----------------------------------------------------
+
+            model.LandArea =
+                advertisement.LandArea;
+
+            model.BuiltUpArea =
+                advertisement.BuiltUpArea;
+
+            model.Bedrooms =
+                advertisement.Bedrooms;
+
+            model.Bathrooms =
+                advertisement.Bathrooms;
+
+            model.PropertyAge =
+                advertisement.PropertyAge;
+
+            model.ExpiryDate =
+                advertisement.ExpiryDate;
+
+
+            // ----------------------------------------------------
+            // LOAD CASCADING LOCATIONS
+            // ----------------------------------------------------
+
+            if (selectedCountryId > 0)
+            {
+                states =
+                    await AdvertisementApiService
+                        .GetStatesAsync(
+                            selectedCountryId);
+            }
+
+            if (selectedCountryId > 0)
+            {
+                cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null);
+            }
+
+            if (selectedCountryId > 0)
+            {
+                areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null,
+                            selectedCityId > 0
+                                ? selectedCityId
+                                : null);
+            }
+
+
+            // ----------------------------------------------------
+            // LOAD EXISTING PHOTOS
+            // ----------------------------------------------------
+
+            LoadSavedImagesFromAdvertisement(
+                advertisement);
+
+
+            advertisementLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD ADVERTISEMENT ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement details. " +
+                "Please refresh the page and try again.";
+
+            advertisementLoaded = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD SAVED IMAGES
+    // ============================================================
+
+    private void LoadSavedImagesFromAdvertisement(
+    AdvertisementResponse advertisement)
+    {
+        savedImages.Clear();
+
+        if (advertisement.Images is null)
+        {
+            return;
+        }
+
+        foreach (var image in advertisement.Images
+                     .OrderBy(x => x.DisplayOrder))
+        {
+            savedImages.Add(
+                new SavedAdvertisementImage
+                {
+                    AdvertisementImageID =
+                        image.AdvertisementImageID,
+
+                    AdvertisementID =
+                        image.AdvertisementID,
+
+                    FileName =
+                        image.FileName ?? string.Empty,
+
+                    FileURL =
+                        image.FileURL ?? string.Empty,
+
+                    FileSize =
+                        image.FileSize,
+
+                    IsPrimary =
+                        image.IsPrimary,
+
+                    DisplayOrder =
+                        image.DisplayOrder,
+
+                    CreatedDate =
+                        image.CreatedDate
+                });
+        }
+    }
+
+
+    // ============================================================
+    // COUNTRY
+    // ============================================================
+
+    private async Task OnCountryChanged(
+        int value)
+    {
+        selectedCountryId = value;
+
+        selectedStateId = 0;
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.CountryID =
+            selectedCountryId > 0
+                ? selectedCountryId
+                : null;
+
+        model.StateID = null;
+        model.CityID = null;
+        model.AreaID = null;
+
+        states.Clear();
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            states =
+                await AdvertisementApiService
+                    .GetStatesAsync(
+                        selectedCountryId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD STATES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available states. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private async Task OnStateChanged(
+        int value)
+    {
+        selectedStateId = value;
+
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.StateID =
+            selectedStateId > 0
+                ? selectedStateId
+                : null;
+
+        model.CityID = null;
+        model.AreaID = null;
+
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            cities =
+                await AdvertisementApiService
+                    .GetCitiesAsync(
+                        selectedCountryId,
+                        selectedStateId > 0
+                            ? selectedStateId
+                            : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD CITIES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available cities. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // CITY
+    // ============================================================
+
+    private async Task OnCityChanged(
+        int value)
+    {
+        selectedCityId = value;
+
+        selectedAreaId = 0;
+
+        model.CityID =
+            selectedCityId > 0
+                ? selectedCityId
+                : null;
+
+        model.AreaID = null;
+
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            areas =
+                await AdvertisementApiService
+                    .GetAreasAsync(
+                        selectedCountryId,
+                        selectedStateId > 0
+                            ? selectedStateId
+                            : null,
+                        selectedCityId > 0
+                            ? selectedCityId
+                            : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD AREAS ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available areas. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE SELECTION
+    // ============================================================
+
+    private async Task HandleImageSelection(
+        InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        var availableSlots =
+            RemainingPhotoSlots;
+
+        if (availableSlots <= 0)
+        {
+            errorMessage =
+                $"You can upload a maximum of {MaxImages} photos " +
+                "for one advertisement.";
+
+            return;
+        }
+
+        IReadOnlyList<IBrowserFile> files;
+
+        try
+        {
+            files =
+                e.GetMultipleFiles(
+                    availableSlots);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"IMAGE SELECTION ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t read the selected photos. " +
+                "Please try selecting them again.";
+
+            return;
+        }
+
+        var addedCount = 0;
+        var rejectedCount = 0;
+
+        foreach (var file in files)
+        {
+            if (file.Size <= 0)
+            {
+                rejectedCount++;
+                continue;
+            }
+
+            if (file.Size > MaxImageSize)
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it exceeds " +
+                    "the maximum file size of 10 MB.";
+
+                continue;
+            }
+
+
+            if (!IsSupportedImageType(
+                    file.ContentType,
+                    file.Name))
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it is not " +
+                    "a supported image format. Please use JPG, PNG or WEBP.";
+
+                continue;
+            }
+
+
+            var duplicate =
+                selectedImages.Any(x =>
+                    string.Equals(
+                        x.FileName,
+                        file.Name,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    x.FileSize == file.Size);
+
+            if (duplicate)
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' is already selected.";
+
+                continue;
+            }
+
+
+            try
+            {
+                await using var browserStream =
+                    file.OpenReadStream(
+                        maxAllowedSize: MaxImageSize);
+
+                using var memoryStream =
+                    new MemoryStream();
+
+                await browserStream.CopyToAsync(
+                    memoryStream);
+
+                var bytes =
+                    memoryStream.ToArray();
+
+
+                var mimeType =
+                    GetImageMimeType(
+                        file.ContentType,
+                        file.Name);
+
+
+                var previewUrl =
+                    $"data:{mimeType};base64," +
+                    Convert.ToBase64String(bytes);
+
+
+                var hasExistingPrimary =
+                    savedImages.Any(
+                        x => x.IsPrimary);
+
+                var hasSelectedPrimary =
+                    selectedImages.Any(
+                        x => x.IsPrimary);
+
+                var makePrimary =
+                    !hasExistingPrimary &&
+                    !hasSelectedPrimary &&
+                    selectedImages.Count == 0;
+
+
+                selectedImages.Add(
+                    new SelectedImage
+                    {
+                        FileName =
+                            file.Name,
+
+                        ContentType =
+                            mimeType,
+
+                        FileBytes =
+                            bytes,
+
+                        PreviewUrl =
+                            previewUrl,
+
+                        IsPrimary =
+                            makePrimary
+                    });
+
+
+                addedCount++;
+            }
+            catch (Exception ex)
+            {
+                rejectedCount++;
+
+                Console.WriteLine(
+                    $"Unable to prepare image: {file.Name}");
+
+                Console.WriteLine(ex);
+
+                errorMessage =
+                    $"We couldn’t prepare '{file.Name}'. " +
+                    "Please try selecting the image again.";
+            }
+        }
+
+
+        if (addedCount > 0)
+        {
+            successMessage =
+                $"{addedCount} photo" +
+                $"{(addedCount == 1 ? "" : "s")} added successfully. " +
+                $"{TotalPhotoCount} of {MaxImages} photos are ready.";
+        }
+
+
+        if (rejectedCount > 0 &&
+            addedCount == 0 &&
+            string.IsNullOrWhiteSpace(errorMessage))
+        {
+            errorMessage =
+                "None of the selected photos could be added. " +
+                "Please check the file type and size.";
+        }
+    }
+
+
+    // ============================================================
+    // SET PRIMARY SELECTED IMAGE
+    // ============================================================
+
+    private void SetPrimarySelectedImage(
+        SelectedImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (savedImages.Any(x => x.IsPrimary))
+        {
+            errorMessage =
+                "Please change the main photo from the existing " +
+                "advertisement photos first.";
+
+            return;
+        }
+
+        foreach (var item in selectedImages)
+        {
+            item.IsPrimary = false;
+        }
+
+        image.IsPrimary = true;
+
+        errorMessage = null;
+
+        successMessage =
+            $"'{image.FileName}' has been selected as the main photo.";
+    }
+
+
+    // ============================================================
+    // REMOVE SELECTED IMAGE
+    // ============================================================
+
+    private void RemoveSelectedImage(
+        SelectedImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var wasPrimary =
+            image.IsPrimary;
+
+        selectedImages.Remove(image);
+
+
+        if (wasPrimary &&
+            !savedImages.Any(x => x.IsPrimary) &&
+            selectedImages.Count > 0)
+        {
+            foreach (var item in selectedImages)
+            {
+                item.IsPrimary = false;
+            }
+
+            selectedImages[0].IsPrimary = true;
+        }
+
+        errorMessage = null;
+
+        successMessage =
+            selectedImages.Count == 0
+                ? "All newly selected photos have been removed."
+                : $"{selectedImages.Count} new photo" +
+                  $"{(selectedImages.Count == 1 ? "" : "s")} ready to upload.";
+    }
+
+
+    // ============================================================
+    // SET PRIMARY SAVED IMAGE
+    // ============================================================
+
+    private async Task SetPrimarySavedImage(
+        SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            errorMessage =
+                "The selected photo could not be identified.";
+
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .SetPrimaryImageAsync(
+                        AdvertisementId,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The main photo could not be changed. " +
+                    "Please try again.";
+
+                return;
+            }
+
+
+            foreach (var savedImage in savedImages)
+            {
+                savedImage.IsPrimary =
+                    savedImage.AdvertisementImageID ==
+                    image.AdvertisementImageID;
+            }
+
+
+            foreach (var selectedImage in selectedImages)
+            {
+                selectedImage.IsPrimary = false;
+            }
+
+
+            successMessage =
+                $"'{image.FileName}' is now the main advertisement photo.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SET PRIMARY IMAGE ERROR: {ex}");
+
+            errorMessage =
+                "The main photo could not be changed right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // DELETE SAVED IMAGE
+    // ============================================================
+
+    private async Task DeleteSavedImage(
+        SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            return;
+        }
+
+
+        if (savedImages.Count <= 1 &&
+            image.IsPrimary)
+        {
+            errorMessage =
+                "An advertisement must keep at least one main photo. " +
+                "Add another photo and set it as main before deleting this photo.";
+
+            return;
+        }
+
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .DeleteAdvertisementImageAsync(
+                        AdvertisementId,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The photo could not be deleted. " +
+                    "Please try again.";
+
+                return;
+            }
+
+
+            savedImages.Remove(image);
+
+            successMessage =
+                $"'{image.FileName}' has been removed.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"DELETE IMAGE ERROR: {ex}");
+
+            errorMessage =
+                "The photo could not be deleted right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // SAVE CHANGES
+    // ============================================================
+
+    private async Task<bool> SaveChanges()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        isSaving = true;
+
+        try
+        {
+            model.CountryID =
+                selectedCountryId > 0
+                    ? selectedCountryId
+                    : null;
+
+            model.StateID =
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null;
+
+            model.CityID =
+                selectedCityId > 0
+                    ? selectedCityId
+                    : null;
+
+            model.AreaID =
+                selectedAreaId > 0
+                    ? selectedAreaId
+                    : null;
+
+
+            var updatedAdvertisement =
+    await AdvertisementApiService
+        .UpdateAdvertisementAsync(
+            AdvertisementId,
+            model);
+
+if (updatedAdvertisement is null)
+{
+    errorMessage =
+        "The advertisement could not be updated. " +
+        "Please review the information and try again.";
+
+    return false;
+}
+
+
+            if (selectedImages.Count > 0)
+            {
+                await UploadSelectedImagesAsync();
+
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    successMessage =
+                        "Your advertisement has been updated successfully.";
+                }
+            }
+            else
+            {
+                successMessage =
+                    "Your advertisement has been updated successfully.";
+            }
+
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "UPDATE ADVERTISEMENT ERROR");
+
+            Console.WriteLine(ex);
+
+            Console.WriteLine(
+                "================================================");
+
+            errorMessage =
+                "We couldn’t update your advertisement right now. " +
+                "Please try again.";
+
+            return false;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // UPLOAD SELECTED IMAGES
+    // ============================================================
+
+    private async Task UploadSelectedImagesAsync()
+    {
+        if (selectedImages.Count == 0)
+        {
+            return;
+        }
+
+        isUploadingImages = true;
+
+        uploadedImageCount = 0;
+
+        totalImagesToUpload =
+            selectedImages.Count;
+
+        var failedImages =
+            new List<SelectedImage>();
+
+        try
+        {
+            var imagesToUpload =
+                selectedImages.ToList();
+
+            foreach (var selectedImage in imagesToUpload)
+            {
+                try
+                {
+                    await using var stream =
+                        new MemoryStream(
+                            selectedImage.FileBytes,
+                            writable: false);
+
+                    var success =
+                        await AdvertisementApiService
+                            .UploadAdvertisementImageAsync(
+                                AdvertisementId,
+                                stream,
+                                selectedImage.FileName,
+                                selectedImage.ContentType,
+                                selectedImage.IsPrimary);
+
+                    if (success)
+                    {
+                        uploadedImageCount++;
+                    }
+                    else
+                    {
+                        failedImages.Add(
+                            selectedImage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"IMAGE UPLOAD FAILED: {selectedImage.FileName}");
+
+                    Console.WriteLine(ex);
+
+                    failedImages.Add(
+                        selectedImage);
+                }
+
+                await InvokeAsync(
+                    StateHasChanged);
+            }
+
+
+            // ----------------------------------------------------
+            // RELOAD EXISTING IMAGES
+            // ----------------------------------------------------
+
+            await ReloadSavedImagesAsync();
+
+
+            if (failedImages.Count == 0)
+            {
+                selectedImages.Clear();
+
+                errorMessage = null;
+
+                successMessage =
+                    uploadedImageCount > 0
+                        ? $"{uploadedImageCount} photo" +
+                          $"{(uploadedImageCount == 1 ? "" : "s")} uploaded successfully."
+                        : successMessage;
+            }
+            else
+            {
+                selectedImages.Clear();
+
+                selectedImages.AddRange(
+                    failedImages);
+
+                errorMessage =
+                    $"{failedImages.Count} photo" +
+                    $"{(failedImages.Count == 1 ? "" : "s")} could not be uploaded. " +
+                    "Please try again.";
+
+                if (uploadedImageCount > 0)
+                {
+                    successMessage =
+                        $"{uploadedImageCount} photo" +
+                        $"{(uploadedImageCount == 1 ? "" : "s")} uploaded successfully.";
+                }
+            }
+        }
+        finally
+        {
+            isUploadingImages = false;
+        }
+    }
+
+
+    // ============================================================
+    // RELOAD SAVED IMAGES
+    // ============================================================
+
+    private async Task ReloadSavedImagesAsync()
+    {
+        try
+        {
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(
+                        AdvertisementId);
+
+            if (advertisement is null)
+            {
+                return;
+            }
+
+            LoadSavedImagesFromAdvertisement(
+                advertisement);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"RELOAD IMAGES ERROR: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // SAVE AND SUBMIT
+    // ============================================================
+
+    private async Task SaveAndSubmit()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var saved =
+            await SaveChanges();
+
+        if (!saved)
+        {
+            return;
+        }
+
+
+        if (isUploadingImages)
+        {
+            errorMessage =
+                "Please wait until all photos finish uploading.";
+
+            return;
+        }
+
+
+        errorMessage = null;
+
+        successMessage = null;
+
+        isSubmitting = true;
+
+        try
+        {
+            var success =
+                await AdvertisementApiService
+                    .SubmitAdvertisementAsync(
+                        AdvertisementId);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The advertisement was saved, but it could not " +
+                    "be submitted for approval. Please try again.";
+
+                return;
+            }
+
+
+            successMessage =
+                "Your advertisement has been updated and submitted for approval.";
+
+
+            await Task.Delay(900);
+
+            Navigation.NavigateTo(
+                $"/my-ads/{AdvertisementId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SUBMIT ADVERTISEMENT ERROR: {ex}");
+
+            errorMessage =
+                "The advertisement was saved, but submission failed. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE TYPE VALIDATION
+    // ============================================================
+
+    private static bool IsSupportedImageType(
+        string? contentType,
+        string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized =
+                contentType
+                    .Trim()
+                    .ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return true;
+            }
+        }
+
+
+        var extension =
+            Path.GetExtension(fileName)
+                .ToLowerInvariant();
+
+        return extension is
+            ".jpg" or
+            ".jpeg" or
+            ".png" or
+            ".webp";
+    }
+
+
+    // ============================================================
+    // MIME TYPE
+    // ============================================================
+
+    private static string GetImageMimeType(
+        string? contentType,
+        string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized =
+                contentType
+                    .Trim()
+                    .ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return normalized == "image/jpg"
+                    ? "image/jpeg"
+                    : normalized;
+            }
+        }
+
+
+        var extension =
+            Path.GetExtension(fileName)
+                .ToLowerInvariant();
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" =>
+                "image/jpeg",
+
+            ".png" =>
+                "image/png",
+
+            ".webp" =>
+                "image/webp",
+
+            _ =>
+                "image/jpeg"
+        };
+    }
+
+
+    // ============================================================
+    // UPLOAD PROGRESS
+    // ============================================================
+
+    private int GetUploadProgressPercentage()
+    {
+        if (totalImagesToUpload <= 0)
+        {
+            return 0;
+        }
+
+        return
+            (int)Math.Round(
+                uploadedImageCount *
+                100d /
+                totalImagesToUpload);
+    }
+
+
+    // ============================================================
+    // BACK
+    // ============================================================
+
+    private void GoBack()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(
+            $"/my-ads/{AdvertisementId}");
+    }
+}

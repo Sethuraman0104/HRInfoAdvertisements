@@ -7,7 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HRInfoAdvertisements.Infrastructure.Services;
 
-public class AdvertisementMediaService : IAdvertisementMediaService
+public class AdvertisementMediaService
+    : IAdvertisementMediaService
 {
     private readonly ApplicationDbContext _context;
     private readonly IFileStorageService _fileStorageService;
@@ -70,7 +71,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var existingCount =
             await _context.AdvertisementImages
                 .CountAsync(x =>
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (isPrimary || existingCount == 0)
         {
@@ -85,29 +87,47 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 "images",
                 contentType);
 
-        var image = new AdvertisementImage
-        {
-            AdvertisementID = advertisementId,
-            FileName = storedFile.FileName,
-            FileURL = storedFile.FileUrl,
-            StorageKey = storedFile.FileName,
-            ContentType = storedFile.ContentType,
-            FileSize = storedFile.FileSize,
-            IsPrimary = isPrimary || existingCount == 0,
-            DisplayOrder = existingCount + 1,
-            CreatedDate = DateTime.UtcNow
-        };
+        var image =
+            new AdvertisementImage
+            {
+                AdvertisementID =
+                    advertisementId,
 
-        _context.AdvertisementImages.Add(image);
+                FileName =
+                    storedFile.FileName,
+
+                S3Key =
+                    storedFile.FileName,
+
+                FileURL =
+                    storedFile.FileUrl,
+
+                FileSize =
+                    storedFile.FileSize,
+
+                IsPrimary =
+                    isPrimary ||
+                    existingCount == 0,
+
+                DisplayOrder =
+                    existingCount + 1,
+
+                CreatedDate =
+                    DateTime.UtcNow
+            };
+
+        _context.AdvertisementImages.Add(
+            image);
 
         await _context.SaveChangesAsync();
 
         return MapImage(image);
     }
 
-    public async Task<List<AdvertisementImageResponse>> GetImagesAsync(
-        long advertisementId,
-        long? userId = null)
+    public async Task<List<AdvertisementImageResponse>>
+        GetImagesAsync(
+            long advertisementId,
+            long? userId = null)
     {
         await EnsureAdvertisementVisibleAsync(
             advertisementId,
@@ -117,8 +137,10 @@ public class AdvertisementMediaService : IAdvertisementMediaService
             await _context.AdvertisementImages
                 .AsNoTracking()
                 .Where(x =>
-                    x.AdvertisementID == advertisementId)
-                .OrderBy(x => x.DisplayOrder)
+                    x.AdvertisementID ==
+                    advertisementId)
+                .OrderBy(x =>
+                    x.DisplayOrder)
                 .ToListAsync();
 
         return images
@@ -138,11 +160,15 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var image =
             await _context.AdvertisementImages
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementImageID == imageId &&
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementImageID ==
+                    imageId &&
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (image == null)
+        {
             return false;
+        }
 
         await ClearPrimaryImageAsync(
             advertisementId);
@@ -173,13 +199,18 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var image =
             await _context.AdvertisementImages
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementImageID == imageId &&
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementImageID ==
+                    imageId &&
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (image == null)
+        {
             return false;
+        }
 
-        image.DisplayOrder = displayOrder;
+        image.DisplayOrder =
+            displayOrder;
 
         await _context.SaveChangesAsync();
 
@@ -198,16 +229,26 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var image =
             await _context.AdvertisementImages
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementImageID == imageId &&
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementImageID ==
+                    imageId &&
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (image == null)
+        {
             return false;
+        }
 
-        await _fileStorageService.DeleteFileAsync(
-            image.FileURL);
+        if (!string.IsNullOrWhiteSpace(
+                image.FileURL))
+        {
+            await _fileStorageService
+                .DeleteFileAsync(
+                    image.FileURL);
+        }
 
-        _context.AdvertisementImages.Remove(image);
+        _context.AdvertisementImages.Remove(
+            image);
 
         await _context.SaveChangesAsync();
 
@@ -218,12 +259,13 @@ public class AdvertisementMediaService : IAdvertisementMediaService
     // VIDEOS
     // ============================================================
 
-    public async Task<AdvertisementVideoResponse> UploadVideoAsync(
-        long userId,
-        long advertisementId,
-        Stream fileStream,
-        string originalFileName,
-        string contentType)
+    public async Task<AdvertisementVideoResponse>
+        UploadVideoAsync(
+            long userId,
+            long advertisementId,
+            Stream fileStream,
+            string originalFileName,
+            string contentType)
     {
         await GetEditableAdvertisementAsync(
             userId,
@@ -242,7 +284,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var existingCount =
             await _context.AdvertisementVideos
                 .CountAsync(x =>
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementID ==
+                    advertisementId);
 
         var storedFile =
             await _fileStorageService.SaveFileAsync(
@@ -251,28 +294,40 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 "videos",
                 contentType);
 
-        var video = new AdvertisementVideo
-        {
-            AdvertisementID = advertisementId,
-            FileName = storedFile.FileName,
-            FileURL = storedFile.FileUrl,
-            StorageKey = storedFile.FileName,
-            ContentType = storedFile.ContentType,
-            FileSize = storedFile.FileSize,
-            DisplayOrder = existingCount + 1,
-            CreatedDate = DateTime.UtcNow
-        };
+        var video =
+            new AdvertisementVideo
+            {
+                AdvertisementID =
+                    advertisementId,
 
-        _context.AdvertisementVideos.Add(video);
+                FileName =
+                    storedFile.FileName,
+
+                S3Key =
+                    storedFile.FileName,
+
+                VideoURL =
+                    storedFile.FileUrl,
+
+                DisplayOrder =
+                    existingCount + 1,
+
+                CreatedDate =
+                    DateTime.UtcNow
+            };
+
+        _context.AdvertisementVideos.Add(
+            video);
 
         await _context.SaveChangesAsync();
 
         return MapVideo(video);
     }
 
-    public async Task<List<AdvertisementVideoResponse>> GetVideosAsync(
-        long advertisementId,
-        long? userId = null)
+    public async Task<List<AdvertisementVideoResponse>>
+        GetVideosAsync(
+            long advertisementId,
+            long? userId = null)
     {
         await EnsureAdvertisementVisibleAsync(
             advertisementId,
@@ -282,8 +337,10 @@ public class AdvertisementMediaService : IAdvertisementMediaService
             await _context.AdvertisementVideos
                 .AsNoTracking()
                 .Where(x =>
-                    x.AdvertisementID == advertisementId)
-                .OrderBy(x => x.DisplayOrder)
+                    x.AdvertisementID ==
+                    advertisementId)
+                .OrderBy(x =>
+                    x.DisplayOrder)
                 .ToListAsync();
 
         return videos
@@ -303,16 +360,26 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var video =
             await _context.AdvertisementVideos
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementVideoID == videoId &&
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementVideoID ==
+                    videoId &&
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (video == null)
+        {
             return false;
+        }
 
-        await _fileStorageService.DeleteFileAsync(
-            video.FileURL);
+        if (!string.IsNullOrWhiteSpace(
+                video.VideoURL))
+        {
+            await _fileStorageService
+                .DeleteFileAsync(
+                    video.VideoURL);
+        }
 
-        _context.AdvertisementVideos.Remove(video);
+        _context.AdvertisementVideos.Remove(
+            video);
 
         await _context.SaveChangesAsync();
 
@@ -323,12 +390,13 @@ public class AdvertisementMediaService : IAdvertisementMediaService
     // DOCUMENTS
     // ============================================================
 
-    public async Task<AdvertisementDocumentResponse> UploadDocumentAsync(
-        long userId,
-        long advertisementId,
-        Stream fileStream,
-        string originalFileName,
-        string contentType)
+    public async Task<AdvertisementDocumentResponse>
+        UploadDocumentAsync(
+            long userId,
+            long advertisementId,
+            Stream fileStream,
+            string originalFileName,
+            string contentType)
     {
         await GetEditableAdvertisementAsync(
             userId,
@@ -351,27 +419,53 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 "documents",
                 contentType);
 
-        var document = new AdvertisementDocument
-        {
-            AdvertisementID = advertisementId,
-            DocumentName = storedFile.OriginalFileName,
-            FileURL = storedFile.FileUrl,
-            StorageKey = storedFile.FileName,
-            ContentType = storedFile.ContentType,
-            FileSize = storedFile.FileSize,
-            CreatedDate = DateTime.UtcNow
-        };
+        var document =
+            new AdvertisementDocument
+            {
+                AdvertisementID =
+                    advertisementId,
 
-        _context.AdvertisementDocuments.Add(document);
+                DocumentType =
+                    GetDocumentType(
+                        originalFileName),
+
+                FileName =
+                    storedFile.FileName,
+
+                S3Key =
+                    storedFile.FileName,
+
+                FileURL =
+                    storedFile.FileUrl,
+
+                VerificationStatus =
+                    "PENDING",
+
+                VerifiedBy =
+                    null,
+
+                VerifiedDate =
+                    null,
+
+                RejectionReason =
+                    null,
+
+                CreatedDate =
+                    DateTime.UtcNow
+            };
+
+        _context.AdvertisementDocuments.Add(
+            document);
 
         await _context.SaveChangesAsync();
 
         return MapDocument(document);
     }
 
-    public async Task<List<AdvertisementDocumentResponse>> GetDocumentsAsync(
-        long advertisementId,
-        long? userId = null)
+    public async Task<List<AdvertisementDocumentResponse>>
+        GetDocumentsAsync(
+            long advertisementId,
+            long? userId = null)
     {
         await EnsureAdvertisementVisibleAsync(
             advertisementId,
@@ -381,8 +475,10 @@ public class AdvertisementMediaService : IAdvertisementMediaService
             await _context.AdvertisementDocuments
                 .AsNoTracking()
                 .Where(x =>
-                    x.AdvertisementID == advertisementId)
-                .OrderByDescending(x => x.CreatedDate)
+                    x.AdvertisementID ==
+                    advertisementId)
+                .OrderByDescending(x =>
+                    x.CreatedDate)
                 .ToListAsync();
 
         return documents
@@ -402,16 +498,26 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var document =
             await _context.AdvertisementDocuments
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementDocumentID == documentId &&
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementDocumentID ==
+                    documentId &&
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (document == null)
+        {
             return false;
+        }
 
-        await _fileStorageService.DeleteFileAsync(
-            document.FileURL);
+        if (!string.IsNullOrWhiteSpace(
+                document.FileURL))
+        {
+            await _fileStorageService
+                .DeleteFileAsync(
+                    document.FileURL);
+        }
 
-        _context.AdvertisementDocuments.Remove(document);
+        _context.AdvertisementDocuments.Remove(
+            document);
 
         await _context.SaveChangesAsync();
 
@@ -429,10 +535,13 @@ public class AdvertisementMediaService : IAdvertisementMediaService
     {
         var advertisement =
             await _context.Advertisements
-                .Include(x => x.Status)
+                .Include(x =>
+                    x.Status)
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementID == advertisementId &&
-                    x.UserID == userId);
+                    x.AdvertisementID ==
+                    advertisementId &&
+                    x.UserID ==
+                    userId);
 
         if (advertisement == null)
         {
@@ -459,9 +568,11 @@ public class AdvertisementMediaService : IAdvertisementMediaService
     {
         var advertisement =
             await _context.Advertisements
-                .Include(x => x.Status)
+                .Include(x =>
+                    x.Status)
                 .FirstOrDefaultAsync(x =>
-                    x.AdvertisementID == advertisementId);
+                    x.AdvertisementID ==
+                    advertisementId);
 
         if (advertisement == null)
         {
@@ -470,12 +581,14 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         }
 
         if (userId.HasValue &&
-            advertisement.UserID == userId.Value)
+            advertisement.UserID ==
+            userId.Value)
         {
             return;
         }
 
-        if (advertisement.Status.StatusCode != "PUBLISHED")
+        if (advertisement.Status.StatusCode !=
+            "PUBLISHED")
         {
             throw new InvalidOperationException(
                 "Advertisement is not available.");
@@ -488,7 +601,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         var primaryImages =
             await _context.AdvertisementImages
                 .Where(x =>
-                    x.AdvertisementID == advertisementId &&
+                    x.AdvertisementID ==
+                    advertisementId &&
                     x.IsPrimary)
                 .ToListAsync();
 
@@ -503,7 +617,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         string[] allowedTypes,
         string mediaType)
     {
-        if (string.IsNullOrWhiteSpace(contentType) ||
+        if (string.IsNullOrWhiteSpace(
+                contentType) ||
             !allowedTypes.Contains(
                 contentType,
                 StringComparer.OrdinalIgnoreCase))
@@ -518,7 +633,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         long maximumSize,
         string mediaType)
     {
-        if (stream.Length > maximumSize)
+        if (stream.Length >
+            maximumSize)
         {
             throw new InvalidOperationException(
                 $"{mediaType} exceeds the maximum allowed file size.");
@@ -526,11 +642,93 @@ public class AdvertisementMediaService : IAdvertisementMediaService
     }
 
     // ============================================================
+    // DOCUMENT TYPE
+    // ============================================================
+
+    private static string GetDocumentType(
+        string? fileName)
+    {
+        var extension =
+            Path.GetExtension(
+                fileName ?? string.Empty)
+                .ToLowerInvariant();
+
+        return extension switch
+        {
+            ".pdf" =>
+                "PDF",
+
+            ".doc" =>
+                "WORD",
+
+            ".docx" =>
+                "WORD",
+
+            _ =>
+                "OTHER"
+        };
+    }
+
+    // ============================================================
+    // MIME TYPE
+    // ============================================================
+
+    private static string?
+        GetContentType(
+            string? fileName)
+    {
+        if (string.IsNullOrWhiteSpace(
+                fileName))
+        {
+            return null;
+        }
+
+        var extension =
+            Path.GetExtension(
+                fileName)
+                .ToLowerInvariant();
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" =>
+                "image/jpeg",
+
+            ".png" =>
+                "image/png",
+
+            ".webp" =>
+                "image/webp",
+
+            ".mp4" =>
+                "video/mp4",
+
+            ".webm" =>
+                "video/webm",
+
+            ".mov" =>
+                "video/quicktime",
+
+            ".pdf" =>
+                "application/pdf",
+
+            ".doc" =>
+                "application/msword",
+
+            ".docx" =>
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+
+            _ =>
+                null
+        };
+    }
+
+    // ============================================================
     // MAPPING
     // ============================================================
 
-    private static AdvertisementImageResponse MapImage(
-        AdvertisementImage image)
+    private static AdvertisementImageResponse
+        MapImage(
+            AdvertisementImage image)
     {
         return new AdvertisementImageResponse
         {
@@ -547,7 +745,8 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 image.FileURL,
 
             ContentType =
-                image.ContentType,
+                GetContentType(
+                    image.FileName),
 
             FileSize =
                 image.FileSize,
@@ -563,8 +762,9 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         };
     }
 
-    private static AdvertisementVideoResponse MapVideo(
-        AdvertisementVideo video)
+    private static AdvertisementVideoResponse
+        MapVideo(
+            AdvertisementVideo video)
     {
         return new AdvertisementVideoResponse
         {
@@ -578,13 +778,14 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 video.FileName,
 
             FileURL =
-                video.FileURL,
+                video.VideoURL,
 
             ContentType =
-                video.ContentType,
+                GetContentType(
+                    video.FileName),
 
             FileSize =
-                video.FileSize,
+                null,
 
             DisplayOrder =
                 video.DisplayOrder,
@@ -594,8 +795,9 @@ public class AdvertisementMediaService : IAdvertisementMediaService
         };
     }
 
-    private static AdvertisementDocumentResponse MapDocument(
-        AdvertisementDocument document)
+    private static AdvertisementDocumentResponse
+        MapDocument(
+            AdvertisementDocument document)
     {
         return new AdvertisementDocumentResponse
         {
@@ -606,16 +808,17 @@ public class AdvertisementMediaService : IAdvertisementMediaService
                 document.AdvertisementID,
 
             DocumentName =
-                document.DocumentName,
+                document.FileName,
 
             FileURL =
                 document.FileURL,
 
             ContentType =
-                document.ContentType,
+                GetContentType(
+                    document.FileName),
 
             FileSize =
-                document.FileSize,
+                null,
 
             CreatedDate =
                 document.CreatedDate

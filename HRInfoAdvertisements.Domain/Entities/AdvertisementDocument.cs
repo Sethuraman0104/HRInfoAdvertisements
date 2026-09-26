@@ -6,15 +6,21 @@ public class AdvertisementDocument
 
     public long AdvertisementID { get; set; }
 
-    public string DocumentName { get; set; } = string.Empty;
+    public string DocumentType { get; set; } = string.Empty;
 
-    public string FileURL { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
 
-    public string? StorageKey { get; set; }
+    public string S3Key { get; set; } = string.Empty;
 
-    public string? ContentType { get; set; }
+    public string? FileURL { get; set; }
 
-    public long? FileSize { get; set; }
+    public string VerificationStatus { get; set; } = string.Empty;
+
+    public long? VerifiedBy { get; set; }
+
+    public DateTime? VerifiedDate { get; set; }
+
+    public string? RejectionReason { get; set; }
 
     public DateTime CreatedDate { get; set; }
 

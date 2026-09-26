@@ -4202,7 +4202,9 @@
 
         border-radius: 23px;
     }
-
+.my-ads-nav-link {
+        width: 100%;
+    }
 
     .auth-modal-header {
         padding: 29px 22px 18px;
@@ -4775,4 +4777,128 @@
 
     font-size: 11px;
     font-weight: 600;
+}
+
+/* ============================================================
+   MY ADVERTISEMENTS HEADER LINK
+   ============================================================ */
+
+.my-ads-nav-link {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 13px;
+    border: 1px solid #dce5f2;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #31577f;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+    transition:
+        background .18s ease,
+        border-color .18s ease,
+        color .18s ease,
+        box-shadow .18s ease;
+}
+
+.my-ads-nav-link i {
+    color: #4991f9;
+    font-size: 14px;
+}
+
+.my-ads-nav-link:hover {
+    border-color: #a9c9f5;
+    background: #f3f8ff;
+    color: #2061c5;
+    box-shadow: 0 4px 12px rgba(73, 145, 249, .10);
+}
+
+.my-ads-nav-link:hover i {
+    color: #2061c5;
+}
+
+/* ============================================================
+   MY ADVERTISEMENTS - HEADER BUTTON
+   ============================================================ */
+
+.my-ads-header-button {
+    min-height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    padding: 0 13px;
+
+    border: 1px solid #dce5f2;
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #31577f;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 650;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease,
+        transform 0.18s ease;
+}
+
+.my-ads-header-button .action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.my-ads-header-button .action-icon svg {
+    width: 16px;
+    height: 16px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.my-ads-header-button:hover {
+    background: #f3f8ff;
+    border-color: #a9c9f5;
+    color: #2061c5;
+
+    box-shadow: 0 4px 12px rgba(73, 145, 249, 0.10);
+
+    transform: translateY(-1px);
+}
+
+.my-ads-header-button:focus-visible {
+    outline: 2px solid rgba(73, 145, 249, 0.35);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+
+    .my-ads-header-button span:not(.action-icon) {
+        display: none;
+    }
+
+    .my-ads-header-button {
+        width: 40px;
+        padding: 0;
+    }
 }

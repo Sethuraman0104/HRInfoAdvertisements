@@ -9,17 +9,21 @@ public class PublicAuthenticationStateProvider
     private static readonly ClaimsPrincipal Anonymous =
         new(new ClaimsIdentity());
 
-    private ClaimsPrincipal _currentUser = Anonymous;
+    private ClaimsPrincipal _currentUser =
+        Anonymous;
 
     private string? _accessToken;
     private string? _refreshToken;
     private DateTime _expiresAt;
 
-    public string? AccessToken => _accessToken;
+    public string? AccessToken =>
+        _accessToken;
 
-    public string? RefreshToken => _refreshToken;
+    public string? RefreshToken =>
+        _refreshToken;
 
-    public DateTime ExpiresAt => _expiresAt;
+    public DateTime ExpiresAt =>
+        _expiresAt;
 
     public bool IsAuthenticated =>
         _currentUser.Identity?.IsAuthenticated == true;
@@ -41,6 +45,42 @@ public class PublicAuthenticationStateProvider
         string refreshToken,
         DateTime expiresAt)
     {
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "PUBLIC SIGN-IN CALLED");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN USER ID: {userId}");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN USER NAME: {userName}");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN ACCESS TOKEN AVAILABLE: " +
+            $"{!string.IsNullOrWhiteSpace(accessToken)}");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN ACCESS TOKEN LENGTH: " +
+            $"{accessToken?.Length ?? 0}");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN REFRESH TOKEN AVAILABLE: " +
+            $"{!string.IsNullOrWhiteSpace(refreshToken)}");
+
+        Console.WriteLine(
+            $"PUBLIC SIGN-IN EXPIRES AT: {expiresAt}");
+
+        Console.WriteLine(
+            "================================================");
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new InvalidOperationException(
+                "Login succeeded, but the API did not return a valid access token.");
+        }
+
         var claims = new List<Claim>
         {
             new(
@@ -56,7 +96,7 @@ public class PublicAuthenticationStateProvider
                 email)
         };
 
-        foreach (var role in roles)
+        foreach (var role in roles ?? Enumerable.Empty<string>())
         {
             claims.Add(
                 new Claim(
@@ -64,7 +104,7 @@ public class PublicAuthenticationStateProvider
                     role));
         }
 
-        foreach (var permission in permissions)
+        foreach (var permission in permissions ?? Enumerable.Empty<string>())
         {
             claims.Add(
                 new Claim(
@@ -72,16 +112,30 @@ public class PublicAuthenticationStateProvider
                     permission));
         }
 
-        var identity = new ClaimsIdentity(
-            claims,
-            authenticationType: "PublicJwt");
+        var identity =
+            new ClaimsIdentity(
+                claims,
+                authenticationType: "PublicJwt");
 
         _currentUser =
             new ClaimsPrincipal(identity);
 
-        _accessToken = accessToken;
-        _refreshToken = refreshToken;
-        _expiresAt = expiresAt;
+        _accessToken =
+            accessToken;
+
+        _refreshToken =
+            refreshToken;
+
+        _expiresAt =
+            expiresAt;
+
+        Console.WriteLine(
+            $"PUBLIC PROVIDER TOKEN AFTER SIGN-IN: " +
+            $"{!string.IsNullOrWhiteSpace(_accessToken)}");
+
+        Console.WriteLine(
+            $"PUBLIC PROVIDER TOKEN LENGTH AFTER SIGN-IN: " +
+            $"{_accessToken?.Length ?? 0}");
 
         NotifyAuthenticationStateChanged(
             GetAuthenticationStateAsync());
@@ -89,11 +143,18 @@ public class PublicAuthenticationStateProvider
 
     public void SignOut()
     {
-        _currentUser = Anonymous;
+        Console.WriteLine(
+            "PUBLIC SIGN-OUT CALLED");
+
+        _currentUser =
+            Anonymous;
 
         _accessToken = null;
+
         _refreshToken = null;
-        _expiresAt = default;
+
+        _expiresAt =
+            default;
 
         NotifyAuthenticationStateChanged(
             GetAuthenticationStateAsync());

@@ -1,271 +1,1069 @@
-/* =========================================================
-   HR INFO ADs NAVIGATION
-   ========================================================= */
+/* ============================================================
+   HR INFO ADs
+   ADMINISTRATION SIDEBAR
+   NavMenu.razor.css
+   ============================================================ */
 
-.hr-navigation {
-    min-height: 100vh;
+
+/* ============================================================
+   ROOT SIDEBAR
+   ============================================================ */
+
+.hr-sidebar-container {
+    position: relative;
 
     display: flex;
-
     flex-direction: column;
 
-    background: #0A2C6A;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
 
-    color: #FFFFFF;
+    overflow: hidden;
+
+    color: #ffffff;
+
+    background:
+        radial-gradient(
+            circle at 15% 5%,
+            rgba(73, 145, 249, 0.16),
+            transparent 28%
+        ),
+        linear-gradient(
+            180deg,
+            #0B3275 0%,
+            #092A65 45%,
+            #071F4D 100%
+        );
 }
 
 
-/* =========================================================
+/* subtle background glow */
+
+.hr-sidebar-container::before {
+    content: "";
+
+    position: absolute;
+
+    top: -100px;
+    left: -100px;
+
+    width: 280px;
+    height: 280px;
+
+    border-radius: 50%;
+
+    background: rgba(73, 145, 249, 0.08);
+
+    filter: blur(50px);
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
    BRAND
-   ========================================================= */
+   Note: this is a plain <a>, written directly in NavMenu.razor's
+   own markup — NOT a NavLink component — so it DOES receive the
+   scope attribute and needs no ::deep.
+   ============================================================ */
 
-.hr-brand {
-    height: 76px;
+.hr-sidebar-brand {
+    position: relative;
 
-    padding: 0 22px;
+    flex: 0 0 auto;
 
-    display: flex;
+    width: 100%;
 
-    align-items: center;
+    padding: 20px 16px 18px;
 
-    gap: 12px;
-
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 
-.hr-brand-logo {
-    width: 42px;
-    height: 42px;
+.hr-sidebar-brand-link {
+    position: relative;
 
     display: flex;
-
     align-items: center;
 
+    width: 100%;
+
+    min-height: 68px;
+
+    padding: 10px 11px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.10),
+            rgba(255, 255, 255, 0.035)
+        );
+
+    text-decoration: none !important;
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.12);
+
+    transition:
+        background 200ms ease,
+        border-color 200ms ease,
+        transform 200ms ease,
+        box-shadow 200ms ease;
+}
+
+
+.hr-sidebar-brand-link:hover {
+    color: #ffffff !important;
+
+    text-decoration: none !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(73, 145, 249, 0.20),
+            rgba(255, 255, 255, 0.06)
+        );
+
+    border-color: rgba(101, 165, 255, 0.25);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+
+.hr-sidebar-logo {
+    display: flex;
+    align-items: center;
     justify-content: center;
-}
 
+    flex: 0 0 46px;
 
-.hr-logo-placeholder {
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
+
+    margin-right: 12px;
 
     border-radius: 11px;
 
-    background: linear-gradient(
-        135deg,
-        #4991F9,
-        #3270D5
-    );
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: center;
-
-    color: #FFFFFF;
-
-    font-size: 14px;
-
-    font-weight: 800;
-
-    letter-spacing: -0.5px;
+    background: #ffffff;
 
     box-shadow:
-        0 5px 14px rgba(0, 0, 0, 0.15);
+        0 5px 14px rgba(0, 0, 0, 0.20);
+
+    overflow: hidden;
+
+    transition:
+        transform 250ms ease,
+        box-shadow 250ms ease;
 }
 
 
-.hr-brand-text {
-    display: flex;
+.hr-sidebar-brand-link:hover .hr-sidebar-logo {
+    transform: scale(1.04) rotate(-2deg);
 
+    box-shadow:
+        0 7px 18px rgba(0, 0, 0, 0.25);
+}
+
+
+.hr-sidebar-logo-image {
+    display: block;
+
+    width: 34px;
+    height: 38px;
+
+    object-fit: contain;
+}
+
+
+/* ============================================================
+   BRAND TEXT
+   ============================================================ */
+
+.hr-sidebar-brand-content {
+    min-width: 0;
+
+    display: flex;
     flex-direction: column;
 
-    gap: 2px;
+    justify-content: center;
 }
 
 
-.hr-brand-name {
-    font-size: 17px;
+.hr-sidebar-brand-title {
+    margin: 0;
 
-    font-weight: 800;
+    color: #ffffff !important;
 
-    letter-spacing: 0.3px;
+    font-size: 15px;
+    font-weight: 700;
 
-    color: #FFFFFF;
+    line-height: 1.25;
+
+    letter-spacing: 0.1px;
+
+    white-space: nowrap;
 }
 
 
-.hr-brand-subtitle {
+.hr-sidebar-brand-caption {
+    margin-top: 4px;
+
+    color: rgba(255, 255, 255, 0.55) !important;
+
     font-size: 10px;
+    font-weight: 500;
 
-    color: rgba(255, 255, 255, 0.60);
+    line-height: 1.2;
+
+    letter-spacing: 1px;
 
     text-transform: uppercase;
 
-    letter-spacing: 1px;
+    white-space: nowrap;
 }
 
 
-/* =========================================================
-   NAVIGATION
-   ========================================================= */
+/* ============================================================
+   NAVIGATION CONTAINER
+   ============================================================ */
 
-.hr-nav {
-    flex: 1;
+.hr-sidebar-nav {
+    position: relative;
 
-    padding: 22px 14px;
+    z-index: 2;
 
-    overflow-y: auto;
-}
+    flex: 1 1 auto;
 
+    min-height: 0;
 
-.hr-nav-section-title {
-    padding: 14px 12px 8px;
-
-    font-size: 10px;
-
-    font-weight: 700;
-
-    letter-spacing: 1.2px;
-
-    color: rgba(255, 255, 255, 0.42);
-}
-
-
-.hr-nav-link {
-    min-height: 44px;
-
-    margin-bottom: 4px;
-
-    padding: 0 12px;
+    width: 100%;
 
     display: flex;
+    flex-direction: column;
 
+    padding: 18px 12px 16px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    scrollbar-width: thin;
+    scrollbar-color:
+        rgba(255, 255, 255, 0.18)
+        transparent;
+}
+
+
+/* ============================================================
+   NAVIGATION SCROLLBAR
+   ============================================================ */
+
+.hr-sidebar-nav::-webkit-scrollbar {
+    width: 5px;
+}
+
+.hr-sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.hr-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.16);
+
+    border-radius: 20px;
+}
+
+.hr-sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+
+/* ============================================================
+   SECTION TITLE
+   ============================================================ */
+
+.hr-sidebar-section {
+    position: relative;
+
+    display: flex;
     align-items: center;
 
-    gap: 12px;
+    flex: 0 0 auto;
 
-    border-radius: 9px;
+    width: 100%;
+    min-height: 25px;
 
-    color: rgba(255, 255, 255, 0.72);
+    margin: 0 0 7px;
 
-    text-decoration: none;
+    padding: 0 8px;
 
+    color: rgba(255, 255, 255, 0.43) !important;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    letter-spacing: 1.5px;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+
+.hr-sidebar-section::after {
+    content: "";
+
+    flex: 1 1 auto;
+
+    height: 1px;
+
+    margin-left: 10px;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.13),
+            transparent
+        );
+}
+
+
+.hr-sidebar-section-spaced {
+    margin-top: 22px;
+}
+
+
+/* ============================================================
+   NAV LINK - BASE
+
+   IMPORTANT — WHY ::deep IS HERE:
+   Every <NavLink href="..."> in NavMenu.razor renders its own
+   <a> element from Microsoft.AspNetCore.Components.Web, a
+   separate component. Blazor's CSS isolation only stamps the
+   scope attribute (b-xxxxxxxx) onto elements written directly
+   in *this* component's markup, so that inner <a> never gets
+   NavMenu's scope attribute — confirmed by inspecting the
+   rendered DOM, where the <a> has no b-xxxxxxxx attribute at
+   all, while the <span> icon/text inside it (written directly
+   in NavMenu.razor) does.
+
+   Without ::deep, every selector below compiles to
+   `a.hr-sidebar-link[b-xxxxxxxx]`, which can never match that
+   real <a> — so text-decoration: none (and everything else
+   here) silently never applied, regardless of !important,
+   regardless of rebuilding, regardless of cache-busting.
+
+   ::deep turns off scope-attribute matching from that point
+   in the selector onward, so it matches the <a> by class name
+   alone, which does exist in the DOM.
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link {
+
+    position: relative;
+
+    display: flex !important;
+    align-items: center !important;
+
+    flex: 0 0 auto;
+
+    width: 100% !important;
+    min-width: 0;
+
+    height: 46px;
+    min-height: 46px;
+
+    margin: 3px 0 !important;
+
+    padding: 0 10px !important;
+
+    border: 1px solid transparent !important;
+    border-radius: 10px !important;
+
+    color: rgba(255, 255, 255, 0.72) !important;
+
+    background: transparent !important;
+
+    font-family: inherit;
     font-size: 13px;
 
     font-weight: 500;
 
+    line-height: 1;
+
+    text-decoration: none !important;
+
+    box-shadow: none;
+
+    overflow: hidden;
+
+    cursor: pointer;
+
+    transform: translateX(0);
+
     transition:
-        background 0.18s ease,
-        color 0.18s ease,
-        transform 0.18s ease;
+        color 180ms ease,
+        background-color 180ms ease,
+        border-color 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease;
 }
 
 
-.hr-nav-link:hover {
-    background: rgba(255, 255, 255, 0.08);
+/* ============================================================
+   LIGHT SWEEP
+   ============================================================ */
 
-    color: #FFFFFF;
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link::before {
 
-    text-decoration: none;
+    content: "";
+
+    position: absolute;
+
+    z-index: 0;
+
+    top: 0;
+    bottom: 0;
+
+    left: -120%;
+
+    width: 70%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.07),
+            transparent
+        );
+
+    transform: skewX(-18deg);
+
+    pointer-events: none;
+
+    transition: left 500ms ease;
 }
 
 
-.hr-nav-link.active {
-    background: linear-gradient(
-        90deg,
-        #4991F9,
-        #3270D5
-    );
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:hover::before {
 
-    color: #FFFFFF;
+    left: 135%;
+}
 
-    font-weight: 600;
+
+/* ============================================================
+   LEFT ACTIVE INDICATOR
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link::after {
+
+    content: "";
+
+    position: absolute;
+
+    z-index: 3;
+
+    top: 50%;
+    left: 0;
+
+    width: 3px;
+    height: 0;
+
+    border-radius: 0 4px 4px 0;
+
+    background: #65A5FF;
 
     box-shadow:
-        0 5px 14px rgba(0, 0, 0, 0.12);
+        0 0 10px rgba(101, 165, 255, 0.75),
+        0 0 18px rgba(101, 165, 255, 0.30);
+
+    opacity: 0;
+
+    transform: translateY(-50%);
+
+    transition:
+        height 180ms ease,
+        opacity 180ms ease;
 }
 
 
-.hr-nav-icon {
-    width: 22px;
+/* ============================================================
+   ICON
+   The icon <span> is written directly in NavMenu.razor (inside
+   the NavLink's ChildContent), so it DOES carry the scope
+   attribute in the DOM. It doesn't strictly need ::deep, but
+   once ::deep appears earlier in a selector chain, everything
+   after it is also unscoped — which is harmless here since the
+   class name still matches either way.
+   ============================================================ */
 
-    text-align: center;
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link
+.hr-sidebar-link-icon {
 
-    font-size: 18px;
+    position: relative;
+
+    z-index: 2;
+
+    display: inline-flex !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+
+    flex: 0 0 36px !important;
+
+    width: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+
+    height: 36px !important;
+
+    margin: 0 9px 0 0 !important;
+    padding: 0 !important;
+
+    border-radius: 9px;
+
+    color: rgba(255, 255, 255, 0.58) !important;
+
+    background: transparent;
+
+    font-size: 16px;
 
     line-height: 1;
 
-    flex-shrink: 0;
-
-    color: currentColor;
+    transition:
+        color 180ms ease,
+        background-color 180ms ease,
+        transform 180ms ease,
+        box-shadow 180ms ease;
 }
 
 
-/* =========================================================
-   SIDEBAR FOOTER
-   ========================================================= */
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link
+.hr-sidebar-link-icon i {
+
+    display: block;
+
+    width: 16px;
+    height: 16px;
+
+    margin: 0;
+    padding: 0;
+
+    color: inherit !important;
+
+    font-size: 16px;
+
+    line-height: 1;
+
+    transition:
+        color 180ms ease,
+        transform 180ms ease;
+}
+
+
+/* ============================================================
+   MENU TEXT
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link
+span.hr-sidebar-link-text {
+
+    position: relative;
+
+    z-index: 2;
+
+    display: block !important;
+
+    flex: 1 1 auto !important;
+
+    width: auto !important;
+    min-width: 0 !important;
+
+    height: auto !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    color: rgba(255, 255, 255, 0.78) !important;
+
+    background: transparent !important;
+
+    font-family: inherit !important;
+
+    font-size: 13px !important;
+
+    font-weight: 500 !important;
+
+    line-height: 1.3 !important;
+
+    letter-spacing: 0 !important;
+
+    text-align: left !important;
+
+    text-decoration: none !important;
+
+    white-space: nowrap !important;
+
+    overflow: hidden !important;
+
+    text-overflow: ellipsis !important;
+
+    opacity: 1 !important;
+
+    visibility: visible !important;
+
+    transform: translateX(0);
+
+    transition:
+        color 180ms ease,
+        transform 180ms ease,
+        font-weight 180ms ease;
+}
+
+
+/* Visited links keep the same color as unvisited ones */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:visited,
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:visited
+span.hr-sidebar-link-text {
+
+    color: rgba(255, 255, 255, 0.72) !important;
+
+    text-decoration: none !important;
+}
+
+
+/* ============================================================
+   HOVER
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:hover {
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(73, 145, 249, 0.20),
+            rgba(73, 145, 249, 0.07)
+        ) !important;
+
+    border-color:
+        rgba(101, 165, 255, 0.14) !important;
+
+    transform: translateX(3px);
+
+    box-shadow:
+        inset 0 0 20px rgba(73, 145, 249, 0.035);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:hover
+.hr-sidebar-link-icon {
+
+    color: #ffffff !important;
+
+    background:
+        rgba(73, 145, 249, 0.14);
+
+    transform: translateX(1px) scale(1.03);
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:hover
+.hr-sidebar-link-icon i {
+
+    color: #ffffff !important;
+
+    transform: scale(1.08);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:hover
+span.hr-sidebar-link-text {
+
+    color: #ffffff !important;
+
+    font-weight: 500 !important;
+
+    transform: translateX(1px);
+}
+
+
+/* ============================================================
+   ACTIVE LINK
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active {
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(73, 145, 249, 0.30),
+            rgba(73, 145, 249, 0.11)
+        ) !important;
+
+    border-color:
+        rgba(101, 165, 255, 0.22) !important;
+
+    box-shadow:
+        inset 0 0 22px rgba(73, 145, 249, 0.05),
+        0 5px 15px rgba(3, 20, 50, 0.15);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active::after {
+
+    height: 24px;
+
+    opacity: 1;
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active
+.hr-sidebar-link-icon {
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(73, 145, 249, 0.30),
+            rgba(73, 145, 249, 0.12)
+        );
+
+    box-shadow:
+        0 5px 14px rgba(0, 0, 0, 0.14);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active
+.hr-sidebar-link-icon i {
+
+    color: #ffffff !important;
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active
+span.hr-sidebar-link-text {
+
+    color: #ffffff !important;
+
+    font-size: 13px !important;
+
+    font-weight: 600 !important;
+
+    line-height: 1.3 !important;
+
+    opacity: 1 !important;
+
+    visibility: visible !important;
+
+    transform: translateX(0);
+}
+
+
+/* ============================================================
+   ACTIVE + HOVER
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active:hover {
+
+    color: #ffffff !important;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(73, 145, 249, 0.38),
+            rgba(73, 145, 249, 0.15)
+        ) !important;
+
+    border-color:
+        rgba(101, 165, 255, 0.28) !important;
+
+    transform: translateX(3px);
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link.active:hover
+span.hr-sidebar-link-text {
+
+    color: #ffffff !important;
+
+    font-weight: 600 !important;
+
+    transform: translateX(1px);
+}
+
+
+/* ============================================================
+   FOCUS
+   ============================================================ */
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:focus,
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:focus-visible {
+
+    color: #ffffff !important;
+
+    text-decoration: none !important;
+
+    outline: none !important;
+}
+
+
+.hr-sidebar-container
+.hr-sidebar-nav
+::deep a.hr-sidebar-link:focus-visible {
+
+    border-color:
+        rgba(101, 165, 255, 0.55) !important;
+
+    box-shadow:
+        0 0 0 3px rgba(73, 145, 249, 0.18);
+}
+
+
+/* ============================================================
+   SYSTEM FOOTER
+   ============================================================ */
 
 .hr-sidebar-footer {
-    padding: 16px 20px 20px;
+    position: relative;
 
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    z-index: 3;
+
+    flex: 0 0 auto;
+
+    width: 100%;
+
+    padding: 14px 14px 16px;
+
+    border-top:
+        1px solid rgba(255, 255, 255, 0.09);
+
+    background:
+        rgba(4, 20, 49, 0.18);
 }
 
 
-.hr-sidebar-status {
+.hr-sidebar-system {
     display: flex;
-
     align-items: center;
 
-    gap: 8px;
+    width: 100%;
 
-    font-size: 11px;
+    min-height: 48px;
 
-    color: rgba(255, 255, 255, 0.70);
+    padding: 8px 10px;
+
+    border:
+        1px solid rgba(255, 255, 255, 0.07);
+
+    border-radius: 10px;
+
+    background:
+        rgba(255, 255, 255, 0.035);
 }
 
 
-.hr-status-dot {
-    width: 7px;
-    height: 7px;
+.hr-sidebar-system-indicator {
+    position: relative;
+
+    flex: 0 0 8px;
+
+    width: 8px;
+    height: 8px;
+
+    margin-right: 10px;
 
     border-radius: 50%;
 
-    background: #16A34A;
+    background: #35D18A;
 
     box-shadow:
-        0 0 0 4px rgba(22, 163, 74, 0.12);
+        0 0 0 4px rgba(53, 209, 138, 0.10),
+        0 0 12px rgba(53, 209, 138, 0.50);
+
+    animation: hr-system-pulse 2.2s ease-in-out infinite;
 }
 
 
-.hr-sidebar-version {
-    margin-top: 8px;
+.hr-sidebar-system-content {
+    min-width: 0;
 
-    font-size: 10px;
-
-    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    flex-direction: column;
 }
 
 
-/* =========================================================
-   SCROLLBAR
-   ========================================================= */
+.hr-sidebar-system-title {
+    color: rgba(255, 255, 255, 0.86);
 
-.hr-nav::-webkit-scrollbar {
-    width: 5px;
+    font-size: 11px;
+    font-weight: 600;
+
+    line-height: 1.3;
 }
 
 
-.hr-nav::-webkit-scrollbar-track {
-    background: transparent;
+.hr-sidebar-system-subtitle {
+    margin-top: 2px;
+
+    color: rgba(255, 255, 255, 0.42);
+
+    font-size: 9px;
+    font-weight: 400;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 
-.hr-nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+/* ============================================================
+   ANIMATION
+   ============================================================ */
 
-    border-radius: 10px;
+@keyframes hr-system-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+
+        box-shadow:
+            0 0 0 4px rgba(53, 209, 138, 0.10),
+            0 0 12px rgba(53, 209, 138, 0.50);
+    }
+
+    50% {
+        opacity: 0.72;
+
+        box-shadow:
+            0 0 0 6px rgba(53, 209, 138, 0.04),
+            0 0 18px rgba(53, 209, 138, 0.30);
+    }
+}
+
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
+
+@media (max-width: 900px) {
+
+    .hr-sidebar-brand {
+        padding: 16px 12px;
+    }
+
+    .hr-sidebar-nav {
+        padding: 15px 10px;
+    }
+
+    .hr-sidebar-container
+    .hr-sidebar-nav
+    ::deep a.hr-sidebar-link {
+
+        height: 44px;
+        min-height: 44px;
+
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+    }
+
+    .hr-sidebar-container
+    .hr-sidebar-nav
+    ::deep a.hr-sidebar-link
+    .hr-sidebar-link-icon {
+
+        flex-basis: 34px !important;
+
+        width: 34px !important;
+        min-width: 34px !important;
+        max-width: 34px !important;
+
+        height: 34px !important;
+
+        margin-right: 8px !important;
+    }
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .hr-sidebar-container *,
+    .hr-sidebar-container *::before,
+    .hr-sidebar-container *::after {
+
+        animation: none !important;
+
+        transition: none !important;
+    }
 }

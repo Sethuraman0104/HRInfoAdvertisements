@@ -1,26 +1,43 @@
 ﻿@inherits LayoutComponentBase
+
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using HRInfoAdvertisements.Admin.Services
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
 
 <div class="hr-app-shell">
 
-    <!-- LEFT NAVIGATION -->
-    <aside class="hr-sidebar">
+    <!-- =========================================================
+         SIDEBAR
+         NavMenu owns the complete sidebar design.
+         ========================================================= -->
+
+    <aside class="hr-sidebar @(sidebarOpen ? "hr-sidebar-open" : "")">
 
         <NavMenu />
 
     </aside>
 
 
-    <!-- MAIN APPLICATION AREA -->
+    <!-- =========================================================
+         MAIN APPLICATION
+         ========================================================= -->
+
     <section class="hr-main">
 
-        <!-- TOP HEADER -->
+
+        <!-- =====================================================
+             TOP BAR
+             ===================================================== -->
+
         <header class="hr-topbar">
 
             <div class="hr-topbar-left">
+
+                <!-- MOBILE MENU -->
 
                 <button class="hr-mobile-menu"
                         type="button"
@@ -33,29 +50,55 @@
 
                 </button>
 
+
+                <!-- PAGE CONTEXT -->
+
                 <div class="hr-page-context">
 
-                    <span class="hr-page-context-title">
-                        Administration Portal
-                    </span>
+                    <div class="hr-topbar-brand">
 
-                    <span class="hr-page-context-subtitle">
-                        HR INFO ADs
-                    </span>
+                        <img src="/images/hr-info-ads-logo.png"
+                             alt="HR INFO ADs"
+                             class="hr-topbar-logo" />
+
+                        <div class="hr-topbar-brand-text">
+
+                            <span class="hr-page-context-title">
+                                Administration Portal
+                            </span>
+
+                            <span class="hr-page-context-subtitle">
+                                HR INFO ADs
+                            </span>
+
+                        </div>
+
+                    </div>
 
                 </div>
 
             </div>
 
 
+            <!-- =================================================
+                 TOP RIGHT
+                 ================================================= -->
+
             <div class="hr-topbar-right">
+
+
+                <!-- NOTIFICATIONS -->
 
                 <button class="hr-icon-button"
                         type="button"
                         title="Notifications"
                         aria-label="Notifications">
 
-                    <span class="hr-notification-icon">●</span>
+                    <i class="bi bi-bell"></i>
+
+                    <span class="hr-notification-badge">
+                        0
+                    </span>
 
                 </button>
 
@@ -63,36 +106,140 @@
                 <div class="hr-topbar-divider"></div>
 
 
-                <div class="hr-user-summary">
+                <!-- USER MENU -->
 
-    <div class="hr-user-avatar">
-        @GetInitials()
-    </div>
+                <div class="hr-user-menu">
 
-    <div class="hr-user-details">
+                    <button class="hr-user-summary"
+                            type="button"
+                            @onclick="ToggleUserMenu"
+                            aria-expanded="@userMenuOpen"
+                            aria-haspopup="true">
 
-        <span class="hr-user-name">
-            @CurrentUserName
-        </span>
+                        <div class="hr-user-avatar">
 
-        <span class="hr-user-role">
-            @CurrentUserRole
-        </span>
+                            @GetInitials()
 
-    </div>
+                        </div>
 
-    <span class="hr-user-chevron">
-        ▾
-    </span>
 
-</div>
+                        <div class="hr-user-details">
+
+                            <span class="hr-user-name">
+                                @CurrentUserName
+                            </span>
+
+                            <span class="hr-user-role">
+                                @CurrentUserRole
+                            </span>
+
+                        </div>
+
+
+                        <i class="bi @(userMenuOpen
+                            ? "bi-chevron-up"
+                            : "bi-chevron-down")
+                            hr-user-chevron">
+                        </i>
+
+                    </button>
+
+
+                    @if (userMenuOpen)
+                    {
+                        <div class="hr-user-dropdown">
+
+
+                            <!-- USER HEADER -->
+
+                            <div class="hr-user-dropdown-header">
+
+                                <div class="hr-user-dropdown-avatar">
+
+                                    @GetInitials()
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="hr-user-dropdown-name">
+                                        @CurrentUserName
+                                    </div>
+
+                                    <div class="hr-user-dropdown-email">
+                                        @CurrentUserEmail
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="hr-user-dropdown-divider"></div>
+
+
+                            <!-- PROFILE -->
+
+                            <button type="button"
+                                    class="hr-user-dropdown-item"
+                                    @onclick="GoToProfile">
+
+                                <i class="bi bi-person"></i>
+
+                                <span>
+                                    My Profile
+                                </span>
+
+                            </button>
+
+
+                            <!-- SETTINGS -->
+
+                            <button type="button"
+                                    class="hr-user-dropdown-item"
+                                    @onclick="GoToSettings">
+
+                                <i class="bi bi-gear"></i>
+
+                                <span>
+                                    Settings
+                                </span>
+
+                            </button>
+
+
+                            <div class="hr-user-dropdown-divider"></div>
+
+
+                            <!-- LOGOUT -->
+
+                            <button type="button"
+                                    class="hr-user-dropdown-item hr-user-dropdown-danger"
+                                    @onclick="Logout">
+
+                                <i class="bi bi-box-arrow-right"></i>
+
+                                <span>
+                                    Sign Out
+                                </span>
+
+                            </button>
+
+                        </div>
+                    }
+
+                </div>
 
             </div>
 
         </header>
 
 
-        <!-- CONTENT -->
+        <!-- =====================================================
+             PAGE CONTENT
+             ===================================================== -->
+
         <main class="hr-content">
 
             @Body
@@ -100,23 +247,42 @@
         </main>
 
 
-        <!-- FOOTER -->
+        <!-- =====================================================
+             FOOTER
+             ===================================================== -->
+
         <footer class="hr-footer">
 
-            <span>
-                © @DateTime.Now.Year HR INFO ADs
-            </span>
+    <div class="hr-footer-left">
+        <span class="hr-footer-brand">
+            <span class="hr-footer-brand-dot"></span>
+            <span>© @DateTime.Now.Year HR INFO ADs</span>
+        </span>
+    </div>
 
-            <span>
-                Advertisement Management Platform
-            </span>
+    <div class="hr-footer-right">
+        <span class="hr-footer-status">
+            <span class="hr-footer-status-dot"></span>
+            System Online
+        </span>
 
-        </footer>
+        <span class="hr-footer-divider"></span>
+
+        <span class="hr-footer-description">
+            Advertisement Management Platform
+        </span>
+    </div>
+
+</footer>
 
     </section>
 
 </div>
 
+
+<!-- =============================================================
+     MOBILE OVERLAY
+     ============================================================= -->
 
 @if (sidebarOpen)
 {
@@ -125,6 +291,10 @@
     </div>
 }
 
+
+<!-- =============================================================
+     BLAZOR ERROR UI
+     ============================================================= -->
 
 <div id="blazor-error-ui"
      data-nosnippet>
@@ -155,33 +325,24 @@
 </div>
 
 
-@code {
-
+@code
+{
     private bool sidebarOpen;
 
-    private string CurrentUserName { get; set; } = "Administrator";
+    private bool userMenuOpen;
 
-    private string CurrentUserRole { get; set; } = "Administrator";
 
-    private string GetInitials()
-    {
-        if (string.IsNullOrWhiteSpace(CurrentUserName))
-            return "A";
+    private string CurrentUserName { get; set; }
+        = "Administrator";
 
-        var parts = CurrentUserName
-            .Trim()
-            .Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries);
 
-        if (parts.Length == 1)
-            return parts[0][0].ToString().ToUpperInvariant();
+    private string CurrentUserRole { get; set; }
+        = "Administrator";
 
-        return (
-            parts[0][0].ToString() +
-            parts[^1][0].ToString()
-        ).ToUpperInvariant();
-    }
+
+    private string CurrentUserEmail { get; set; }
+        = string.Empty;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -189,30 +350,117 @@
             await AuthenticationStateProvider
                 .GetAuthenticationStateAsync();
 
-        var user = authenticationState.User;
+        var user =
+            authenticationState.User;
+
 
         if (user.Identity?.IsAuthenticated == true)
         {
             CurrentUserName =
                 user.Identity.Name
-                ?? user.FindFirst(ClaimTypes.Email)?.Value
+                ?? user.FindFirst(
+                    ClaimTypes.Email)?.Value
                 ?? "Administrator";
 
+
+            CurrentUserEmail =
+                user.FindFirst(
+                    ClaimTypes.Email)?.Value
+                ?? string.Empty;
+
+
             CurrentUserRole =
-                user.FindFirst(ClaimTypes.Role)?.Value
+                user.FindFirst(
+                    ClaimTypes.Role)?.Value
                 ?? "Administrator";
         }
     }
 
+
+    private string GetInitials()
+    {
+        if (string.IsNullOrWhiteSpace(
+                CurrentUserName))
+        {
+            return "A";
+        }
+
+
+        var parts =
+            CurrentUserName
+                .Trim()
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+
+        if (parts.Length == 1)
+        {
+            return parts[0][0]
+                .ToString()
+                .ToUpperInvariant();
+        }
+
+
+        return (
+            parts[0][0].ToString() +
+            parts[^1][0].ToString()
+        ).ToUpperInvariant();
+    }
+
+
     private void ToggleSidebar()
     {
-        sidebarOpen = !sidebarOpen;
+        sidebarOpen =
+            !sidebarOpen;
     }
+
 
     private void CloseSidebar()
     {
         sidebarOpen = false;
     }
-}
 
+
+    private void ToggleUserMenu()
+    {
+        userMenuOpen =
+            !userMenuOpen;
+    }
+
+
+    private void GoToProfile()
+    {
+        userMenuOpen = false;
+
+        Navigation.NavigateTo(
+            "/admin/profile");
+    }
+
+
+    private void GoToSettings()
+    {
+        userMenuOpen = false;
+
+        Navigation.NavigateTo(
+            "/admin/settings");
+    }
+
+
+    private void Logout()
+    {
+        userMenuOpen = false;
+
+
+        if (AuthenticationStateProvider
+            is AdminAuthenticationStateProvider adminProvider)
+        {
+            adminProvider.SignOut();
+        }
+
+
+        Navigation.NavigateTo(
+            "/login",
+            replace: true);
+    }
 }

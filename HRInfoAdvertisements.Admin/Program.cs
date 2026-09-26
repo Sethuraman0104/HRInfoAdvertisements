@@ -1,19 +1,19 @@
 using HRInfoAdvertisements.Admin.Components;
 using HRInfoAdvertisements.Admin.Services;
+using HRInfoAdvertisements.Application.Interfaces;
+
+using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // ============================================================
-// AUTHENTICATION / AUTHORIZATION
+// AUTHORIZATION
 // ============================================================
 
-builder.Services.AddAuthentication();
 builder.Services.AddAuthorization();
-builder.Services.AddCascadingAuthenticationState();
 
-builder.Services
-    .AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddCascadingAuthenticationState();
 
 
 // ============================================================
@@ -24,18 +24,22 @@ builder.Services.AddScoped<
     AdminAuthenticationStateProvider>();
 
 builder.Services.AddScoped<
+    AuthenticationStateProvider>(
+        serviceProvider =>
+            serviceProvider.GetRequiredService<
+                AdminAuthenticationStateProvider>());
+
+builder.Services.AddScoped<
     PublicAuthenticationStateProvider>();
 
 
 // ============================================================
-// JWT HANDLERS
+// RAZOR COMPONENTS
 // ============================================================
 
-builder.Services.AddTransient<
-    AdminJwtHandler>();
-
-builder.Services.AddTransient<
-    PublicJwtHandler>();
+builder.Services
+    .AddRazorComponents()
+    .AddInteractiveServerComponents();
 
 
 // ============================================================
@@ -54,7 +58,22 @@ if (string.IsNullOrWhiteSpace(apiBaseUrl))
 
 
 // ============================================================
-// ADMIN API CLIENT
+// ADMIN / APPLICATION API CLIENT
+// ============================================================
+//
+// IMPORTANT:
+//
+// We intentionally do NOT use AdminJwtHandler here.
+//
+// The Admin application is a Blazor Server application and
+// AdminAuthenticationStateProvider stores the JWT inside the
+// current Blazor circuit.
+//
+// AdminAdvertisementModerationService explicitly reads the
+// token from that provider and attaches it to each request.
+//
+// This prevents IHttpClientFactory handler scopes from using
+// a different AdminAuthenticationStateProvider instance.
 // ============================================================
 
 builder.Services.AddHttpClient(
@@ -66,13 +85,11 @@ builder.Services.AddHttpClient(
 
         client.Timeout =
             TimeSpan.FromSeconds(30);
-    })
-    .AddHttpMessageHandler<
-        AdminJwtHandler>();
+    });
 
 
 // ============================================================
-// PUBLIC AUTHENTICATED API CLIENT
+// PUBLIC API CLIENT
 // ============================================================
 
 builder.Services.AddHttpClient(
@@ -84,9 +101,7 @@ builder.Services.AddHttpClient(
 
         client.Timeout =
             TimeSpan.FromSeconds(60);
-    })
-    .AddHttpMessageHandler<
-        PublicJwtHandler>();
+    });
 
 
 // ============================================================
@@ -104,10 +119,20 @@ builder.Services.AddScoped<
 
 
 // ============================================================
+// ADMIN MODERATION SERVICE
+// ============================================================
+
+builder.Services.AddScoped<
+    IAdvertisementModerationService,
+    AdminAdvertisementModerationService>();
+
+
+// ============================================================
 // BUILD
 // ============================================================
 
-var app = builder.Build();
+var app =
+    builder.Build();
 
 
 // ============================================================
