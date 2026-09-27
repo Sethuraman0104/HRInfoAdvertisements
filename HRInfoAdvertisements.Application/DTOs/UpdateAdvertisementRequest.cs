@@ -29,6 +29,21 @@ public class UpdateAdvertisementRequest
 
     public bool IsNegotiable { get; set; }
 
+    // ============================================================
+// CONTACT INFORMATION
+// ============================================================
+
+[MaxLength(30)]
+public string? WhatsAppNumber { get; set; }
+
+[EmailAddress]
+[MaxLength(254)]
+public string? ContactEmail { get; set; }
+
+public bool ShowWhatsAppToPublic { get; set; }
+
+public bool ShowEmailToPublic { get; set; }
+
     public int? CountryID { get; set; }
 
     public int? StateID { get; set; }

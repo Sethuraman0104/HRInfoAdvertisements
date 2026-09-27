@@ -6,12 +6,11 @@
 
 
 /* ============================================================
-   ROOT SIDEBAR
+   SIDEBAR ROOT
    ============================================================ */
 
 .hr-sidebar-container {
     position: relative;
-
     display: flex;
     flex-direction: column;
 
@@ -38,13 +37,12 @@
 }
 
 
-/* subtle background glow */
+/* Background glow */
 
 .hr-sidebar-container::before {
     content: "";
 
     position: absolute;
-
     top: -100px;
     left: -100px;
 
@@ -63,9 +61,6 @@
 
 /* ============================================================
    BRAND
-   Note: this is a plain <a>, written directly in NavMenu.razor's
-   own markup — NOT a NavLink component — so it DOES receive the
-   scope attribute and needs no ::deep.
    ============================================================ */
 
 .hr-sidebar-brand {
@@ -88,7 +83,6 @@
     align-items: center;
 
     width: 100%;
-
     min-height: 68px;
 
     padding: 10px 11px;
@@ -120,8 +114,6 @@
 
 .hr-sidebar-brand-link:hover {
     color: #ffffff !important;
-
-    text-decoration: none !important;
 
     background:
         linear-gradient(
@@ -197,7 +189,6 @@
 
     display: flex;
     flex-direction: column;
-
     justify-content: center;
 }
 
@@ -211,7 +202,6 @@
     font-weight: 700;
 
     line-height: 1.25;
-
     letter-spacing: 0.1px;
 
     white-space: nowrap;
@@ -227,7 +217,6 @@
     font-weight: 500;
 
     line-height: 1.2;
-
     letter-spacing: 1px;
 
     text-transform: uppercase;
@@ -237,7 +226,7 @@
 
 
 /* ============================================================
-   NAVIGATION CONTAINER
+   NAVIGATION
    ============================================================ */
 
 .hr-sidebar-nav {
@@ -248,7 +237,6 @@
     flex: 1 1 auto;
 
     min-height: 0;
-
     width: 100%;
 
     display: flex;
@@ -266,9 +254,7 @@
 }
 
 
-/* ============================================================
-   NAVIGATION SCROLLBAR
-   ============================================================ */
+/* Scrollbar */
 
 .hr-sidebar-nav::-webkit-scrollbar {
     width: 5px;
@@ -280,7 +266,6 @@
 
 .hr-sidebar-nav::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.16);
-
     border-radius: 20px;
 }
 
@@ -290,7 +275,7 @@
 
 
 /* ============================================================
-   SECTION TITLE
+   SECTION TITLES
    ============================================================ */
 
 .hr-sidebar-section {
@@ -305,7 +290,6 @@
     min-height: 25px;
 
     margin: 0 0 7px;
-
     padding: 0 8px;
 
     color: rgba(255, 255, 255, 0.43) !important;
@@ -314,7 +298,6 @@
     font-weight: 700;
 
     line-height: 1;
-
     letter-spacing: 1.5px;
 
     text-transform: uppercase;
@@ -347,34 +330,15 @@
 
 
 /* ============================================================
-   NAV LINK - BASE
-
-   IMPORTANT — WHY ::deep IS HERE:
-   Every <NavLink href="..."> in NavMenu.razor renders its own
-   <a> element from Microsoft.AspNetCore.Components.Web, a
-   separate component. Blazor's CSS isolation only stamps the
-   scope attribute (b-xxxxxxxx) onto elements written directly
-   in *this* component's markup, so that inner <a> never gets
-   NavMenu's scope attribute — confirmed by inspecting the
-   rendered DOM, where the <a> has no b-xxxxxxxx attribute at
-   all, while the <span> icon/text inside it (written directly
-   in NavMenu.razor) does.
-
-   Without ::deep, every selector below compiles to
-   `a.hr-sidebar-link[b-xxxxxxxx]`, which can never match that
-   real <a> — so text-decoration: none (and everything else
-   here) silently never applied, regardless of !important,
-   regardless of rebuilding, regardless of cache-busting.
-
-   ::deep turns off scope-attribute matching from that point
-   in the selector onward, so it matches the <a> by class name
-   alone, which does exist in the DOM.
+   NAV LINKS
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link {
+/*
+   NavLink generates the actual <a> element.
+   ::deep is therefore required so the isolated CSS reaches it.
+*/
 
+.hr-sidebar-nav ::deep a.hr-sidebar-link {
     position: relative;
 
     display: flex !important;
@@ -389,7 +353,6 @@
     min-height: 46px;
 
     margin: 3px 0 !important;
-
     padding: 0 10px !important;
 
     border: 1px solid transparent !important;
@@ -401,7 +364,6 @@
 
     font-family: inherit;
     font-size: 13px;
-
     font-weight: 500;
 
     line-height: 1;
@@ -426,13 +388,10 @@
 
 
 /* ============================================================
-   LIGHT SWEEP
+   LINK LIGHT SWEEP
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link::before {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link::before {
     content: "";
 
     position: absolute;
@@ -462,22 +421,16 @@
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:hover::before {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:hover::before {
     left: 135%;
 }
 
 
 /* ============================================================
-   LEFT ACTIVE INDICATOR
+   ACTIVE INDICATOR
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link::after {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link::after {
     content: "";
 
     position: absolute;
@@ -510,19 +463,9 @@
 
 /* ============================================================
    ICON
-   The icon <span> is written directly in NavMenu.razor (inside
-   the NavLink's ChildContent), so it DOES carry the scope
-   attribute in the DOM. It doesn't strictly need ::deep, but
-   once ::deep appears earlier in a selector chain, everything
-   after it is also unscoped — which is harmless here since the
-   class name still matches either way.
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link
-.hr-sidebar-link-icon {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link .hr-sidebar-link-icon {
     position: relative;
 
     z-index: 2;
@@ -561,11 +504,7 @@
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link
-.hr-sidebar-link-icon i {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link .hr-sidebar-link-icon i {
     display: block;
 
     width: 16px;
@@ -577,7 +516,6 @@
     color: inherit !important;
 
     font-size: 16px;
-
     line-height: 1;
 
     transition:
@@ -587,14 +525,10 @@
 
 
 /* ============================================================
-   MENU TEXT
+   LINK TEXT
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link
-span.hr-sidebar-link-text {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link .hr-sidebar-link-text {
     position: relative;
 
     z-index: 2;
@@ -618,11 +552,9 @@ span.hr-sidebar-link-text {
     font-family: inherit !important;
 
     font-size: 13px !important;
-
     font-weight: 500 !important;
 
     line-height: 1.3 !important;
-
     letter-spacing: 0 !important;
 
     text-align: left !important;
@@ -632,11 +564,9 @@ span.hr-sidebar-link-text {
     white-space: nowrap !important;
 
     overflow: hidden !important;
-
     text-overflow: ellipsis !important;
 
     opacity: 1 !important;
-
     visibility: visible !important;
 
     transform: translateX(0);
@@ -648,16 +578,18 @@ span.hr-sidebar-link-text {
 }
 
 
-/* Visited links keep the same color as unvisited ones */
+/* ============================================================
+   VISITED
+   ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:visited,
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:visited
-span.hr-sidebar-link-text {
+.hr-sidebar-nav ::deep a.hr-sidebar-link:visited {
+    color: rgba(255, 255, 255, 0.72) !important;
 
+    text-decoration: none !important;
+}
+
+
+.hr-sidebar-nav ::deep a.hr-sidebar-link:visited .hr-sidebar-link-text {
     color: rgba(255, 255, 255, 0.72) !important;
 
     text-decoration: none !important;
@@ -668,10 +600,7 @@ span.hr-sidebar-link-text {
    HOVER
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:hover {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:hover {
     color: #ffffff !important;
 
     background:
@@ -691,11 +620,7 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:hover
-.hr-sidebar-link-icon {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:hover .hr-sidebar-link-icon {
     color: #ffffff !important;
 
     background:
@@ -708,22 +633,14 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:hover
-.hr-sidebar-link-icon i {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:hover .hr-sidebar-link-icon i {
     color: #ffffff !important;
 
     transform: scale(1.08);
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:hover
-span.hr-sidebar-link-text {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:hover .hr-sidebar-link-text {
     color: #ffffff !important;
 
     font-weight: 500 !important;
@@ -733,13 +650,10 @@ span.hr-sidebar-link-text {
 
 
 /* ============================================================
-   ACTIVE LINK
+   ACTIVE
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active {
     color: #ffffff !important;
 
     background:
@@ -758,21 +672,13 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active::after {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active::after {
     height: 24px;
-
     opacity: 1;
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active
-.hr-sidebar-link-icon {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active .hr-sidebar-link-icon {
     color: #ffffff !important;
 
     background:
@@ -787,30 +693,20 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active
-.hr-sidebar-link-icon i {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active .hr-sidebar-link-icon i {
     color: #ffffff !important;
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active
-span.hr-sidebar-link-text {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active .hr-sidebar-link-text {
     color: #ffffff !important;
 
     font-size: 13px !important;
-
     font-weight: 600 !important;
 
     line-height: 1.3 !important;
 
     opacity: 1 !important;
-
     visibility: visible !important;
 
     transform: translateX(0);
@@ -821,10 +717,7 @@ span.hr-sidebar-link-text {
    ACTIVE + HOVER
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active:hover {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active:hover {
     color: #ffffff !important;
 
     background:
@@ -841,11 +734,7 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link.active:hover
-span.hr-sidebar-link-text {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link.active:hover .hr-sidebar-link-text {
     color: #ffffff !important;
 
     font-weight: 600 !important;
@@ -858,13 +747,8 @@ span.hr-sidebar-link-text {
    FOCUS
    ============================================================ */
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:focus,
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:focus-visible {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:focus,
+.hr-sidebar-nav ::deep a.hr-sidebar-link:focus-visible {
     color: #ffffff !important;
 
     text-decoration: none !important;
@@ -873,10 +757,7 @@ span.hr-sidebar-link-text {
 }
 
 
-.hr-sidebar-container
-.hr-sidebar-nav
-::deep a.hr-sidebar-link:focus-visible {
-
+.hr-sidebar-nav ::deep a.hr-sidebar-link:focus-visible {
     border-color:
         rgba(101, 165, 255, 0.55) !important;
 
@@ -913,7 +794,6 @@ span.hr-sidebar-link-text {
     align-items: center;
 
     width: 100%;
-
     min-height: 48px;
 
     padding: 8px 10px;
@@ -946,7 +826,8 @@ span.hr-sidebar-link-text {
         0 0 0 4px rgba(53, 209, 138, 0.10),
         0 0 12px rgba(53, 209, 138, 0.50);
 
-    animation: hr-system-pulse 2.2s ease-in-out infinite;
+    animation:
+        hr-system-pulse 2.2s ease-in-out infinite;
 }
 
 
@@ -985,11 +866,10 @@ span.hr-sidebar-link-text {
 
 
 /* ============================================================
-   ANIMATION
+   SYSTEM STATUS ANIMATION
    ============================================================ */
 
 @keyframes hr-system-pulse {
-
     0%,
     100% {
         opacity: 1;
@@ -1023,10 +903,7 @@ span.hr-sidebar-link-text {
         padding: 15px 10px;
     }
 
-    .hr-sidebar-container
-    .hr-sidebar-nav
-    ::deep a.hr-sidebar-link {
-
+    .hr-sidebar-nav ::deep a.hr-sidebar-link {
         height: 44px;
         min-height: 44px;
 
@@ -1034,11 +911,7 @@ span.hr-sidebar-link-text {
         padding-right: 9px !important;
     }
 
-    .hr-sidebar-container
-    .hr-sidebar-nav
-    ::deep a.hr-sidebar-link
-    .hr-sidebar-link-icon {
-
+    .hr-sidebar-nav ::deep a.hr-sidebar-link .hr-sidebar-link-icon {
         flex-basis: 34px !important;
 
         width: 34px !important;
@@ -1061,9 +934,7 @@ span.hr-sidebar-link-text {
     .hr-sidebar-container *,
     .hr-sidebar-container *::before,
     .hr-sidebar-container *::after {
-
         animation: none !important;
-
         transition: none !important;
     }
 }

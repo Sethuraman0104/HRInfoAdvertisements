@@ -1,0 +1,2270 @@
+/* ================================================================
+   HR INFO ADs
+   ADMIN USER MANAGEMENT
+   Index.razor.css
+
+   Page-specific styles only.
+   The application shell, sidebar, topbar and footer are owned by
+   MainLayout.razor / MainLayout.razor.css.
+
+   ================================================================ */
+/* ============================================================
+   HR INFO ADs
+   ADMIN USERS PAGE
+   ============================================================ */
+.admin-users {
+    --users-primary: #790000;
+    --users-primary-dark: #5f0000;
+    --users-primary-light: #a91414;
+    --users-accent: #ffbf00;
+
+    --users-text: #071F4D;
+    --users-text-secondary: #667085;
+    --users-text-muted: #8A8A8A;
+    --users-muted: #667085;
+
+    --users-border: #DDE5F2;
+    --users-border-light: #EEEEEE;
+
+    --users-background: #F6F8FC;
+    --users-card: #FFFFFF;
+
+    --users-success: #168653;
+    --users-success-bg: #EDF8F2;
+
+    --users-warning: #B77900;
+    --users-warning-bg: #FFF7E6;
+
+    --users-danger: #C62828;
+    --users-danger-bg: #FFF0F0;
+
+    --users-shadow: 0 8px 28px rgba(7, 31, 77, 0.06);
+    --users-shadow-sm: 0 3px 12px rgba(7, 31, 77, 0.05);
+
+    position: relative;
+
+    display: block;
+
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+
+    margin: 0;
+    padding: 0;
+
+    color: var(--users-text);
+
+    box-sizing: border-box;
+}
+
+/* ================================================================
+   BOX SIZING
+   ================================================================ */
+
+.admin-users *,
+.admin-users *::before,
+.admin-users *::after {
+    box-sizing: border-box;
+}
+
+
+/* ================================================================
+   IMPORTANT
+   Do NOT add .hr-sidebar, .hr-main, .hr-app-shell, .hr-topbar,
+   .hr-footer or other layout selectors here.
+
+   Those belong to MainLayout.razor.css.
+   ================================================================ */
+
+
+/* ================================================================
+   PAGE HEADER
+   ================================================================ */
+
+.admin-users .users-page-header {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 24px;
+
+    margin-bottom: 25px;
+    padding: 25px 28px;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(121, 0, 0, 0.08);
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #fffafa 55%,
+            #fdf5f5 100%
+        );
+
+    box-shadow: var(--users-shadow);
+
+    animation: users-fade-up 0.45s ease both;
+}
+
+.admin-users .users-page-header::before {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+    bottom: 0;
+
+    width: 5px;
+
+    background:
+        linear-gradient(
+            180deg,
+            var(--users-primary),
+            var(--users-accent)
+        );
+}
+
+.admin-users .users-page-header::after {
+    content: "";
+
+    position: absolute;
+
+    width: 190px;
+    height: 190px;
+
+    right: -80px;
+    top: -95px;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(121, 0, 0, 0.08) 0%,
+            rgba(121, 0, 0, 0) 70%
+        );
+
+    pointer-events: none;
+}
+
+.admin-users .users-page-header-content {
+    position: relative;
+    z-index: 2;
+
+    min-width: 0;
+}
+
+.admin-users .users-eyebrow {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-bottom: 8px;
+
+    color: var(--users-primary);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 1.8px;
+    line-height: 1;
+
+    text-transform: uppercase;
+}
+
+.admin-users .users-eyebrow::before {
+    content: "";
+
+    width: 20px;
+    height: 2px;
+
+    flex: 0 0 20px;
+
+    border-radius: 10px;
+
+    background: var(--users-primary);
+}
+
+.admin-users .users-page-header h1 {
+    margin: 0 0 5px;
+
+    color: #292929;
+
+    font-size: 27px;
+    font-weight: 750;
+
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.admin-users .users-page-header p {
+    max-width: 650px;
+
+    margin: 0;
+
+    color: var(--users-text-secondary);
+
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ================================================================
+   HEADER ACTIONS
+   ================================================================ */
+
+.admin-users .users-header-actions {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+
+/* ================================================================
+   COUNT CARD
+   Matches hr-ad-summary-card: soft border, hover lift, icon tile.
+   ================================================================ */
+
+.admin-users .users-count-card {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 125px;
+    height: 48px;
+
+    padding: 0 14px;
+
+    box-sizing: border-box;
+
+    border: 1px solid var(--users-border);
+    border-radius: 12px;
+
+    background: var(--users-card);
+
+    box-shadow: var(--users-shadow-sm);
+
+    transition:
+        border-color 0.22s ease,
+        box-shadow 0.22s ease,
+        transform 0.22s ease;
+}
+
+.admin-users .users-count-card:hover {
+    border-color: #d9d9d9;
+
+    box-shadow: 0 9px 25px rgba(0, 0, 0, 0.09);
+
+    transform: translateY(-2px);
+}
+
+.admin-users .users-count-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 31px;
+    height: 31px;
+
+    flex-shrink: 0;
+
+    border-radius: 9px;
+
+    color: var(--users-primary);
+
+    background: rgba(121, 0, 0, 0.075);
+
+    font-size: 14px;
+}
+
+.admin-users .users-count-card small {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: var(--users-text-muted);
+
+    font-size: 9px;
+    font-weight: 700;
+
+    letter-spacing: 0.6px;
+
+    text-transform: uppercase;
+}
+
+.admin-users .users-count-card strong {
+    display: block;
+
+    color: #292929;
+
+    font-size: 16px;
+    font-weight: 800;
+
+    line-height: 1;
+}
+
+
+/* ================================================================
+   REFRESH BUTTON
+   Matches hr-ad-refresh-button: neutral by default, tints red
+   and lifts on hover.
+   ================================================================ */
+
+.admin-users .users-refresh-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    height: 48px;
+
+    padding: 0 17px;
+
+    border: 1px solid #dedede;
+    border-radius: 11px;
+
+    color: #444444;
+
+    background: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 12.5px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.admin-users .users-refresh-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+
+    color: var(--users-primary);
+
+    border-color: rgba(121, 0, 0, 0.25);
+
+    background: #fffafa;
+
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.admin-users .users-refresh-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.admin-users .users-refresh-button:focus-visible {
+    outline: none;
+
+    box-shadow:
+        0 0 0 3px rgba(121, 0, 0, 0.12),
+        0 5px 14px rgba(121, 0, 0, 0.10);
+}
+
+.admin-users .users-refresh-button:disabled {
+    opacity: 0.6;
+
+    cursor: not-allowed;
+}
+
+.admin-users .users-refresh-button i {
+    font-size: 14px;
+}
+
+
+/* ================================================================
+   SPINNER
+   ================================================================ */
+
+.admin-users .users-spinner {
+    width: 13px;
+    height: 13px;
+
+    flex: 0 0 13px;
+
+    border: 2px solid rgba(121, 0, 0, 0.20);
+    border-top-color: var(--users-primary);
+
+    border-radius: 50%;
+
+    animation: users-spin 0.75s linear infinite;
+}
+
+
+/* ================================================================
+   ERROR
+   Matches hr-ad-alert-error: rounded icon tile, gradient surface.
+   ================================================================ */
+
+.admin-users .users-error {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-bottom: 18px;
+    padding: 13px 15px;
+
+    border: 1px solid #f0cccc;
+    border-radius: 11px;
+
+    color: #8e2525;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7f7,
+            #fff0f0
+        );
+
+    animation: users-fade-in 0.3s ease both;
+}
+
+.admin-users .users-error-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    border-radius: 9px;
+
+    color: var(--users-danger);
+
+    background: #ffe0e0;
+
+    font-size: 14px;
+}
+
+.admin-users .users-error-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+
+    flex: 1;
+
+    min-width: 0;
+}
+
+.admin-users .users-error-content strong {
+    color: #8e2222;
+
+    font-size: 12.5px;
+    font-weight: 800;
+}
+
+.admin-users .users-error-content span {
+    color: #a65c5c;
+
+    font-size: 12px;
+
+    line-height: 1.5;
+}
+
+.admin-users .users-error > button {
+    height: 32px;
+
+    flex-shrink: 0;
+
+    padding: 0 13px;
+
+    border: 1px solid #e5b8b8;
+    border-radius: 8px;
+
+    color: #a52a2a;
+
+    background: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        color 0.16s ease,
+        border-color 0.16s ease,
+        background 0.16s ease;
+}
+
+.admin-users .users-error > button:hover {
+    color: #8e2222;
+
+    border-color: #d99b9b;
+
+    background: #fffafa;
+}
+
+
+/* ================================================================
+   FILTER PANEL
+   Flat, single-row bar matching hr-ad-filter-card, rather than
+   a bordered vertical block. The title row stays as a compact
+   strip above it.
+   ================================================================ */
+
+.admin-users .users-filter-panel {
+    margin-bottom: 20px;
+
+    border-radius: 14px;
+
+    background: transparent;
+
+    animation: users-fade-up 0.5s ease 0.12s both;
+}
+
+.admin-users .users-filter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    margin-bottom: 10px;
+}
+
+.admin-users .users-filter-title {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.admin-users .users-filter-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    border-radius: 9px;
+
+    color: var(--users-primary);
+
+    background: rgba(121, 0, 0, 0.075);
+
+    font-size: 14px;
+}
+
+.admin-users .users-filter-title h2 {
+    margin: 0 0 3px;
+
+    color: #292929;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    line-height: 1.2;
+}
+
+.admin-users .users-filter-title p {
+    margin: 0;
+
+    color: var(--users-text-muted);
+
+    font-size: 11px;
+
+    line-height: 1.4;
+}
+
+.admin-users .users-clear-filters {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    flex-shrink: 0;
+
+    padding: 6px 9px;
+
+    border: 0;
+    border-radius: 7px;
+
+    color: #777;
+
+    background: #f6f6f6;
+
+    font-family: inherit;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        color 0.16s ease,
+        background 0.16s ease;
+}
+
+.admin-users .users-clear-filters:hover {
+    color: var(--users-primary);
+
+    background: rgba(121, 0, 0, 0.06);
+}
+
+.admin-users .users-clear-filters:focus-visible {
+    outline: none;
+
+    box-shadow: 0 0 0 3px rgba(121, 0, 0, 0.08);
+}
+
+
+/* ================================================================
+   FILTER GRID → FLAT BAR
+   Same surface, spacing and control heights as hr-ad-filter-card.
+   ================================================================ */
+
+.admin-users .users-filter-grid {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 14px;
+
+    border: 1px solid var(--users-border);
+    border-radius: 14px;
+
+    background: var(--users-card);
+
+    box-shadow: var(--users-shadow-sm);
+}
+
+.admin-users .users-filter-field {
+    min-width: 0;
+}
+
+.admin-users .users-search-field {
+    flex: 1 1 auto;
+
+    min-width: 250px;
+}
+
+.admin-users .users-filter-field:not(.users-search-field) {
+    flex: 0 0 auto;
+
+    min-width: 190px;
+}
+
+.admin-users .users-filter-field > label {
+    display: none;
+}
+
+.admin-users .users-search-wrapper,
+.admin-users .users-select-wrapper {
+    position: relative;
+
+    width: 100%;
+}
+
+.admin-users .users-search-wrapper > i,
+.admin-users .users-select-wrapper > i {
+    position: absolute;
+
+    left: 14px;
+    top: 50%;
+
+    z-index: 2;
+
+    color: #999999;
+
+    font-size: 13px;
+
+    pointer-events: none;
+
+    transform: translateY(-50%);
+}
+
+.admin-users .users-input,
+.admin-users .users-select {
+    width: 100%;
+    height: 42px;
+
+    box-sizing: border-box;
+
+    padding: 0 38px 0 39px;
+
+    border: 1px solid #dedede;
+    border-radius: 9px;
+
+    outline: none;
+
+    color: #333333;
+
+    background: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.admin-users .users-input::placeholder {
+    color: #aaaaaa;
+}
+
+.admin-users .users-input:hover,
+.admin-users .users-select:hover {
+    border-color: #cccccc;
+}
+
+.admin-users .users-input:focus,
+.admin-users .users-select:focus {
+    border-color: rgba(121, 0, 0, 0.5);
+
+    background: #fffdfd;
+
+    box-shadow: 0 0 0 3px rgba(121, 0, 0, 0.08);
+}
+
+.admin-users .users-select {
+    appearance: none;
+
+    padding-left: 39px;
+    padding-right: 34px;
+
+    cursor: pointer;
+}
+
+.admin-users .users-select-wrapper::after {
+    content: "\F282";
+
+    position: absolute;
+
+    right: 13px;
+    top: 50%;
+
+    color: #999999;
+
+    font-family: "bootstrap-icons";
+
+    font-size: 10px;
+
+    pointer-events: none;
+
+    transform: translateY(-50%);
+}
+
+
+/* ================================================================
+   SEARCH CLEAR
+   ================================================================ */
+
+.admin-users .users-search-clear {
+    position: absolute;
+
+    right: 8px;
+    top: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 27px;
+    height: 27px;
+
+    padding: 0;
+
+    border: 0;
+    border-radius: 7px;
+
+    color: #888888;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transform: translateY(-50%);
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.admin-users .users-search-clear:hover {
+    color: var(--users-danger);
+
+    background: #fff1f1;
+}
+
+.admin-users .users-search-clear:focus-visible {
+    outline: none;
+
+    color: var(--users-primary);
+
+    background: rgba(121, 0, 0, 0.06);
+
+    box-shadow: 0 0 0 2px rgba(121, 0, 0, 0.08);
+}
+
+
+/* ================================================================
+   SEARCH BUTTON
+   Matches hr-ad-filter-button: gradient fill, lift on hover.
+   ================================================================ */
+
+.admin-users .users-filter-action {
+    flex: 0 0 auto;
+}
+
+.admin-users .users-search-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: 1px solid var(--users-primary);
+    border-radius: 9px;
+
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--users-primary),
+            var(--users-accent)
+        );
+
+    box-shadow: 0 4px 12px rgba(121, 0, 0, 0.18);
+
+    font-family: inherit;
+
+    font-size: 12.5px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.admin-users .users-search-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow: 0 7px 17px rgba(121, 0, 0, 0.23);
+}
+
+.admin-users .users-search-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.admin-users .users-search-button:focus-visible {
+    outline: none;
+
+    box-shadow:
+        0 0 0 3px rgba(121, 0, 0, 0.10),
+        0 4px 12px rgba(121, 0, 0, 0.13);
+}
+
+.admin-users .users-search-button:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+
+/* ================================================================
+   RESULTS PANEL
+   Matches hr-ad-table-card: rounded card, gradient header strip.
+   ================================================================ */
+
+.admin-users .users-results-panel {
+    width: 100%;
+    min-width: 0;
+
+    overflow: hidden;
+
+    border: 1px solid var(--users-border);
+    border-radius: 16px;
+
+    background: var(--users-card);
+
+    box-shadow: var(--users-shadow);
+
+    animation: users-fade-up 0.5s ease 0.18s both;
+}
+
+
+/* ================================================================
+   RESULTS HEADER
+   ================================================================ */
+
+.admin-users .users-results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 20px 22px;
+
+    border-bottom: 1px solid var(--users-border-light);
+
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #fcfcfc
+        );
+}
+
+.admin-users .users-results-eyebrow {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: var(--users-primary);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 1.4px;
+
+    text-transform: uppercase;
+}
+
+.admin-users .users-results-header h2 {
+    margin: 0;
+
+    color: #282828;
+
+    font-size: 16px;
+    font-weight: 750;
+
+    letter-spacing: -0.2px;
+}
+
+.admin-users .users-results-header p {
+    margin: 5px 0 0;
+
+    color: #8a8a8a;
+
+    font-size: 12px;
+}
+
+.admin-users .users-results-meta {
+    flex-shrink: 0;
+}
+
+.admin-users .users-result-range {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 32px;
+
+    padding: 0 11px;
+
+    border: 1px solid #ececec;
+    border-radius: 8px;
+
+    color: #888888;
+
+    background: #fafafa;
+
+    font-size: 11px;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-result-range strong {
+    margin: 0 3px;
+
+    color: #555555;
+
+    font-weight: 800;
+}
+
+
+/* ================================================================
+   TABLE WRAPPER
+   ================================================================ */
+
+.admin-users .users-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: thin;
+    scrollbar-color: #d2d2d2 transparent;
+}
+
+.admin-users .users-table-wrapper::-webkit-scrollbar {
+    height: 7px;
+}
+
+.admin-users .users-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.admin-users .users-table-wrapper::-webkit-scrollbar-thumb {
+    border-radius: 20px;
+
+    background: #d3d3d3;
+}
+
+
+/* ================================================================
+   TABLE
+   ================================================================ */
+
+.admin-users .users-table {
+    width: 100%;
+
+    min-width: 1180px;
+
+    border-collapse: separate;
+    border-spacing: 0;
+
+    table-layout: fixed;
+
+    font-size: 12.5px;
+}
+
+.admin-users .users-table thead th {
+    height: 45px;
+
+    padding: 0 13px;
+
+    border-bottom: 1px solid #dedede;
+
+    color: #777777;
+
+    background: #fafafa;
+
+    font-size: 10.5px;
+    font-weight: 750;
+
+    letter-spacing: 0.45px;
+
+    text-align: left;
+
+    text-transform: uppercase;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-table thead th:first-child {
+    width: 20%;
+
+    padding-left: 22px;
+}
+
+.admin-users .users-table thead th:nth-child(2) {
+    width: 19%;
+}
+
+.admin-users .users-table thead th:nth-child(3) {
+    width: 13%;
+}
+
+.admin-users .users-table thead th:nth-child(4) {
+    width: 13%;
+}
+
+.admin-users .users-table thead th:nth-child(5) {
+    width: 11%;
+}
+
+.admin-users .users-table thead th:nth-child(6) {
+    width: 10%;
+}
+
+.admin-users .users-table thead th:nth-child(7) {
+    width: 9%;
+}
+
+.admin-users .users-table thead th:last-child {
+    width: 5%;
+    min-width: 62px;
+
+    padding-right: 22px;
+}
+
+.admin-users .users-table tbody tr {
+    background: #ffffff;
+
+    transition: background 0.16s ease;
+}
+
+.admin-users .users-table tbody tr:hover {
+    background: #fffafa;
+}
+
+.admin-users .users-table tbody td {
+    height: 74px;
+
+    padding: 11px 13px;
+
+    border-bottom: 1px solid #eeeeee;
+
+    color: #555555;
+
+    font-size: 12px;
+
+    vertical-align: middle;
+}
+
+.admin-users .users-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.admin-users .users-table tbody td:first-child {
+    padding-left: 22px;
+}
+
+.admin-users .users-table tbody td:last-child {
+    padding-right: 22px;
+}
+
+.admin-users .users-action-column {
+    text-align: right !important;
+}
+
+
+/* ================================================================
+   USER CELL
+   ================================================================ */
+
+.admin-users .users-user-cell {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.admin-users .users-avatar {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 39px;
+    height: 39px;
+
+    flex: 0 0 39px;
+
+    border: 1px solid rgba(121, 0, 0, 0.12);
+    border-radius: 11px;
+
+    color: var(--users-primary);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(121, 0, 0, 0.10),
+            rgba(169, 20, 20, 0.035)
+        );
+
+    font-size: 11px;
+    font-weight: 850;
+
+    letter-spacing: 0.4px;
+}
+
+.admin-users .users-avatar::after {
+    content: "";
+
+    position: absolute;
+
+    right: -2px;
+    bottom: -2px;
+
+    width: 8px;
+    height: 8px;
+
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+
+    background: #aaaaaa;
+}
+
+.admin-users .users-avatar.mfa::after {
+    background: var(--users-success);
+}
+
+.admin-users .users-user-info {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    gap: 2px;
+}
+
+.admin-users .users-user-name {
+    display: block;
+
+    max-width: 180px;
+
+    overflow: hidden;
+
+    margin: 0;
+    padding: 0;
+
+    border: 0;
+
+    color: #303030;
+
+    background: transparent;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    text-align: left;
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition: color 0.16s ease;
+}
+
+.admin-users .users-user-name:hover {
+    color: var(--users-primary);
+}
+
+.admin-users .users-user-name:focus-visible {
+    outline: none;
+
+    color: var(--users-primary);
+
+    text-decoration: underline;
+}
+
+.admin-users .users-user-info > span {
+    overflow: hidden;
+
+    color: #777777;
+
+    font-size: 10.5px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-user-info small {
+    color: #aaaaaa;
+
+    font-size: 9.5px;
+}
+
+
+/* ================================================================
+   CONTACT
+   ================================================================ */
+
+.admin-users .users-contact-cell {
+    display: flex;
+    flex-direction: column;
+
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.admin-users .users-contact-cell span {
+    display: flex;
+    align-items: center;
+
+    gap: 6px;
+
+    min-width: 0;
+
+    overflow: hidden;
+
+    color: #666666;
+
+    font-size: 10.5px;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-contact-cell i {
+    width: 12px;
+
+    flex: 0 0 12px;
+
+    color: #aaaaaa;
+
+    font-size: 9px;
+
+    text-align: center;
+}
+
+.admin-users .users-contact-cell span:first-child i {
+    color: var(--users-primary);
+}
+
+
+/* ================================================================
+   ROLES
+   ================================================================ */
+
+.admin-users .users-role-list {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 4px;
+
+    max-width: 160px;
+}
+
+.admin-users .users-role-badge {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 21px;
+
+    padding: 0 7px;
+
+    border: 1px solid rgba(121, 0, 0, 0.12);
+    border-radius: 6px;
+
+    color: #7a2020;
+
+    background: rgba(121, 0, 0, 0.055);
+
+    font-size: 9.5px;
+    font-weight: 750;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-role-more {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 21px;
+
+    padding: 0 7px;
+
+    border-radius: 6px;
+
+    color: #777777;
+
+    background: #f1f1f1;
+
+    font-size: 9.5px;
+    font-weight: 800;
+}
+
+.admin-users .users-no-role {
+    color: #aaaaaa;
+
+    font-size: 10.5px;
+
+    font-style: italic;
+}
+
+
+/* ================================================================
+   VERIFICATION
+   ================================================================ */
+
+.admin-users .users-verification-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 5px;
+}
+
+.admin-users .users-verification {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    color: #aaaaaa;
+
+    font-size: 10.5px;
+    font-weight: 650;
+}
+
+.admin-users .users-verification i {
+    width: 12px;
+
+    font-size: 9px;
+
+    text-align: center;
+}
+
+.admin-users .users-verification.verified {
+    color: var(--users-success);
+}
+
+.admin-users .users-verification.not-verified {
+    color: #aaaaaa;
+}
+
+.admin-users .users-verification.not-verified i {
+    color: #c5c5c5;
+}
+
+.admin-users .users-mfa-enabled {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 5px;
+
+    color: #6d5a9a;
+
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.admin-users .users-mfa-enabled i {
+    font-size: 9px;
+}
+
+
+/* ================================================================
+   ACCOUNT STATUS
+   Matches hr-ad-status pill design: dot + rounded pill.
+   ================================================================ */
+
+.admin-users .users-account-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 5px;
+}
+
+.admin-users .users-status {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 5px 9px;
+
+    border: 1px solid transparent;
+    border-radius: 20px;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-status-dot {
+    width: 6px;
+    height: 6px;
+
+    flex: 0 0 6px;
+
+    border-radius: 50%;
+
+    background: currentColor;
+}
+
+.admin-users .users-status.active {
+    color: var(--users-success);
+
+    border-color: rgba(22, 134, 83, 0.14);
+
+    background: var(--users-success-bg);
+}
+
+.admin-users .users-status.inactive {
+    color: #626262;
+
+    border-color: #dedede;
+
+    background: #f1f2f3;
+}
+
+.admin-users .users-status.suspended,
+.admin-users .users-status.locked {
+    color: #654096;
+
+    border-color: #dfd0ef;
+
+    background: #f5effb;
+}
+
+.admin-users .users-status.unknown {
+    color: #626262;
+
+    border-color: #dedede;
+
+    background: #f1f2f3;
+}
+
+.admin-users .users-lock-indicator {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 4px;
+
+    color: var(--users-danger);
+
+    font-size: 9px;
+    font-weight: 750;
+}
+
+.admin-users .users-lock-indicator i {
+    font-size: 9px;
+}
+
+
+/* ================================================================
+   DATE CELLS
+   ================================================================ */
+
+.admin-users .users-date-cell {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.admin-users .users-date-cell strong {
+    color: #4a4a4a;
+
+    font-size: 10.5px;
+    font-weight: 650;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-date-cell small {
+    color: #a0a0a0;
+
+    font-size: 9.5px;
+
+    white-space: nowrap;
+}
+
+.admin-users .users-never {
+    color: #aaaaaa;
+
+    font-size: 10px;
+
+    font-style: italic;
+}
+
+
+/* ================================================================
+   VIEW BUTTON
+   Matches hr-ad-action.view: neutral tile that tints red on hover.
+   ================================================================ */
+
+.admin-users .users-view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 31px;
+    height: 31px;
+
+    padding: 0;
+
+    border: 1px solid #e2e5e8;
+    border-radius: 8px;
+
+    color: #5c6470;
+
+    background: #f1f3f5;
+
+    cursor: pointer;
+
+    transition:
+        color 0.18s ease,
+        border-color 0.18s ease,
+        background 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.admin-users .users-view-button:hover {
+    color: #ffffff;
+
+    border-color: var(--users-primary);
+
+    background: var(--users-primary);
+
+    box-shadow: 0 5px 13px rgba(121, 0, 0, 0.17);
+
+    transform: translateY(-2px);
+}
+
+.admin-users .users-view-button:active {
+    transform: translateY(0);
+}
+
+.admin-users .users-view-button:focus-visible {
+    outline: none;
+
+    color: var(--users-primary);
+
+    border-color: var(--users-primary);
+
+    box-shadow: 0 0 0 3px rgba(121, 0, 0, 0.10);
+}
+
+.admin-users .users-view-button i {
+    font-size: 12px;
+}
+
+
+/* ================================================================
+   PAGINATION
+   ================================================================ */
+
+.admin-users .users-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    min-height: 58px;
+
+    padding: 0 18px 0 20px;
+
+    border-top: 1px solid #eeeeee;
+
+    background: #fcfcfc;
+}
+
+.admin-users .users-pagination-info {
+    color: #999999;
+
+    font-size: 11px;
+}
+
+.admin-users .users-pagination-info strong {
+    color: #555555;
+
+    font-weight: 800;
+}
+
+.admin-users .users-pagination-controls {
+    display: flex;
+    align-items: center;
+
+    gap: 3px;
+}
+
+.admin-users .users-page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 29px;
+    height: 29px;
+
+    padding: 0 6px;
+
+    border: 1px solid transparent;
+    border-radius: 7px;
+
+    color: #777777;
+
+    background: transparent;
+
+    font-family: inherit;
+
+    font-size: 10.5px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        color 0.16s ease,
+        border-color 0.16s ease,
+        background 0.16s ease,
+        transform 0.16s ease;
+}
+
+.admin-users .users-page-button:hover:not(:disabled) {
+    color: var(--users-primary);
+
+    border-color: #e5e5e5;
+
+    background: #ffffff;
+
+    transform: translateY(-1px);
+}
+
+.admin-users .users-page-button.active {
+    color: #ffffff;
+
+    border-color: var(--users-primary);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--users-primary),
+            var(--users-accent)
+        );
+
+    box-shadow: 0 4px 10px rgba(121, 0, 0, 0.16);
+}
+
+.admin-users .users-page-button:focus-visible {
+    outline: none;
+
+    box-shadow: 0 0 0 3px rgba(121, 0, 0, 0.09);
+}
+
+.admin-users .users-page-button:disabled {
+    color: #c7c7c7;
+
+    cursor: not-allowed;
+
+    transform: none;
+}
+
+.admin-users .users-page-ellipsis {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 23px;
+    height: 29px;
+
+    color: #aaaaaa;
+
+    font-size: 11px;
+}
+
+
+/* ================================================================
+   LOADING
+   Matches hr-ad-loading: rounded icon tile spinner and copy sizes.
+   ================================================================ */
+
+.admin-users .users-loading {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 310px;
+
+    padding: 65px 25px 70px;
+
+    text-align: center;
+}
+
+.admin-users .users-loading-spinner {
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 15px;
+
+    border: 3px solid rgba(121, 0, 0, 0.10);
+
+    border-top-color: var(--users-primary);
+    border-right-color: var(--users-primary-light);
+
+    border-radius: 17px;
+
+    animation: users-spin 0.75s linear infinite;
+}
+
+.admin-users .users-loading strong {
+    margin-bottom: 5px;
+
+    color: #3b3b3b;
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.admin-users .users-loading span {
+    color: #999999;
+
+    font-size: 11.5px;
+}
+
+
+/* ================================================================
+   EMPTY STATE
+   Matches hr-ad-empty: rounded icon tile, muted copy.
+   ================================================================ */
+
+.admin-users .users-empty {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+
+    min-height: 320px;
+
+    padding: 65px 25px 70px;
+
+    text-align: center;
+}
+
+.admin-users .users-empty-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 70px;
+    height: 70px;
+
+    margin-bottom: 17px;
+
+    border-radius: 20px;
+
+    color: var(--users-primary);
+
+    background: #fff2f2;
+
+    font-size: 27px;
+
+    box-shadow: inset 0 0 0 1px rgba(121, 0, 0, 0.05);
+}
+
+.admin-users .users-empty strong {
+    margin-bottom: 7px;
+
+    color: #333333;
+
+    font-size: 16px;
+    font-weight: 750;
+}
+
+.admin-users .users-empty > span {
+    max-width: 430px;
+
+    color: #929292;
+
+    font-size: 12px;
+
+    line-height: 1.6;
+}
+
+.admin-users .users-empty > button {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+
+    margin-top: 20px;
+
+    height: 38px;
+
+    padding: 0 14px;
+
+    border: 1px solid #dedede;
+    border-radius: 8px;
+
+    color: #555555;
+
+    background: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 11.5px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.admin-users .users-empty > button:hover {
+    color: var(--users-primary);
+
+    border-color: rgba(121, 0, 0, 0.25);
+
+    background: #fffafa;
+
+    transform: translateY(-1px);
+}
+
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+
+@keyframes users-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes users-fade-in {
+    from {
+        opacity: 0;
+
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes users-fade-up {
+    from {
+        opacity: 0;
+
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+@keyframes users-row-in {
+    from {
+        opacity: 0;
+
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+
+        transform: translateY(0);
+    }
+}
+
+
+/* ================================================================
+   ROW ANIMATION
+   ================================================================ */
+
+.admin-users .users-table tbody tr {
+    animation: users-row-in 0.22s ease both;
+}
+
+.admin-users .users-table tbody tr:nth-child(1) { animation-delay: 0.02s; }
+.admin-users .users-table tbody tr:nth-child(2) { animation-delay: 0.04s; }
+.admin-users .users-table tbody tr:nth-child(3) { animation-delay: 0.06s; }
+.admin-users .users-table tbody tr:nth-child(4) { animation-delay: 0.08s; }
+.admin-users .users-table tbody tr:nth-child(5) { animation-delay: 0.10s; }
+.admin-users .users-table tbody tr:nth-child(6) { animation-delay: 0.12s; }
+.admin-users .users-table tbody tr:nth-child(7) { animation-delay: 0.14s; }
+.admin-users .users-table tbody tr:nth-child(8) { animation-delay: 0.16s; }
+
+
+/* ================================================================
+   RESPONSIVE - LARGE TABLETS
+   Same breakpoint (1250px) as the Advertisements page.
+   ================================================================ */
+
+@media (max-width: 1250px) {
+
+    .admin-users {
+        padding: 24px 22px 40px;
+    }
+
+    .admin-users .users-filter-grid {
+        flex-wrap: wrap;
+    }
+
+    .admin-users .users-search-field {
+        flex: 1 1 100%;
+        min-width: 100%;
+    }
+
+    .admin-users .users-filter-field:not(.users-search-field) {
+        flex: 1;
+    }
+
+    .admin-users .users-select {
+        width: 100%;
+    }
+}
+
+
+/* ================================================================
+   RESPONSIVE - TABLET
+   Same breakpoint (850px) as the Advertisements page.
+   ================================================================ */
+
+@media (max-width: 850px) {
+
+    .admin-users {
+        padding: 20px 17px 35px;
+    }
+
+    .admin-users .users-page-header {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 17px;
+
+        padding: 20px;
+
+        border-radius: 15px;
+    }
+
+    .admin-users .users-page-header h1 {
+        font-size: 23px;
+    }
+
+    .admin-users .users-page-header p {
+        font-size: 12.5px;
+    }
+
+    .admin-users .users-header-actions {
+        width: 100%;
+    }
+
+    .admin-users .users-count-card {
+        flex: 1;
+    }
+
+    .admin-users .users-filter-grid {
+        align-items: stretch;
+    }
+
+    .admin-users .users-filter-action {
+        width: 100%;
+    }
+
+    .admin-users .users-search-button {
+        width: 100%;
+    }
+
+    .admin-users .users-results-header {
+        align-items: flex-start;
+        flex-direction: column;
+
+        gap: 10px;
+    }
+
+    .admin-users .users-results-meta {
+        width: 100%;
+    }
+
+    .admin-users .users-result-range {
+        width: 100%;
+
+        justify-content: center;
+
+        box-sizing: border-box;
+    }
+}
+
+
+/* ================================================================
+   RESPONSIVE - MOBILE
+   Same breakpoint (600px) as the Advertisements page.
+   ================================================================ */
+
+@media (max-width: 600px) {
+
+    .admin-users {
+        min-height: calc(100vh - 115px);
+
+        padding: 15px 12px 30px;
+    }
+
+    .admin-users .users-page-header {
+        padding: 18px;
+    }
+
+    .admin-users .users-page-header h1 {
+        font-size: 21px;
+    }
+
+    .admin-users .users-page-header p {
+        font-size: 11.5px;
+    }
+
+    .admin-users .users-header-actions {
+        align-items: stretch;
+        flex-direction: column;
+
+        width: 100%;
+    }
+
+    .admin-users .users-count-card {
+        width: 100%;
+    }
+
+    .admin-users .users-refresh-button {
+        width: 100%;
+    }
+
+    .admin-users .users-filter-grid {
+        flex-direction: column;
+
+        padding: 11px;
+    }
+
+    .admin-users .users-search-field,
+    .admin-users .users-filter-field:not(.users-search-field) {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .admin-users .users-error {
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+    }
+
+    .admin-users .users-error > button {
+        margin-left: 46px;
+    }
+
+    .admin-users .users-results-header {
+        padding: 16px;
+    }
+
+    .admin-users .users-results-header h2 {
+        font-size: 14px;
+    }
+
+    .admin-users .users-pagination {
+        align-items: center;
+        flex-direction: column;
+
+        justify-content: center;
+
+        padding: 12px;
+    }
+
+    .admin-users .users-pagination-controls {
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        padding-bottom: 2px;
+    }
+}
+
+
+/* ================================================================
+   VERY SMALL MOBILE
+   ================================================================ */
+
+@media (max-width: 420px) {
+
+    .admin-users {
+        padding-right: 9px;
+        padding-left: 9px;
+    }
+
+    .admin-users .users-page-header h1 {
+        font-size: 19px;
+    }
+
+    .admin-users .users-page-header p {
+        font-size: 11px;
+    }
+}
+
+
+/* ================================================================
+   REDUCED MOTION
+   ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .admin-users *,
+    .admin-users *::before,
+    .admin-users *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ============================================================
+   USERS PAGE LAYOUT SAFETY
+   Prevent this page from interfering with MainLayout/NavMenu
+   ============================================================ */
+
+.admin-users,
+.admin-users *,
+.admin-users *::before,
+.admin-users *::after {
+    box-sizing: border-box;
+}
+
+.admin-users img {
+    max-width: 100%;
+}
+
+.admin-users button,
+.admin-users input,
+.admin-users select,
+.admin-users textarea {
+    font-family: inherit;
+}
+
+.admin-users table {
+    width: 100%;
+    max-width: 100%;
+}
+
+.admin-users .users-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}

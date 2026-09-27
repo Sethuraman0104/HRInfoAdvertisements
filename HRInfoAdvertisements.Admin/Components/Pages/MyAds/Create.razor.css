@@ -4356,3 +4356,263 @@ textarea.form-control[dir="rtl"] {
         min-height: 190px;
     }
 }
+
+
+/* ============================================================
+   CONTACT INFORMATION
+   ============================================================ */
+
+.create-ad-page .contact-intro {
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 14px !important;
+
+    margin-bottom: 24px !important;
+    padding: 15px 17px !important;
+
+    border: 1px solid #dbe7f5 !important;
+    border-radius: 14px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f7faff 0%,
+            #f1f6fc 100%
+        ) !important;
+}
+
+.create-ad-page .contact-intro-icon {
+    width: 38px !important;
+    height: 38px !important;
+
+    flex: 0 0 38px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 11px !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1b5fc7,
+            #0a2c6a
+        ) !important;
+
+    color: #ffffff !important;
+
+    font-size: 16px !important;
+
+    box-shadow:
+        0 5px 12px rgba(27, 95, 199, 0.18) !important;
+}
+
+.create-ad-page .contact-intro-content {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+}
+
+.create-ad-page .contact-intro-content strong {
+    color: #26344d !important;
+
+    font-size: 12.5px !important;
+    font-weight: 800 !important;
+}
+
+.create-ad-page .contact-intro-content span {
+    color: #718096 !important;
+
+    font-size: 11px !important;
+    line-height: 1.5 !important;
+}
+
+
+/* CONTACT VISIBILITY */
+
+.create-ad-page .contact-visibility-card {
+    display: flex !important;
+    flex-direction: column !important;
+
+    gap: 10px !important;
+
+    padding: 16px !important;
+
+    border: 1px solid #e0e7f0 !important;
+    border-radius: 14px !important;
+
+    background: #fbfcfe !important;
+
+    transition:
+        border-color .2s ease,
+        background .2s ease,
+        box-shadow .2s ease !important;
+}
+
+.create-ad-page .contact-visibility-card:hover {
+    border-color: #c5d3e4 !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 5px 14px rgba(15, 23, 42, 0.045) !important;
+}
+
+.create-ad-page .contact-visibility-card.enabled {
+    border-color: #b8cce8 !important;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fbfdff,
+            #f5f9ff
+        ) !important;
+}
+
+.create-ad-page .contact-visibility-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    gap: 15px !important;
+}
+
+.create-ad-page .contact-visibility-title {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+.create-ad-page .contact-visibility-title-icon {
+    width: 34px !important;
+    height: 34px !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    border-radius: 9px !important;
+
+    background: #edf3fc !important;
+    color: #1b5fc7 !important;
+
+    font-size: 15px !important;
+}
+
+.create-ad-page .contact-visibility-title-text {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+}
+
+.create-ad-page .contact-visibility-title-text strong {
+    color: #26344d !important;
+
+    font-size: 12px !important;
+    font-weight: 750 !important;
+}
+
+.create-ad-page .contact-visibility-title-text span {
+    color: #8995a6 !important;
+
+    font-size: 10.5px !important;
+}
+
+
+/* TOGGLE */
+
+.create-ad-page .contact-toggle {
+    position: relative !important;
+
+    width: 46px !important;
+    height: 25px !important;
+
+    flex: 0 0 46px !important;
+
+    cursor: pointer !important;
+}
+
+.create-ad-page .contact-toggle input {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    opacity: 0 !important;
+}
+
+.create-ad-page .contact-toggle-track {
+    position: absolute !important;
+
+    inset: 0 !important;
+
+    border-radius: 20px !important;
+
+    background: #cbd5e1 !important;
+
+    transition:
+        background .2s ease,
+        box-shadow .2s ease !important;
+}
+
+.create-ad-page .contact-toggle-track::after {
+    content: "" !important;
+
+    position: absolute !important;
+
+    top: 3px !important;
+    left: 3px !important;
+
+    width: 19px !important;
+    height: 19px !important;
+
+    border-radius: 50% !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 2px 5px rgba(15, 23, 42, 0.18) !important;
+
+    transition:
+        transform .2s ease !important;
+}
+
+.create-ad-page .contact-toggle input:checked
++ .contact-toggle-track {
+    background: #1b5fc7 !important;
+
+    box-shadow:
+        0 3px 9px rgba(27, 95, 199, 0.22) !important;
+}
+
+.create-ad-page .contact-toggle input:checked
++ .contact-toggle-track::after {
+    transform: translateX(21px) !important;
+}
+
+.create-ad-page .contact-toggle input:focus-visible
++ .contact-toggle-track {
+    box-shadow:
+        0 0 0 4px rgba(27, 95, 199, 0.12) !important;
+}
+
+
+/* CONTACT NOTE */
+
+.create-ad-page .contact-note {
+    display: flex !important;
+
+    align-items: center !important;
+    gap: 7px !important;
+
+    margin-top: 7px !important;
+
+    color: #8793a4 !important;
+
+    font-size: 10.5px !important;
+}
+
+.create-ad-page .contact-note i {
+    color: #6e84a2 !important;
+}

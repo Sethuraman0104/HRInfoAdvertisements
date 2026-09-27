@@ -1218,6 +1218,266 @@
         }
     }
 
+    /* ============================================================
+CONTACT INFORMATION
+============================================================ */
+
+.edit-contact-intro {
+display: flex;
+align-items: flex-start;
+gap: 12px;
+margin-bottom: 20px;
+padding: 14px 16px;
+border: 1px solid #eadede;
+border-radius: 12px;
+background: linear-gradient(
+135deg,
+#fffafa,
+#faf6f6
+);
+}
+
+.edit-contact-intro-icon {
+width: 36px;
+height: 36px;
+min-width: 36px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 10px;
+background: #f5eaea;
+color: #790000;
+font-size: 17px;
+}
+
+.edit-contact-intro > div:last-child {
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+
+.edit-contact-intro strong {
+color: #332727;
+font-size: 13px;
+font-weight: 700;
+}
+
+.edit-contact-intro span {
+color: #766969;
+font-size: 12px;
+line-height: 1.5;
+}
+
+/* ============================================================
+CONTACT CARDS
+============================================================ */
+
+.edit-contact-grid {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 18px;
+}
+
+.edit-contact-card {
+padding: 20px;
+border: 1px solid #eadede;
+border-radius: 14px;
+background: #ffffff;
+box-shadow: 0 4px 14px rgba(80, 20, 20, .04);
+transition:
+border-color .2s ease,
+box-shadow .2s ease,
+transform .2s ease;
+}
+
+.edit-contact-card:hover {
+border-color: #dcc5c5;
+box-shadow: 0 8px 22px rgba(80, 20, 20, .07);
+transform: translateY(-1px);
+}
+
+.edit-contact-card-header {
+display: flex;
+align-items: center;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.edit-contact-method-icon {
+width: 42px;
+height: 42px;
+min-width: 42px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 11px;
+font-size: 19px;
+}
+
+.edit-contact-method-icon.whatsapp {
+background: #eaf8f0;
+color: #16884a;
+}
+
+.edit-contact-method-icon.email {
+background: #f5eeee;
+color: #790000;
+}
+
+.edit-contact-method-heading {
+min-width: 0;
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+
+.edit-contact-method-heading strong {
+color: #2f2525;
+font-size: 15px;
+font-weight: 700;
+}
+
+.edit-contact-method-heading span {
+color: #817575;
+font-size: 11px;
+line-height: 1.4;
+}
+
+/* ============================================================
+VISIBILITY
+============================================================ */
+
+.edit-contact-visibility {
+display: flex;
+align-items: flex-start;
+gap: 11px;
+margin: 18px 0 0;
+padding: 12px 13px;
+border: 1px solid #eee5e5;
+border-radius: 11px;
+background: #faf8f8;
+cursor: pointer;
+}
+
+.edit-contact-visibility:hover {
+background: #fdfafa;
+}
+
+.edit-contact-visibility input[type="checkbox"] {
+width: 17px;
+height: 17px;
+margin-top: 2px;
+flex-shrink: 0;
+accent-color: #790000;
+cursor: pointer;
+}
+
+.edit-contact-visibility-content {
+min-width: 0;
+flex: 1;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+.edit-contact-visibility-title {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 8px;
+flex-wrap: wrap;
+}
+
+.edit-contact-visibility-title > span:first-child {
+color: #403535;
+font-size: 12px;
+font-weight: 700;
+}
+
+.edit-contact-visibility-content small {
+color: #867878;
+font-size: 10px;
+line-height: 1.4;
+}
+
+/* ============================================================
+VISIBILITY BADGES
+============================================================ */
+
+.edit-contact-public-badge,
+.edit-contact-private-badge {
+display: inline-flex;
+align-items: center;
+gap: 4px;
+padding: 4px 7px;
+border-radius: 20px;
+font-size: 9px;
+font-weight: 700;
+white-space: nowrap;
+}
+
+.edit-contact-public-badge {
+color: #167344;
+background: #eaf8f0;
+border: 1px solid #cdebd9;
+}
+
+.edit-contact-private-badge {
+color: #786666;
+background: #f4f0f0;
+border: 1px solid #e2dada;
+}
+
+/* ============================================================
+INFORMATION NOTE
+============================================================ */
+
+.edit-contact-note {
+display: flex;
+align-items: flex-start;
+gap: 9px;
+margin-top: 18px;
+padding: 12px 14px;
+border-radius: 10px;
+background: #faf7f7;
+border: 1px solid #eee5e5;
+color: #746767;
+font-size: 11px;
+line-height: 1.5;
+}
+
+.edit-contact-note i {
+flex-shrink: 0;
+margin-top: 1px;
+color: #790000;
+font-size: 14px;
+}
+
+/* ============================================================
+RESPONSIVE
+============================================================ */
+
+@@media (max-width: 800px) {
+.edit-contact-grid {
+    grid-template-columns: 1fr;
+}
+
+}
+
+@@media (max-width: 575px) {
+
+```
+.edit-contact-card {
+    padding: 16px;
+}
+
+.edit-contact-visibility-title {
+    align-items: flex-start;
+    flex-direction: column;
+}
+}
+
+
 </style>
 
 
@@ -2059,6 +2319,255 @@
 
                 </section>
 
+<!-- =================================================
+     CONTACT INFORMATION
+     ================================================= -->
+
+<section class="edit-form-section">
+<div class="edit-section-heading">
+
+    <div class="edit-section-icon">
+        <i class="bi bi-person-lines-fill"></i>
+    </div>
+
+    <div>
+
+        <h3>
+            Contact Information
+        </h3>
+
+        <p>
+            Add the contact details that visitors can use to reach you.
+        </p>
+
+    </div>
+
+</div>
+
+
+<div class="edit-contact-intro">
+
+    <div class="edit-contact-intro-icon">
+        <i class="bi bi-shield-check"></i>
+    </div>
+
+    <div>
+
+        <strong>
+            Control your contact visibility
+        </strong>
+
+        <span>
+            Your contact details are always visible to you.
+            Choose which contact methods should be visible to
+            visitors.
+        </span>
+
+    </div>
+
+</div>
+
+
+<div class="edit-contact-grid">
+
+    <!-- =================================================
+         WHATSAPP
+         ================================================= -->
+
+    <div class="edit-contact-card">
+
+        <div class="edit-contact-card-header">
+
+            <div class="edit-contact-method-icon whatsapp">
+                <i class="bi bi-whatsapp"></i>
+            </div>
+
+            <div class="edit-contact-method-heading">
+
+                <strong>
+                    WhatsApp
+                </strong>
+
+                <span>
+                    Allow visitors to contact you on WhatsApp.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="edit-form-group">
+
+            <label>
+                WhatsApp Number
+            </label>
+
+            <div class="edit-input-wrap">
+
+                <i class="bi bi-whatsapp edit-input-icon"></i>
+
+                <InputText class="edit-input"
+                           @bind-Value="model.WhatsAppNumber"
+                           placeholder="Enter WhatsApp number" />
+
+            </div>
+
+            <small class="edit-help">
+                Include the country code, for example +973 XXXXXXXX.
+            </small>
+
+        </div>
+
+
+        <label class="edit-contact-visibility">
+
+            <InputCheckbox
+                @bind-Value="model.ShowWhatsAppToPublic" />
+
+            <div class="edit-contact-visibility-content">
+
+                <div class="edit-contact-visibility-title">
+
+                    <span>
+                        Show WhatsApp to visitors
+                    </span>
+
+                    @if (model.ShowWhatsAppToPublic)
+                    {
+                        <span class="edit-contact-public-badge">
+                            <i class="bi bi-eye-fill"></i>
+                            Public
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="edit-contact-private-badge">
+                            <i class="bi bi-eye-slash-fill"></i>
+                            Private
+                        </span>
+                    }
+
+                </div>
+
+                <small>
+                    Visitors can see this number when enabled.
+                </small>
+
+            </div>
+
+        </label>
+
+    </div>
+
+
+    <!-- =================================================
+         EMAIL
+         ================================================= -->
+
+    <div class="edit-contact-card">
+
+        <div class="edit-contact-card-header">
+
+            <div class="edit-contact-method-icon email">
+                <i class="bi bi-envelope-fill"></i>
+            </div>
+
+            <div class="edit-contact-method-heading">
+
+                <strong>
+                    Email
+                </strong>
+
+                <span>
+                    Allow visitors to contact you by email.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="edit-form-group">
+
+            <label>
+                Email Address
+            </label>
+
+            <div class="edit-input-wrap">
+
+                <i class="bi bi-envelope edit-input-icon"></i>
+
+                <InputText class="edit-input"
+                           type="email"
+                           @bind-Value="model.ContactEmail"
+                           placeholder="Enter contact email address" />
+
+            </div>
+
+            <small class="edit-help">
+                Use an email address that you regularly monitor.
+            </small>
+
+        </div>
+
+
+        <label class="edit-contact-visibility">
+
+            <InputCheckbox
+                @bind-Value="model.ShowEmailToPublic" />
+
+            <div class="edit-contact-visibility-content">
+
+                <div class="edit-contact-visibility-title">
+
+                    <span>
+                        Show email to visitors
+                    </span>
+
+                    @if (model.ShowEmailToPublic)
+                    {
+                        <span class="edit-contact-public-badge">
+                            <i class="bi bi-eye-fill"></i>
+                            Public
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="edit-contact-private-badge">
+                            <i class="bi bi-eye-slash-fill"></i>
+                            Private
+                        </span>
+                    }
+
+                </div>
+
+                <small>
+                    Visitors can see this email address when enabled.
+                </small>
+
+            </div>
+
+        </label>
+
+    </div>
+
+</div>
+
+
+<div class="edit-contact-note">
+
+    <i class="bi bi-info-circle-fill"></i>
+
+    <span>
+        At least one contact method must be provided and at least
+        one contact method must be visible to visitors before the
+        advertisement can be submitted for approval.
+    </span>
+
+</div>
+</section>
+
 
                 <!-- =================================================
                      PHOTOS
@@ -2804,6 +3313,21 @@
 
             model.IsNegotiable =
                 advertisement.IsNegotiable;
+// ----------------------------------------------------
+// CONTACT INFORMATION
+// ----------------------------------------------------
+
+model.WhatsAppNumber =
+    advertisement.WhatsAppNumber;
+
+model.ContactEmail =
+    advertisement.ContactEmail;
+
+model.ShowWhatsAppToPublic =
+    advertisement.ShowWhatsAppToPublic;
+
+model.ShowEmailToPublic =
+    advertisement.ShowEmailToPublic;
 
 
             // ----------------------------------------------------

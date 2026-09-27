@@ -87,7 +87,7 @@ public class AdvertisementController : ControllerBase
     }
 
     // ============================================================
-    // GET BY ID
+    // GET ADVERTISEMENT BY ID
     // ============================================================
 
     [HttpGet("{id:long}")]
@@ -105,9 +105,32 @@ public class AdvertisementController : ControllerBase
             }
         }
 
+        /*
+         * IMPORTANT:
+         *
+         * The service must return contact information according
+         * to the caller's context.
+         *
+         * Public visitor:
+         *   WhatsAppNumber is returned only when
+         *   ShowWhatsAppToPublic = true.
+         *
+         *   ContactEmail is returned only when
+         *   ShowEmailToPublic = true.
+         *
+         * Advertisement owner:
+         *   Full contact information may be returned.
+         *
+         * Admin:
+         *   Full contact information may be returned through
+         *   the Admin advertisement service.
+         */
+
         var result =
             await _advertisementService
-                .GetByIdAsync(id, userId);
+                .GetByIdAsync(
+                    id,
+                    userId);
 
         if (result == null)
         {
@@ -122,60 +145,63 @@ public class AdvertisementController : ControllerBase
     }
 
     // ============================================================
-// SET PRIMARY IMAGE
-// ============================================================
+    // SET PRIMARY IMAGE
+    // ============================================================
 
-[HttpPut("{advertisementId:long}/media/images/{imageId:long}/primary")]
-[Authorize]
-public async Task<IActionResult> SetPrimaryImage(
-    long advertisementId,
-    long imageId,
-    [FromServices] IAdvertisementMediaService mediaService)
-{
-    if (!TryGetUserId(out var userId))
+    [HttpPut("{advertisementId:long}/media/images/{imageId:long}/primary")]
+    [Authorize]
+    public async Task<IActionResult> SetPrimaryImage(
+        long advertisementId,
+        long imageId,
+        [FromServices]
+        IAdvertisementMediaService mediaService)
     {
-        return Unauthorized(new
+        if (!TryGetUserId(out var userId))
         {
-            Success = false,
-            Message = "Invalid user identity."
-        });
-    }
-
-    try
-    {
-        var result =
-            await mediaService.SetPrimaryImageAsync(
-                userId,
-                advertisementId,
-                imageId);
-
-        if (!result)
-        {
-            return NotFound(new
+            return Unauthorized(new
             {
                 Success = false,
-                Message = "Advertisement image not found."
+                Message = "Invalid user identity."
             });
         }
 
-        return Ok(new
+        try
         {
-            Success = true,
-            Message = "Main advertisement photo updated successfully."
-        });
-    }
-    catch (InvalidOperationException ex)
-    {
-        return BadRequest(new
+            var result =
+                await mediaService.SetPrimaryImageAsync(
+                    userId,
+                    advertisementId,
+                    imageId);
+
+            if (!result)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message =
+                        "Advertisement image not found."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message =
+                    "Main advertisement photo updated successfully."
+            });
+        }
+        catch (InvalidOperationException ex)
         {
-            Success = false,
-            Message = ex.Message
-        });
+            return BadRequest(new
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
     }
-}
 
     // ============================================================
-    // CREATE
+    // CREATE ADVERTISEMENT
     // ============================================================
 
     [HttpPost]
@@ -199,6 +225,18 @@ public async Task<IActionResult> SetPrimaryImage(
 
         try
         {
+            /*
+             * Contact information is part of the advertisement
+             * request.
+             *
+             * The service is responsible for saving:
+             *
+             *   WhatsAppNumber
+             *   ContactEmail
+             *   ShowWhatsAppToPublic
+             *   ShowEmailToPublic
+             */
+
             var result =
                 await _advertisementService
                     .CreateAsync(
@@ -224,7 +262,7 @@ public async Task<IActionResult> SetPrimaryImage(
     }
 
     // ============================================================
-    // UPDATE
+    // UPDATE ADVERTISEMENT
     // ============================================================
 
     [HttpPut("{id:long}")]
@@ -249,6 +287,12 @@ public async Task<IActionResult> SetPrimaryImage(
 
         try
         {
+            /*
+             * Update includes the advertisement contact settings.
+             *
+             * Only the owner can update these values.
+             */
+
             var result =
                 await _advertisementService
                     .UpdateAsync(
@@ -279,7 +323,7 @@ public async Task<IActionResult> SetPrimaryImage(
     }
 
     // ============================================================
-    // DELETE
+    // DELETE ADVERTISEMENT
     // ============================================================
 
     [HttpDelete("{id:long}")]
@@ -315,12 +359,13 @@ public async Task<IActionResult> SetPrimaryImage(
         return Ok(new
         {
             Success = true,
-            Message = "Advertisement deleted successfully."
+            Message =
+                "Advertisement deleted successfully."
         });
     }
 
     // ============================================================
-    // SUBMIT
+    // SUBMIT ADVERTISEMENT
     // ============================================================
 
     [HttpPost("{id:long}/submit")]
@@ -337,28 +382,51 @@ public async Task<IActionResult> SetPrimaryImage(
             });
         }
 
-        var result =
-            await _advertisementService
-                .SubmitAsync(
-                    userId,
-                    id);
+        try
+        {
+            /*
+             * SubmitAsync should validate the advertisement,
+             * including the contact information rules.
+             *
+             * Recommended rules:
+             *
+             * 1. Draft can exist without contact information.
+             * 2. Submission requires valid contact information.
+             * 3. At least one contact method must be enabled
+             *    for public display.
+             */
 
-        if (!result)
+            var result =
+                await _advertisementService
+                    .SubmitAsync(
+                        userId,
+                        id);
+
+            if (!result)
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message =
+                        "Advertisement could not be submitted. Please make sure it exists, belongs to you, is in Draft status, contains the required information, and has valid public contact settings."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message =
+                    "Advertisement submitted for approval successfully."
+            });
+        }
+        catch (InvalidOperationException ex)
         {
             return BadRequest(new
             {
                 Success = false,
-                Message =
-                    "Advertisement could not be submitted. Please make sure it exists, belongs to you, is in Draft status, and contains the required information."
+                Message = ex.Message
             });
         }
-
-        return Ok(new
-        {
-            Success = true,
-            Message =
-                "Advertisement submitted for approval successfully."
-        });
     }
 
     // ============================================================

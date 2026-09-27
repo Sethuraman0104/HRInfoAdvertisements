@@ -779,45 +779,75 @@ public class AdvertisementApiService
     // SUBMIT ADVERTISEMENT FOR APPROVAL
     // ============================================================
 
-    public async Task<bool>
-        SubmitAdvertisementAsync(
-            long advertisementId)
+public async Task<bool>
+    SubmitAdvertisementAsync(
+        long advertisementId)
+{
+    if (advertisementId <= 0)
     {
-        if (advertisementId <= 0)
-        {
-            return false;
-        }
-
-
-        var client =
-            CreateAuthenticatedPublicClient();
-
-
-        var response =
-            await client.PostAsync(
-                $"api/v1/advertisements/{advertisementId}/submit",
-                null);
-
-
-        Console.WriteLine(
-            $"SUBMIT ADVERTISEMENT STATUS: " +
-            $"{(int)response.StatusCode} " +
-            $"{response.StatusCode}");
-
-
-        if (!response.IsSuccessStatusCode)
-        {
-            var responseBody =
-                await response.Content.ReadAsStringAsync();
-
-            Console.WriteLine(
-                $"SUBMIT ADVERTISEMENT RESPONSE: " +
-                $"{responseBody}");
-        }
-
-
-        return response.IsSuccessStatusCode;
+        return false;
     }
+
+    var client =
+        CreateAuthenticatedPublicClient();
+
+    var response =
+        await client.PostAsync(
+            $"api/v1/advertisements/{advertisementId}/submit",
+            null);
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(
+        $"SUBMIT ADVERTISEMENT STATUS: " +
+        $"{(int)response.StatusCode} " +
+        $"{response.StatusCode}");
+
+    Console.WriteLine(
+        $"SUBMIT ADVERTISEMENT RESPONSE: " +
+        $"{responseBody}");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        string? errorMessage = null;
+
+        try
+        {
+            using var document =
+                JsonDocument.Parse(responseBody);
+
+            if (document.RootElement.TryGetProperty(
+                    "message",
+                    out var messageProperty))
+            {
+                errorMessage =
+                    messageProperty.GetString();
+            }
+
+            if (string.IsNullOrWhiteSpace(errorMessage) &&
+                document.RootElement.TryGetProperty(
+                    "Message",
+                    out var MessageProperty))
+            {
+                errorMessage =
+                    MessageProperty.GetString();
+            }
+        }
+        catch
+        {
+            // Ignore JSON parsing errors.
+        }
+
+        throw new InvalidOperationException(
+            string.IsNullOrWhiteSpace(errorMessage)
+                ? "The advertisement could not be submitted."
+                : errorMessage);
+    }
+
+    return true;
+}
+
 
     // ============================================================
     // UPLOAD ADVERTISEMENT IMAGE

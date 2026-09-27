@@ -31,6 +31,22 @@ public class AdvertisementConfiguration
             .HasMaxLength(10)
             .HasDefaultValue("BHD");
 
+        // ============================================================
+// CONTACT INFORMATION
+// ============================================================
+
+builder.Property(x => x.WhatsAppNumber)
+    .HasMaxLength(30);
+
+builder.Property(x => x.ContactEmail)
+    .HasMaxLength(254);
+
+builder.Property(x => x.ShowWhatsAppToPublic)
+    .HasDefaultValue(false);
+
+builder.Property(x => x.ShowEmailToPublic)
+    .HasDefaultValue(false);
+
         builder.Property(x => x.Price)
             .HasPrecision(18, 3);
 

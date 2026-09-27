@@ -1,7 +1,6 @@
-using System.Net.Mime;
-
 using HRInfoAdvertisements.Application.DTOs.Admin;
 using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
@@ -176,11 +175,19 @@ public class AdvertisementModerationService
 
         return new AdminAdvertisementDetailResponse
         {
+            // ====================================================
+            // IDENTIFICATION
+            // ====================================================
+
             AdvertisementID =
                 advertisement.AdvertisementID,
 
             AdvertisementNumber =
                 advertisement.AdvertisementNumber,
+
+            // ====================================================
+            // OWNER
+            // ====================================================
 
             UserID =
                 advertisement.UserID,
@@ -193,6 +200,22 @@ public class AdvertisementModerationService
 
             MobileNo =
                 advertisement.User.MobileNo,
+
+            // ====================================================
+            // BASIC INFORMATION
+            // ====================================================
+
+            CategoryID =
+                advertisement.CategoryID,
+
+            CategoryName =
+                advertisement.Category.CategoryName,
+
+            AdvertisementTypeID =
+                advertisement.AdvertisementTypeID,
+
+            AdvertisementTypeName =
+                advertisement.AdvertisementType.TypeName,
 
             Title =
                 advertisement.Title,
@@ -215,17 +238,47 @@ public class AdvertisementModerationService
             IsNegotiable =
                 advertisement.IsNegotiable,
 
-            CategoryName =
-                advertisement.Category.CategoryName,
+            // ====================================================
+            // CONTACT INFORMATION
+            // ====================================================
 
-            AdvertisementTypeName =
-                advertisement.AdvertisementType.TypeName,
+            WhatsAppNumber =
+                advertisement.WhatsAppNumber,
+
+            ContactEmail =
+                advertisement.ContactEmail,
+
+            ShowWhatsAppToPublic =
+                advertisement.ShowWhatsAppToPublic,
+
+            ShowEmailToPublic =
+                advertisement.ShowEmailToPublic,
+
+            // ====================================================
+            // STATUS
+            // ====================================================
 
             StatusCode =
                 advertisement.Status.StatusCode,
 
             StatusName =
                 advertisement.Status.StatusName,
+
+            // ====================================================
+            // LOCATION
+            // ====================================================
+
+            CountryID =
+                advertisement.CountryID,
+
+            StateID =
+                advertisement.StateID,
+
+            CityID =
+                advertisement.CityID,
+
+            AreaID =
+                advertisement.AreaID,
 
             AddressLine =
                 advertisement.AddressLine,
@@ -235,6 +288,13 @@ public class AdvertisementModerationService
 
             Longitude =
                 advertisement.Longitude,
+
+            // ====================================================
+            // PROPERTY DETAILS
+            // ====================================================
+
+            PlotNumber =
+                advertisement.PlotNumber,
 
             LandArea =
                 advertisement.LandArea,
@@ -251,6 +311,10 @@ public class AdvertisementModerationService
             PropertyAge =
                 advertisement.PropertyAge,
 
+            // ====================================================
+            // FEATURED / PUBLICATION
+            // ====================================================
+
             IsFeatured =
                 advertisement.IsFeatured,
 
@@ -262,6 +326,10 @@ public class AdvertisementModerationService
 
             ExpiryDate =
                 advertisement.ExpiryDate,
+
+            // ====================================================
+            // AUDIT
+            // ====================================================
 
             CreatedDate =
                 advertisement.CreatedDate,
@@ -383,9 +451,169 @@ public class AdvertisementModerationService
                         })
                     .ToList(),
 
+            // ====================================================
+            // APPROVAL HISTORY
+            // ====================================================
+
             ApprovalHistory =
                 history
         };
+    }
+
+    // ============================================================
+    // ADMIN UPDATE ADVERTISEMENT
+    // ============================================================
+
+    public async Task<AdminAdvertisementDetailResponse?>
+        UpdateAdvertisementAsync(
+            long adminUserId,
+            long advertisementId,
+            UpdateAdvertisementRequest request)
+    {
+        var advertisement =
+            await _context.Advertisements
+                .FirstOrDefaultAsync(x =>
+                    x.AdvertisementID ==
+                    advertisementId);
+
+        if (advertisement == null)
+        {
+            return null;
+        }
+
+        // ========================================================
+        // BASIC INFORMATION
+        // ========================================================
+
+        advertisement.CategoryID =
+            request.CategoryID;
+
+        advertisement.AdvertisementTypeID =
+            request.AdvertisementTypeID;
+
+        advertisement.Title =
+            request.Title.Trim();
+
+        advertisement.TitleAr =
+            NormalizeOptionalValue(
+                request.TitleAr);
+
+        advertisement.Description =
+            request.Description.Trim();
+
+        advertisement.DescriptionAr =
+            NormalizeOptionalValue(
+                request.DescriptionAr);
+
+        advertisement.Price =
+            request.Price;
+
+        advertisement.CurrencyCode =
+            string.IsNullOrWhiteSpace(
+                request.CurrencyCode)
+                ? "BHD"
+                : request.CurrencyCode
+                    .Trim()
+                    .ToUpperInvariant();
+
+        advertisement.IsNegotiable =
+            request.IsNegotiable;
+
+        // ========================================================
+        // CONTACT INFORMATION
+        // ========================================================
+
+        var whatsappNumber =
+            NormalizeOptionalValue(
+                request.WhatsAppNumber);
+
+        var contactEmail =
+            NormalizeOptionalValue(
+                request.ContactEmail);
+
+        ValidatePublicContactFlags(
+            whatsappNumber,
+            contactEmail,
+            request.ShowWhatsAppToPublic,
+            request.ShowEmailToPublic);
+
+        advertisement.WhatsAppNumber =
+            whatsappNumber;
+
+        advertisement.ContactEmail =
+            contactEmail;
+
+        advertisement.ShowWhatsAppToPublic =
+            request.ShowWhatsAppToPublic;
+
+        advertisement.ShowEmailToPublic =
+            request.ShowEmailToPublic;
+
+        // ========================================================
+        // LOCATION
+        // ========================================================
+
+        advertisement.CountryID =
+            request.CountryID;
+
+        advertisement.StateID =
+            request.StateID;
+
+        advertisement.CityID =
+            request.CityID;
+
+        advertisement.AreaID =
+            request.AreaID;
+
+        advertisement.AddressLine =
+            NormalizeOptionalValue(
+                request.AddressLine);
+
+        advertisement.Latitude =
+            request.Latitude;
+
+        advertisement.Longitude =
+            request.Longitude;
+
+        // ========================================================
+        // PROPERTY DETAILS
+        // ========================================================
+
+        advertisement.PlotNumber =
+            NormalizeOptionalValue(
+                request.PlotNumber);
+
+        advertisement.LandArea =
+            request.LandArea;
+
+        advertisement.BuiltUpArea =
+            request.BuiltUpArea;
+
+        advertisement.Bedrooms =
+            request.Bedrooms;
+
+        advertisement.Bathrooms =
+            request.Bathrooms;
+
+        advertisement.PropertyAge =
+            request.PropertyAge;
+
+        // ========================================================
+        // AUDIT
+        // ========================================================
+
+        advertisement.ModifiedDate =
+            DateTime.UtcNow;
+
+        advertisement.ModifiedBy =
+            adminUserId;
+
+        await _context.SaveChangesAsync();
+
+        // Return the updated advertisement using the same
+        // mapping used by the Admin detail endpoint.
+        return await GetAdvertisementAsync(
+            advertisementId);
     }
 
     // ============================================================
@@ -913,6 +1141,47 @@ public class AdvertisementModerationService
         }
 
         return status;
+    }
+
+    // ============================================================
+    // NORMALIZE OPTIONAL VALUE
+    // ============================================================
+
+    private static string?
+        NormalizeOptionalValue(
+            string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
+
+    // ============================================================
+    // VALIDATE PUBLIC CONTACT FLAGS
+    // ============================================================
+
+    private static void
+        ValidatePublicContactFlags(
+            string? whatsappNumber,
+            string? contactEmail,
+            bool showWhatsAppToPublic,
+            bool showEmailToPublic)
+    {
+        if (showWhatsAppToPublic &&
+            string.IsNullOrWhiteSpace(
+                whatsappNumber))
+        {
+            throw new InvalidOperationException(
+                "A WhatsApp number is required when WhatsApp visibility is enabled.");
+        }
+
+        if (showEmailToPublic &&
+            string.IsNullOrWhiteSpace(
+                contactEmail))
+        {
+            throw new InvalidOperationException(
+                "An email address is required when email visibility is enabled.");
+        }
     }
 
     // ============================================================

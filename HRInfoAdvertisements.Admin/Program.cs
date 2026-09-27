@@ -19,18 +19,80 @@ builder.Services.AddCascadingAuthenticationState();
 // ============================================================
 // AUTHENTICATION STATE PROVIDERS
 // ============================================================
+//
+// PUBLIC AUTHENTICATION
+//
+// The public website uses:
+//      PublicAuthenticationStateProvider
+//
+// This includes:
+//      Home
+//      My Ads
+//      Create Advertisement
+//      Account
+//      Public authentication modal
+//
+// ADMIN AUTHENTICATION
+//
+// The Admin area uses:
+//      AdminAuthenticationStateProvider
+//
+// This includes:
+//      Admin login
+//      Admin dashboard
+//      Admin advertisements
+//      Admin moderation
+//
+// IMPORTANT:
+//
+// These providers must remain separate because they maintain
+// different JWT tokens and different authentication states.
+// ============================================================
+
+
+// ------------------------------------------------------------
+// PUBLIC AUTHENTICATION PROVIDER
+// ------------------------------------------------------------
+
+builder.Services.AddScoped<
+    PublicAuthenticationStateProvider>();
+
+
+// ------------------------------------------------------------
+// ADMIN AUTHENTICATION PROVIDER
+// ------------------------------------------------------------
 
 builder.Services.AddScoped<
     AdminAuthenticationStateProvider>();
+
+
+// ------------------------------------------------------------
+// DEFAULT / CASCADING AUTHENTICATION PROVIDER
+// ------------------------------------------------------------
+//
+// The public authentication provider is the default provider
+// for the Blazor application.
+//
+// Therefore:
+//
+//     AuthenticationStateProvider
+//              ↓
+//     PublicAuthenticationStateProvider
+//
+// Admin components that require administrator authentication
+// explicitly inject:
+//
+//     AdminAuthenticationStateProvider
+//
+// This prevents the Admin authentication state from affecting
+// the public Home page and other public components.
+// ------------------------------------------------------------
 
 builder.Services.AddScoped<
     AuthenticationStateProvider>(
         serviceProvider =>
             serviceProvider.GetRequiredService<
-                AdminAuthenticationStateProvider>());
-
-builder.Services.AddScoped<
-    PublicAuthenticationStateProvider>();
+                PublicAuthenticationStateProvider>());
 
 
 // ============================================================
@@ -91,6 +153,20 @@ builder.Services.AddHttpClient(
 // ============================================================
 // PUBLIC API CLIENT
 // ============================================================
+//
+// Used by the public advertisement functionality:
+//
+//     Home
+//     Browse Advertisements
+//     My Ads
+//     Create Advertisement
+//     Advertisement Details
+//     Account
+//
+// AdvertisementApiService explicitly retrieves the public JWT
+// from PublicAuthenticationStateProvider when an authenticated
+// public request is required.
+// ============================================================
 
 builder.Services.AddHttpClient(
     "HRInfoAdvertisementsPublicAPI",
@@ -117,9 +193,20 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     AdvertisementApiService>();
 
+builder.Services.AddScoped<UserManagementApiService>();
+
 
 // ============================================================
 // ADMIN MODERATION SERVICE
+// ============================================================
+//
+// This service explicitly uses:
+//
+//     AdminAuthenticationStateProvider
+//
+// for administrator JWT authentication.
+//
+// It must NOT use PublicAuthenticationStateProvider.
 // ============================================================
 
 builder.Services.AddScoped<

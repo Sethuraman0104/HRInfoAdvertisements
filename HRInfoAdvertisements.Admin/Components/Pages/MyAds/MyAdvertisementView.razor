@@ -706,6 +706,134 @@
 
                     </section>
 
+                    <!-- =================================================
+     CONTACT INFORMATION
+     ================================================= -->
+
+@if (!string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber) ||
+!string.IsNullOrWhiteSpace(advertisement.ContactEmail))
+{ <section class="my-ad-view-card my-ad-view-contact-card">
+
+    <div class="my-ad-view-section-heading">
+
+        <div class="section-heading-icon contact-heading-icon">
+            <i class="bi bi-person-lines-fill"></i>
+        </div>
+
+        <div>
+
+            <h2>
+                Contact Information
+            </h2>
+
+            <span>
+                Your contact details
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="my-ad-view-contact-list">
+
+        @if (!string.IsNullOrWhiteSpace(
+            advertisement.WhatsAppNumber))
+        {
+            <div class="my-ad-view-contact-item">
+
+                <div class="my-ad-view-contact-icon whatsapp-contact">
+                    <i class="bi bi-whatsapp"></i>
+                </div>
+
+                <div class="my-ad-view-contact-content">
+
+                    <span>
+                        WhatsApp
+                    </span>
+
+                    <strong>
+                        @advertisement.WhatsAppNumber
+                    </strong>
+
+                </div>
+
+                @if (advertisement.ShowWhatsAppToPublic)
+                {
+                    <span class="my-ad-view-contact-visibility public">
+                        <i class="bi bi-eye-fill"></i>
+                        Public
+                    </span>
+                }
+                else
+                {
+                    <span class="my-ad-view-contact-visibility private">
+                        <i class="bi bi-eye-slash-fill"></i>
+                        Private
+                    </span>
+                }
+
+            </div>
+        }
+
+
+        @if (!string.IsNullOrWhiteSpace(
+            advertisement.ContactEmail))
+        {
+            <div class="my-ad-view-contact-item">
+
+                <div class="my-ad-view-contact-icon email-contact">
+                    <i class="bi bi-envelope-fill"></i>
+                </div>
+
+                <div class="my-ad-view-contact-content">
+
+                    <span>
+                        Email
+                    </span>
+
+                    <strong>
+                        @advertisement.ContactEmail
+                    </strong>
+
+                </div>
+
+                @if (advertisement.ShowEmailToPublic)
+                {
+                    <span class="my-ad-view-contact-visibility public">
+                        <i class="bi bi-eye-fill"></i>
+                        Public
+                    </span>
+                }
+                else
+                {
+                    <span class="my-ad-view-contact-visibility private">
+                        <i class="bi bi-eye-slash-fill"></i>
+                        Private
+                    </span>
+                }
+
+            </div>
+        }
+
+    </div>
+
+
+    <div class="my-ad-view-contact-note">
+
+        <i class="bi bi-shield-check"></i>
+
+        <span>
+            Public contact details can be seen by visitors.
+            Private contact details are visible only to you.
+        </span>
+
+    </div>
+
+</section>
+}
+
+
 
                     <!-- =================================================
                          ACTIONS

@@ -1,4 +1,5 @@
 using HRInfoAdvertisements.Application.DTOs.Admin;
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
 
 namespace HRInfoAdvertisements.Application.Interfaces;
 
@@ -12,6 +13,11 @@ public interface IAdvertisementModerationService
 
     Task<AdminAdvertisementDetailResponse?> GetAdvertisementAsync(
         long advertisementId);
+
+    Task<AdminAdvertisementDetailResponse?> UpdateAdvertisementAsync(
+        long adminUserId,
+        long advertisementId,
+        UpdateAdvertisementRequest request);
 
     Task<bool> ApproveAdvertisementAsync(
         long adminUserId,

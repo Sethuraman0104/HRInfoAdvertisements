@@ -1,0 +1,1286 @@
+@page "/admin/users"
+
+@using System.Globalization
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.UserManagement
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject UserManagementApiService UserManagementApiService
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Users | HR INFO ADs</PageTitle>
+
+<div class="admin-users">
+
+    <!-- =========================================================
+         PAGE HEADER
+         ========================================================= -->
+
+    <section class="users-page-header">
+
+        <div class="users-page-header-content">
+
+            <span class="users-eyebrow">
+                USER MANAGEMENT
+            </span>
+
+            <h1>
+                Users
+            </h1>
+
+            <p>
+                Manage registered HR INFO ADs platform accounts,
+                account status, roles and access.
+            </p>
+
+        </div>
+
+        <div class="users-header-actions">
+
+            <div class="users-count-card">
+
+                <div class="users-count-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <div>
+                    <small>Total Users</small>
+
+                    <strong>
+                        @totalRecords.ToString("N0")
+                    </strong>
+                </div>
+
+            </div>
+
+            <button type="button"
+                    class="users-refresh-button"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+
+                @if (isLoading)
+                {
+                    <span class="users-spinner"></span>
+
+                    <span>
+                        Loading
+                    </span>
+                }
+                else
+                {
+                    <i class="bi bi-arrow-clockwise"></i>
+
+                    <span>
+                        Refresh
+                    </span>
+                }
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         ERROR
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="users-error">
+
+            <div class="users-error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="users-error-content">
+
+                <strong>
+                    Unable to load users
+                </strong>
+
+                <span>
+                    @errorMessage
+                </span>
+
+            </div>
+
+            <button type="button"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+
+                Retry
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         FILTER PANEL
+         ========================================================= -->
+
+    <section class="users-filter-panel">
+
+        <div class="users-filter-header">
+
+            <div class="users-filter-title">
+
+                <div class="users-filter-icon">
+                    <i class="bi bi-funnel"></i>
+                </div>
+
+                <div>
+
+                    <h2>
+                        Find Users
+                    </h2>
+
+                    <p>
+                        Search and filter registered platform accounts.
+                    </p>
+
+                </div>
+
+            </div>
+
+            @if (HasActiveFilters)
+            {
+                <button type="button"
+                        class="users-clear-filters"
+                        @onclick="ClearFilters">
+
+                    <i class="bi bi-x-circle"></i>
+
+                    Clear Filters
+
+                </button>
+            }
+
+        </div>
+
+
+        <div class="users-filter-grid">
+
+            <!-- SEARCH -->
+
+            <div class="users-filter-field users-search-field">
+
+                <label for="userSearch">
+                    Search
+                </label>
+
+                <div class="users-search-wrapper">
+
+                    <i class="bi bi-search"></i>
+
+                    <input id="userSearch"
+                           type="text"
+                           class="users-input"
+                           placeholder="Name, username, email or mobile..."
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown" />
+
+                    @if (!string.IsNullOrWhiteSpace(searchText))
+                    {
+                        <button type="button"
+                                class="users-search-clear"
+                                title="Clear search"
+                                @onclick="ClearSearch">
+
+                            <i class="bi bi-x"></i>
+
+                        </button>
+                    }
+
+                </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="users-filter-field">
+
+                <label for="accountStatus">
+                    Account Status
+                </label>
+
+                <div class="users-select-wrapper">
+
+                    <i class="bi bi-person-check"></i>
+
+                    <select id="accountStatus"
+                            class="users-select"
+                            @bind="accountStatus">
+
+                        <option value="">
+                            All Statuses
+                        </option>
+
+                        <option value="ACTIVE">
+                            Active
+                        </option>
+
+                        <option value="INACTIVE">
+                            Inactive
+                        </option>
+
+                        <option value="SUSPENDED">
+                            Suspended
+                        </option>
+
+                        <option value="LOCKED">
+                            Locked
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- SEARCH BUTTON -->
+
+            <div class="users-filter-action">
+
+                <button type="button"
+                        class="users-search-button"
+                        @onclick="SearchAsync"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-search"></i>
+
+                    <span>
+                        Search
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         RESULTS HEADER
+         ========================================================= -->
+
+    <section class="users-results-panel">
+
+        <div class="users-results-header">
+
+            <div>
+
+                <span class="users-results-eyebrow">
+                    USER DIRECTORY
+                </span>
+
+                <h2>
+                    Registered Users
+                </h2>
+
+                <p>
+                    @GetResultsDescription()
+                </p>
+
+            </div>
+
+            <div class="users-results-meta">
+
+                @if (totalRecords > 0)
+                {
+                    <span class="users-result-range">
+                        Showing
+                        <strong>@FirstRecordNumber</strong>
+                        –
+                        <strong>@LastRecordNumber</strong>
+                        of
+                        <strong>@totalRecords</strong>
+                    </span>
+                }
+                else
+                {
+                    <span class="users-result-range">
+                        No users found
+                    </span>
+                }
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             LOADING
+             ===================================================== -->
+
+        @if (isLoading && !hasLoaded)
+        {
+            <div class="users-loading">
+
+                <div class="users-loading-spinner"></div>
+
+                <strong>
+                    Loading users
+                </strong>
+
+                <span>
+                    Retrieving registered accounts...
+                </span>
+
+            </div>
+        }
+        else if (users.Count == 0)
+        {
+            <!-- =================================================
+                 EMPTY
+                 ================================================= -->
+
+            <div class="users-empty">
+
+                <div class="users-empty-icon">
+                    <i class="bi bi-people"></i>
+                </div>
+
+                <strong>
+                    No users found
+                </strong>
+
+                <span>
+                    @GetEmptyMessage()
+                </span>
+
+                @if (HasActiveFilters)
+                {
+                    <button type="button"
+                            @onclick="ClearFilters">
+
+                        Clear Filters
+
+                    </button>
+                }
+
+            </div>
+        }
+        else
+        {
+            <!-- =================================================
+                 TABLE
+                 ================================================= -->
+
+            <div class="users-table-wrapper">
+
+                <table class="users-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                User
+                            </th>
+
+                            <th>
+                                Contact
+                            </th>
+
+                            <th>
+                                Roles
+                            </th>
+
+                            <th>
+                                Verification
+                            </th>
+
+                            <th>
+                                Account
+                            </th>
+
+                            <th>
+                                Last Login
+                            </th>
+
+                            <th>
+                                Created
+                            </th>
+
+                            <th class="users-action-column">
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var user in users)
+                        {
+                            <tr @key="user.UserID">
+
+                                <!-- USER -->
+
+                                <td>
+
+                                    <div class="users-user-cell">
+
+                                        <div class="@GetAvatarClass(user)">
+
+                                            @GetInitials(user)
+
+                                        </div>
+
+                                        <div class="users-user-info">
+
+                                            <button type="button"
+                                                    class="users-user-name"
+                                                    @onclick="() => OpenUser(user.UserID)">
+
+                                                @GetDisplayName(user)
+
+                                            </button>
+
+                                            <span>
+                                                @user.UserName
+                                            </span>
+
+                                            <small>
+                                                ID #@user.UserID
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- CONTACT -->
+
+                                <td>
+
+                                    <div class="users-contact-cell">
+
+                                        <span>
+                                            <i class="bi bi-envelope"></i>
+
+                                            @DisplayText(user.Email)
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(user.MobileNo))
+                                        {
+                                            <span>
+                                                <i class="bi bi-phone"></i>
+
+                                                @user.MobileNo
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ROLES -->
+
+                                <td>
+
+                                    <div class="users-role-list">
+
+                                        @if (user.Roles.Count == 0)
+                                        {
+                                            <span class="users-no-role">
+                                                No roles
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var role in user.Roles.Take(3))
+                                            {
+                                                <span class="users-role-badge">
+                                                    @role
+                                                </span>
+                                            }
+
+                                            @if (user.Roles.Count > 3)
+                                            {
+                                                <span class="users-role-more">
+                                                    +@(user.Roles.Count - 3)
+                                                </span>
+                                            }
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- VERIFICATION -->
+
+                                <td>
+
+                                    <div class="users-verification-list">
+
+                                        <span class="@GetVerificationClass(user.IsEmailVerified)">
+
+                                            <i class="bi @(user.IsEmailVerified
+                                                ? "bi-check-circle-fill"
+                                                : "bi-circle")">
+                                            </i>
+
+                                            Email
+
+                                        </span>
+
+                                        <span class="@GetVerificationClass(user.IsMobileVerified)">
+
+                                            <i class="bi @(user.IsMobileVerified
+                                                ? "bi-check-circle-fill"
+                                                : "bi-circle")">
+                                            </i>
+
+                                            Mobile
+
+                                        </span>
+
+                                        @if (user.IsMFAEnabled)
+                                        {
+                                            <span class="users-mfa-enabled">
+
+                                                <i class="bi bi-shield-check"></i>
+
+                                                MFA
+
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ACCOUNT -->
+
+                                <td>
+
+                                    <div class="users-account-status">
+
+                                        <span class="@GetStatusClass(user)">
+
+                                            <span class="users-status-dot"></span>
+
+                                            @GetStatusName(user)
+
+                                        </span>
+
+                                        @if (IsLocked(user))
+                                        {
+                                            <span class="users-lock-indicator">
+
+                                                <i class="bi bi-lock-fill"></i>
+
+                                                Locked
+
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- LAST LOGIN -->
+
+                                <td>
+
+                                    <div class="users-date-cell">
+
+                                        @if (user.LastLoginDate.HasValue)
+                                        {
+                                            <strong>
+                                                @FormatDate(user.LastLoginDate.Value)
+                                            </strong>
+
+                                            <small>
+                                                @FormatTime(user.LastLoginDate.Value)
+                                            </small>
+                                        }
+                                        else
+                                        {
+                                            <span class="users-never">
+                                                Never
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- CREATED -->
+
+                                <td>
+
+                                    <div class="users-date-cell">
+
+                                        <strong>
+                                            @FormatDate(user.CreatedDate)
+                                        </strong>
+
+                                        <small>
+                                            @FormatTime(user.CreatedDate)
+                                        </small>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ACTION -->
+
+                                <td class="users-action-column">
+
+                                    <button type="button"
+                                            class="users-view-button"
+                                            title="View user"
+                                            @onclick="() => OpenUser(user.UserID)">
+
+                                        <i class="bi bi-arrow-up-right"></i>
+
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- =================================================
+                 PAGINATION
+                 ================================================= -->
+
+            @if (totalPages > 1)
+            {
+                <div class="users-pagination">
+
+                    <div class="users-pagination-info">
+
+                        Page
+                        <strong>@pageNumber</strong>
+                        of
+                        <strong>@totalPages</strong>
+
+                    </div>
+
+
+                    <div class="users-pagination-controls">
+
+                        <button type="button"
+                                class="users-page-button"
+                                @onclick="GoToFirstPageAsync"
+                                disabled="@(pageNumber <= 1 || isLoading)"
+                                title="First page">
+
+                            <i class="bi bi-chevron-double-left"></i>
+
+                        </button>
+
+
+                        <button type="button"
+                                class="users-page-button"
+                                @onclick="GoToPreviousPageAsync"
+                                disabled="@(pageNumber <= 1 || isLoading)"
+                                title="Previous page">
+
+                            <i class="bi bi-chevron-left"></i>
+
+                        </button>
+
+
+                        @foreach (var pageNumberValue in GetPageNumbers())
+{
+    if (pageNumberValue == -1)
+    {
+        <span class="users-page-ellipsis">
+            …
+        </span>
+    }
+    else
+    {
+        <button type="button"
+                class="@GetPageButtonClass(pageNumberValue)"
+                @onclick="() => GoToPageAsync(pageNumberValue)"
+                disabled="@isLoading">
+
+            @pageNumberValue
+
+        </button>
+    }
+}
+
+
+                        <button type="button"
+                                class="users-page-button"
+                                @onclick="GoToNextPageAsync"
+                                disabled="@(pageNumber >= totalPages || isLoading)"
+                                title="Next page">
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </button>
+
+
+                        <button type="button"
+                                class="users-page-button"
+                                @onclick="GoToLastPageAsync"
+                                disabled="@(pageNumber >= totalPages || isLoading)"
+                                title="Last page">
+
+                            <i class="bi bi-chevron-double-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+        }
+
+    </section>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private List<UserListItemResponse> users = new();
+
+    // ============================================================
+    // FILTERS
+    // ============================================================
+
+    private string? searchText;
+
+    private string? accountStatus;
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private int pageNumber = 1;
+
+    private int pageSize = 20;
+
+    private int totalRecords;
+
+    private int totalPages;
+
+    // ============================================================
+    // PAGE STATE
+    // ============================================================
+
+    private bool isLoading;
+
+    private bool hasLoaded;
+
+    private string? errorMessage;
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AdminAuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+
+            return;
+        }
+
+        await LoadUsersAsync();
+    }
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadUsersAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result =
+                await UserManagementApiService
+                    .GetUsersAsync(
+                        search: searchText,
+                        accountStatus: accountStatus,
+                        pageNumber: pageNumber,
+                        pageSize: pageSize);
+
+            if (result == null)
+            {
+                users = new();
+                totalRecords = 0;
+                totalPages = 0;
+
+                errorMessage =
+                    "The user information could not be retrieved. " +
+                    "Your session may have expired or you may not have permission to view users.";
+
+                return;
+            }
+
+            users =
+                result.Items
+                ?? new List<UserListItemResponse>();
+
+            pageNumber =
+                result.PageNumber;
+
+            pageSize =
+                result.PageSize;
+
+            totalRecords =
+                result.TotalRecords;
+
+            totalPages =
+                result.TotalPages;
+
+            hasLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"USER MANAGEMENT ERROR: {ex}");
+
+            users = new();
+
+            errorMessage =
+                "The user information could not be loaded. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task HandleSearchKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAsync();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchText = null;
+
+        pageNumber = 1;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task ClearFilters()
+    {
+        searchText = null;
+        accountStatus = null;
+
+        pageNumber = 1;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadUsersAsync();
+    }
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private async Task GoToPageAsync(int page)
+    {
+        if (page < 1 ||
+            page > totalPages ||
+            page == pageNumber ||
+            isLoading)
+        {
+            return;
+        }
+
+        pageNumber = page;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task GoToFirstPageAsync()
+    {
+        if (pageNumber <= 1)
+        {
+            return;
+        }
+
+        pageNumber = 1;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task GoToPreviousPageAsync()
+    {
+        if (pageNumber <= 1)
+        {
+            return;
+        }
+
+        pageNumber--;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task GoToNextPageAsync()
+    {
+        if (pageNumber >= totalPages)
+        {
+            return;
+        }
+
+        pageNumber++;
+
+        await LoadUsersAsync();
+    }
+
+    private async Task GoToLastPageAsync()
+    {
+        if (pageNumber >= totalPages)
+        {
+            return;
+        }
+
+        pageNumber = totalPages;
+
+        await LoadUsersAsync();
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        if (totalPages <= 7)
+        {
+            return Enumerable
+                .Range(1, totalPages);
+        }
+
+        var pages = new List<int>();
+
+        pages.Add(1);
+
+        if (pageNumber > 4)
+        {
+            pages.Add(-1);
+        }
+
+        var start =
+            Math.Max(
+                2,
+                pageNumber - 1);
+
+        var end =
+            Math.Min(
+                totalPages - 1,
+                pageNumber + 1);
+
+        for (var i = start; i <= end; i++)
+        {
+            pages.Add(i);
+        }
+
+        if (pageNumber < totalPages - 3)
+        {
+            pages.Add(-1);
+        }
+
+        pages.Add(totalPages);
+
+        return pages.Distinct();
+    }
+
+    private string GetPageButtonClass(int page)
+    {
+        return page == pageNumber
+            ? "users-page-button active"
+            : "users-page-button";
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void OpenUser(long userId)
+    {
+        if (userId <= 0)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(
+            $"/admin/users/{userId}");
+    }
+
+    // ============================================================
+    // DISPLAY
+    // ============================================================
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchText) ||
+        !string.IsNullOrWhiteSpace(accountStatus);
+
+    private int FirstRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : ((pageNumber - 1) * pageSize) + 1;
+
+    private int LastRecordNumber =>
+        Math.Min(
+            pageNumber * pageSize,
+            totalRecords);
+
+    private string GetResultsDescription()
+    {
+        if (totalRecords == 0)
+        {
+            return HasActiveFilters
+                ? "No accounts match the selected search criteria."
+                : "There are currently no registered user accounts.";
+        }
+
+        if (HasActiveFilters)
+        {
+            return "Accounts matching your current search and filter criteria.";
+        }
+
+        return "All registered accounts on the HR INFO ADs platform.";
+    }
+
+    private string GetEmptyMessage()
+    {
+        if (HasActiveFilters)
+        {
+            return
+                "Try changing your search terms or clearing the filters.";
+        }
+
+        return
+            "Registered user accounts will appear here.";
+    }
+
+    private static string GetDisplayName(
+        UserListItemResponse user)
+    {
+        var fullName =
+            $"{user.FirstName} {user.LastName}"
+                .Trim();
+
+        return string.IsNullOrWhiteSpace(fullName)
+            ? user.UserName
+            : fullName;
+    }
+
+    private static string DisplayText(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "Not specified"
+            : value;
+    }
+
+    // ============================================================
+    // INITIALS
+    // ============================================================
+
+    private static string GetInitials(
+        UserListItemResponse user)
+    {
+        var firstName =
+            user.FirstName?.Trim();
+
+        var lastName =
+            user.LastName?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(firstName) &&
+            !string.IsNullOrWhiteSpace(lastName))
+        {
+            return (
+                firstName[0].ToString() +
+                lastName[0].ToString())
+                .ToUpperInvariant();
+        }
+
+        var userName =
+            user.UserName?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(userName))
+        {
+            return userName
+                .Substring(
+                    0,
+                    Math.Min(
+                        2,
+                        userName.Length))
+                .ToUpperInvariant();
+        }
+
+        return "US";
+    }
+
+    private static string GetAvatarClass(
+        UserListItemResponse user)
+    {
+        return user.IsMFAEnabled
+            ? "users-avatar mfa"
+            : "users-avatar";
+    }
+
+    // ============================================================
+    // ACCOUNT STATUS
+    // ============================================================
+
+    private static bool IsLocked(
+        UserListItemResponse user)
+    {
+        if (user.LockoutEndDate.HasValue)
+        {
+            return user.LockoutEndDate.Value > DateTime.Now;
+        }
+
+        return string.Equals(
+            user.AccountStatus,
+            "LOCKED",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetStatusName(
+        UserListItemResponse user)
+    {
+        if (IsLocked(user))
+        {
+            return "Locked";
+        }
+
+        if (string.IsNullOrWhiteSpace(user.AccountStatus))
+        {
+            return "Unknown";
+        }
+
+        return user.AccountStatus
+            .Trim()
+            .Replace("_", " ")
+            .Replace("-", " ");
+    }
+
+    private static string GetStatusClass(
+        UserListItemResponse user)
+    {
+        if (IsLocked(user))
+        {
+            return "users-status locked";
+        }
+
+        return user.AccountStatus
+            ?.Trim()
+            .ToUpperInvariant() switch
+        {
+            "ACTIVE" =>
+                "users-status active",
+
+            "INACTIVE" =>
+                "users-status inactive",
+
+            "SUSPENDED" =>
+                "users-status suspended",
+
+            "LOCKED" =>
+                "users-status locked",
+
+            _ =>
+                "users-status unknown"
+        };
+    }
+
+    // ============================================================
+    // VERIFICATION
+    // ============================================================
+
+    private static string GetVerificationClass(
+        bool verified)
+    {
+        return verified
+            ? "users-verification verified"
+            : "users-verification not-verified";
+    }
+
+    // ============================================================
+    // DATES
+    // ============================================================
+
+    private static string FormatDate(
+        DateTime date)
+    {
+        return date.ToString(
+            "dd MMM yyyy",
+            CultureInfo.CurrentCulture);
+    }
+
+    private static string FormatTime(
+        DateTime date)
+    {
+        return date.ToString(
+            "hh:mm tt",
+            CultureInfo.CurrentCulture);
+    }
+}

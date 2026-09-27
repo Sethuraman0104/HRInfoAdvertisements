@@ -38,6 +38,18 @@ public class AdvertisementResponse
 
     public bool IsNegotiable { get; set; }
 
+    // ============================================================
+// CONTACT INFORMATION
+// ============================================================
+
+public string? WhatsAppNumber { get; set; }
+
+public string? ContactEmail { get; set; }
+
+public bool ShowWhatsAppToPublic { get; set; }
+
+public bool ShowEmailToPublic { get; set; }
+
     public int? CountryID { get; set; }
 
     public int? StateID { get; set; }

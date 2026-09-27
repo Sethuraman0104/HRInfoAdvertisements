@@ -2760,3 +2760,281 @@
         transition: none;
     }
 }
+
+
+/* ========================================================= */
+/* MY AD CONTACT INFORMATION                                */
+/* ========================================================= */
+
+.my-ad-contact {
+    margin-top: 18px;
+
+    padding: 14px;
+
+    border: 1px solid #eee4e4;
+    border-radius: 13px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffafa,
+            #ffffff
+        );
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.my-ad-contact:hover {
+    border-color: rgba(121, 0, 0, 0.18);
+
+    box-shadow:
+        0 5px 16px rgba(0, 0, 0, 0.04);
+}
+
+
+/* --------------------------------------------------------- */
+/* HEADER                                                    */
+/* --------------------------------------------------------- */
+
+.my-ad-contact-header {
+    display: flex;
+
+    align-items: center;
+
+    margin-bottom: 11px;
+}
+
+
+.my-ad-contact-title {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+
+.my-ad-contact-icon {
+    width: 31px;
+    height: 31px;
+
+    flex: 0 0 31px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #790000,
+            #d30505
+        );
+
+    color: #ffffff;
+
+    font-size: 14px;
+}
+
+
+.my-ad-contact-title > div {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 1px;
+}
+
+
+.my-ad-contact-title strong {
+    color: #3c2d2d;
+
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+
+.my-ad-contact-title span {
+    color: #968989;
+
+    font-size: 9.5px;
+}
+
+
+/* --------------------------------------------------------- */
+/* CONTACT METHODS                                           */
+/* --------------------------------------------------------- */
+
+.my-ad-contact-methods {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 7px;
+}
+
+
+.my-ad-contact-method {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    min-width: 0;
+
+    padding: 9px 10px;
+
+    border: 1px solid #f0e9e9;
+    border-radius: 9px;
+
+    background: #ffffff;
+}
+
+
+.my-ad-contact-method-icon {
+    width: 30px;
+    height: 30px;
+
+    flex: 0 0 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    color: #ffffff;
+
+    font-size: 13px;
+}
+
+
+.my-ad-contact-method-icon.whatsapp {
+    background:
+        linear-gradient(
+            135deg,
+            #663333,
+            #886666
+        );
+}
+
+
+.my-ad-contact-method-icon.email {
+    background:
+        linear-gradient(
+            135deg,
+            #735626,
+            #996600
+        );
+}
+
+
+/* --------------------------------------------------------- */
+/* CONTACT TEXT                                              */
+/* --------------------------------------------------------- */
+
+.my-ad-contact-method-content {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.my-ad-contact-method-content span {
+    color: #928585;
+
+    font-size: 9.5px;
+
+    line-height: 1;
+}
+
+
+.my-ad-contact-method-content strong {
+    overflow: hidden;
+
+    color: #453535;
+
+    font-size: 11.5px;
+    font-weight: 600;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* --------------------------------------------------------- */
+/* VISIBILITY BADGES                                         */
+/* --------------------------------------------------------- */
+
+.my-ad-contact-public,
+.my-ad-contact-private {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 4px;
+
+    flex: 0 0 auto;
+
+    padding: 4px 7px;
+
+    border-radius: 20px;
+
+    font-size: 8.5px;
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+.my-ad-contact-public {
+    background: rgba(51, 217, 128, 0.10);
+
+    color: #248f5a;
+}
+
+
+.my-ad-contact-private {
+    background: rgba(120, 110, 110, 0.09);
+
+    color: #817575;
+}
+
+
+.my-ad-contact-public i,
+.my-ad-contact-private i {
+    font-size: 8px;
+}
+
+
+/* --------------------------------------------------------- */
+/* RESPONSIVE                                                */
+/* --------------------------------------------------------- */
+
+@media (max-width: 576px) {
+
+    .my-ad-contact {
+        padding: 12px;
+    }
+
+    .my-ad-contact-method {
+        align-items: flex-start;
+    }
+
+    .my-ad-contact-public,
+    .my-ad-contact-private {
+        margin-left: auto;
+    }
+}

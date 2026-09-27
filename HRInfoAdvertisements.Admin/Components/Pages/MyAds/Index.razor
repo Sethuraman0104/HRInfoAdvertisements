@@ -713,67 +713,191 @@
 
                                 </div>
 
+<!-- =====================================================
+     DETAILS
+     ===================================================== -->
 
-                                <!-- DETAILS -->
-                                <div class="my-ad-details">
+<div class="my-ad-details">
+
+    @if (advertisement.Price.HasValue)
+    {
+        <div class="my-ad-detail">
+
+            <div class="detail-icon">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+
+            <div>
+
+                <span>
+                    Price
+                </span>
+
+                <strong>
+                    @FormatPrice(advertisement)
+                </strong>
+
+                @if (advertisement.IsNegotiable)
+                {
+                    <small>
+                        Negotiable
+                    </small>
+                }
+
+            </div>
+
+        </div>
+    }
 
 
-                                    @if (advertisement.Price.HasValue)
-                                    {
-                                        <div class="my-ad-detail">
+    @if (!string.IsNullOrWhiteSpace(
+        advertisement.AddressLine))
+    {
+        <div class="my-ad-detail">
 
-                                            <div class="detail-icon">
-                                                <i class="bi bi-cash-stack"></i>
-                                            </div>
+            <div class="detail-icon">
+                <i class="bi bi-geo-alt"></i>
+            </div>
 
-                                            <div>
+            <div>
 
-                                                <span>
-                                                    Price
-                                                </span>
+                <span>
+                    Location
+                </span>
 
-                                                <strong>
-                                                    @FormatPrice(advertisement)
-                                                </strong>
+                <strong class="location-text">
+                    @advertisement.AddressLine
+                </strong>
 
-                                                @if (advertisement.IsNegotiable)
-                                                {
-                                                    <small>
-                                                        Negotiable
-                                                    </small>
-                                                }
+            </div>
 
-                                            </div>
+        </div>
+    }
 
-                                        </div>
-                                    }
+</div>
 
 
-                                    @if (!string.IsNullOrWhiteSpace(
-                                        advertisement.AddressLine))
-                                    {
-                                        <div class="my-ad-detail">
+<!-- =====================================================
+     CONTACT INFORMATION
+     ===================================================== -->
 
-                                            <div class="detail-icon">
-                                                <i class="bi bi-geo-alt"></i>
-                                            </div>
+@if (!string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber) ||
+     !string.IsNullOrWhiteSpace(advertisement.ContactEmail))
+{
+    <div class="my-ad-contact">
 
-                                            <div>
+        <div class="my-ad-contact-header">
 
-                                                <span>
-                                                    Location
-                                                </span>
+            <div class="my-ad-contact-title">
 
-                                                <strong class="location-text">
-                                                    @advertisement.AddressLine
-                                                </strong>
+                <span class="my-ad-contact-icon">
+                    <i class="bi bi-person-lines-fill"></i>
+                </span>
 
-                                            </div>
+                <div>
 
-                                        </div>
-                                    }
+                    <strong>
+                        Contact Information
+                    </strong>
 
-                                </div>
+                    <span>
+                        Your contact details
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="my-ad-contact-methods">
+
+            <!-- WHATSAPP -->
+            @if (!string.IsNullOrWhiteSpace(
+                advertisement.WhatsAppNumber))
+            {
+                <div class="my-ad-contact-method">
+
+                    <div class="my-ad-contact-method-icon whatsapp">
+                        <i class="bi bi-whatsapp"></i>
+                    </div>
+
+                    <div class="my-ad-contact-method-content">
+
+                        <span>
+                            WhatsApp
+                        </span>
+
+                        <strong>
+                            @advertisement.WhatsAppNumber
+                        </strong>
+
+                    </div>
+
+                    @if (advertisement.ShowWhatsAppToPublic)
+                    {
+                        <span class="my-ad-contact-public">
+                            <i class="bi bi-eye-fill"></i>
+                            Public
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="my-ad-contact-private">
+                            <i class="bi bi-eye-slash-fill"></i>
+                            Private
+                        </span>
+                    }
+
+                </div>
+            }
+
+
+            <!-- EMAIL -->
+            @if (!string.IsNullOrWhiteSpace(
+                advertisement.ContactEmail))
+            {
+                <div class="my-ad-contact-method">
+
+                    <div class="my-ad-contact-method-icon email">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+
+                    <div class="my-ad-contact-method-content">
+
+                        <span>
+                            Email
+                        </span>
+
+                        <strong>
+                            @advertisement.ContactEmail
+                        </strong>
+
+                    </div>
+
+                    @if (advertisement.ShowEmailToPublic)
+                    {
+                        <span class="my-ad-contact-public">
+                            <i class="bi bi-eye-fill"></i>
+                            Public
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="my-ad-contact-private">
+                            <i class="bi bi-eye-slash-fill"></i>
+                            Private
+                        </span>
+                    }
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+}
 
 
                                 <!-- DATES -->

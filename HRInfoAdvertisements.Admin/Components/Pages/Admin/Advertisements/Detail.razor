@@ -1,0 +1,4281 @@
+@page "/admin/advertisements/{AdvertisementId:long}"
+
+@using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisement
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Application.DTOs.Admin
+@using HRInfoAdvertisements.Application.Interfaces
+@using System.Security.Claims
+
+@inject IAdvertisementModerationService AdvertisementModerationService
+@inject AdvertisementApiService AdvertisementApiService
+@inject AdminAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+<PageTitle>Advertisement Details | HR INFO ADs</PageTitle>
+
+<div class="admin-ad-detail-page">
+
+    @if (_isLoading)
+    {
+        <div class="admin-ad-loading">
+            <div class="admin-ad-loading-spinner"></div>
+            <h3>Loading advertisement...</h3>
+            <p>Please wait while the advertisement details are retrieved.</p>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(_errorMessage) && _advertisement == null)
+    {
+        <div class="admin-ad-error-page">
+
+            <div class="admin-ad-error-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <h2>Unable to load advertisement</h2>
+
+            <p>@_errorMessage</p>
+
+            <div class="admin-ad-error-actions">
+                <button type="button"
+                        class="admin-ad-secondary-button"
+                        @onclick="BackToAdvertisements">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Advertisements
+                </button>
+
+                <button type="button"
+                        class="admin-ad-primary-button"
+                        @onclick="LoadAdvertisementAsync">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Try Again
+                </button>
+            </div>
+
+        </div>
+    }
+    else if (_advertisement != null)
+    {
+        <!-- =========================================================
+             PAGE HEADER
+             ========================================================= -->
+
+        <section class="admin-ad-header">
+
+            <div class="admin-ad-header-left">
+
+                <button type="button"
+                        class="admin-ad-back-button"
+                        @onclick="BackToAdvertisements">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    <span>Advertisements</span>
+
+                </button>
+
+                <div class="admin-ad-header-main">
+
+                    <div class="admin-ad-header-icon">
+                        <i class="bi bi-megaphone-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <div class="admin-ad-eyebrow">
+                            ADVERTISEMENT MANAGEMENT
+                        </div>
+
+                        <h1>
+                            @_advertisement.AdvertisementNumber
+                        </h1>
+
+                        <p>
+                            Review and manage this advertisement submitted by
+                            @_advertisement.UserName.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="admin-ad-header-right">
+
+                <span class="admin-ad-status @GetStatusClass(_advertisement.StatusCode)">
+                    <span class="admin-ad-status-dot"></span>
+                    @_advertisement.StatusName
+                </span>
+
+                <button type="button"
+                        class="admin-ad-refresh-button"
+                        @onclick="LoadAdvertisementAsync"
+                        disabled="@_isBusy">
+
+                    <i class="bi @(_isBusy
+                        ? "bi-arrow-repeat admin-ad-spin"
+                        : "bi-arrow-clockwise")"></i>
+
+                    <span>Refresh</span>
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================================
+             ALERTS
+             ========================================================= -->
+
+        @if (!string.IsNullOrWhiteSpace(_successMessage))
+        {
+            <div class="admin-ad-alert admin-ad-alert-success">
+
+                <div class="admin-ad-alert-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div>
+                    <strong>Success</strong>
+                    <span>@_successMessage</span>
+                </div>
+
+                <button type="button"
+                        @onclick="ClearMessages">
+                    <i class="bi bi-x"></i>
+                </button>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_errorMessage))
+        {
+            <div class="admin-ad-alert admin-ad-alert-error">
+
+                <div class="admin-ad-alert-icon">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                </div>
+
+                <div>
+                    <strong>Action could not be completed</strong>
+                    <span>@_errorMessage</span>
+                </div>
+
+                <button type="button"
+                        @onclick="ClearMessages">
+                    <i class="bi bi-x"></i>
+                </button>
+
+            </div>
+        }
+
+
+        <!-- =========================================================
+             ACTION BAR
+             ========================================================= -->
+
+        <section class="admin-ad-action-bar">
+
+            <div class="admin-ad-action-info">
+
+                <div class="admin-ad-action-title">
+                    Advertisement Details
+                </div>
+
+                <div class="admin-ad-action-subtitle">
+                    @( _isEditMode
+                        ? "Edit advertisement information and save your changes."
+                        : "Review advertisement information and moderation history." )
+                </div>
+
+            </div>
+
+            <div class="admin-ad-action-buttons">
+
+                @if (_isEditMode)
+                {
+                    <button type="button"
+                            class="admin-ad-secondary-button"
+                            @onclick="CancelEdit"
+                            disabled="@_isSaving">
+
+                        <i class="bi bi-x-lg"></i>
+                        Cancel
+
+                    </button>
+
+                    <button type="button"
+                            class="admin-ad-save-button"
+                            @onclick="SaveAdvertisementAsync"
+                            disabled="@_isSaving">
+
+                        @if (_isSaving)
+                        {
+                            <span class="admin-ad-button-spinner"></span>
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg"></i>
+                            <span>Save Changes</span>
+                        }
+
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="admin-ad-edit-button"
+                            @onclick="BeginEdit">
+
+                        <i class="bi bi-pencil-square"></i>
+                        Edit Advertisement
+
+                    </button>
+                }
+
+            </div>
+
+        </section>
+
+
+        <div class="admin-ad-content-grid">
+
+            <!-- =====================================================
+                 MAIN CONTENT
+                 ===================================================== -->
+
+            <main class="admin-ad-main-column">
+
+                <!-- BASIC INFORMATION -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-card-text"></i>
+                            </div>
+
+                            <div>
+                                <h2>Basic Information</h2>
+                                <p>Advertisement title and description.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-form-grid">
+
+                            <div class="admin-ad-form-group admin-ad-form-full">
+
+                                <label>
+                                    Title
+                                </label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputText class="admin-ad-input"
+                                               @bind-Value="_editModel.Title" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @DisplayValue(_advertisement.Title)
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="admin-ad-form-group admin-ad-form-full">
+
+                                <label>
+                                    Arabic Title
+                                </label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputText class="admin-ad-input"
+                                               dir="rtl"
+                                               @bind-Value="_editModel.TitleAr" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value arabic-value">
+                                        @DisplayValue(_advertisement.TitleAr)
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="admin-ad-form-group admin-ad-form-full">
+
+                                <label>
+                                    Description
+                                </label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputTextArea class="admin-ad-textarea"
+                                                   @bind-Value="_editModel.Description" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-description">
+                                        @DisplayValue(_advertisement.Description)
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="admin-ad-form-group admin-ad-form-full">
+
+                                <label>
+                                    Arabic Description
+                                </label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputTextArea class="admin-ad-textarea"
+                                                   dir="rtl"
+                                                   @bind-Value="_editModel.DescriptionAr" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-description arabic-value">
+                                        @DisplayValue(_advertisement.DescriptionAr)
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CATEGORY / TYPE / PRICE -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-tags-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2>Advertisement Classification</h2>
+                                <p>Category, type and pricing information.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-form-grid">
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Category</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            @bind="_editModel.CategoryID">
+
+                                        <option value="0">
+                                            Select category
+                                        </option>
+
+                                        @foreach (var item in _categories)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @_advertisement.CategoryName
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Advertisement Type</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            @bind="_editModel.AdvertisementTypeID">
+
+                                        <option value="0">
+                                            Select type
+                                        </option>
+
+                                        @foreach (var item in _advertisementTypes)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @_advertisement.AdvertisementTypeName
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Price</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.Price" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-price-value">
+                                        @FormatPrice(_advertisement.Price)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Currency</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputText class="admin-ad-input"
+                                               maxlength="3"
+                                               @bind-Value="_editModel.CurrencyCode" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @_advertisement.CurrencyCode
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group admin-ad-checkbox-group">
+
+                                <label class="admin-ad-checkbox-label">
+
+                                    @if (_isEditMode)
+                                    {
+                                        <InputCheckbox
+                                            @bind-Value="_editModel.IsNegotiable" />
+                                    }
+                                    else
+                                    {
+                                        <span class="admin-ad-checkbox-display
+                                            @(_advertisement.IsNegotiable
+                                                ? "checked"
+                                                : "")">
+                                            <i class="bi bi-check"></i>
+                                        </span>
+                                    }
+
+                                    <span>
+                                        Price is negotiable
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CONTACT -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2>Contact Information</h2>
+                                <p>Contact details and public visibility settings.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-contact-grid">
+
+                            <div class="admin-ad-contact-item">
+
+                                <div class="admin-ad-contact-icon whatsapp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
+
+                                <div class="admin-ad-contact-content">
+
+                                    <span>WhatsApp Number</span>
+
+                                    @if (_isEditMode)
+                                    {
+                                        <InputText class="admin-ad-input"
+                                                   @bind-Value="_editModel.WhatsAppNumber" />
+                                    }
+                                    else
+                                    {
+                                        <strong>
+                                            @DisplayValue(_advertisement.WhatsAppNumber)
+                                        </strong>
+                                    }
+
+                                </div>
+
+                                <div class="admin-ad-visibility">
+
+                                    @if (_isEditMode)
+                                    {
+                                        <label class="admin-ad-switch-label">
+
+                                            <InputCheckbox
+                                                @bind-Value="_editModel.ShowWhatsAppToPublic" />
+
+                                            <span class="admin-ad-switch"></span>
+
+                                            <small>Public</small>
+
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        <span class="admin-ad-visibility-badge
+                                            @(_advertisement.ShowWhatsAppToPublic
+                                                ? "visible"
+                                                : "hidden")">
+
+                                            <i class="bi @(_advertisement.ShowWhatsAppToPublic
+                                                ? "bi-eye-fill"
+                                                : "bi-eye-slash-fill")"></i>
+
+                                            @(_advertisement.ShowWhatsAppToPublic
+                                                ? "Public"
+                                                : "Private")
+
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="admin-ad-contact-item">
+
+                                <div class="admin-ad-contact-icon email">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
+
+                                <div class="admin-ad-contact-content">
+
+                                    <span>Email Address</span>
+
+                                    @if (_isEditMode)
+                                    {
+                                        <InputText class="admin-ad-input"
+                                                   type="email"
+                                                   @bind-Value="_editModel.ContactEmail" />
+                                    }
+                                    else
+                                    {
+                                        <strong>
+                                            @DisplayValue(_advertisement.ContactEmail)
+                                        </strong>
+                                    }
+
+                                </div>
+
+                                <div class="admin-ad-visibility">
+
+                                    @if (_isEditMode)
+                                    {
+                                        <label class="admin-ad-switch-label">
+
+                                            <InputCheckbox
+                                                @bind-Value="_editModel.ShowEmailToPublic" />
+
+                                            <span class="admin-ad-switch"></span>
+
+                                            <small>Public</small>
+
+                                        </label>
+                                    }
+                                    else
+                                    {
+                                        <span class="admin-ad-visibility-badge
+                                            @(_advertisement.ShowEmailToPublic
+                                                ? "visible"
+                                                : "hidden")">
+
+                                            <i class="bi @(_advertisement.ShowEmailToPublic
+                                                ? "bi-eye-fill"
+                                                : "bi-eye-slash-fill")"></i>
+
+                                            @(_advertisement.ShowEmailToPublic
+                                                ? "Public"
+                                                : "Private")
+
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <div class="admin-ad-contact-note">
+
+                            <i class="bi bi-info-circle-fill"></i>
+
+                            <span>
+                                Public visibility controls determine which contact
+                                details are shown to other users. Administrators
+                                can always view the complete contact information.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- LOCATION -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2>Location</h2>
+                                <p>Advertisement location and address information.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-form-grid">
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Country</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            value="@_editModel.CountryID"
+                                            @onchange="CountryChangedAsync">
+
+                                        <option value="">
+                                            Select country
+                                        </option>
+
+                                        @foreach (var item in _countries)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @GetLookupName(
+                                            _countries,
+                                            _advertisement.CountryID)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>State / Governorate</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            value="@_editModel.StateID"
+                                            @onchange="StateChangedAsync"
+                                            disabled="@(!_editModel.CountryID.HasValue)">
+
+                                        <option value="">
+                                            Select state
+                                        </option>
+
+                                        @foreach (var item in _states)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @GetLookupName(
+                                            _states,
+                                            _advertisement.StateID)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>City</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            value="@_editModel.CityID"
+                                            @onchange="CityChangedAsync"
+                                            disabled="@(!_editModel.CountryID.HasValue)">
+
+                                        <option value="">
+                                            Select city
+                                        </option>
+
+                                        @foreach (var item in _cities)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @GetLookupName(
+                                            _cities,
+                                            _advertisement.CityID)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Area</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <select class="admin-ad-select"
+                                            value="@_editModel.AreaID"
+                                            @onchange="AreaChangedAsync"
+                                            disabled="@(!_editModel.CityID.HasValue)">
+
+                                        <option value="">
+                                            Select area
+                                        </option>
+
+                                        @foreach (var item in _areas)
+                                        {
+                                            <option value="@item.ID">
+                                                @item.Name
+                                            </option>
+                                        }
+
+                                    </select>
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @GetLookupName(
+                                            _areas,
+                                            _advertisement.AreaID)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group admin-ad-form-full">
+
+                                <label>Address</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputText class="admin-ad-input"
+                                               @bind-Value="_editModel.AddressLine" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @DisplayValue(_advertisement.AddressLine)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Plot Number</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputText class="admin-ad-input"
+                                               @bind-Value="_editModel.PlotNumber" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @DisplayValue(_advertisement.PlotNumber)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Latitude</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.Latitude" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @FormatDecimal(_advertisement.Latitude)
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-form-group">
+
+                                <label>Longitude</label>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.Longitude" />
+                                }
+                                else
+                                {
+                                    <div class="admin-ad-value">
+                                        @FormatDecimal(_advertisement.Longitude)
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PROPERTY DETAILS -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-house-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2>Property Details</h2>
+                                <p>Additional property information.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-stat-grid">
+
+                            <div class="admin-ad-stat-item">
+
+                                <i class="bi bi-rulers"></i>
+
+                                <span>Land Area</span>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.LandArea" />
+                                }
+                                else
+                                {
+                                    <strong>
+                                        @FormatDecimal(_advertisement.LandArea)
+                                    </strong>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-stat-item">
+
+                                <i class="bi bi-building"></i>
+
+                                <span>Built-up Area</span>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.BuiltUpArea" />
+                                }
+                                else
+                                {
+                                    <strong>
+                                        @FormatDecimal(_advertisement.BuiltUpArea)
+                                    </strong>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-stat-item">
+
+                                <i class="bi bi-door-open-fill"></i>
+
+                                <span>Bedrooms</span>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.Bedrooms" />
+                                }
+                                else
+                                {
+                                    <strong>
+                                        @DisplayInt(_advertisement.Bedrooms)
+                                    </strong>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-stat-item">
+
+                                <i class="bi bi-droplet-fill"></i>
+
+                                <span>Bathrooms</span>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.Bathrooms" />
+                                }
+                                else
+                                {
+                                    <strong>
+                                        @DisplayInt(_advertisement.Bathrooms)
+                                    </strong>
+                                }
+
+                            </div>
+
+
+                            <div class="admin-ad-stat-item">
+
+                                <i class="bi bi-calendar3"></i>
+
+                                <span>Property Age</span>
+
+                                @if (_isEditMode)
+                                {
+                                    <InputNumber class="admin-ad-input"
+                                                 @bind-Value="_editModel.PropertyAge" />
+                                }
+                                else
+                                {
+                                    <strong>
+                                        @DisplayInt(_advertisement.PropertyAge)
+                                    </strong>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- MEDIA -->
+
+                @if (_advertisement.Images?.Any() == true)
+                {
+                    <section class="admin-ad-card">
+
+                        <div class="admin-ad-card-header">
+
+                            <div class="admin-ad-card-title">
+
+                                <div class="admin-ad-section-icon">
+                                    <i class="bi bi-images"></i>
+                                </div>
+
+                                <div>
+                                    <h2>Photos</h2>
+                                    <p>
+                                        Advertisement photographs.
+                                    </p>
+                                </div>
+
+                            </div>
+
+                            <span class="admin-ad-card-count">
+                                @_advertisement.Images.Count
+                            </span>
+
+                        </div>
+
+                        <div class="admin-ad-card-body">
+
+                            <div class="admin-ad-gallery">
+
+                                @foreach (var image in _advertisement.Images)
+                                {
+                                    <div class="admin-ad-gallery-item">
+
+                                        @if (!string.IsNullOrWhiteSpace(image.FileURL))
+                                        {
+                                            <img src="@image.FileURL"
+                                                 alt="Advertisement photo"
+                                                 loading="lazy" />
+                                        }
+                                        else
+                                        {
+                                            <div class="admin-ad-gallery-placeholder">
+                                                <i class="bi bi-image"></i>
+                                            </div>
+                                        }
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+
+                    </section>
+                }
+
+            </main>
+
+
+            <!-- =====================================================
+                 SIDEBAR
+                 ===================================================== -->
+
+            <aside class="admin-ad-sidebar">
+
+                <!-- OWNER -->
+
+                <section class="admin-ad-card admin-ad-owner-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+
+                            <div>
+                                <h2>Owner</h2>
+                                <p>Advertisement owner.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-owner">
+
+                            <div class="admin-ad-owner-avatar">
+                                @GetInitials(_advertisement.UserName)
+                            </div>
+
+                            <div class="admin-ad-owner-info">
+
+                                <strong>
+                                    @_advertisement.UserName
+                                </strong>
+
+                                <span>
+                                    User ID: @_advertisement.UserID
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="admin-ad-owner-details">
+
+                            <div>
+                                <i class="bi bi-envelope"></i>
+                                <span>
+                                    @DisplayValue(_advertisement.Email)
+                                </span>
+                            </div>
+
+                            <div>
+                                <i class="bi bi-phone"></i>
+                                <span>
+                                    @DisplayValue(_advertisement.MobileNo)
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- DATES -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+
+                            <div>
+                                <h2>Timeline</h2>
+                                <p>Advertisement lifecycle.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+    <div class="admin-ad-timeline">
+
+        <!-- Created -->
+        <div class="admin-ad-timeline-item">
+
+            <span class="admin-ad-timeline-dot"></span>
+
+            <div class="admin-ad-timeline-content">
+                <small>Created</small>
+                <strong>
+                    @_advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy")
+                    <span class="timeline-time">
+                        · @_advertisement.CreatedDate.ToLocalTime().ToString("h:mm tt")
+                    </span>
+                </strong>
+            </div>
+
+        </div>
+
+        <!-- Last Modified -->
+        @if (_advertisement.ModifiedDate.HasValue)
+        {
+            <div class="admin-ad-timeline-item">
+
+                <span class="admin-ad-timeline-dot"></span>
+
+                <div class="admin-ad-timeline-content">
+                    <small>Last Modified</small>
+                    <strong>
+                        @_advertisement.ModifiedDate.Value.ToLocalTime().ToString("dd MMM yyyy")
+                        <span class="timeline-time">
+                            · @_advertisement.ModifiedDate.Value.ToLocalTime().ToString("h:mm tt")
+                        </span>
+                    </strong>
+                </div>
+
+            </div>
+        }
+
+        <!-- Published -->
+        @if (_advertisement.PublishedDate.HasValue)
+        {
+            <div class="admin-ad-timeline-item">
+
+                <span class="admin-ad-timeline-dot published"></span>
+
+                <div class="admin-ad-timeline-content">
+                    <small>Published</small>
+                    <strong>
+                        @_advertisement.PublishedDate.Value.ToLocalTime().ToString("dd MMM yyyy")
+                        <span class="timeline-time">
+                            · @_advertisement.PublishedDate.Value.ToLocalTime().ToString("h:mm tt")
+                        </span>
+                    </strong>
+                </div>
+
+            </div>
+        }
+
+        <!-- Expiry -->
+        @if (_advertisement.ExpiryDate.HasValue)
+        {
+            <div class="admin-ad-timeline-item">
+
+                <span class="admin-ad-timeline-dot expiry"></span>
+
+                <div class="admin-ad-timeline-content">
+                    <small>Expiry</small>
+                    <strong>
+                        @_advertisement.ExpiryDate.Value.ToLocalTime().ToString("dd MMM yyyy")
+                        <span class="timeline-time">
+                            · @_advertisement.ExpiryDate.Value.ToLocalTime().ToString("h:mm tt")
+                        </span>
+                    </strong>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+                </section>
+
+
+                <!-- MODERATION -->
+
+                <section class="admin-ad-card admin-ad-moderation-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon moderation">
+                                <i class="bi bi-shield-check"></i>
+                            </div>
+
+                            <div>
+                                <h2>Moderation</h2>
+                                <p>Manage advertisement status.</p>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        <div class="admin-ad-moderation-actions">
+
+                            @if (CanApprove())
+                            {
+                                <button type="button"
+                                        class="admin-ad-moderation-button approve"
+                                        @onclick="() => OpenModerationModal(ModerationAction.Approve)"
+                                        disabled="@_isBusy">
+
+                                    <i class="bi bi-check-lg"></i>
+                                    Approve
+
+                                </button>
+                            }
+
+                            @if (CanReject())
+                            {
+                                <button type="button"
+                                        class="admin-ad-moderation-button reject"
+                                        @onclick="() => OpenModerationModal(ModerationAction.Reject)"
+                                        disabled="@_isBusy">
+
+                                    <i class="bi bi-x-lg"></i>
+                                    Reject
+
+                                </button>
+                            }
+
+                            @if (CanSuspend())
+                            {
+                                <button type="button"
+                                        class="admin-ad-moderation-button suspend"
+                                        @onclick="() => OpenModerationModal(ModerationAction.Suspend)"
+                                        disabled="@_isBusy">
+
+                                    <i class="bi bi-pause-fill"></i>
+                                    Suspend
+
+                                </button>
+                            }
+
+                            @if (CanReactivate())
+                            {
+                                <button type="button"
+                                        class="admin-ad-moderation-button reactivate"
+                                        @onclick="() => OpenModerationModal(ModerationAction.Reactivate)"
+                                        disabled="@_isBusy">
+
+                                    <i class="bi bi-play-fill"></i>
+                                    Reactivate
+
+                                </button>
+                            }
+
+                            @if (!CanApprove() &&
+                                 !CanReject() &&
+                                 !CanSuspend() &&
+                                 !CanReactivate())
+                            {
+                                <div class="admin-ad-no-moderation">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span>
+                                        No moderation actions are available
+                                        for the current status.
+                                    </span>
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- APPROVAL HISTORY -->
+
+                <section class="admin-ad-card">
+
+                    <div class="admin-ad-card-header">
+
+                        <div class="admin-ad-card-title">
+
+                            <div class="admin-ad-section-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+
+                            <div>
+                                <h2>Approval History</h2>
+                                <p>Moderation activity.</p>
+                            </div>
+
+                        </div>
+
+                        @if (_advertisement.ApprovalHistory?.Any() == true)
+                        {
+                            <span class="admin-ad-card-count">
+                                @_advertisement.ApprovalHistory.Count
+                            </span>
+                        }
+
+                    </div>
+
+                    <div class="admin-ad-card-body">
+
+                        @if (_advertisement.ApprovalHistory?.Any() == true)
+                        {
+                            <div class="admin-ad-history">
+
+                                @foreach (var history in _advertisement.ApprovalHistory
+                                    .OrderByDescending(x => x.ActionDate))
+                                {
+                                    <div class="admin-ad-history-item">
+
+                                        <div class="admin-ad-history-icon
+                                            @GetHistoryClass(history.Action)">
+
+                                            <i class="bi @GetHistoryIcon(history.Action)"></i>
+
+                                        </div>
+
+                                        <div class="admin-ad-history-content">
+
+                                            <strong>
+                                                @history.Action
+                                            </strong>
+
+                                            <span>
+                                                @history.ActionDate
+                                                    .ToLocalTime()
+                                                    .ToString(
+                                                        "dd MMM yyyy, hh:mm tt")
+                                            </span>
+
+                                            @if (!string.IsNullOrWhiteSpace(history.Comments))
+                                            {
+                                                <p>
+                                                    @history.Comments
+                                                </p>
+                                            }
+
+                                        </div>
+
+                                    </div>
+                                }
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="admin-ad-empty-history">
+
+                                <i class="bi bi-clock-history"></i>
+
+                                <span>
+                                    No moderation history is available.
+                                </span>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+    }
+</div>
+
+
+<!-- =============================================================
+     MODERATION MODAL
+     ============================================================= -->
+
+@if (_showModerationModal)
+{
+    <div class="admin-ad-modal-backdrop"
+         @onclick="HandleModalBackdropClick">
+
+        <div class="admin-ad-modal"
+             @onclick:stopPropagation="true">
+
+            <div class="admin-ad-modal-header">
+
+                <div class="admin-ad-modal-icon @GetModalIconClass()">
+                    <i class="@GetModalIcon()"></i>
+                </div>
+
+                <div>
+                    <h2>@GetModalTitle()</h2>
+                    <p>
+                        Advertisement @_advertisement?.AdvertisementNumber
+                    </p>
+                </div>
+
+                <button type="button"
+                        class="admin-ad-modal-close"
+                        @onclick="CloseModerationModal"
+                        disabled="@_isModerationProcessing">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+            <div class="admin-ad-modal-body">
+
+                <label class="admin-ad-modal-label">
+                    @GetCommentsLabel()
+                </label>
+
+                <textarea class="admin-ad-modal-textarea"
+                          @bind="_moderationComments"
+                          placeholder="@GetCommentsPlaceholder()"></textarea>
+
+                @if (_moderationAction == ModerationAction.Reject)
+                {
+                    <label class="admin-ad-modal-label">
+                        Rejection Reason
+                    </label>
+
+                    <select class="admin-ad-select"
+                            @bind="_selectedRejectionReasonId">
+
+                        <option value="">
+                            Select rejection reason
+                        </option>
+
+                        @foreach (var reason in _rejectionReasons)
+                        {
+                            <option value="@reason.RejectionReasonID">
+                                @reason.ReasonName
+                            </option>
+                        }
+
+                    </select>
+                }
+
+            </div>
+
+            <div class="admin-ad-modal-footer">
+
+                <button type="button"
+                        class="admin-ad-secondary-button"
+                        @onclick="CloseModerationModal"
+                        disabled="@_isModerationProcessing">
+
+                    Cancel
+
+                </button>
+
+                <button type="button"
+                        class="admin-ad-modal-confirm @GetModalConfirmClass()"
+                        @onclick="ConfirmModerationAsync"
+                        disabled="@_isModerationProcessing">
+
+                    @if (_isModerationProcessing)
+                    {
+                        <span class="admin-ad-button-spinner"></span>
+                        <span>Processing...</span>
+                    }
+                    else
+                    {
+                        <i class="@GetModalIcon()"></i>
+                        <span>@GetModalConfirmText()</span>
+                    }
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
+<style>
+
+    /* ============================================================
+       PAGE
+       ============================================================ */
+
+    .admin-ad-detail-page {
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 28px 32px 60px;
+    }
+
+
+    /* ============================================================
+       HEADER
+       ============================================================ */
+
+    .admin-ad-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 22px;
+    }
+
+    .admin-ad-header-left {
+        min-width: 0;
+    }
+
+    .admin-ad-back-button {
+        border: 0;
+        background: transparent;
+        color: #6b7280;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0;
+        margin-bottom: 18px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all .2s ease;
+    }
+
+    .admin-ad-back-button:hover {
+        color: #790000;
+        transform: translateX(-3px);
+    }
+
+    .admin-ad-header-main {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .admin-ad-header-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, #790000, #d30505);
+        box-shadow: 0 12px 25px rgba(121, 0, 0, .18);
+        flex: 0 0 auto;
+        font-size: 23px;
+    }
+
+    .admin-ad-eyebrow {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: #996600;
+        margin-bottom: 4px;
+    }
+
+    .admin-ad-header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #262626;
+        letter-spacing: -.5px;
+    }
+
+    .admin-ad-header p {
+        margin: 5px 0 0;
+        color: #777;
+        font-size: 14px;
+    }
+
+    .admin-ad-header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-top: 38px;
+    }
+
+    .admin-ad-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    .admin-ad-status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .admin-ad-status.pending {
+        color: #9a6700;
+        background: #fff7df;
+    }
+
+    .admin-ad-status.published {
+        color: #087443;
+        background: #eaf9f1;
+    }
+
+    .admin-ad-status.rejected {
+        color: #a11;
+        background: #fff0f0;
+    }
+
+    .admin-ad-status.suspended {
+        color: #745100;
+        background: #fff4df;
+    }
+
+    .admin-ad-status.draft {
+        color: #59636e;
+        background: #eef1f4;
+    }
+
+
+    /* ============================================================
+       ACTION BAR
+       ============================================================ */
+
+    .admin-ad-action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 18px 20px;
+        background: #fff;
+        border: 1px solid #ececec;
+        border-radius: 18px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .035);
+        margin-bottom: 22px;
+    }
+
+    .admin-ad-action-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #252525;
+    }
+
+    .admin-ad-action-subtitle {
+        margin-top: 3px;
+        color: #8a8a8a;
+        font-size: 13px;
+    }
+
+    .admin-ad-action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+
+    /* ============================================================
+       BUTTONS
+       ============================================================ */
+
+    .admin-ad-refresh-button,
+    .admin-ad-edit-button,
+    .admin-ad-save-button,
+    .admin-ad-primary-button,
+    .admin-ad-secondary-button {
+        border: 0;
+        border-radius: 10px;
+        min-height: 40px;
+        padding: 0 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        transition: all .2s ease;
+    }
+
+    .admin-ad-refresh-button {
+        color: #555;
+        background: #f4f5f6;
+    }
+
+    .admin-ad-refresh-button:hover:not(:disabled) {
+        background: #e9eaec;
+    }
+
+    .admin-ad-edit-button,
+    .admin-ad-save-button,
+    .admin-ad-primary-button {
+        color: #fff;
+        background: linear-gradient(135deg, #790000, #d30505);
+        box-shadow: 0 8px 18px rgba(121, 0, 0, .16);
+    }
+
+    .admin-ad-edit-button:hover,
+    .admin-ad-save-button:hover,
+    .admin-ad-primary-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 11px 22px rgba(121, 0, 0, .2);
+    }
+
+    .admin-ad-secondary-button {
+        color: #555;
+        background: #f2f3f4;
+    }
+
+    .admin-ad-secondary-button:hover {
+        background: #e7e8e9;
+    }
+
+    button:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+
+    /* ============================================================
+       GRID
+       ============================================================ */
+
+    .admin-ad-content-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 22px;
+        align-items: start;
+    }
+
+    .admin-ad-main-column,
+    .admin-ad-sidebar {
+        min-width: 0;
+    }
+
+    .admin-ad-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+
+    /* ============================================================
+       CARDS
+       ============================================================ */
+
+    .admin-ad-card {
+        background: #fff;
+        border: 1px solid #ececec;
+        border-radius: 18px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, .035);
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    .admin-ad-sidebar .admin-ad-card {
+        margin-bottom: 0;
+    }
+
+    .admin-ad-card-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid #eeeeee;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+
+    .admin-ad-card-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .admin-ad-section-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        background: #fff2f2;
+        color: #9a1717;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+    }
+
+    .admin-ad-section-icon.moderation {
+        background: #f2f0f7;
+        color: #592462;
+    }
+
+    .admin-ad-card-title h2 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+        color: #272727;
+    }
+
+    .admin-ad-card-title p {
+        margin: 3px 0 0;
+        font-size: 12px;
+        color: #8b8b8b;
+    }
+
+    .admin-ad-card-count {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 8px;
+        border-radius: 999px;
+        background: #f2f3f4;
+        color: #666;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .admin-ad-card-body {
+        padding: 20px;
+    }
+
+
+    /* ============================================================
+       FORM
+       ============================================================ */
+
+    .admin-ad-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .admin-ad-form-full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-ad-form-group {
+        min-width: 0;
+    }
+
+    .admin-ad-form-group > label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 12px;
+        font-weight: 750;
+        color: #555;
+    }
+
+    .admin-ad-input,
+    .admin-ad-select,
+    .admin-ad-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #dcdfe3;
+        border-radius: 10px;
+        background: #fff;
+        color: #292929;
+        font-size: 13px;
+        padding: 10px 12px;
+        outline: none;
+        transition: border-color .2s ease,
+                    box-shadow .2s ease,
+                    background .2s ease;
+    }
+
+    .admin-ad-input,
+    .admin-ad-select {
+        min-height: 42px;
+    }
+
+    .admin-ad-textarea {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .admin-ad-input:focus,
+    .admin-ad-select:focus,
+    .admin-ad-textarea:focus {
+        border-color: #a82020;
+        box-shadow: 0 0 0 3px rgba(168, 32, 32, .08);
+    }
+
+    .admin-ad-value {
+        min-height: 42px;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #eef0f1;
+        color: #333;
+        font-size: 13px;
+        white-space: pre-wrap;
+    }
+
+    .admin-ad-description {
+        min-height: 110px;
+        box-sizing: border-box;
+        padding: 12px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #eef0f1;
+        color: #444;
+        font-size: 13px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+    }
+
+    .arabic-value {
+        direction: rtl;
+        text-align: right;
+    }
+
+    .admin-ad-price-value {
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #eef0f1;
+        color: #790000;
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+
+    /* ============================================================
+       CHECKBOX
+       ============================================================ */
+
+    .admin-ad-checkbox-group {
+        display: flex;
+        align-items: flex-end;
+        padding-bottom: 5px;
+    }
+
+    .admin-ad-checkbox-label {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 9px;
+        cursor: pointer;
+        margin: 0 !important;
+    }
+
+    .admin-ad-checkbox-label input {
+        accent-color: #790000;
+    }
+
+    .admin-ad-checkbox-display {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        background: #eceeef;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: transparent;
+    }
+
+    .admin-ad-checkbox-display.checked {
+        color: #fff;
+        background: #790000;
+    }
+
+
+    /* ============================================================
+       CONTACT
+       ============================================================ */
+
+    .admin-ad-contact-grid {
+        display: grid;
+        gap: 12px;
+    }
+
+    .admin-ad-contact-item {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr) auto;
+        gap: 12px;
+        align-items: center;
+        padding: 14px;
+        border: 1px solid #eeeeee;
+        border-radius: 14px;
+        background: #fafafa;
+    }
+
+    .admin-ad-contact-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 18px;
+    }
+
+    .admin-ad-contact-icon.whatsapp {
+        background: #2680e6;
+    }
+
+    .admin-ad-contact-icon.email {
+        background: #996600;
+    }
+
+    .admin-ad-contact-content {
+        min-width: 0;
+    }
+
+    .admin-ad-contact-content > span {
+        display: block;
+        font-size: 11px;
+        color: #888;
+        margin-bottom: 3px;
+    }
+
+    .admin-ad-contact-content > strong {
+        display: block;
+        color: #333;
+        font-size: 13px;
+        word-break: break-word;
+    }
+
+    .admin-ad-visibility {
+        min-width: 75px;
+        text-align: right;
+    }
+
+    .admin-ad-switch-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        cursor: pointer;
+        font-size: 11px;
+        color: #666;
+    }
+
+    .admin-ad-switch-label input {
+        accent-color: #790000;
+    }
+
+    .admin-ad-visibility-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 9px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .admin-ad-visibility-badge.visible {
+        background: #eaf8f0;
+        color: #087443;
+    }
+
+    .admin-ad-visibility-badge.hidden {
+        background: #f0f1f2;
+        color: #777;
+    }
+
+    .admin-ad-contact-note {
+        margin-top: 14px;
+        padding: 11px 13px;
+        border-radius: 10px;
+        background: #fff8e8;
+        color: #7a5a00;
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+
+    /* ============================================================
+       PROPERTY
+       ============================================================ */
+
+    .admin-ad-stat-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .admin-ad-stat-item {
+        padding: 14px;
+        border-radius: 13px;
+        border: 1px solid #eeeeee;
+        background: #fafafa;
+    }
+
+    .admin-ad-stat-item > i {
+        display: block;
+        color: #996600;
+        font-size: 17px;
+        margin-bottom: 8px;
+    }
+
+    .admin-ad-stat-item > span {
+        display: block;
+        color: #888;
+        font-size: 11px;
+        margin-bottom: 5px;
+    }
+
+    .admin-ad-stat-item > strong {
+        display: block;
+        color: #303030;
+        font-size: 14px;
+    }
+
+    .admin-ad-stat-item .admin-ad-input {
+        padding: 7px 8px;
+        min-height: 36px;
+    }
+
+
+    /* ============================================================
+       OWNER
+       ============================================================ */
+
+    .admin-ad-owner {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .admin-ad-owner-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #790000, #d30505);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+        flex: 0 0 auto;
+    }
+
+    .admin-ad-owner-info {
+        min-width: 0;
+    }
+
+    .admin-ad-owner-info strong {
+        display: block;
+        color: #303030;
+        font-size: 14px;
+    }
+
+    .admin-ad-owner-info span {
+        display: block;
+        margin-top: 3px;
+        color: #888;
+        font-size: 11px;
+    }
+
+    .admin-ad-owner-details {
+        margin-top: 18px;
+        padding-top: 15px;
+        border-top: 1px solid #eeeeee;
+        display: grid;
+        gap: 10px;
+    }
+
+    .admin-ad-owner-details > div {
+        display: flex;
+        gap: 9px;
+        align-items: flex-start;
+        color: #666;
+        font-size: 12px;
+    }
+
+    .admin-ad-owner-details i {
+        color: #996600;
+        margin-top: 2px;
+    }
+
+    .admin-ad-owner-details span {
+        min-width: 0;
+        word-break: break-word;
+    }
+
+
+    /* ============================================================
+       TIMELINE
+       ============================================================ */
+
+    .admin-ad-timeline {
+        position: relative;
+        padding-left: 18px;
+    }
+
+    .admin-ad-timeline::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 7px;
+        bottom: 7px;
+        width: 1px;
+        background: #e1e2e4;
+    }
+
+    .admin-ad-timeline-item {
+        position: relative;
+        display: flex;
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .admin-ad-timeline-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .admin-ad-timeline-dot {
+        position: absolute;
+        left: -18px;
+        top: 4px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: #996600;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px #d8d8d8;
+    }
+
+    .admin-ad-timeline-dot.published {
+        background: #33d980;
+    }
+
+    .admin-ad-timeline-dot.expiry {
+        background: #cc3333;
+    }
+
+    .admin-ad-timeline-item small {
+        display: block;
+        color: #929292;
+        font-size: 10px;
+    }
+
+    .admin-ad-timeline-item strong {
+        display: block;
+        margin-top: 3px;
+        color: #444;
+        font-size: 11px;
+    }
+
+
+    /* ============================================================
+       GALLERY
+       ============================================================ */
+
+    .admin-ad-gallery {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .admin-ad-gallery-item {
+        aspect-ratio: 4 / 3;
+        border-radius: 12px;
+        overflow: hidden;
+        background: #f1f2f3;
+        border: 1px solid #e7e7e7;
+    }
+
+    .admin-ad-gallery-item img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+        transition: transform .25s ease;
+    }
+
+    .admin-ad-gallery-item:hover img {
+        transform: scale(1.04);
+    }
+
+    .admin-ad-gallery-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #aaa;
+        font-size: 25px;
+    }
+
+
+    /* ============================================================
+       MODERATION
+       ============================================================ */
+
+    .admin-ad-moderation-actions {
+        display: grid;
+        gap: 9px;
+    }
+
+    .admin-ad-moderation-button {
+        width: 100%;
+        min-height: 40px;
+        border: 0;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 750;
+        transition: all .2s ease;
+    }
+
+    .admin-ad-moderation-button.approve {
+        background: #eaf9f1;
+        color: #087443;
+    }
+
+    .admin-ad-moderation-button.approve:hover {
+        background: #d8f3e5;
+    }
+
+    .admin-ad-moderation-button.reject {
+        background: #fff0f0;
+        color: #a11;
+    }
+
+    .admin-ad-moderation-button.reject:hover {
+        background: #ffe0e0;
+    }
+
+    .admin-ad-moderation-button.suspend {
+        background: #fff5df;
+        color: #856000;
+    }
+
+    .admin-ad-moderation-button.suspend:hover {
+        background: #ffedc2;
+    }
+
+    .admin-ad-moderation-button.reactivate {
+        background: #eef7ff;
+        color: #1668a0;
+    }
+
+    .admin-ad-moderation-button.reactivate:hover {
+        background: #deefff;
+    }
+
+    .admin-ad-no-moderation {
+        padding: 12px;
+        border-radius: 10px;
+        background: #f5f6f7;
+        color: #777;
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        font-size: 11px;
+        line-height: 1.5;
+    }
+
+
+    /* ============================================================
+       HISTORY
+       ============================================================ */
+
+    .admin-ad-history {
+        display: grid;
+        gap: 13px;
+    }
+
+    .admin-ad-history-item {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .admin-ad-history-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 auto;
+        background: #f1f2f3;
+        color: #666;
+        font-size: 13px;
+    }
+
+    .admin-ad-history-icon.approve {
+        background: #eaf9f1;
+        color: #087443;
+    }
+
+    .admin-ad-history-icon.reject {
+        background: #fff0f0;
+        color: #a11;
+    }
+
+    .admin-ad-history-icon.suspend {
+        background: #fff5df;
+        color: #856000;
+    }
+
+    .admin-ad-history-icon.reactivate {
+        background: #eef7ff;
+        color: #1668a0;
+    }
+
+    .admin-ad-history-content {
+        min-width: 0;
+    }
+
+    .admin-ad-history-content strong {
+        display: block;
+        color: #444;
+        font-size: 12px;
+    }
+
+    .admin-ad-history-content > span {
+        display: block;
+        color: #929292;
+        font-size: 10px;
+        margin-top: 2px;
+    }
+
+    .admin-ad-history-content p {
+        margin: 5px 0 0;
+        color: #666;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .admin-ad-empty-history {
+        min-height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 7px;
+        color: #aaa;
+        font-size: 11px;
+        text-align: center;
+    }
+
+    .admin-ad-empty-history i {
+        font-size: 24px;
+    }
+
+
+    /* ============================================================
+       ALERTS / LOADING
+       ============================================================ */
+
+    .admin-ad-alert {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 13px 15px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+    }
+
+    .admin-ad-alert > div:nth-child(2) {
+        flex: 1;
+    }
+
+    .admin-ad-alert strong,
+    .admin-ad-alert span {
+        display: block;
+    }
+
+    .admin-ad-alert strong {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+
+    .admin-ad-alert span {
+        font-size: 12px;
+    }
+
+    .admin-ad-alert button {
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 18px;
+        color: inherit;
+    }
+
+    .admin-ad-alert-success {
+        background: #eaf9f1;
+        color: #087443;
+    }
+
+    .admin-ad-alert-error {
+        background: #fff0f0;
+        color: #a11;
+    }
+
+    .admin-ad-alert-icon {
+        font-size: 17px;
+    }
+
+    .admin-ad-loading,
+    .admin-ad-error-page {
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .admin-ad-loading-spinner,
+    .admin-ad-button-spinner {
+        border-radius: 50%;
+        border: 3px solid #eadada;
+        border-top-color: #790000;
+        animation: admin-ad-spin 0.8s linear infinite;
+    }
+
+    .admin-ad-loading-spinner {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 18px;
+    }
+
+    .admin-ad-loading h3 {
+        margin: 0;
+        color: #333;
+    }
+
+    .admin-ad-loading p,
+    .admin-ad-error-page p {
+        color: #888;
+        font-size: 13px;
+    }
+
+    .admin-ad-error-icon {
+        width: 62px;
+        height: 62px;
+        border-radius: 18px;
+        background: #fff0f0;
+        color: #a11;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 25px;
+        margin-bottom: 18px;
+    }
+
+    .admin-ad-error-page h2 {
+        margin: 0;
+        color: #333;
+    }
+
+    .admin-ad-error-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .admin-ad-button-spinner {
+        width: 14px;
+        height: 14px;
+        border-width: 2px;
+        border-top-color: #fff;
+        border-left-color: rgba(255,255,255,.35);
+        border-right-color: rgba(255,255,255,.35);
+        border-bottom-color: rgba(255,255,255,.35);
+    }
+
+
+    /* ============================================================
+       MODAL
+       ============================================================ */
+
+    .admin-ad-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 5000;
+        background: rgba(22, 22, 22, .52);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: admin-ad-fade-in .18s ease;
+    }
+
+    .admin-ad-modal {
+        width: min(560px, 100%);
+        max-height: calc(100vh - 40px);
+        overflow: auto;
+        background: #fff;
+        border-radius: 20px;
+        box-shadow: 0 25px 80px rgba(0,0,0,.25);
+        animation: admin-ad-modal-in .2s ease;
+    }
+
+    .admin-ad-modal-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px;
+        border-bottom: 1px solid #eeeeee;
+    }
+
+    .admin-ad-modal-header > div:nth-child(2) {
+        flex: 1;
+    }
+
+    .admin-ad-modal-header h2 {
+        margin: 0;
+        font-size: 17px;
+        color: #292929;
+    }
+
+    .admin-ad-modal-header p {
+        margin: 3px 0 0;
+        color: #929292;
+        font-size: 11px;
+    }
+
+    .admin-ad-modal-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .admin-ad-modal-icon.approve {
+        background: #eaf9f1;
+        color: #087443;
+    }
+
+    .admin-ad-modal-icon.reject {
+        background: #fff0f0;
+        color: #a11;
+    }
+
+    .admin-ad-modal-icon.suspend {
+        background: #fff5df;
+        color: #856000;
+    }
+
+    .admin-ad-modal-icon.reactivate {
+        background: #eef7ff;
+        color: #1668a0;
+    }
+
+    .admin-ad-modal-close {
+        width: 34px;
+        height: 34px;
+        border: 0;
+        border-radius: 9px;
+        background: #f3f4f5;
+        color: #666;
+        cursor: pointer;
+    }
+
+    .admin-ad-modal-body {
+        padding: 20px;
+    }
+
+    .admin-ad-modal-label {
+        display: block;
+        margin-bottom: 7px;
+        font-size: 12px;
+        font-weight: 750;
+        color: #555;
+    }
+
+    .admin-ad-modal-textarea {
+        width: 100%;
+        min-height: 110px;
+        resize: vertical;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 11px 12px;
+        font-size: 13px;
+        outline: none;
+        margin-bottom: 16px;
+    }
+
+    .admin-ad-modal-textarea:focus {
+        border-color: #a82020;
+        box-shadow: 0 0 0 3px rgba(168,32,32,.08);
+    }
+
+    .admin-ad-modal-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 16px 20px;
+        border-top: 1px solid #eeeeee;
+    }
+
+    .admin-ad-modal-confirm {
+        min-height: 40px;
+        border: 0;
+        border-radius: 10px;
+        padding: 0 17px;
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 750;
+    }
+
+    .admin-ad-modal-confirm.approve {
+        background: #087443;
+    }
+
+    .admin-ad-modal-confirm.reject {
+        background: #a11;
+    }
+
+    .admin-ad-modal-confirm.suspend {
+        background: #856000;
+    }
+
+    .admin-ad-modal-confirm.reactivate {
+        background: #1668a0;
+    }
+
+
+    /* ============================================================
+       ANIMATIONS
+       ============================================================ */
+
+    .admin-spin {
+        animation: admin-ad-spin .8s linear infinite;
+    }
+
+    @@keyframes admin-ad-spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes admin-ad-fade-in {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes admin-ad-modal-in {
+        from {
+            opacity: 0;
+            transform: translateY(8px) scale(.98);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+
+    @@media (max-width: 1180px) {
+
+        .admin-ad-content-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-ad-sidebar {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            align-items: start;
+        }
+
+        .admin-ad-gallery {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+    }
+
+
+    @@media (max-width: 800px) {
+
+        .admin-ad-detail-page {
+            padding: 20px 16px 40px;
+        }
+
+        .admin-ad-header {
+            flex-direction: column;
+        }
+
+        .admin-ad-header-right {
+            padding-top: 0;
+            width: 100%;
+        }
+
+        .admin-ad-action-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .admin-ad-action-buttons {
+            justify-content: flex-end;
+        }
+
+        .admin-ad-form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-ad-form-full {
+            grid-column: auto;
+        }
+
+        .admin-ad-stat-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .admin-ad-sidebar {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-ad-gallery {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+    }
+
+
+    @@media (max-width: 520px) {
+
+        .admin-ad-header-main {
+            align-items: flex-start;
+        }
+
+        .admin-ad-header-icon {
+            width: 48px;
+            height: 48px;
+        }
+
+        .admin-ad-header h1 {
+            font-size: 22px;
+        }
+
+        .admin-ad-contact-item {
+            grid-template-columns: 40px minmax(0, 1fr);
+        }
+
+        .admin-ad-visibility {
+            grid-column: 2;
+            text-align: left;
+        }
+
+        .admin-ad-stat-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-ad-gallery {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .admin-ad-action-buttons {
+            width: 100%;
+        }
+
+        .admin-ad-action-buttons button {
+            flex: 1;
+        }
+
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public long AdvertisementId { get; set; }
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private AdminAdvertisementDetailResponse? _advertisement;
+
+    private UpdateAdvertisementRequest _editModel =
+        new();
+
+    private bool _isLoading;
+    private bool _isEditMode;
+    private bool _isSaving;
+    private bool _isBusy;
+    private bool _isModerationProcessing;
+
+    private string? _errorMessage;
+    private string? _successMessage;
+
+
+    // ============================================================
+    // LOOKUPS
+    // ============================================================
+
+    private List<LookupItemResponse> _categories =
+        new();
+
+    private List<LookupItemResponse> _advertisementTypes =
+        new();
+
+    private List<LookupItemResponse> _countries =
+        new();
+
+    private List<LookupItemResponse> _states =
+        new();
+
+    private List<LookupItemResponse> _cities =
+        new();
+
+    private List<LookupItemResponse> _areas =
+        new();
+
+    private List<RejectionReasonResponse> _rejectionReasons =
+        new();
+
+
+    // ============================================================
+    // MODERATION
+    // ============================================================
+
+    private bool _showModerationModal;
+
+    private ModerationAction _moderationAction =
+        ModerationAction.None;
+
+    private string _moderationComments =
+        string.Empty;
+
+    private int? _selectedRejectionReasonId;
+
+
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAdvertisementAsync();
+    }
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadAdvertisementAsync()
+    {
+        _isLoading = true;
+        _isBusy = true;
+
+        ClearMessages();
+
+        try
+        {
+            _advertisement =
+                await AdvertisementModerationService
+                    .GetAdvertisementAsync(
+                        AdvertisementId);
+
+            if (_advertisement == null)
+            {
+                _errorMessage =
+                    "The requested advertisement could not be found.";
+
+                return;
+            }
+
+            await LoadLookupsAsync();
+
+            CopyAdvertisementToEditModel();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Admin Advertisement Detail] Load error: {ex}");
+
+            _errorMessage =
+                GetFriendlyErrorMessage(ex);
+        }
+        finally
+        {
+            _isLoading = false;
+            _isBusy = false;
+        }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            var categoriesTask =
+                AdvertisementApiService
+                    .GetCategoriesAsync();
+
+            var typesTask =
+                AdvertisementApiService
+                    .GetAdvertisementTypesAsync();
+
+            var countriesTask =
+                AdvertisementApiService
+                    .GetCountriesAsync();
+
+            var rejectionTask =
+                AdvertisementModerationService
+                    .GetRejectionReasonsAsync();
+
+            await Task.WhenAll(
+                categoriesTask,
+                typesTask,
+                countriesTask,
+                rejectionTask);
+
+            _categories =
+                await categoriesTask;
+
+            _advertisementTypes =
+                await typesTask;
+
+            _countries =
+                await countriesTask;
+
+            _rejectionReasons =
+                await rejectionTask;
+
+            if (_advertisement.CountryID.HasValue)
+            {
+                _states =
+                    await AdvertisementApiService
+                        .GetStatesAsync(
+                            _advertisement.CountryID.Value);
+            }
+
+            if (_advertisement.CountryID.HasValue)
+            {
+                _cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            _advertisement.CountryID.Value,
+                            _advertisement.StateID);
+            }
+
+            if (_advertisement.CountryID.HasValue)
+            {
+                _areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            _advertisement.CountryID.Value,
+                            _advertisement.StateID,
+                            _advertisement.CityID);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Admin Advertisement Detail] Lookup error: {ex}");
+
+            // Lookup failure should not prevent the advertisement
+            // itself from being displayed.
+        }
+    }
+
+
+    // ============================================================
+    // EDIT
+    // ============================================================
+
+    private void BeginEdit()
+    {
+        if (_advertisement == null)
+        {
+            return;
+        }
+
+        ClearMessages();
+
+        CopyAdvertisementToEditModel();
+
+        _isEditMode = true;
+    }
+
+
+    private void CancelEdit()
+    {
+        if (_advertisement == null)
+        {
+            return;
+        }
+
+        CopyAdvertisementToEditModel();
+
+        _isEditMode = false;
+
+        ClearMessages();
+    }
+
+
+    private void CopyAdvertisementToEditModel()
+    {
+        if (_advertisement == null)
+        {
+            return;
+        }
+
+        _editModel =
+            new UpdateAdvertisementRequest
+            {
+                CategoryID =
+                    _advertisement.CategoryID,
+
+                AdvertisementTypeID =
+                    _advertisement.AdvertisementTypeID,
+
+                Title =
+                    _advertisement.Title,
+
+                TitleAr =
+                    _advertisement.TitleAr,
+
+                Description =
+                    _advertisement.Description,
+
+                DescriptionAr =
+                    _advertisement.DescriptionAr,
+
+                Price =
+                    _advertisement.Price,
+
+                CurrencyCode =
+                    _advertisement.CurrencyCode,
+
+                IsNegotiable =
+                    _advertisement.IsNegotiable,
+
+                WhatsAppNumber =
+                    _advertisement.WhatsAppNumber,
+
+                ContactEmail =
+                    _advertisement.ContactEmail,
+
+                ShowWhatsAppToPublic =
+                    _advertisement.ShowWhatsAppToPublic,
+
+                ShowEmailToPublic =
+                    _advertisement.ShowEmailToPublic,
+
+                CountryID =
+                    _advertisement.CountryID,
+
+                StateID =
+                    _advertisement.StateID,
+
+                CityID =
+                    _advertisement.CityID,
+
+                AreaID =
+                    _advertisement.AreaID,
+
+                AddressLine =
+                    _advertisement.AddressLine,
+
+                Latitude =
+                    _advertisement.Latitude,
+
+                Longitude =
+                    _advertisement.Longitude,
+
+                PlotNumber =
+                    _advertisement.PlotNumber,
+
+                LandArea =
+                    _advertisement.LandArea,
+
+                BuiltUpArea =
+                    _advertisement.BuiltUpArea,
+
+                Bedrooms =
+                    _advertisement.Bedrooms,
+
+                Bathrooms =
+                    _advertisement.Bathrooms,
+
+                PropertyAge =
+                    _advertisement.PropertyAge
+            };
+    }
+
+
+    private async Task SaveAdvertisementAsync()
+    {
+        if (_advertisement == null ||
+            _isSaving)
+        {
+            return;
+        }
+
+        ClearMessages();
+
+        var validationError =
+            ValidateEditModel();
+
+        if (validationError != null)
+        {
+            _errorMessage = validationError;
+            return;
+        }
+
+        _isSaving = true;
+        _isBusy = true;
+
+        try
+        {
+            var adminUserId =
+    await GetCurrentAdminUserIdAsync();
+
+            var result =
+                await AdvertisementModerationService
+                    .UpdateAdvertisementAsync(
+                        adminUserId,
+                        AdvertisementId,
+                        _editModel);
+
+            if (result == null)
+            {
+                _errorMessage =
+                    "The advertisement could not be updated.";
+
+                return;
+            }
+
+            _advertisement = result;
+
+            CopyAdvertisementToEditModel();
+
+            _isEditMode = false;
+
+            _successMessage =
+                "Advertisement changes were saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Admin Advertisement Detail] Save error: {ex}");
+
+            _errorMessage =
+                GetFriendlyErrorMessage(ex);
+        }
+        finally
+        {
+            _isSaving = false;
+            _isBusy = false;
+        }
+    }
+
+
+    private string? ValidateEditModel()
+    {
+        if (_editModel.CategoryID <= 0)
+        {
+            return "Please select an advertisement category.";
+        }
+
+        if (_editModel.AdvertisementTypeID <= 0)
+        {
+            return "Please select an advertisement type.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_editModel.Title))
+        {
+            return "Advertisement title is required.";
+        }
+
+        if (string.IsNullOrWhiteSpace(_editModel.Description))
+        {
+            return "Advertisement description is required.";
+        }
+
+        var hasContact =
+            !string.IsNullOrWhiteSpace(
+                _editModel.WhatsAppNumber) ||
+            !string.IsNullOrWhiteSpace(
+                _editModel.ContactEmail);
+
+        if (!hasContact)
+        {
+            return "At least one contact method must be entered.";
+        }
+
+        var hasPublicContact =
+            _editModel.ShowWhatsAppToPublic ||
+            _editModel.ShowEmailToPublic;
+
+        if (!hasPublicContact)
+        {
+            return "At least one contact method must be publicly visible.";
+        }
+
+        if (_editModel.ShowWhatsAppToPublic &&
+            string.IsNullOrWhiteSpace(
+                _editModel.WhatsAppNumber))
+        {
+            return "A WhatsApp number is required when WhatsApp visibility is enabled.";
+        }
+
+        if (_editModel.ShowEmailToPublic &&
+            string.IsNullOrWhiteSpace(
+                _editModel.ContactEmail))
+        {
+            return "An email address is required when email visibility is enabled.";
+        }
+
+        return null;
+    }
+
+
+    // ============================================================
+    // LOCATION CASCADING
+    // ============================================================
+
+    private async Task CountryChangedAsync(
+        ChangeEventArgs e)
+    {
+        if (int.TryParse(
+            e.Value?.ToString(),
+            out var countryId) &&
+            countryId > 0)
+        {
+            _editModel.CountryID =
+                countryId;
+
+            _editModel.StateID = null;
+            _editModel.CityID = null;
+            _editModel.AreaID = null;
+
+            _states =
+                await AdvertisementApiService
+                    .GetStatesAsync(countryId);
+
+            _cities = new();
+            _areas = new();
+        }
+        else
+        {
+            _editModel.CountryID = null;
+            _editModel.StateID = null;
+            _editModel.CityID = null;
+            _editModel.AreaID = null;
+
+            _states = new();
+            _cities = new();
+            _areas = new();
+        }
+    }
+
+
+    private async Task StateChangedAsync(
+        ChangeEventArgs e)
+    {
+        if (int.TryParse(
+            e.Value?.ToString(),
+            out var stateId) &&
+            stateId > 0)
+        {
+            _editModel.StateID =
+                stateId;
+
+            _editModel.CityID = null;
+            _editModel.AreaID = null;
+
+            if (_editModel.CountryID.HasValue)
+            {
+                _cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            _editModel.CountryID.Value,
+                            stateId);
+            }
+
+            _areas = new();
+        }
+        else
+        {
+            _editModel.StateID = null;
+            _editModel.CityID = null;
+            _editModel.AreaID = null;
+
+            _cities = new();
+            _areas = new();
+        }
+    }
+
+
+    private async Task CityChangedAsync(
+        ChangeEventArgs e)
+    {
+        if (int.TryParse(
+            e.Value?.ToString(),
+            out var cityId) &&
+            cityId > 0)
+        {
+            _editModel.CityID =
+                cityId;
+
+            _editModel.AreaID = null;
+
+            if (_editModel.CountryID.HasValue)
+            {
+                _areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            _editModel.CountryID.Value,
+                            _editModel.StateID,
+                            cityId);
+            }
+        }
+        else
+        {
+            _editModel.CityID = null;
+            _editModel.AreaID = null;
+            _areas = new();
+        }
+    }
+
+
+    private Task AreaChangedAsync(
+        ChangeEventArgs e)
+    {
+        if (int.TryParse(
+            e.Value?.ToString(),
+            out var areaId) &&
+            areaId > 0)
+        {
+            _editModel.AreaID = areaId;
+        }
+        else
+        {
+            _editModel.AreaID = null;
+        }
+
+        return Task.CompletedTask;
+    }
+
+
+    // ============================================================
+    // MODERATION
+    // ============================================================
+
+    private bool CanApprove()
+    {
+        return _advertisement != null &&
+               !string.Equals(
+                   _advertisement.StatusCode,
+                   "PUBLISHED",
+                   StringComparison.OrdinalIgnoreCase) &&
+               !string.Equals(
+                   _advertisement.StatusCode,
+                   "SUSPENDED",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool CanReject()
+    {
+        return _advertisement != null &&
+               !string.Equals(
+                   _advertisement.StatusCode,
+                   "REJECTED",
+                   StringComparison.OrdinalIgnoreCase) &&
+               !string.Equals(
+                   _advertisement.StatusCode,
+                   "PUBLISHED",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool CanSuspend()
+    {
+        return _advertisement != null &&
+               string.Equals(
+                   _advertisement.StatusCode,
+                   "PUBLISHED",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private bool CanReactivate()
+    {
+        return _advertisement != null &&
+               string.Equals(
+                   _advertisement.StatusCode,
+                   "SUSPENDED",
+                   StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private void OpenModerationModal(
+        ModerationAction action)
+    {
+        if (_advertisement == null)
+        {
+            return;
+        }
+
+        _moderationAction = action;
+        _moderationComments = string.Empty;
+        _selectedRejectionReasonId = null;
+        _showModerationModal = true;
+
+        ClearMessages();
+    }
+
+
+    private void CloseModerationModal()
+    {
+        if (_isModerationProcessing)
+        {
+            return;
+        }
+
+        _showModerationModal = false;
+        _moderationAction = ModerationAction.None;
+        _moderationComments = string.Empty;
+        _selectedRejectionReasonId = null;
+    }
+
+
+    private async Task ConfirmModerationAsync()
+    {
+        if (_advertisement == null ||
+            _isModerationProcessing)
+        {
+            return;
+        }
+
+        _isModerationProcessing = true;
+        _isBusy = true;
+
+        ClearMessages();
+
+        try
+        {
+            var adminUserId =
+               await GetCurrentAdminUserIdAsync();
+
+            var comments =
+                NormalizeComments(
+                    _moderationComments);
+
+            bool success;
+
+            switch (_moderationAction)
+            {
+                case ModerationAction.Approve:
+
+                    success =
+                        await AdvertisementModerationService
+                            .ApproveAdvertisementAsync(
+                                adminUserId,
+                                AdvertisementId,
+                                new ApproveAdvertisementRequest
+                                {
+                                    Comments = comments
+                                });
+
+                    break;
+
+                case ModerationAction.Reject:
+
+                    success =
+                        await AdvertisementModerationService
+                            .RejectAdvertisementAsync(
+                                adminUserId,
+                                AdvertisementId,
+                                new RejectAdvertisementRequest
+                                {
+                                    RejectionReasonID =
+                                        _selectedRejectionReasonId,
+                                    Comments = comments
+                                });
+
+                    break;
+
+                case ModerationAction.Suspend:
+
+                    success =
+                        await AdvertisementModerationService
+                            .SuspendAdvertisementAsync(
+                                adminUserId,
+                                AdvertisementId,
+                                new SuspendAdvertisementRequest
+                                {
+                                    Comments = comments
+                                });
+
+                    break;
+
+                case ModerationAction.Reactivate:
+
+                    success =
+                        await AdvertisementModerationService
+                            .ReactivateAdvertisementAsync(
+                                adminUserId,
+                                AdvertisementId,
+                                comments);
+
+                    break;
+
+                default:
+
+                    success = false;
+
+                    break;
+            }
+
+            if (!success)
+            {
+                _errorMessage =
+                    "The moderation action could not be completed.";
+
+                return;
+            }
+
+            _showModerationModal = false;
+
+            _successMessage =
+                $"{GetModalActionName()} completed successfully.";
+
+            _moderationAction =
+                ModerationAction.None;
+
+            await ReloadAdvertisementOnlyAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"[Admin Advertisement Detail] Moderation error: {ex}");
+
+            _errorMessage =
+                GetFriendlyErrorMessage(ex);
+        }
+        finally
+        {
+            _isModerationProcessing = false;
+            _isBusy = false;
+        }
+    }
+
+
+    private async Task ReloadAdvertisementOnlyAsync()
+    {
+        var result =
+            await AdvertisementModerationService
+                .GetAdvertisementAsync(
+                    AdvertisementId);
+
+        if (result != null)
+        {
+            _advertisement = result;
+            CopyAdvertisementToEditModel();
+        }
+    }
+
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
+   private async Task<long> GetCurrentAdminUserIdAsync()
+{
+    var authenticationState =
+        await AuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+
+    var userIdValue =
+        authenticationState.User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+    return long.TryParse(
+        userIdValue,
+        out var userId)
+            ? userId
+            : 0;
+}
+
+
+    private void BackToAdvertisements()
+    {
+        Navigation.NavigateTo(
+            "/admin/advertisements");
+    }
+
+
+    private void ClearMessages()
+    {
+        _errorMessage = null;
+        _successMessage = null;
+    }
+
+
+    private static string DisplayValue(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? "Not provided"
+            : value;
+    }
+
+
+    private static string DisplayInt(
+        int? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString(
+                CultureInfo.InvariantCulture)
+            : "Not provided";
+    }
+
+
+    private static string FormatDecimal(
+        decimal? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture)
+            : "Not provided";
+    }
+
+
+    private static string FormatPrice(
+        decimal? value)
+    {
+        return value.HasValue
+            ? value.Value.ToString(
+                "#,##0.000",
+                CultureInfo.InvariantCulture) +
+              " BHD"
+            : "Price not specified";
+    }
+
+
+    private static string GetLookupName(
+        IEnumerable<LookupItemResponse> items,
+        int? id)
+    {
+        if (!id.HasValue)
+        {
+            return "Not provided";
+        }
+
+        return items
+                   .FirstOrDefault(
+                       x => x.ID == id.Value)
+                   ?.Name
+               ?? "Not available";
+    }
+
+
+    private static string GetInitials(
+        string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "AD";
+        }
+
+        var parts =
+            name.Trim()
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0]
+                .Substring(
+                    0,
+                    Math.Min(
+                        2,
+                        parts[0].Length))
+                .ToUpperInvariant();
+        }
+
+        return (
+            parts[0][0].ToString() +
+            parts[^1][0].ToString())
+            .ToUpperInvariant();
+    }
+
+
+    private static string GetStatusClass(
+        string? status)
+    {
+        return status?.ToUpperInvariant() switch
+        {
+            "PUBLISHED" => "published",
+            "PENDING_REVIEW" => "pending",
+            "REJECTED" => "rejected",
+            "SUSPENDED" => "suspended",
+            "DRAFT" => "draft",
+            _ => string.Empty
+        };
+    }
+
+
+    private static string GetHistoryClass(
+        string? action)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return string.Empty;
+        }
+
+        var value =
+            action.ToUpperInvariant();
+
+        if (value.Contains("APPROV"))
+        {
+            return "approve";
+        }
+
+        if (value.Contains("REJECT"))
+        {
+            return "reject";
+        }
+
+        if (value.Contains("SUSPEND"))
+        {
+            return "suspend";
+        }
+
+        if (value.Contains("REACTIV"))
+        {
+            return "reactivate";
+        }
+
+        return string.Empty;
+    }
+
+
+    private static string GetHistoryIcon(
+        string? action)
+    {
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return "bi-clock-history";
+        }
+
+        var value =
+            action.ToUpperInvariant();
+
+        if (value.Contains("APPROV"))
+        {
+            return "bi-check-lg";
+        }
+
+        if (value.Contains("REJECT"))
+        {
+            return "bi-x-lg";
+        }
+
+        if (value.Contains("SUSPEND"))
+        {
+            return "bi-pause-fill";
+        }
+
+        if (value.Contains("REACTIV"))
+        {
+            return "bi-play-fill";
+        }
+
+        return "bi-clock-history";
+    }
+
+
+    private static string NormalizeComments(
+        string? comments)
+    {
+        return string.IsNullOrWhiteSpace(comments)
+            ? string.Empty
+            : comments.Trim();
+    }
+
+
+    private string GetModalTitle()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approve Advertisement",
+
+            ModerationAction.Reject =>
+                "Reject Advertisement",
+
+            ModerationAction.Suspend =>
+                "Suspend Advertisement",
+
+            ModerationAction.Reactivate =>
+                "Reactivate Advertisement",
+
+            _ =>
+                "Advertisement Moderation"
+        };
+    }
+
+
+    private string GetModalActionName()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approval",
+
+            ModerationAction.Reject =>
+                "Rejection",
+
+            ModerationAction.Suspend =>
+                "Suspension",
+
+            ModerationAction.Reactivate =>
+                "Reactivation",
+
+            _ =>
+                "Moderation"
+        };
+    }
+
+
+    private string GetModalConfirmText()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Approve",
+
+            ModerationAction.Reject =>
+                "Reject",
+
+            ModerationAction.Suspend =>
+                "Suspend",
+
+            ModerationAction.Reactivate =>
+                "Reactivate",
+
+            _ =>
+                "Confirm"
+        };
+    }
+
+
+    private string GetModalIcon()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "bi bi-check-lg",
+
+            ModerationAction.Reject =>
+                "bi bi-x-lg",
+
+            ModerationAction.Suspend =>
+                "bi bi-pause-fill",
+
+            ModerationAction.Reactivate =>
+                "bi bi-play-fill",
+
+            _ =>
+                "bi bi-check-lg"
+        };
+    }
+
+
+    private string GetModalIconClass()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "approve",
+
+            ModerationAction.Reject =>
+                "reject",
+
+            ModerationAction.Suspend =>
+                "suspend",
+
+            ModerationAction.Reactivate =>
+                "reactivate",
+
+            _ =>
+                string.Empty
+        };
+    }
+
+
+    private string GetModalConfirmClass()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "approve",
+
+            ModerationAction.Reject =>
+                "reject",
+
+            ModerationAction.Suspend =>
+                "suspend",
+
+            ModerationAction.Reactivate =>
+                "reactivate",
+
+            _ =>
+                string.Empty
+        };
+    }
+
+
+    private string GetCommentsPlaceholder()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Approve =>
+                "Optional approval comments...",
+
+            ModerationAction.Reject =>
+                "Optional comments about the rejection...",
+
+            ModerationAction.Suspend =>
+                "Enter the reason or comments for suspending this advertisement...",
+
+            ModerationAction.Reactivate =>
+                "Optional comments about reactivating this advertisement...",
+
+            _ =>
+                "Enter comments..."
+        };
+    }
+
+
+    private string GetCommentsLabel()
+    {
+        return _moderationAction switch
+        {
+            ModerationAction.Reject =>
+                "Comments / Rejection Notes",
+
+            ModerationAction.Suspend =>
+                "Suspension Comments",
+
+            ModerationAction.Approve =>
+                "Approval Comments",
+
+            ModerationAction.Reactivate =>
+                "Reactivation Comments",
+
+            _ =>
+                "Comments"
+        };
+    }
+
+
+    private void HandleModalBackdropClick(
+        Microsoft.AspNetCore.Components.Web.MouseEventArgs _)
+    {
+        if (!_isModerationProcessing)
+        {
+            CloseModerationModal();
+        }
+    }
+
+
+    private string GetFriendlyErrorMessage(
+        Exception ex)
+    {
+        if (ex is HttpRequestException httpEx &&
+            !string.IsNullOrWhiteSpace(
+                httpEx.Message))
+        {
+            return httpEx.Message;
+        }
+
+        return string.IsNullOrWhiteSpace(ex.Message)
+            ? "An unexpected error occurred."
+            : ex.Message;
+    }
+
+
+    private enum ModerationAction
+    {
+        None,
+        Approve,
+        Reject,
+        Suspend,
+        Reactivate
+    }
+}

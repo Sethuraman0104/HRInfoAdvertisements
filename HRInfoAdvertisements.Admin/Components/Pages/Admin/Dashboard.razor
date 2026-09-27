@@ -11,7 +11,7 @@
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject IAdvertisementModerationService AdvertisementModerationService
 @inject NavigationManager Navigation
 
@@ -1060,8 +1060,8 @@
     private async Task<bool> LoadAdministratorAsync()
     {
         var authenticationState =
-            await AuthenticationStateProvider
-                .GetAuthenticationStateAsync();
+    await AdminAuthenticationStateProvider
+        .GetAuthenticationStateAsync();
 
         var user =
             authenticationState.User;

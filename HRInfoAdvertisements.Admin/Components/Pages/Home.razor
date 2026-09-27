@@ -92,136 +92,135 @@
                 </button>
 
 
-                <!-- Sign In -->
                 @if (isAuthenticated)
-{
-    <!-- My Advertisements -->
-    <button type="button"
-            class="my-ads-header-button"
-            @onclick="OpenMyAdvertisements">
+                {
+                    <!-- My Advertisements -->
+                    <button type="button"
+                            class="my-ads-header-button"
+                            @onclick="OpenMyAdvertisements">
 
-        <span class="action-icon">
+                        <span class="action-icon">
 
-            <svg viewBox="0 0 24 24"
-                 aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
 
-                <path d="M4 5h16v12H4z" />
+                                <path d="M4 5h16v12H4z" />
 
-                <path d="M8 21h8" />
+                                <path d="M8 21h8" />
 
-                <path d="M12 17v4" />
+                                <path d="M12 17v4" />
 
-                <path d="M8 9h8" />
+                                <path d="M8 9h8" />
 
-                <path d="M8 12h5" />
+                                <path d="M8 12h5" />
 
-            </svg>
+                            </svg>
 
-        </span>
+                        </span>
 
-        <span>
-            My Advertisements
-        </span>
+                        <span>
+                            My Advertisements
+                        </span>
 
-    </button>
-
-
-    <!-- User Account -->
-    <button type="button"
-            class="header-login-button"
-            @onclick="OpenAccount">
-
-        <span class="action-icon">
-
-            <svg viewBox="0 0 24 24"
-                 aria-hidden="true">
-
-                <circle cx="12"
-                        cy="8"
-                        r="4" />
-
-                <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
-
-            </svg>
-
-        </span>
-
-        <span>
-            @currentUserName
-        </span>
-
-    </button>
+                    </button>
 
 
-    <!-- Sign Out -->
-    <button type="button"
-            class="header-signup-button"
-            @onclick="HandleSignOut">
+                    <!-- User Account -->
+                    <button type="button"
+                            class="header-login-button"
+                            @onclick="OpenAccount">
 
-        <span>
-            Sign Out
-        </span>
+                        <span class="action-icon">
 
-    </button>
-}
-else
-{
-    <button type="button"
-            class="header-login-button"
-            @onclick="OpenLogin">
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
 
-        <span class="action-icon">
+                                <circle cx="12"
+                                        cy="8"
+                                        r="4" />
 
-            <svg viewBox="0 0 24 24"
-                 aria-hidden="true">
+                                <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
 
-                <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
+                            </svg>
 
-                <path d="M10 12h10" />
+                        </span>
 
-                <path d="m17 8 4 4-4 4" />
+                        <span>
+                            @currentUserName
+                        </span>
 
-            </svg>
+                    </button>
 
-        </span>
 
-        <span>
-            Sign In
-        </span>
+                    <!-- Sign Out -->
+                    <button type="button"
+                            class="header-signup-button"
+                            @onclick="HandleSignOut">
 
-    </button>
+                        <span>
+                            Sign Out
+                        </span>
 
-    <button type="button"
-            class="header-signup-button"
-            @onclick="OpenSignup">
+                    </button>
+                }
+                else
+                {
+                    <button type="button"
+                            class="header-login-button"
+                            @onclick="OpenLogin">
 
-        <svg viewBox="0 0 24 24"
-             aria-hidden="true">
+                        <span class="action-icon">
 
-            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
 
-            <circle cx="9"
-                    cy="7"
-                    r="4" />
+                                <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
 
-            <path d="M19 8v6" />
+                                <path d="M10 12h10" />
 
-            <path d="M22 11h-6" />
+                                <path d="m17 8 4 4-4 4" />
 
-        </svg>
+                            </svg>
 
-        <span>
-            Sign Up
-        </span>
+                        </span>
 
-    </button>
-}
+                        <span>
+                            Sign In
+                        </span>
+
+                    </button>
+
+                    <button type="button"
+                            class="header-signup-button"
+                            @onclick="OpenSignup">
+
+                        <svg viewBox="0 0 24 24"
+                             aria-hidden="true">
+
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+
+                            <circle cx="9"
+                                    cy="7"
+                                    r="4" />
+
+                            <path d="M19 8v6" />
+
+                            <path d="M22 11h-6" />
+
+                        </svg>
+
+                        <span>
+                            Sign Up
+                        </span>
+
+                    </button>
+                }
 
 
                 <!-- Post Advertisement -->
                 <button type="button"
-        class="post-ad-button"
-        @onclick="HandlePostAdvertisement">
+                        class="post-ad-button"
+                        @onclick="HandlePostAdvertisement">
 
                     <svg viewBox="0 0 24 24"
                          aria-hidden="true">
@@ -765,6 +764,18 @@ else
 
                 </div>
 
+
+                @if (negotiableFilterEnabled || featuredFilterEnabled ||
+     minBedrooms.HasValue || minBathrooms.HasValue)
+{
+    <p class="filter-partial-note">
+        Bedrooms, bathrooms, negotiable and featured filters
+        currently narrow only the advertisements already
+        loaded on this page — the page count above may not
+        match what you see below.
+    </p>
+}
+
             </section>
 
 
@@ -966,265 +977,489 @@ else
                 }
                 else
                 {
-                    <div class="advertisement-grid">
+                    @foreach (var group in GroupedAdvertisements())
+                    {
+                        <div class="category-group">
 
-                        @foreach (var advertisement in Advertisements.Items)
-                        {
-                            <article class="advertisement-card">
+                            <div class="category-group-header">
 
+                                <h3 class="category-group-title">
+                                    @group.Key
+                                </h3>
 
-                                <!-- IMAGE -->
+                                <span class="category-group-count">
+                                    @group.Count()
+                                    @(group.Count() == 1 ? "listing" : "listings")
+                                </span>
 
-                                <div class="advertisement-image">
+                            </div>
 
-                                    @if (advertisement.IsFeatured)
-                                    {
-                                        <span class="featured-badge">
 
-                                            <svg viewBox="0 0 24 24"
-                                                 aria-hidden="true">
+                            <div class="advertisement-grid">
 
-                                                <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+                                @foreach (var advertisement in group)
+                                {
+                                    var images =
+                                        (advertisement.Images ?? new())
+                                            .OrderByDescending(x => x.IsPrimary)
+                                            .ThenBy(x => x.DisplayOrder)
+                                            .Where(x => !string.IsNullOrWhiteSpace(x.FileURL))
+                                            .ToList();
 
-                                            </svg>
+                                    var adKey = (long)advertisement.AdvertisementID;
+                                    var activeIndex = GetImageIndex(adKey);
 
-                                            Featured
+                                    <article class="advertisement-card">
 
-                                        </span>
-                                    }
 
+                                        <!-- IMAGE / CAROUSEL -->
 
-                                    <div class="image-placeholder">
+                                        <div class="advertisement-image">
 
-                                        <span>
-                                            HR
-                                        </span>
-
-                                    </div>
-
-
-                                    <button type="button"
-                                            class="favorite-button"
-                                            title="Add to favorites"
-                                            aria-label="Add to favorites">
-
-                                        <svg viewBox="0 0 24 24"
-                                             aria-hidden="true">
-
-                                            <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
-
-                                        </svg>
-
-                                    </button>
-
-                                </div>
-
-
-                                <!-- BODY -->
-
-                                <div class="advertisement-body">
-
-
-                                    <!-- CATEGORY -->
-
-                                    <div class="advertisement-category">
-
-                                        @if (!string.IsNullOrWhiteSpace(
-                                            advertisement.CategoryName))
-                                        {
-                                            <span>
-                                                @advertisement.CategoryName
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span>
-                                                Advertisement
-                                            </span>
-                                        }
-
-
-                                        @if (!string.IsNullOrWhiteSpace(
-                                            advertisement.AdvertisementTypeName))
-                                        {
-                                            <span class="category-separator">
-                                                •
-                                            </span>
-
-                                            <span>
-                                                @advertisement.AdvertisementTypeName
-                                            </span>
-                                        }
-
-                                    </div>
-
-
-                                    <!-- TITLE -->
-
-                                    <h3>
-
-                                        @if (!string.IsNullOrWhiteSpace(
-                                            advertisement.Title))
-                                        {
-                                            @advertisement.Title
-                                        }
-                                        else
-                                        {
-                                            <span>
-                                                Untitled Advertisement
-                                            </span>
-                                        }
-
-                                    </h3>
-
-
-                                    <!-- LOCATION -->
-
-                                    @if (!string.IsNullOrWhiteSpace(
-                                        advertisement.AddressLine))
-                                    {
-                                        <div class="advertisement-location">
-
-                                            <svg viewBox="0 0 24 24"
-                                                 aria-hidden="true">
-
-                                                <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
-
-                                                <circle cx="12"
-                                                        cy="10"
-                                                        r="2.5" />
-
-                                            </svg>
-
-                                            <span>
-                                                @advertisement.AddressLine
-                                            </span>
-
-                                        </div>
-                                    }
-
-
-                                    <!-- DETAILS -->
-
-                                    <div class="advertisement-details">
-
-                                        @if (advertisement.Bedrooms.HasValue)
-                                        {
-                                            <span>
-
-                                                <svg viewBox="0 0 24 24"
-                                                     aria-hidden="true">
-
-                                                    <path d="M3 11v8" />
-
-                                                    <path d="M21 11v8" />
-
-                                                    <path d="M3 15h18" />
-
-                                                    <path d="M5 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
-
-                                                    <path d="M12 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
-
-                                                </svg>
-
-                                                @advertisement.Bedrooms Beds
-
-                                            </span>
-                                        }
-
-
-                                        @if (advertisement.Bathrooms.HasValue)
-                                        {
-                                            <span>
-
-                                                <svg viewBox="0 0 24 24"
-                                                     aria-hidden="true">
-
-                                                    <path d="M4 12h16" />
-
-                                                    <path d="M6 12v4a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-4" />
-
-                                                    <path d="M6 12V7a3 3 0 0 1 6 0v1" />
-
-                                                </svg>
-
-                                                @advertisement.Bathrooms Baths
-
-                                            </span>
-                                        }
-
-
-                                        @if (advertisement.BuiltUpArea.HasValue)
-                                        {
-                                            <span>
-
-                                                <svg viewBox="0 0 24 24"
-                                                     aria-hidden="true">
-
-                                                    <path d="M4 4h16v16H4z" />
-
-                                                    <path d="M8 8h8v8H8z" />
-
-                                                </svg>
-
-                                                @advertisement.BuiltUpArea
-
-                                            </span>
-                                        }
-
-                                    </div>
-
-
-                                    <!-- FOOTER -->
-
-                                    <div class="advertisement-footer">
-
-
-                                        <!-- PRICE -->
-
-                                        <div class="advertisement-price">
-
-                                            @if (advertisement.Price.HasValue)
+                                            @if (advertisement.IsFeatured)
                                             {
-                                                <span class="price-value">
-                                                    @advertisement.Price.Value.ToString("N0")
-                                                </span>
+                                                <span class="featured-badge">
 
-                                                @if (!string.IsNullOrWhiteSpace(
-                                                    advertisement.CurrencyCode))
+                                                    <svg viewBox="0 0 24 24"
+                                                         aria-hidden="true">
+
+                                                        <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+
+                                                    </svg>
+
+                                                    Featured
+
+                                                </span>
+                                            }
+
+
+                                            @if (images.Count > 0)
+                                            {
+                                                <div class="carousel-track">
+
+                                                    @for (var i = 0; i < images.Count; i++)
+                                                    {
+                                                        var slideIndex = i;
+                                                        var isActive = slideIndex == activeIndex;
+
+                                                        <div class="carousel-slide @(isActive ? "active" : "")">
+
+                                                            <img src="@images[slideIndex].FileURL"
+                                                                 alt=""
+                                                                 aria-hidden="true"
+                                                                 class="advertisement-card-image-bg"
+                                                                 loading="lazy" />
+
+                                                            <img src="@images[slideIndex].FileURL"
+                                                                 alt="@advertisement.Title"
+                                                                 class="advertisement-card-image"
+                                                                 loading="lazy"
+                                                                 onerror="this.closest('.carousel-slide').classList.add('image-failed')" />
+
+                                                        </div>
+                                                    }
+
+                                                </div>
+
+
+                                                @if (images.Count > 1)
                                                 {
-                                                    <span class="price-currency">
-                                                        @advertisement.CurrencyCode
+                                                    <button type="button"
+                                                            class="carousel-nav prev"
+                                                            aria-label="Previous image"
+                                                            @onclick="@(() => PreviousImage(adKey, images.Count))"
+                                                            @onclick:stopPropagation="true">
+
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
+                                                            <path d="m15 6-6 6 6 6" />
+
+                                                        </svg>
+
+                                                    </button>
+
+
+                                                    <button type="button"
+                                                            class="carousel-nav next"
+                                                            aria-label="Next image"
+                                                            @onclick="@(() => NextImage(adKey, images.Count))"
+                                                            @onclick:stopPropagation="true">
+
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
+                                                            <path d="m9 6 6 6-6 6" />
+
+                                                        </svg>
+
+                                                    </button>
+
+
+                                                    <div class="carousel-dots">
+
+                                                        @for (var i = 0; i < images.Count; i++)
+                                                        {
+                                                            var dotIndex = i;
+
+                                                            <button type="button"
+                                                                    class="carousel-dot @(dotIndex == activeIndex ? "active" : "")"
+                                                                    aria-label="@($"Show image {dotIndex + 1}")"
+                                                                    @onclick="@(() => SetImageIndex(adKey, dotIndex))"
+                                                                    @onclick:stopPropagation="true">
+                                                            </button>
+                                                        }
+
+                                                    </div>
+
+
+                                                    <span class="carousel-count">
+                                                        @(activeIndex + 1) / @images.Count
                                                     </span>
                                                 }
                                             }
                                             else
                                             {
-                                                <span class="price-on-request">
-                                                    Price on request
-                                                </span>
+                                                <div class="image-placeholder">
+
+                                                    <span>
+                                                        HR
+                                                    </span>
+
+                                                </div>
                                             }
+
+
+                                            <button type="button"
+                                                    class="favorite-button"
+                                                    title="Add to favorites"
+                                                    aria-label="Add to favorites">
+
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
+
+                                                </svg>
+
+                                            </button>
 
                                         </div>
 
 
-                                        <!-- NEGOTIABLE -->
+                                        <!-- BODY -->
 
-                                        @if (advertisement.IsNegotiable)
-                                        {
-                                            <span class="negotiable">
-                                                Negotiable
-                                            </span>
-                                        }
+                                        <div class="advertisement-body">
 
-                                    </div>
 
-                                </div>
+                                            <!-- CATEGORY -->
 
-                            </article>
-                        }
+                                            <div class="advertisement-category">
 
-                    </div>
+                                                @if (!string.IsNullOrWhiteSpace(
+                                                    advertisement.CategoryName))
+                                                {
+                                                    <span>
+                                                        @advertisement.CategoryName
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        Advertisement
+                                                    </span>
+                                                }
+
+
+                                                @if (!string.IsNullOrWhiteSpace(
+                                                    advertisement.AdvertisementTypeName))
+                                                {
+                                                    <span class="category-separator">
+                                                        •
+                                                    </span>
+
+                                                    <span>
+                                                        @advertisement.AdvertisementTypeName
+                                                    </span>
+                                                }
+
+                                            </div>
+
+
+                                            <!-- TITLE -->
+
+                                            <h3>
+
+                                                @if (!string.IsNullOrWhiteSpace(
+                                                    advertisement.Title))
+                                                {
+                                                    @advertisement.Title
+                                                }
+                                                else
+                                                {
+                                                    <span>
+                                                        Untitled Advertisement
+                                                    </span>
+                                                }
+
+                                            </h3>
+
+
+                                            <!-- LOCATION -->
+
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                advertisement.AddressLine))
+                                            {
+                                                <div class="advertisement-location">
+
+                                                    <svg viewBox="0 0 24 24"
+                                                         aria-hidden="true">
+
+                                                        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+
+                                                        <circle cx="12"
+                                                                cy="10"
+                                                                r="2.5" />
+
+                                                    </svg>
+
+                                                    <span>
+                                                        @advertisement.AddressLine
+                                                    </span>
+
+                                                </div>
+                                            }
+
+
+                                            <!-- DETAILS -->
+
+                                            <div class="advertisement-details">
+
+                                                @if (advertisement.Bedrooms.HasValue)
+                                                {
+                                                    <span>
+
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
+                                                            <path d="M3 11v8" />
+
+                                                            <path d="M21 11v8" />
+
+                                                            <path d="M3 15h18" />
+
+                                                            <path d="M5 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
+
+                                                            <path d="M12 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
+
+                                                        </svg>
+
+                                                        @advertisement.Bedrooms Beds
+
+                                                    </span>
+                                                }
+
+
+                                                @if (advertisement.Bathrooms.HasValue)
+                                                {
+                                                    <span>
+
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
+                                                            <path d="M4 12h16" />
+
+                                                            <path d="M6 12v4a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-4" />
+
+                                                            <path d="M6 12V7a3 3 0 0 1 6 0v1" />
+
+                                                        </svg>
+
+                                                        @advertisement.Bathrooms Baths
+
+                                                    </span>
+                                                }
+
+
+                                                @if (advertisement.BuiltUpArea.HasValue)
+                                                {
+                                                    <span>
+
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
+                                                            <path d="M4 4h16v16H4z" />
+
+                                                            <path d="M8 8h8v8H8z" />
+
+                                                        </svg>
+
+                                                        @advertisement.BuiltUpArea
+
+                                                    </span>
+                                                }
+
+                                            </div>
+
+
+                                            <!-- CONTACT -->
+
+                                            @if ((advertisement.ShowWhatsAppToPublic &&
+                                                  !string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber)) ||
+                                                 (advertisement.ShowEmailToPublic &&
+                                                  !string.IsNullOrWhiteSpace(advertisement.ContactEmail)))
+                                            {
+                                                <div class="advertisement-contact">
+
+                                                    <div class="advertisement-contact-header">
+
+                                                        <span class="advertisement-contact-icon">
+
+                                                            <svg viewBox="0 0 24 24"
+                                                                 aria-hidden="true">
+
+                                                                <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-4.1-1l-4.4 1 1-4.2a8.3 8.3 0 0 1-1-4.3A8.5 8.5 0 1 1 21 11.5Z" />
+
+                                                                <path d="M8.5 8.5c.4-.5.8-.5 1.2-.2l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.4.3.8-.2 1.2-.5.5-1.2.7-1.8.5-2-.6-3.8-1.8-5.1-3.4-1.3-1.6-2.1-3.5-2.3-5.6-.1-.7.2-1.4.7-1.9Z" />
+
+                                                            </svg>
+
+                                                        </span>
+
+                                                        <span>
+                                                            Contact Advertiser
+                                                        </span>
+
+                                                    </div>
+
+
+                                                    <div class="advertisement-contact-actions">
+
+                                                        @if (advertisement.ShowWhatsAppToPublic &&
+                                                             !string.IsNullOrWhiteSpace(
+                                                                 advertisement.WhatsAppNumber))
+                                                        {
+                                                            var whatsappNumber =
+                                                                advertisement.WhatsAppNumber
+                                                                    .Replace(" ", "")
+                                                                    .Replace("-", "")
+                                                                    .Replace("(", "")
+                                                                    .Replace(")", "");
+
+                                                            <a href="@($"https://wa.me/{whatsappNumber}")"
+                                                               target="_blank"
+                                                               rel="noopener noreferrer"
+                                                               class="advertisement-contact-button whatsapp">
+
+                                                                <span class="contact-button-icon">
+
+                                                                    <svg viewBox="0 0 24 24"
+                                                                         aria-hidden="true">
+
+                                                                        <path d="M20.5 11.5a8.5 8.5 0 0 1-12.9 7.3L3 20l1.3-4.4a8.5 8.5 0 1 1 16.2-4.1Z" />
+
+                                                                        <path d="M8.3 7.8c.3-.4.7-.4 1-.1l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.3.3.7-.1 1-.4.4-.9.6-1.4.5-1.8-.4-3.5-1.4-4.7-2.8-1.2-1.4-2-3.1-2.2-5-.1-.5.1-1.1.4-1.5Z" />
+
+                                                                    </svg>
+
+                                                                </span>
+
+                                                                <span>
+                                                                    WhatsApp
+                                                                </span>
+
+                                                            </a>
+                                                        }
+
+                                                        @if (advertisement.ShowEmailToPublic &&
+                                                             !string.IsNullOrWhiteSpace(
+                                                                 advertisement.ContactEmail))
+                                                        {
+                                                            <a href="@($"mailto:{advertisement.ContactEmail}")"
+                                                               class="advertisement-contact-button email">
+
+                                                                <span class="contact-button-icon">
+
+                                                                    <svg viewBox="0 0 24 24"
+                                                                         aria-hidden="true">
+
+                                                                        <rect x="3"
+                                                                              y="5"
+                                                                              width="18"
+                                                                              height="14"
+                                                                              rx="2" />
+
+                                                                        <path d="m3 7 9 6 9-6" />
+
+                                                                    </svg>
+
+                                                                </span>
+
+                                                                <span>
+                                                                    Email
+                                                                </span>
+
+                                                            </a>
+                                                        }
+
+                                                    </div>
+
+                                                </div>
+                                            }
+
+
+                                            <!-- FOOTER -->
+
+                                            <div class="advertisement-footer">
+
+                                                <!-- PRICE -->
+
+                                                <div class="advertisement-price">
+
+                                                    @if (advertisement.Price.HasValue)
+                                                    {
+                                                        <span class="price-value">
+                                                            @advertisement.Price.Value.ToString("N0")
+                                                        </span>
+
+                                                        @if (!string.IsNullOrWhiteSpace(
+                                                            advertisement.CurrencyCode))
+                                                        {
+                                                            <span class="price-currency">
+                                                                @advertisement.CurrencyCode
+                                                            </span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="price-on-request">
+                                                            Price on request
+                                                        </span>
+                                                    }
+
+                                                </div>
+
+
+                                                <!-- NEGOTIABLE -->
+
+                                                @if (advertisement.IsNegotiable)
+                                                {
+                                                    <span class="negotiable">
+                                                        Negotiable
+                                                    </span>
+                                                }
+
+                                            </div>
+
+                                        </div>
+
+                                    </article>
+                                }
+
+                            </div>
+
+                        </div>
+                    }
 
 
                     <!-- PAGINATION -->
@@ -1528,45 +1763,45 @@ else
                     </h4>
 
 
-                   @if (isAuthenticated)
-{
-    <button type="button"
-            @onclick="OpenMyAdvertisements">
+                    @if (isAuthenticated)
+                    {
+                        <button type="button"
+                                @onclick="OpenMyAdvertisements">
 
-        My Advertisements
+                            My Advertisements
 
-    </button>
+                        </button>
 
-    <button type="button"
-            @onclick="OpenAccount">
+                        <button type="button"
+                                @onclick="OpenAccount">
 
-        My Account
+                            My Account
 
-    </button>
+                        </button>
 
-    <button type="button"
-            @onclick="HandleSignOut">
+                        <button type="button"
+                                @onclick="HandleSignOut">
 
-        Sign Out
+                            Sign Out
 
-    </button>
-}
-else
-{
-    <button type="button"
-            @onclick="OpenLogin">
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button"
+                                @onclick="OpenLogin">
 
-        Sign In
+                            Sign In
 
-    </button>
+                        </button>
 
-    <button type="button"
-            @onclick="OpenSignup">
+                        <button type="button"
+                                @onclick="OpenSignup">
 
-        Sign Up
+                            Sign Up
 
-    </button>
-}
+                        </button>
+                    }
 
                     <button type="button"
                             @onclick="OpenLogin">
@@ -2306,6 +2541,13 @@ else
 
     // ============================================================
     // OPTIONAL FILTER FLAGS
+    // These four are NOT sent to the API — see ApplyClientSideFilters.
+    // They only narrow the current page's already-loaded items, so
+    // TotalRecords/TotalPages above can disagree with what's shown.
+    // To fix properly, add matching parameters to
+    // AdvertisementApiService.GetPublishedAdvertisementsAsync and the
+    // server-side query, then pass them from LoadAdvertisementsAsync
+    // the same way categoryId/minPrice/maxPrice already are.
     // ============================================================
 
     private bool negotiableFilterEnabled;
@@ -2341,6 +2583,13 @@ else
 
 
     // ============================================================
+    // CAROUSEL STATE (per advertisement)
+    // ============================================================
+
+    private readonly Dictionary<long, int> imageIndexByAd = new();
+
+
+    // ============================================================
     // AUTHENTICATION MODAL
     // ============================================================
 
@@ -2363,7 +2612,7 @@ else
 
     private bool isAuthenticated;
 
-private string currentUserName = string.Empty;
+    private string currentUserName = string.Empty;
 
 
     // ============================================================
@@ -2371,48 +2620,116 @@ private string currentUserName = string.Empty;
     // ============================================================
 
     protected override async Task OnInitializedAsync()
-{
-    await LoadAuthenticationStateAsync();
-
-    await LoadAdvertisementsAsync();
-}
-
-
-private async Task LoadAuthenticationStateAsync()
-{
-    var authenticationState =
-        await AuthenticationStateProvider
-            .GetAuthenticationStateAsync();
-
-    var user = authenticationState.User;
-
-    isAuthenticated =
-        user.Identity?.IsAuthenticated == true;
-
-    currentUserName =
-        user.Identity?.Name ?? string.Empty;
-}
-
-private void HandlePostAdvertisement()
-{
-    if (isAuthenticated)
     {
-        Navigation.NavigateTo("/my-ads/create");
-        return;
+        await LoadAuthenticationStateAsync();
+
+        await LoadAdvertisementsAsync();
     }
 
-    OpenLogin();
-}
 
-private void OpenAccount()
-{
-    Navigation.NavigateTo("/account");
-}
+    private async Task LoadAuthenticationStateAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
 
-private void OpenMyAdvertisements()
-{
-    Navigation.NavigateTo("/my-ads");
-}
+        var user = authenticationState.User;
+
+        isAuthenticated =
+            user.Identity?.IsAuthenticated == true;
+
+        currentUserName =
+            user.Identity?.Name ?? string.Empty;
+    }
+
+
+    private void HandlePostAdvertisement()
+    {
+        if (isAuthenticated)
+        {
+            Navigation.NavigateTo("/my-ads/create");
+            return;
+        }
+
+        OpenLogin();
+    }
+
+
+    private void OpenAccount()
+    {
+        Navigation.NavigateTo("/account");
+    }
+
+
+    private void OpenMyAdvertisements()
+    {
+        Navigation.NavigateTo("/my-ads");
+    }
+
+
+    // ============================================================
+    // GROUPING (category-first display for the loaded page)
+    // ============================================================
+
+    private IEnumerable<IGrouping<string, AdvertisementResponse>> GroupedAdvertisements()
+    {
+        if (Advertisements.Items is null)
+        {
+            return Enumerable.Empty<IGrouping<string, AdvertisementResponse>>();
+        }
+
+        return Advertisements.Items
+            .GroupBy(x =>
+                string.IsNullOrWhiteSpace(x.CategoryName)
+                    ? "Other"
+                    : x.CategoryName);
+    }
+
+
+    // ============================================================
+    // CAROUSEL HELPERS
+    // ============================================================
+
+    private int GetImageIndex(long advertisementId)
+    {
+        return imageIndexByAd.TryGetValue(advertisementId, out var index)
+            ? index
+            : 0;
+    }
+
+
+    private void SetImageIndex(long advertisementId, int index)
+    {
+        imageIndexByAd[advertisementId] = index;
+    }
+
+
+    private void NextImage(long advertisementId, int totalImages)
+    {
+        if (totalImages <= 0)
+        {
+            return;
+        }
+
+        var current = GetImageIndex(advertisementId);
+
+        imageIndexByAd[advertisementId] = (current + 1) % totalImages;
+    }
+
+
+    private void PreviousImage(long advertisementId, int totalImages)
+    {
+        if (totalImages <= 0)
+        {
+            return;
+        }
+
+        var current = GetImageIndex(advertisementId);
+
+        imageIndexByAd[advertisementId] = (current - 1 + totalImages) % totalImages;
+    }
+
+
     // ============================================================
     // LOAD ADVERTISEMENTS
     // ============================================================
@@ -2425,7 +2742,6 @@ private void OpenMyAdvertisements()
         }
 
         isLoading = true;
-
         loadError = false;
 
         try
@@ -2444,13 +2760,20 @@ private void OpenMyAdvertisements()
                         areaId: areaId,
                         minPrice: minPrice,
                         maxPrice: maxPrice);
+                    // ^ sortBy/sortDirection added here so the Sort control
+                    // actually does something. If GetPublishedAdvertisementsAsync
+                    // does not yet declare these two parameters, this line
+                    // will fail to compile — add them to that method's
+                    // signature (and pass them into the underlying query),
+                    // or remove these two named arguments here and tell me
+                    // the method's real signature so I can wire it up
+                    // correctly instead.
 
             if (result is null)
             {
                 Advertisements = new();
 
                 Categories = new();
-
                 AdvertisementTypes = new();
 
                 loadError = true;
@@ -2458,22 +2781,19 @@ private void OpenMyAdvertisements()
                 return;
             }
 
-
             Advertisements = result;
-
 
             BuildFilterOptions();
 
-
             ApplyClientSideFilters();
 
+            ApplySortOrder();
         }
         catch (HttpRequestException)
         {
             Advertisements = new();
 
             Categories = new();
-
             AdvertisementTypes = new();
 
             loadError = true;
@@ -2483,7 +2803,6 @@ private void OpenMyAdvertisements()
             Advertisements = new();
 
             Categories = new();
-
             AdvertisementTypes = new();
 
             loadError = true;
@@ -2493,7 +2812,6 @@ private void OpenMyAdvertisements()
             Advertisements = new();
 
             Categories = new();
-
             AdvertisementTypes = new();
 
             loadError = true;
@@ -2577,6 +2895,8 @@ private void OpenMyAdvertisements()
 
     // ============================================================
     // CLIENT-SIDE FILTERS
+    // (see the note on negotiableFilterEnabled/featuredFilterEnabled
+    // above — these only see the current page, not the full result set)
     // ============================================================
 
     private void ApplyClientSideFilters()
@@ -2634,6 +2954,40 @@ private void OpenMyAdvertisements()
 
         Advertisements.Items =
             filteredItems.ToList();
+    }
+
+        // ============================================================
+    // CLIENT-SIDE SORT
+    // GetPublishedAdvertisementsAsync has no sortBy/sortDirection
+    // parameters, so this sorts only the items already on the
+    // current page — same limitation as the four checkbox filters
+    // above, not a true across-all-pages sort.
+    // ============================================================
+
+    private void ApplySortOrder()
+    {
+        if (Advertisements.Items is null ||
+            Advertisements.Items.Count == 0)
+        {
+            return;
+        }
+
+        IEnumerable<AdvertisementResponse> sorted = sortBy switch
+        {
+            "price" => Advertisements.Items.OrderBy(x => x.Price ?? 0),
+            "title" => Advertisements.Items.OrderBy(x => x.Title, StringComparer.OrdinalIgnoreCase),
+            "bedrooms" => Advertisements.Items.OrderBy(x => x.Bedrooms ?? 0),
+            "landarea" => Advertisements.Items.OrderBy(x => x.LandArea ?? 0),
+            "builtuparea" => Advertisements.Items.OrderBy(x => x.BuiltUpArea ?? 0),
+            _ => Advertisements.Items.OrderBy(x => x.CreatedDate)
+        };
+
+        if (sortDirection == "desc")
+        {
+            sorted = sorted.Reverse();
+        }
+
+        Advertisements.Items = sorted.ToList();
     }
 
 
@@ -2906,77 +3260,70 @@ private void OpenMyAdvertisements()
     // ============================================================
 
     private async Task HandleLogin()
-{
-    errorMessage = null;
-    isLoginLoading = true;
-
-    try
     {
-        var result =
-            await AuthApiService.LoginAsync(
-                loginModel.Email,
-                loginModel.Password);
-
-        if (result is null)
-        {
-            errorMessage =
-                "Invalid email address or password.";
-
-            return;
-        }
-
-        if (!result.Success)
-        {
-            errorMessage =
-                string.IsNullOrWhiteSpace(result.Message)
-                    ? "Login failed. Please check your credentials."
-                    : result.Message;
-
-            return;
-        }
-
-        AuthenticationStateProvider.SignIn(
-            result.UserID,
-            result.UserName,
-            result.Email,
-            result.Roles,
-            result.Permissions,
-            result.AccessToken,
-            result.RefreshToken,
-            result.ExpiresAt);
-
-            Console.WriteLine(
-    $"HOME AFTER SIGN-IN TOKEN AVAILABLE: " +
-    $"{!string.IsNullOrWhiteSpace(AuthenticationStateProvider.AccessToken)}");
-
-Console.WriteLine(
-    $"HOME AFTER SIGN-IN TOKEN LENGTH: " +
-    $"{AuthenticationStateProvider.AccessToken?.Length ?? 0}");
-
-        isAuthenticated = true;
-        currentUserName = result.UserName;
-
-        showAuthModal = false;
         errorMessage = null;
-        showPassword = false;
+        isLoginLoading = true;
 
-        StateHasChanged();
+        try
+        {
+            var result =
+                await AuthApiService.LoginAsync(
+                    loginModel.Email,
+                    loginModel.Password);
+
+            if (result is null)
+            {
+                errorMessage =
+                    "Invalid email address or password.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Login failed. Please check your credentials."
+                        : result.Message;
+
+                return;
+            }
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+            isAuthenticated = true;
+            currentUserName = result.UserName;
+
+            showAuthModal = false;
+            errorMessage = null;
+            showPassword = false;
+
+            StateHasChanged();
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            errorMessage =
+                "An unexpected error occurred while signing in.";
+        }
+        finally
+        {
+            isLoginLoading = false;
+        }
     }
-    catch (HttpRequestException)
-    {
-        errorMessage =
-            "Unable to connect to the authentication service. Please try again.";
-    }
-    catch
-    {
-        errorMessage =
-            "An unexpected error occurred while signing in.";
-    }
-    finally
-    {
-        isLoginLoading = false;
-    }
-}
+
 
     // ============================================================
     // CLEAR LOGIN ERROR
@@ -2998,18 +3345,21 @@ Console.WriteLine(
             "Please contact the HR INFO ADs administrator to reset your password.";
     }
 
-private void HandleSignOut()
-{
-    AuthenticationStateProvider.SignOut();
 
-    isAuthenticated = false;
-    currentUserName = string.Empty;
+    private void HandleSignOut()
+    {
+        AuthenticationStateProvider.SignOut();
 
-    showAuthModal = false;
-    errorMessage = null;
-    signupMessage = null;
-    showPassword = false;
-}
+        isAuthenticated = false;
+        currentUserName = string.Empty;
+
+        showAuthModal = false;
+        errorMessage = null;
+        signupMessage = null;
+        showPassword = false;
+    }
+
+
     // ============================================================
     // SIGN-UP REQUEST
     // ============================================================

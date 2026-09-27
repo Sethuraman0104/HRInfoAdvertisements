@@ -1,6 +1,7 @@
 using System.Security.Claims;
 
 using HRInfoAdvertisements.Application.DTOs.Admin;
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.Interfaces;
 
 using Microsoft.AspNetCore.Authorization;
@@ -47,8 +48,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -68,11 +69,13 @@ public class AdminAdvertisementController : ControllerBase
                     advertisementId);
 
             if (result == null)
+            {
                 return NotFound(new
                 {
-                    success = false,
-                    message = "Advertisement not found."
+                    Success = false,
+                    Message = "Advertisement not found."
                 });
+            }
 
             return Ok(result);
         }
@@ -80,12 +83,72 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
 
+    // ============================================================
+// UPDATE ADVERTISEMENT
+// ADMIN CAN UPDATE ANY ADVERTISEMENT
+// ============================================================
+
+[HttpPut("{advertisementId:long}")]
+public async Task<IActionResult> UpdateAdvertisement(
+    long advertisementId,
+    [FromBody] UpdateAdvertisementRequest request)
+{
+    if (!TryGetUserId(out var adminUserId))
+    {
+        return Unauthorized(new
+        {
+            Success = false,
+            Message = "Invalid administrator identity."
+        });
+    }
+
+    if (!ModelState.IsValid)
+    {
+        return ValidationProblem(ModelState);
+    }
+
+    try
+    {
+        var result =
+            await _service.UpdateAdvertisementAsync(
+                adminUserId,
+                advertisementId,
+                request);
+
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                Success = false,
+                Message = "Advertisement not found."
+            });
+        }
+
+        return Ok(result);
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
     // ============================================================
     // APPROVE
     // ============================================================
@@ -96,7 +159,18 @@ public class AdminAdvertisementController : ControllerBase
         [FromBody] ApproveAdvertisementRequest request)
     {
         if (!TryGetUserId(out var adminUserId))
-            return Unauthorized();
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         try
         {
@@ -107,12 +181,18 @@ public class AdminAdvertisementController : ControllerBase
                     request);
 
             if (!result)
-                return NotFound();
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Advertisement not found or could not be approved."
+                });
+            }
 
             return Ok(new
             {
-                success = true,
-                message =
+                Success = true,
+                Message =
                     "Advertisement approved and published successfully."
             });
         }
@@ -120,8 +200,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -136,7 +216,18 @@ public class AdminAdvertisementController : ControllerBase
         [FromBody] RejectAdvertisementRequest request)
     {
         if (!TryGetUserId(out var adminUserId))
-            return Unauthorized();
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         try
         {
@@ -147,12 +238,18 @@ public class AdminAdvertisementController : ControllerBase
                     request);
 
             if (!result)
-                return NotFound();
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Advertisement not found or could not be rejected."
+                });
+            }
 
             return Ok(new
             {
-                success = true,
-                message =
+                Success = true,
+                Message =
                     "Advertisement rejected successfully."
             });
         }
@@ -160,8 +257,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -176,7 +273,18 @@ public class AdminAdvertisementController : ControllerBase
         [FromBody] SuspendAdvertisementRequest request)
     {
         if (!TryGetUserId(out var adminUserId))
-            return Unauthorized();
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
 
         try
         {
@@ -187,12 +295,18 @@ public class AdminAdvertisementController : ControllerBase
                     request);
 
             if (!result)
-                return NotFound();
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Advertisement not found or could not be suspended."
+                });
+            }
 
             return Ok(new
             {
-                success = true,
-                message =
+                Success = true,
+                Message =
                     "Advertisement suspended successfully."
             });
         }
@@ -200,8 +314,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -216,7 +330,13 @@ public class AdminAdvertisementController : ControllerBase
         [FromBody] string? comments)
     {
         if (!TryGetUserId(out var adminUserId))
-            return Unauthorized();
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
 
         try
         {
@@ -227,12 +347,18 @@ public class AdminAdvertisementController : ControllerBase
                     comments);
 
             if (!result)
-                return NotFound();
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Advertisement not found or could not be reactivated."
+                });
+            }
 
             return Ok(new
             {
-                success = true,
-                message =
+                Success = true,
+                Message =
                     "Advertisement reactivated successfully."
             });
         }
@@ -240,8 +366,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -266,8 +392,8 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
@@ -290,11 +416,15 @@ public class AdminAdvertisementController : ControllerBase
         {
             return BadRequest(new
             {
-                success = false,
-                message = ex.Message
+                Success = false,
+                Message = ex.Message
             });
         }
     }
+
+    // ============================================================
+    // GET ADMIN USER ID FROM JWT
+    // ============================================================
 
     private bool TryGetUserId(out long userId)
     {
@@ -304,6 +434,8 @@ public class AdminAdvertisementController : ControllerBase
             User.FindFirst(
                 ClaimTypes.NameIdentifier)?.Value;
 
-        return long.TryParse(value, out userId);
+        return long.TryParse(
+            value,
+            out userId);
     }
 }

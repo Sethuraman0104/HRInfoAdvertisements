@@ -74,6 +74,25 @@ public class AdvertisementService : IAdvertisementService
         }
 
         // --------------------------------------------------------
+        // Validate Contact Information
+        //
+        // Contact information may be saved while creating a draft.
+        // Full submission validation is performed in SubmitAsync().
+        // --------------------------------------------------------
+
+        var whatsappNumber =
+            NormalizeOptionalValue(request.WhatsAppNumber);
+
+        var contactEmail =
+            NormalizeOptionalValue(request.ContactEmail);
+
+        ValidatePublicContactFlags(
+            whatsappNumber,
+            contactEmail,
+            request.ShowWhatsAppToPublic,
+            request.ShowEmailToPublic);
+
+        // --------------------------------------------------------
         // Generate Advertisement Number
         // --------------------------------------------------------
 
@@ -172,6 +191,26 @@ public class AdvertisementService : IAdvertisementService
             PropertyAge =
                 request.PropertyAge,
 
+            // ----------------------------------------------------
+            // Contact Information
+            // ----------------------------------------------------
+
+            WhatsAppNumber =
+                whatsappNumber,
+
+            ContactEmail =
+                contactEmail,
+
+            ShowWhatsAppToPublic =
+                request.ShowWhatsAppToPublic,
+
+            ShowEmailToPublic =
+                request.ShowEmailToPublic,
+
+            // ----------------------------------------------------
+            // Advertisement Flags / Dates
+            // ----------------------------------------------------
+
             IsFeatured =
                 false,
 
@@ -221,8 +260,8 @@ public class AdvertisementService : IAdvertisementService
                     x.AdvertisementID == advertisementId);
 
         // --------------------------------------------------------
-        // When userId is supplied, allow owner to see own ad.
-        // Otherwise only published ads are returned.
+        // Owner can see own advertisement.
+        // Other users can only see published advertisements.
         // --------------------------------------------------------
 
         if (userId.HasValue)
@@ -245,7 +284,17 @@ public class AdvertisementService : IAdvertisementService
             return null;
         }
 
-        return MapToResponse(advertisement);
+        // --------------------------------------------------------
+        // Determine whether the current user owns the ad.
+        // --------------------------------------------------------
+
+        var isOwner =
+            userId.HasValue &&
+            advertisement.UserID == userId.Value;
+
+        return MapToResponse(
+            advertisement,
+            includePrivateContact: isOwner);
     }
 
     // ============================================================
@@ -292,7 +341,10 @@ public class AdvertisementService : IAdvertisementService
         {
             Items =
                 items
-                    .Select(MapToResponse)
+                    .Select(x =>
+                        MapToResponse(
+                            x,
+                            includePrivateContact: true))
                     .ToList(),
 
             PageNumber =
@@ -456,7 +508,10 @@ public class AdvertisementService : IAdvertisementService
         {
             Items =
                 items
-                    .Select(MapToResponse)
+                    .Select(x =>
+                        MapToResponse(
+                            x,
+                            includePrivateContact: false))
                     .ToList(),
 
             PageNumber =
@@ -558,6 +613,29 @@ public class AdvertisementService : IAdvertisementService
         }
 
         // --------------------------------------------------------
+        // Normalize Contact Information
+        // --------------------------------------------------------
+
+        var whatsappNumber =
+            NormalizeOptionalValue(request.WhatsAppNumber);
+
+        var contactEmail =
+            NormalizeOptionalValue(request.ContactEmail);
+
+        // --------------------------------------------------------
+        // Validate Public Contact Flags
+        //
+        // It is invalid to mark a method as public when the
+        // corresponding contact value has not been supplied.
+        // --------------------------------------------------------
+
+        ValidatePublicContactFlags(
+            whatsappNumber,
+            contactEmail,
+            request.ShowWhatsAppToPublic,
+            request.ShowEmailToPublic);
+
+        // --------------------------------------------------------
         // Update Fields
         // --------------------------------------------------------
 
@@ -641,6 +719,22 @@ public class AdvertisementService : IAdvertisementService
 
         advertisement.ExpiryDate =
             request.ExpiryDate;
+
+        // --------------------------------------------------------
+        // Contact Information
+        // --------------------------------------------------------
+
+        advertisement.WhatsAppNumber =
+            whatsappNumber;
+
+        advertisement.ContactEmail =
+            contactEmail;
+
+        advertisement.ShowWhatsAppToPublic =
+            request.ShowWhatsAppToPublic;
+
+        advertisement.ShowEmailToPublic =
+            request.ShowEmailToPublic;
 
         advertisement.ModifiedDate =
             DateTime.UtcNow;
@@ -757,6 +851,45 @@ public class AdvertisementService : IAdvertisementService
         }
 
         // --------------------------------------------------------
+        // Validate Contact Information
+        //
+        // At least one contact method must:
+        //   1. contain a value
+        //   2. be allowed to be shown publicly
+        //
+        // This prevents an advertisement from being submitted
+        // without a usable public contact method.
+        // --------------------------------------------------------
+
+        var hasWhatsApp =
+            !string.IsNullOrWhiteSpace(
+                advertisement.WhatsAppNumber);
+
+        var hasEmail =
+            !string.IsNullOrWhiteSpace(
+                advertisement.ContactEmail);
+
+        var hasPublicWhatsApp =
+            hasWhatsApp &&
+            advertisement.ShowWhatsAppToPublic;
+
+        var hasPublicEmail =
+            hasEmail &&
+            advertisement.ShowEmailToPublic;
+
+        if (!hasWhatsApp && !hasEmail)
+        {
+            throw new InvalidOperationException(
+                "At least one contact method is required before submitting the advertisement.");
+        }
+
+        if (!hasPublicWhatsApp && !hasPublicEmail)
+        {
+            throw new InvalidOperationException(
+                "At least one contact method must be enabled for public visibility before submitting the advertisement.");
+        }
+
+        // --------------------------------------------------------
         // Get Pending Review Status
         // --------------------------------------------------------
 
@@ -844,8 +977,45 @@ public class AdvertisementService : IAdvertisementService
 
     private static AdvertisementResponse
         MapToResponse(
-            Advertisement advertisement)
+            Advertisement advertisement,
+            bool includePrivateContact = false)
     {
+        // --------------------------------------------------------
+        // Contact visibility
+        //
+        // Owner:
+        //     sees actual WhatsApp/email values.
+        //
+        // Public visitor:
+        //     only sees a value when its public flag is enabled.
+        // --------------------------------------------------------
+
+        string? whatsappNumber = null;
+        string? contactEmail = null;
+
+        if (includePrivateContact)
+        {
+            whatsappNumber =
+                advertisement.WhatsAppNumber;
+
+            contactEmail =
+                advertisement.ContactEmail;
+        }
+        else
+        {
+            if (advertisement.ShowWhatsAppToPublic)
+            {
+                whatsappNumber =
+                    advertisement.WhatsAppNumber;
+            }
+
+            if (advertisement.ShowEmailToPublic)
+            {
+                contactEmail =
+                    advertisement.ContactEmail;
+            }
+        }
+
         return new AdvertisementResponse
         {
             AdvertisementID =
@@ -961,12 +1131,23 @@ public class AdvertisementService : IAdvertisementService
                 advertisement.ModifiedDate,
 
             // ----------------------------------------------------
-            // Advertisement Images
+            // Contact Information
             // ----------------------------------------------------
-            // ContentType is intentionally not mapped here because
-            // AdvertisementImage does not contain a ContentType
-            // property and the database table does not have a
-            // ContentType column.
+
+            WhatsAppNumber =
+                whatsappNumber,
+
+            ContactEmail =
+                contactEmail,
+
+            ShowWhatsAppToPublic =
+                advertisement.ShowWhatsAppToPublic,
+
+            ShowEmailToPublic =
+                advertisement.ShowEmailToPublic,
+
+            // ----------------------------------------------------
+            // Advertisement Images
             // ----------------------------------------------------
 
             Images =
@@ -1003,5 +1184,42 @@ public class AdvertisementService : IAdvertisementService
                     })
                     .ToList()
         };
+    }
+
+    // ============================================================
+    // NORMALIZE OPTIONAL VALUE
+    // ============================================================
+
+    private static string? NormalizeOptionalValue(
+        string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
+
+    // ============================================================
+    // VALIDATE PUBLIC CONTACT FLAGS
+    // ============================================================
+
+    private static void ValidatePublicContactFlags(
+        string? whatsappNumber,
+        string? contactEmail,
+        bool showWhatsAppToPublic,
+        bool showEmailToPublic)
+    {
+        if (showWhatsAppToPublic &&
+            string.IsNullOrWhiteSpace(whatsappNumber))
+        {
+            throw new InvalidOperationException(
+                "A WhatsApp number is required when WhatsApp visibility is enabled.");
+        }
+
+        if (showEmailToPublic &&
+            string.IsNullOrWhiteSpace(contactEmail))
+        {
+            throw new InvalidOperationException(
+                "An email address is required when email visibility is enabled.");
+        }
     }
 }

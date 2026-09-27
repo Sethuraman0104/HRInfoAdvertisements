@@ -4902,3 +4902,449 @@
         padding: 0;
     }
 }
+
+
+.advertisement-card-image {
+display: block;
+width: 100%;
+height: 100%;
+object-fit: cover;
+object-position: center;
+transition:
+transform 0.45s ease,
+filter 0.35s ease;
+}
+
+.advertisement-image:hover .advertisement-card-image {
+transform: scale(1.04);
+}
+
+.image-load-fallback {
+width: 100%;
+height: 100%;
+align-items: center;
+justify-content: center;
+}
+
+/* ============================================================
+ADVERTISEMENT CONTACT
+============================================================ */
+
+.advertisement-contact {
+margin-top: 18px;
+padding-top: 15px;
+border-top: 1px solid #eee5e5;
+}
+
+.advertisement-contact-header {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-bottom: 10px;
+color: #4a3838;
+font-size: 12px;
+font-weight: 700;
+}
+
+.advertisement-contact-icon {
+width: 28px;
+height: 28px;
+flex: 0 0 28px;
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 8px;
+background: #f8eeee;
+color: #790000;
+}
+
+.advertisement-contact-icon svg {
+width: 15px;
+height: 15px;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.7;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.advertisement-contact-actions {
+display: flex;
+gap: 8px;
+flex-wrap: wrap;
+}
+
+.advertisement-contact-button {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 7px;
+min-height: 34px;
+padding: 7px 11px;
+border: 1px solid #eadede;
+border-radius: 8px;
+background: #fff;
+color: #4a3838;
+text-decoration: none;
+font-size: 12px;
+font-weight: 700;
+transition:
+transform 0.2s ease,
+box-shadow 0.2s ease,
+border-color 0.2s ease,
+background 0.2s ease;
+}
+
+.advertisement-contact-button:hover {
+transform: translateY(-1px);
+box-shadow: 0 5px 14px rgba(60, 25, 25, 0.10);
+border-color: #d9c4c4;
+}
+
+.advertisement-contact-button.whatsapp:hover {
+background: #f4fbf7;
+}
+
+.advertisement-contact-button.email:hover {
+background: #faf7fb;
+}
+
+.contact-button-icon {
+width: 20px;
+height: 20px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+.contact-button-icon svg {
+width: 17px;
+height: 17px;
+fill: none;
+stroke: currentColor;
+stroke-width: 1.7;
+stroke-linecap: round;
+stroke-linejoin: round;
+}
+
+.advertisement-contact-button.whatsapp {
+color: #247b4b;
+}
+
+.advertisement-contact-button.email {
+color: #592462;
+}
+
+/* ============================================================
+   HR INFO ADs
+   CATEGORY GROUPS + CARD CAROUSEL REDESIGN
+   Append to the end of your marketplace stylesheet.
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   CATEGORY GROUP
+   ------------------------------------------------------------ */
+
+.category-group {
+    margin-bottom: 46px;
+}
+
+.category-group:last-child {
+    margin-bottom: 0;
+}
+
+.category-group-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+
+    border-bottom: 2px solid var(--blue-100);
+}
+
+.category-group-title {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 19px;
+    font-weight: 900;
+
+    letter-spacing: -.3px;
+}
+
+.category-group-count {
+    flex-shrink: 0;
+
+    padding: 3px 10px;
+
+    border-radius: 999px;
+
+    background: var(--blue-50);
+
+    color: var(--blue-700);
+
+    font-size: 11px;
+    font-weight: 800;
+
+    white-space: nowrap;
+}
+
+.filter-partial-note {
+    margin: 14px 0 0;
+
+    padding: 10px 14px;
+
+    border: 1px solid #fde3b0;
+    border-radius: 10px;
+
+    background: #fffaf0;
+
+    color: #92600a;
+
+    font-size: 11px;
+    font-weight: 600;
+
+    line-height: 1.5;
+}
+
+
+/* ------------------------------------------------------------
+   IMAGE / CAROUSEL
+   Two stacked <img> per slide: a blurred, cover-filled copy
+   behind, and the real image on top using object-fit: contain
+   so nothing gets cropped out of frame.
+   ------------------------------------------------------------ */
+
+.advertisement-image {
+    isolation: isolate;
+}
+
+.carousel-track {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-slide {
+    position: absolute;
+    inset: 0;
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition:
+        opacity .45s ease,
+        transform .45s cubic-bezier(.2,.8,.2,1);
+
+    transform: scale(1.02);
+}
+
+.carousel-slide.active {
+    opacity: 1;
+
+    pointer-events: auto;
+
+    transform: scale(1);
+}
+
+.advertisement-card-image-bg {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    filter: blur(22px) saturate(1.15) brightness(0.92);
+    transform: scale(1.15);
+}
+
+.advertisement-card-image {
+    position: relative;
+    z-index: 1;
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+    object-position: center;
+
+    transition: transform .45s ease;
+}
+
+.advertisement-card:hover .carousel-slide.active .advertisement-card-image {
+    transform: scale(1.03);
+}
+
+.carousel-slide.image-failed .advertisement-card-image,
+.carousel-slide.image-failed .advertisement-card-image-bg {
+    display: none;
+}
+
+.carousel-slide.image-failed::after {
+    content: "HR";
+
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--blue-500);
+    background: radial-gradient(circle at center, #ffffff, #eaf1fb);
+
+    font-size: 18px;
+    font-weight: 950;
+}
+
+
+/* ------------------------------------------------------------
+   CAROUSEL CONTROLS
+   ------------------------------------------------------------ */
+
+.carousel-nav {
+    position: absolute;
+
+    z-index: 8;
+
+    top: 50%;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    color: var(--navy);
+    background: rgba(255, 255, 255, .88);
+
+    box-shadow: 0 6px 16px rgba(10, 40, 90, .16);
+
+    opacity: 0;
+
+    transform: translateY(-50%);
+
+    transition:
+        opacity .2s ease,
+        background .2s ease,
+        transform .2s ease;
+}
+
+.carousel-nav svg {
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.carousel-nav.prev {
+    left: 10px;
+}
+
+.carousel-nav.next {
+    right: 10px;
+}
+
+.advertisement-image:hover .carousel-nav {
+    opacity: 1;
+}
+
+.carousel-nav:hover {
+    background: #ffffff;
+
+    transform: translateY(-50%) scale(1.08);
+}
+
+.carousel-dots {
+    position: absolute;
+
+    z-index: 8;
+
+    left: 50%;
+    bottom: 12px;
+
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    transform: translateX(-50%);
+}
+
+.carousel-dot {
+    width: 7px;
+    height: 7px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, .55);
+
+    box-shadow: 0 0 0 1px rgba(10, 40, 90, .18);
+
+    transition:
+        background .2s ease,
+        transform .2s ease,
+        width .2s ease;
+}
+
+.carousel-dot.active {
+    width: 18px;
+
+    border-radius: 4px;
+
+    background: #ffffff;
+}
+
+.carousel-count {
+    position: absolute;
+
+    z-index: 8;
+
+    top: 12px;
+    right: 12px;
+
+    padding: 3px 9px;
+
+    border-radius: 999px;
+
+    background: rgba(10, 20, 40, .55);
+
+    color: #fff;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    backdrop-filter: blur(4px);
+}
+
+/* keep the favorite button above the carousel arrows/dots */
+.favorite-button {
+    z-index: 9;
+}
+
+.featured-badge {
+    z-index: 9;
+}

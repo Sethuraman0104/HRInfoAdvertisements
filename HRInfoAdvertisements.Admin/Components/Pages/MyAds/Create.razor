@@ -997,6 +997,733 @@
             width: 100% !important;
         }
     }
+
+   /* ========================================================= */
+/* CONTACT INFORMATION                                      */
+/* ========================================================= */
+
+.contact-section {
+    position: relative;
+}
+
+
+/* --------------------------------------------------------- */
+/* INTRO                                                     */
+/* --------------------------------------------------------- */
+
+.contact-intro {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    margin-bottom: 22px;
+    padding: 16px 18px;
+
+    border: 1px solid rgba(118, 12, 12, 0.10);
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255, 248, 248, 0.95),
+            rgba(255, 255, 255, 0.98)
+        );
+
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+.contact-intro:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.05);
+}
+
+.contact-intro-icon {
+    width: 44px;
+    height: 44px;
+
+    flex: 0 0 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #790000,
+            #d30505
+        );
+
+    color: #ffffff;
+
+    font-size: 20px;
+
+    box-shadow:
+        0 6px 14px rgba(121, 0, 0, 0.18);
+}
+
+.contact-intro-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.contact-intro-content strong {
+    color: #3a1d1d;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.contact-intro-content span {
+    color: #777;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* --------------------------------------------------------- */
+/* CONTACT CARDS                                             */
+/* --------------------------------------------------------- */
+
+.contact-methods {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
+}
+
+
+.contact-card {
+    position: relative;
+
+    overflow: hidden;
+
+    border: 1px solid #e7dddd;
+    border-radius: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 4px 18px rgba(0, 0, 0, 0.04);
+
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        transform 0.25s ease;
+}
+
+.contact-card:hover {
+    transform: translateY(-2px);
+
+    border-color: rgba(118, 12, 12, 0.25);
+
+    box-shadow:
+        0 12px 28px rgba(0, 0, 0, 0.07);
+}
+
+
+.contact-card-active {
+    border-color: rgba(118, 12, 12, 0.35);
+
+    box-shadow:
+        0 10px 28px rgba(118, 12, 12, 0.08);
+}
+
+
+/* --------------------------------------------------------- */
+/* CARD HEADER                                               */
+/* --------------------------------------------------------- */
+
+.contact-card-header {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 14px;
+
+    padding: 20px 20px 16px;
+
+    border-bottom: 1px solid #f0e8e8;
+
+    background:
+        linear-gradient(
+            180deg,
+            #fffafa,
+            #ffffff
+        );
+}
+
+
+.contact-card-icon {
+    width: 46px;
+    height: 46px;
+
+    flex: 0 0 46px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    font-size: 21px;
+}
+
+
+.whatsapp-icon {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333,
+            #886666
+        );
+
+    box-shadow:
+        0 6px 14px rgba(102, 51, 51, 0.18);
+}
+
+
+.email-icon {
+    color: #ffffff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #735626,
+            #996600
+        );
+
+    box-shadow:
+        0 6px 14px rgba(115, 86, 38, 0.18);
+}
+
+
+.contact-card-title {
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.contact-card-title-row {
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    flex-wrap: wrap;
+}
+
+
+.contact-card-title h3 {
+    margin: 0;
+
+    color: #2e2222;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.contact-card-title p {
+    margin: 5px 0 0;
+
+    color: #777;
+
+    font-size: 12.5px;
+
+    line-height: 1.5;
+}
+
+
+/* --------------------------------------------------------- */
+/* PUBLIC BADGE                                              */
+/* --------------------------------------------------------- */
+
+.visibility-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 5px;
+
+    padding: 4px 8px;
+
+    border-radius: 20px;
+
+    background: rgba(51, 217, 128, 0.12);
+
+    color: #248f5a;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+.visibility-badge i {
+    font-size: 10px;
+}
+
+
+/* --------------------------------------------------------- */
+/* CARD BODY                                                 */
+/* --------------------------------------------------------- */
+
+.contact-card-body {
+    padding: 20px;
+}
+
+
+.contact-field-label {
+    display: block;
+
+    margin-bottom: 8px;
+
+    color: #4b3b3b;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.contact-input-wrapper {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+}
+
+
+.contact-input-icon {
+    position: absolute;
+
+    left: 13px;
+
+    width: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #886666;
+
+    font-size: 15px;
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+.contact-input {
+    height: 46px;
+
+    padding-left: 42px;
+
+    border: 1px solid #ded3d3;
+
+    border-radius: 10px;
+
+    color: #342727;
+
+    background: #ffffff;
+
+    font-size: 13px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.contact-input::placeholder {
+    color: #b5aaaa;
+}
+
+
+.contact-input:hover {
+    border-color: #bdaaaa;
+}
+
+
+.contact-input:focus {
+    border-color: #790000;
+
+    outline: none;
+
+    background: #fffdfd;
+
+    box-shadow:
+        0 0 0 3px rgba(121, 0, 0, 0.08);
+}
+
+
+/* --------------------------------------------------------- */
+/* VISIBILITY OPTION                                         */
+/* --------------------------------------------------------- */
+
+.contact-option {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 18px;
+
+    padding-top: 16px;
+
+    border-top: 1px solid #f0e8e8;
+}
+
+
+.visibility-toggle {
+    position: relative;
+
+    width: 44px;
+    height: 24px;
+
+    flex: 0 0 44px;
+
+    margin: 0;
+
+    cursor: pointer;
+}
+
+
+.visibility-toggle input {
+    position: absolute;
+
+    opacity: 0;
+
+    width: 0;
+    height: 0;
+}
+
+
+.toggle-slider {
+    position: absolute;
+
+    inset: 0;
+
+    border-radius: 30px;
+
+    background: #d7cece;
+
+    transition:
+        background 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+.toggle-slider::before {
+    content: "";
+
+    position: absolute;
+
+    width: 18px;
+    height: 18px;
+
+    left: 3px;
+    top: 3px;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 2px 5px rgba(0, 0, 0, 0.18);
+
+    transition:
+        transform 0.25s ease;
+}
+
+
+.visibility-toggle input:checked + .toggle-slider {
+    background:
+        linear-gradient(
+            90deg,
+            #790000,
+            #d30505
+        );
+
+    box-shadow:
+        0 3px 10px rgba(121, 0, 0, 0.20);
+}
+
+
+.visibility-toggle input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+
+.visibility-text {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+
+.visibility-text strong {
+    color: #453636;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.visibility-text span {
+    color: #8a7e7e;
+
+    font-size: 11px;
+
+    line-height: 1.4;
+}
+
+
+/* --------------------------------------------------------- */
+/* PRIVACY NOTE                                              */
+/* --------------------------------------------------------- */
+
+.contact-privacy-note {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+    padding: 14px 16px;
+
+    border: 1px solid rgba(51, 217, 128, 0.20);
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(51, 217, 128, 0.06),
+            rgba(255, 255, 255, 0.95)
+        );
+}
+
+
+.contact-privacy-icon {
+    width: 38px;
+    height: 38px;
+
+    flex: 0 0 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+
+    background: rgba(51, 217, 128, 0.13);
+
+    color: #248f5a;
+
+    font-size: 17px;
+}
+
+
+.contact-privacy-content {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.contact-privacy-content strong {
+    color: #315b45;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.contact-privacy-content span {
+    color: #708077;
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+/* --------------------------------------------------------- */
+/* RESPONSIVE                                                */
+/* --------------------------------------------------------- */
+
+@@media (max-width: 900px) {
+
+    .contact-methods {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@@media (max-width: 576px) {
+
+    .contact-intro {
+        align-items: flex-start;
+
+        padding: 14px;
+    }
+
+    .contact-card-header {
+        padding: 17px 16px 14px;
+    }
+
+    .contact-card-body {
+        padding: 17px 16px;
+    }
+
+    .contact-card-icon {
+        width: 42px;
+        height: 42px;
+
+        flex-basis: 42px;
+
+        font-size: 19px;
+    }
+
+    .contact-option {
+        align-items: flex-start;
+    }
+
+    .contact-privacy-note {
+        align-items: flex-start;
+    }
+}
+
+/* ========================================================= */
+/* CONTACT SECTION HEADER                                    */
+/* ========================================================= */
+
+.contact-section .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+
+.contact-section .section-number {
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 1px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #790000,
+            #d30505
+        );
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    line-height: 1;
+
+    box-shadow:
+        0 5px 12px rgba(121, 0, 0, 0.16);
+}
+
+
+.contact-section .section-heading {
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    min-height: 42px;
+}
+
+
+.contact-section .section-heading h2 {
+    margin: 0;
+
+    color: #2e2222;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    line-height: 1.25;
+}
+
+
+.contact-section .section-heading p {
+    margin: 4px 0 0;
+
+    color: #777;
+
+    font-size: 13px;
+
+    line-height: 1.45;
+}
+
+
+/* --------------------------------------------------------- */
+/* MOBILE                                                    */
+/* --------------------------------------------------------- */
+
+@@media (max-width: 576px) {
+
+    .contact-section .section-header {
+        gap: 11px;
+    }
+
+    .contact-section .section-number {
+        width: 38px;
+        height: 38px;
+
+        flex-basis: 38px;
+
+        font-size: 12px;
+    }
+
+    .contact-section .section-heading {
+        min-height: 38px;
+    }
+
+    .contact-section .section-heading h2 {
+        font-size: 18px;
+    }
+
+    .contact-section .section-heading p {
+        font-size: 12px;
+    }
+}
 </style>
 
 @if (!isAuthenticated)
@@ -1087,11 +1814,13 @@ else
                     <div>
 
                         <div class="create-ad-page-heading">
-                            Post Advertisement
+                            @(isEditMode ? "Edit Advertisement" : "Post Advertisement")
                         </div>
 
                         <div class="create-ad-page-description">
-                            Create and publish your advertisement
+                            @(isEditMode
+                                ? "Update your advertisement details"
+                                : "Create and publish your advertisement")
                         </div>
 
                     </div>
@@ -1135,18 +1864,20 @@ else
                             <i class="bi bi-pencil-square"></i>
                         </span>
 
-                        CREATE NEW LISTING
+                        @(isEditMode ? "EDIT LISTING" : "CREATE NEW LISTING")
 
                     </div>
 
                     <h1>
-                        Post Your Advertisement
+                        @(isEditMode
+                            ? "Edit Your Advertisement"
+                            : "Post Your Advertisement")
                     </h1>
 
                     <p>
-                        Provide the details below to create your advertisement.
-                        You can save it as a draft and continue editing before
-                        submitting it for approval.
+                        @(isEditMode
+                            ? "Update the information below and save your changes."
+                            : "Provide the details below to create your advertisement. You can save it as a draft and continue editing before submitting it for approval.")
                     </p>
 
                 </div>
@@ -1237,6 +1968,40 @@ else
 
 
             <!-- =================================================
+                 LOAD PROGRESS
+                 ================================================= -->
+
+            @if (isLoadingAdvertisement)
+            {
+                <div class="upload-progress-card">
+
+                    <div class="upload-progress-top">
+
+                        <div class="upload-progress-icon">
+
+                            <i class="bi bi-arrow-repeat"></i>
+
+                        </div>
+
+                        <div class="upload-progress-content">
+
+                            <strong>
+                                Loading advertisement
+                            </strong>
+
+                            <span>
+                                Please wait while your advertisement information is loaded.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <!-- =================================================
                  UPLOAD PROGRESS
                  ================================================= -->
 
@@ -1279,7 +2044,6 @@ else
 
                         <div class="upload-progress-value"
                              style="width:@GetUploadProgressPercentage()%;">
-
                         </div>
 
                     </div>
@@ -1541,8 +2305,7 @@ else
                                 <i class="bi bi-cash-stack input-icon"></i>
 
                                 <InputNumber class="form-control has-icon"
-                                             @bind-Value="model.Price"
-                                             placeholder="0.000" />
+                                             @bind-Value="model.Price" />
 
                             </div>
 
@@ -1963,8 +2726,284 @@ else
                 </section>
 
 
+<!-- ========================================================= -->
+<!-- 05 CONTACT INFORMATION                                   -->
+<!-- ========================================================= -->
+
+<section class="form-section">
+
+    <div class="section-heading">
+
+        <div class="section-number">
+            05
+        </div>
+
+        <div class="section-heading-text">
+
+            <h2>
+                Contact Information
+            </h2>
+
+            <p>
+                Choose how interested buyers can contact you.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="contact-intro">
+
+        <div class="contact-intro-icon">
+            <i class="bi bi-person-lines-fill"></i>
+        </div>
+
+        <div class="contact-intro-content">
+
+            <strong>
+                Make it easy for buyers to reach you
+            </strong>
+
+            <span>
+                Add at least one contact method and choose which
+                details you want to display publicly.
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="contact-methods">
+
+        <!-- ================================================= -->
+        <!-- WHATSAPP                                          -->
+        <!-- ================================================= -->
+
+        <div class="contact-card
+                    @(model.ShowWhatsAppToPublic
+                        ? "contact-card-active"
+                        : "")">
+
+            <div class="contact-card-header">
+
+                <div class="contact-card-icon whatsapp-icon">
+                    <i class="bi bi-whatsapp"></i>
+                </div>
+
+                <div class="contact-card-title">
+
+                    <div class="contact-card-title-row">
+
+                        <h3>
+                            WhatsApp
+                        </h3>
+
+                        @if (model.ShowWhatsAppToPublic)
+                        {
+                            <span class="visibility-badge">
+                                <i class="bi bi-eye-fill"></i>
+                                Public
+                            </span>
+                        }
+
+                    </div>
+
+                    <p>
+                        Let interested buyers contact you directly
+                        through WhatsApp.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="contact-card-body">
+
+                <label class="contact-field-label">
+                    WhatsApp Number
+                </label>
+
+                <div class="contact-input-wrapper">
+
+                    <div class="contact-input-icon">
+                        <i class="bi bi-whatsapp"></i>
+                    </div>
+
+                    <InputText
+                        class="form-control contact-input"
+                        @bind-Value="model.WhatsAppNumber"
+                        placeholder="+973 XXXXXXXX"
+                        autocomplete="tel" />
+
+                </div>
+
+
+                <div class="contact-option">
+
+                    <label class="visibility-toggle">
+
+                        <input
+                            type="checkbox"
+                            @bind="model.ShowWhatsAppToPublic" />
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+
+                    <div class="visibility-text">
+
+                        <strong>
+                            Show WhatsApp to public
+                        </strong>
+
+                        <span>
+                            Buyers will be able to see this number
+                            on your advertisement.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- ================================================= -->
+        <!-- EMAIL                                              -->
+        <!-- ================================================= -->
+
+        <div class="contact-card
+                    @(model.ShowEmailToPublic
+                        ? "contact-card-active"
+                        : "")">
+
+            <div class="contact-card-header">
+
+                <div class="contact-card-icon email-icon">
+                    <i class="bi bi-envelope-fill"></i>
+                </div>
+
+                <div class="contact-card-title">
+
+                    <div class="contact-card-title-row">
+
+                        <h3>
+                            Email
+                        </h3>
+
+                        @if (model.ShowEmailToPublic)
+                        {
+                            <span class="visibility-badge">
+                                <i class="bi bi-eye-fill"></i>
+                                Public
+                            </span>
+                        }
+
+                    </div>
+
+                    <p>
+                        Allow interested buyers to contact you
+                        by email.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="contact-card-body">
+
+                <label class="contact-field-label">
+                    Email Address
+                </label>
+
+                <div class="contact-input-wrapper">
+
+                    <div class="contact-input-icon">
+                        <i class="bi bi-envelope"></i>
+                    </div>
+
+                    <InputText
+                        class="form-control contact-input"
+                        @bind-Value="model.ContactEmail"
+                        placeholder="yourname@example.com"
+                        autocomplete="email" />
+
+                </div>
+
+
+                <div class="contact-option">
+
+                    <label class="visibility-toggle">
+
+                        <input
+                            type="checkbox"
+                            @bind="model.ShowEmailToPublic" />
+
+                        <span class="toggle-slider"></span>
+
+                    </label>
+
+
+                    <div class="visibility-text">
+
+                        <strong>
+                            Show email to public
+                        </strong>
+
+                        <span>
+                            Buyers will be able to see this email
+                            address on your advertisement.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ===================================================== -->
+    <!-- PRIVACY INFORMATION                                    -->
+    <!-- ===================================================== -->
+
+    <div class="contact-privacy-note">
+
+        <div class="contact-privacy-icon">
+            <i class="bi bi-shield-check"></i>
+        </div>
+
+        <div class="contact-privacy-content">
+
+            <strong>
+                Your privacy is in your control
+            </strong>
+
+            <span>
+                Your contact details are stored securely.
+                Only the contact methods you choose to make public
+                will be displayed to other users.
+            </span>
+
+        </div>
+
+    </div>
+
+</section>
+
+
                 <!-- =================================================
-                     05 PHOTOS
+                     06 PHOTOS
                      ================================================= -->
 
                 <section class="form-section photos-section">
@@ -1972,7 +3011,7 @@ else
                     <div class="section-heading">
 
                         <div class="section-number">
-                            05
+                            06
                         </div>
 
                         <div class="section-heading-text">
@@ -2356,6 +3395,10 @@ else
                                 {
                                     <text>Uploading images...</text>
                                 }
+                                else if (isEditMode)
+                                {
+                                    <text>Updating...</text>
+                                }
                                 else
                                 {
                                     <text>Saving...</text>
@@ -2367,7 +3410,9 @@ else
                             <i class="bi bi-file-earmark-check"></i>
 
                             <span>
-                                Save as Draft
+                                @(isEditMode
+                                    ? "Save Changes"
+                                    : "Save as Draft")
                             </span>
                         }
 
@@ -2422,10 +3467,19 @@ else
 
 
     // ============================================================
+    // EDIT MODE
+    // ============================================================
+
+    private bool isEditMode;
+
+    private bool isLoadingAdvertisement;
+
+
+    // ============================================================
     // FORM MODEL
     // ============================================================
 
-    private readonly CreateAdvertisementRequest model =
+    private CreateAdvertisementRequest model =
         new()
         {
             CurrencyCode = "BHD"
@@ -2486,10 +3540,7 @@ else
 
     private int totalImagesToUpload;
 
-private bool IsBusy =>
-    isSaving ||
-    isUploadingImages ||
-    isSubmitting;
+
     // ============================================================
     // FORM STATE
     // ============================================================
@@ -2501,6 +3552,19 @@ private bool IsBusy =>
     private string? errorMessage;
 
     private string? successMessage;
+
+    private bool showContactValidation;
+
+
+    // ============================================================
+    // BUSY
+    // ============================================================
+
+    private bool IsBusy =>
+        isSaving ||
+        isUploadingImages ||
+        isSubmitting ||
+        isLoadingAdvertisement;
 
 
     // ============================================================
@@ -2515,12 +3579,27 @@ private bool IsBusy =>
 
 
     // ============================================================
+    // CONTACT VALIDATION
+    // ============================================================
+
+    private bool HasAnyContactInformation =>
+        !string.IsNullOrWhiteSpace(model.WhatsAppNumber) ||
+        !string.IsNullOrWhiteSpace(model.ContactEmail);
+
+
+    private bool HasAnyPublicContact =>
+        model.ShowWhatsAppToPublic ||
+        model.ShowEmailToPublic;
+
+
+    // ============================================================
     // IMAGE COUNTERS
     // ============================================================
 
     private int TotalPhotoCount =>
         savedImages.Count +
         selectedImages.Count;
+
 
     private int RemainingPhotoSlots =>
         Math.Max(
@@ -2548,6 +3627,8 @@ private bool IsBusy =>
         }
 
         await LoadLookupsAsync();
+
+        await LoadAdvertisementFromQueryAsync();
     }
 
 
@@ -2585,25 +3666,25 @@ private bool IsBusy =>
     // ============================================================
 
     private sealed class SavedAdvertisementImage
-{
-    public long AdvertisementImageID { get; init; }
+    {
+        public long AdvertisementImageID { get; init; }
 
-    public long AdvertisementID { get; init; }
+        public long AdvertisementID { get; init; }
 
-    public string FileName { get; init; } =
-        string.Empty;
+        public string FileName { get; init; } =
+            string.Empty;
 
-    public string FileURL { get; init; } =
-        string.Empty;
+        public string FileURL { get; init; } =
+            string.Empty;
 
-    public long? FileSize { get; init; }
+        public long? FileSize { get; init; }
 
-    public bool IsPrimary { get; set; }
+        public bool IsPrimary { get; set; }
 
-    public int DisplayOrder { get; init; }
+        public int DisplayOrder { get; init; }
 
-    public DateTime CreatedDate { get; init; }
-}
+        public DateTime CreatedDate { get; init; }
+    }
 
 
     // ============================================================
@@ -2641,6 +3722,322 @@ private bool IsBusy =>
 
 
     // ============================================================
+    // LOAD EXISTING ADVERTISEMENT
+    //
+    // Supports:
+    //
+    // /my-ads/create?id=123
+    //
+    // This uses the authenticated API method so the owner can
+    // receive private contact information.
+    // ============================================================
+
+    private async Task LoadAdvertisementFromQueryAsync()
+    {
+        try
+        {
+            var uri =
+                Navigation.ToAbsoluteUri(
+                    Navigation.Uri);
+
+            var query =
+                Microsoft.AspNetCore.WebUtilities
+                    .QueryHelpers.ParseQuery(uri.Query);
+
+            if (!query.TryGetValue(
+                    "id",
+                    out var idValue))
+            {
+                return;
+            }
+
+            if (!long.TryParse(
+                    idValue.FirstOrDefault(),
+                    out var advertisementId) ||
+                advertisementId <= 0)
+            {
+                errorMessage =
+                    "The advertisement ID is invalid.";
+
+                return;
+            }
+
+            await LoadExistingAdvertisementAsync(
+                advertisementId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD QUERY PARAMETER ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement.";
+        }
+    }
+
+
+    // ============================================================
+    // LOAD EXISTING ADVERTISEMENT
+    // ============================================================
+
+    private async Task LoadExistingAdvertisementAsync(
+        long advertisementId)
+    {
+        isLoadingAdvertisement = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "LOADING EXISTING ADVERTISEMENT");
+
+            Console.WriteLine(
+                $"ADVERTISEMENT ID: {advertisementId}");
+
+            Console.WriteLine(
+                "================================================");
+
+
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(
+                        advertisementId);
+
+
+            if (advertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be found.";
+
+                return;
+            }
+
+
+            draftAdvertisementId =
+                advertisement.AdvertisementID;
+
+
+            isEditMode = true;
+
+
+            // ----------------------------------------------------
+            // BASIC INFORMATION
+            // ----------------------------------------------------
+
+            model.CategoryID =
+                advertisement.CategoryID;
+
+            model.AdvertisementTypeID =
+                advertisement.AdvertisementTypeID;
+
+            model.Title =
+                advertisement.Title;
+
+            model.TitleAr =
+                advertisement.TitleAr;
+
+            model.Description =
+                advertisement.Description;
+
+            model.DescriptionAr =
+                advertisement.DescriptionAr;
+
+
+            // ----------------------------------------------------
+            // PRICING
+            // ----------------------------------------------------
+
+            model.Price =
+                advertisement.Price;
+
+            model.CurrencyCode =
+                advertisement.CurrencyCode;
+
+            model.IsNegotiable =
+                advertisement.IsNegotiable;
+
+
+            // ----------------------------------------------------
+            // LOCATION
+            // ----------------------------------------------------
+
+            model.CountryID =
+                advertisement.CountryID;
+
+            model.StateID =
+                advertisement.StateID;
+
+            model.CityID =
+                advertisement.CityID;
+
+            model.AreaID =
+                advertisement.AreaID;
+
+            model.AddressLine =
+                advertisement.AddressLine;
+
+            model.PlotNumber =
+                advertisement.PlotNumber;
+
+
+            selectedCountryId =
+                advertisement.CountryID ?? 0;
+
+            selectedStateId =
+                advertisement.StateID ?? 0;
+
+            selectedCityId =
+                advertisement.CityID ?? 0;
+
+            selectedAreaId =
+                advertisement.AreaID ?? 0;
+
+
+            // ----------------------------------------------------
+            // PROPERTY DETAILS
+            // ----------------------------------------------------
+
+            model.LandArea =
+                advertisement.LandArea;
+
+            model.BuiltUpArea =
+                advertisement.BuiltUpArea;
+
+            model.Bedrooms =
+                advertisement.Bedrooms;
+
+            model.Bathrooms =
+                advertisement.Bathrooms;
+
+            model.PropertyAge =
+                advertisement.PropertyAge;
+
+
+            // ----------------------------------------------------
+            // CONTACT INFORMATION
+            //
+            // Because this method uses the authenticated API,
+            // the owner receives the actual stored contact
+            // values regardless of the public visibility flags.
+            // ----------------------------------------------------
+
+            model.WhatsAppNumber =
+                advertisement.WhatsAppNumber;
+
+            model.ContactEmail =
+                advertisement.ContactEmail;
+
+            model.ShowWhatsAppToPublic =
+                advertisement.ShowWhatsAppToPublic;
+
+            model.ShowEmailToPublic =
+                advertisement.ShowEmailToPublic;
+
+
+            // ----------------------------------------------------
+            // LOAD LOCATION LOOKUPS
+            // ----------------------------------------------------
+
+            await LoadExistingLocationLookupsAsync();
+
+
+            // ----------------------------------------------------
+            // LOAD SAVED IMAGES
+            // ----------------------------------------------------
+
+            await LoadSavedImagesAsync(
+                advertisement.AdvertisementID);
+
+
+            Console.WriteLine(
+                "EXISTING ADVERTISEMENT LOADED SUCCESSFULLY.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "LOAD ADVERTISEMENT ERROR");
+
+            Console.WriteLine(
+                ex.ToString());
+
+            Console.WriteLine(
+                "================================================");
+
+            errorMessage =
+                "We couldn’t load the advertisement information. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoadingAdvertisement = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD LOCATION LOOKUPS FOR EXISTING ADVERTISEMENT
+    // ============================================================
+
+    private async Task LoadExistingLocationLookupsAsync()
+    {
+        try
+        {
+            states.Clear();
+            cities.Clear();
+            areas.Clear();
+
+
+            if (selectedCountryId > 0)
+            {
+                states =
+                    await AdvertisementApiService
+                        .GetStatesAsync(
+                            selectedCountryId);
+            }
+
+
+            if (selectedCountryId > 0)
+            {
+                cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null);
+            }
+
+
+            if (selectedCountryId > 0)
+            {
+                areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null,
+                            selectedCityId > 0
+                                ? selectedCityId
+                                : null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD EXISTING LOCATION LOOKUPS ERROR: {ex}");
+        }
+    }
+
+
+    // ============================================================
     // COUNTRY
     // ============================================================
 
@@ -2653,6 +4050,15 @@ private bool IsBusy =>
         selectedStateId = 0;
         selectedCityId = 0;
         selectedAreaId = 0;
+
+        model.CountryID =
+            selectedCountryId > 0
+                ? selectedCountryId
+                : null;
+
+        model.StateID = null;
+        model.CityID = null;
+        model.AreaID = null;
 
         states.Clear();
         cities.Clear();
@@ -2697,6 +4103,14 @@ private bool IsBusy =>
         selectedCityId = 0;
         selectedAreaId = 0;
 
+        model.StateID =
+            selectedStateId > 0
+                ? selectedStateId
+                : null;
+
+        model.CityID = null;
+        model.AreaID = null;
+
         cities.Clear();
         areas.Clear();
 
@@ -2740,6 +4154,13 @@ private bool IsBusy =>
             value;
 
         selectedAreaId = 0;
+
+        model.CityID =
+            selectedCityId > 0
+                ? selectedCityId
+                : null;
+
+        model.AreaID = null;
 
         areas.Clear();
 
@@ -2830,10 +4251,6 @@ private bool IsBusy =>
 
         foreach (var file in files)
         {
-            // ----------------------------------------------------
-            // FILE SIZE
-            // ----------------------------------------------------
-
             if (file.Size <= 0)
             {
                 rejectedCount++;
@@ -2852,10 +4269,6 @@ private bool IsBusy =>
             }
 
 
-            // ----------------------------------------------------
-            // FILE TYPE
-            // ----------------------------------------------------
-
             if (!IsSupportedImageType(
                     file.ContentType,
                     file.Name))
@@ -2869,10 +4282,6 @@ private bool IsBusy =>
                 continue;
             }
 
-
-            // ----------------------------------------------------
-            // DUPLICATE CHECK
-            // ----------------------------------------------------
 
             var duplicate =
                 selectedImages.Any(x =>
@@ -2893,10 +4302,6 @@ private bool IsBusy =>
             }
 
 
-            // ----------------------------------------------------
-            // COPY FILE INTO MEMORY
-            // ----------------------------------------------------
-
             try
             {
                 await using var browserStream =
@@ -2913,36 +4318,16 @@ private bool IsBusy =>
                     memoryStream.ToArray();
 
 
-                // ------------------------------------------------
-                // MIME TYPE
-                // ------------------------------------------------
-
                 var mimeType =
                     GetImageMimeType(
                         file.ContentType,
                         file.Name);
 
 
-                // ------------------------------------------------
-                // PREVIEW
-                // ------------------------------------------------
-
                 var previewUrl =
                     $"data:{mimeType};base64," +
                     Convert.ToBase64String(bytes);
 
-
-                // ------------------------------------------------
-                // PRIMARY IMAGE
-                // ------------------------------------------------
-                //
-                // If there is already a saved primary image,
-                // don't automatically create another primary.
-                //
-                // If there is no saved image, the first selected
-                // image becomes the primary image.
-                //
-                // ------------------------------------------------
 
                 var hasExistingPrimary =
                     savedImages.Any(
@@ -2957,10 +4342,6 @@ private bool IsBusy =>
                     !hasSelectedPrimary &&
                     selectedImages.Count == 0;
 
-
-                // ------------------------------------------------
-                // ADD IMAGE
-                // ------------------------------------------------
 
                 selectedImages.Add(
                     new SelectedImage
@@ -3025,10 +4406,6 @@ private bool IsBusy =>
         }
 
 
-        // ========================================================
-        // USER FEEDBACK
-        // ========================================================
-
         if (addedCount > 0)
         {
             successMessage =
@@ -3046,35 +4423,6 @@ private bool IsBusy =>
                 "None of the selected photos could be added. " +
                 "Please check the file type and size.";
         }
-
-
-        // ========================================================
-        // DIAGNOSTIC LOG
-        // ========================================================
-
-        Console.WriteLine(
-            "================================================");
-
-        Console.WriteLine(
-            $"SAVED IMAGES: {savedImages.Count}");
-
-        Console.WriteLine(
-            $"SELECTED IMAGES: {selectedImages.Count}");
-
-        Console.WriteLine(
-            $"TOTAL IMAGES: {TotalPhotoCount}");
-
-        foreach (var image in selectedImages)
-        {
-            Console.WriteLine(
-                $"SELECTED IMAGE: {image.FileName}, " +
-                $"SIZE={image.FileSize}, " +
-                $"TYPE={image.ContentType}, " +
-                $"PRIMARY={image.IsPrimary}");
-        }
-
-        Console.WriteLine(
-            "================================================");
     }
 
 
@@ -3145,13 +4493,6 @@ private bool IsBusy =>
         selectedImages.Remove(image);
 
 
-        // --------------------------------------------------------
-        // If the removed image was primary:
-        //
-        // First use an existing saved primary if available.
-        // Otherwise make the first remaining selected image primary.
-        // --------------------------------------------------------
-
         if (wasPrimary &&
             !savedImages.Any(x => x.IsPrimary) &&
             selectedImages.Count > 0)
@@ -3204,11 +4545,7 @@ private bool IsBusy =>
 
             if (advertisement is null)
             {
-                Console.WriteLine(
-                    "LOAD SAVED IMAGES: Advertisement not found.");
-
                 savedImages.Clear();
-
                 return;
             }
 
@@ -3261,17 +4598,6 @@ private bool IsBusy =>
             Console.WriteLine(
                 $"LOAD SAVED IMAGES: " +
                 $"{savedImages.Count} image(s) loaded.");
-
-
-            foreach (var image in savedImages)
-            {
-                Console.WriteLine(
-                    $"IMAGE {image.AdvertisementImageID}: " +
-                    $"{image.FileName}, " +
-                    $"Primary={image.IsPrimary}, " +
-                    $"Order={image.DisplayOrder}, " +
-                    $"URL={image.FileURL}");
-            }
         }
         catch (Exception ex)
         {
@@ -3285,9 +4611,6 @@ private bool IsBusy =>
 
             Console.WriteLine(
                 "================================================");
-
-            // Don't block the advertisement page if image
-            // loading fails. The advertisement itself was saved.
         }
     }
 
@@ -3297,37 +4620,34 @@ private bool IsBusy =>
     // ============================================================
 
     private void SetPrimaryImage(
-    SelectedImage image)
-{
-    if (IsBusy)
+        SelectedImage image)
     {
-        return;
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (savedImages.Any(x => x.IsPrimary))
+        {
+            errorMessage =
+                "Please save the advertisement first before changing " +
+                "the main photo.";
+
+            return;
+        }
+
+        foreach (var item in selectedImages)
+        {
+            item.IsPrimary = false;
+        }
+
+        image.IsPrimary = true;
+
+        errorMessage = null;
+
+        successMessage =
+            $"'{image.FileName}' has been selected as the main photo.";
     }
-
-    // If a saved image is currently primary,
-    // the new selection cannot become primary until
-    // the saved primary is changed through the API.
-    if (savedImages.Any(x => x.IsPrimary))
-    {
-        errorMessage =
-            "Please save the advertisement first before changing " +
-            "the main photo.";
-
-        return;
-    }
-
-    foreach (var item in selectedImages)
-    {
-        item.IsPrimary = false;
-    }
-
-    image.IsPrimary = true;
-
-    errorMessage = null;
-
-    successMessage =
-        $"'{image.FileName}' has been selected as the main photo.";
-}
 
 
     // ============================================================
@@ -3370,124 +4690,272 @@ private bool IsBusy =>
 
 
     // ============================================================
-    // SAVE DRAFT
+    // CONTACT VALIDATION
     // ============================================================
 
-    private async Task SaveDraft()
+    private bool ValidateContactInformation(
+        bool forSubmission)
     {
-        if (isSaving ||
+        showContactValidation = true;
+
+
+        if (!HasAnyContactInformation)
+        {
+            errorMessage =
+                "Please provide at least one contact method: " +
+                "WhatsApp number or email address.";
+
+            return false;
+        }
+
+
+        if (model.ShowWhatsAppToPublic &&
+            string.IsNullOrWhiteSpace(
+                model.WhatsAppNumber))
+        {
+            errorMessage =
+                "A WhatsApp number is required because " +
+                "WhatsApp visibility is enabled.";
+
+            return false;
+        }
+
+
+        if (model.ShowEmailToPublic &&
+            string.IsNullOrWhiteSpace(
+                model.ContactEmail))
+        {
+            errorMessage =
+                "An email address is required because " +
+                "email visibility is enabled.";
+
+            return false;
+        }
+
+
+        if (forSubmission &&
+            !HasAnyPublicContact)
+        {
+            errorMessage =
+                "Please make at least one contact method visible " +
+                "to buyers before submitting the advertisement.";
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    // ============================================================
+    // CREATE UPDATE REQUEST
+    // ============================================================
+
+    private UpdateAdvertisementRequest BuildUpdateRequest()
+    {
+        return new UpdateAdvertisementRequest
+        {
+            CategoryID =
+                model.CategoryID,
+
+            AdvertisementTypeID =
+                model.AdvertisementTypeID,
+
+            Title =
+                model.Title,
+
+            TitleAr =
+                model.TitleAr,
+
+            Description =
+                model.Description,
+
+            DescriptionAr =
+                model.DescriptionAr,
+
+            Price =
+                model.Price,
+
+            CurrencyCode =
+                model.CurrencyCode,
+
+            IsNegotiable =
+                model.IsNegotiable,
+
+            CountryID =
+                model.CountryID,
+
+            StateID =
+                model.StateID,
+
+            CityID =
+                model.CityID,
+
+            AreaID =
+                model.AreaID,
+
+            AddressLine =
+                model.AddressLine,
+
+            PlotNumber =
+                model.PlotNumber,
+
+            LandArea =
+                model.LandArea,
+
+            BuiltUpArea =
+                model.BuiltUpArea,
+
+            Bedrooms =
+                model.Bedrooms,
+
+            Bathrooms =
+                model.Bathrooms,
+
+            PropertyAge =
+                model.PropertyAge,
+
+            WhatsAppNumber =
+                model.WhatsAppNumber,
+
+            ContactEmail =
+                model.ContactEmail,
+
+            ShowWhatsAppToPublic =
+                model.ShowWhatsAppToPublic,
+
+            ShowEmailToPublic =
+                model.ShowEmailToPublic
+        };
+    }
+
+private async Task SaveDraft()
+{
+    if (isSaving ||
         isUploadingImages ||
-        isSubmitting)
+        isSubmitting ||
+        isLoadingAdvertisement)
     {
         return;
     }
 
+    errorMessage = null;
+    successMessage = null;
 
-        errorMessage = null;
-        successMessage = null;
+    // ----------------------------------------------------
+    // CONTACT INFORMATION
+    // ----------------------------------------------------
 
-        isSaving = true;
+    // Contact information is required for the advertisement.
+    if (!ValidateContactInformation(
+            forSubmission: false))
+    {
+        return;
+    }
+
+    isSaving = true;
+
+    try
+    {
+        // ----------------------------------------------------
+        // LOCATION
+        // ----------------------------------------------------
+
+        model.CountryID =
+            selectedCountryId > 0
+                ? selectedCountryId
+                : null;
+
+        model.StateID =
+            selectedStateId > 0
+                ? selectedStateId
+                : null;
+
+        model.CityID =
+            selectedCityId > 0
+                ? selectedCityId
+                : null;
+
+        model.AreaID =
+            selectedAreaId > 0
+                ? selectedAreaId
+                : null;
 
 
-        try
+        // ----------------------------------------------------
+        // UPDATE EXISTING ADVERTISEMENT
+        // ----------------------------------------------------
+
+        if (draftAdvertisementId.HasValue)
         {
-            // ----------------------------------------------------
-            // LOCATION
-            // ----------------------------------------------------
-
-            model.CountryID =
-                selectedCountryId > 0
-                    ? selectedCountryId
-                    : null;
-
-            model.StateID =
-                selectedStateId > 0
-                    ? selectedStateId
-                    : null;
-
-            model.CityID =
-                selectedCityId > 0
-                    ? selectedCityId
-                    : null;
-
-            model.AreaID =
-                selectedAreaId > 0
-                    ? selectedAreaId
-                    : null;
-
-
-            // ----------------------------------------------------
-            // CREATE ADVERTISEMENT
-            // ----------------------------------------------------
-
             Console.WriteLine(
                 "================================================");
 
             Console.WriteLine(
-                "CREATING ADVERTISEMENT...");
+                "UPDATING ADVERTISEMENT...");
 
             Console.WriteLine(
-                $"TITLE: {model.Title}");
+                $"ADVERTISEMENT ID: {draftAdvertisementId.Value}");
 
             Console.WriteLine(
-                $"CATEGORY ID: {model.CategoryID}");
+                $"WHATSAPP: {model.WhatsAppNumber}");
 
             Console.WriteLine(
-                $"TYPE ID: {model.AdvertisementTypeID}");
+                $"EMAIL: {model.ContactEmail}");
 
             Console.WriteLine(
-                $"SELECTED IMAGE COUNT: {selectedImages.Count}");
+                $"SHOW WHATSAPP: {model.ShowWhatsAppToPublic}");
+
+            Console.WriteLine(
+                $"SHOW EMAIL: {model.ShowEmailToPublic}");
 
             Console.WriteLine(
                 "================================================");
 
 
-            var result =
+            var updateRequest =
+                BuildUpdateRequest();
+
+
+            // IMPORTANT:
+            // Use a different variable name from the
+            // create operation below.
+            var updateResult =
                 await AdvertisementApiService
-                    .CreateAdvertisementAsync(
-                        model);
+                    .UpdateAdvertisementAsync(
+                        draftAdvertisementId.Value,
+                        updateRequest);
 
 
-            if (result is null)
+            if (updateResult is null)
             {
                 errorMessage =
-                    "We couldn’t save the advertisement right now. " +
-                    "Please review the highlighted fields and try again.";
+                    "We couldn’t update the advertisement. " +
+                    "Please review the information and try again.";
 
                 return;
             }
 
 
-            // ----------------------------------------------------
-            // SAVE ADVERTISEMENT ID
-            // ----------------------------------------------------
-
+            // Keep the returned ID in case the API response
+            // contains the current advertisement ID.
             draftAdvertisementId =
-                result.AdvertisementID;
+                updateResult.AdvertisementID;
+
+            isEditMode = true;
 
 
             Console.WriteLine(
-                "================================================");
-
-            Console.WriteLine(
-                "ADVERTISEMENT CREATED SUCCESSFULLY.");
+                "ADVERTISEMENT UPDATED SUCCESSFULLY.");
 
             Console.WriteLine(
                 $"ADVERTISEMENT ID: {draftAdvertisementId}");
 
-            Console.WriteLine(
-                $"ADVERTISEMENT NUMBER: {result.AdvertisementNumber}");
 
-            Console.WriteLine(
-                $"IMAGES TO UPLOAD: {selectedImages.Count}");
-
-            Console.WriteLine(
-                "================================================");
-
-
-            // ----------------------------------------------------
-            // UPLOAD IMAGES
-            // ----------------------------------------------------
+            // ------------------------------------------------
+            // UPLOAD NEW IMAGES
+            // ------------------------------------------------
 
             if (selectedImages.Count > 0)
             {
@@ -3496,102 +4964,118 @@ private bool IsBusy =>
             else
             {
                 successMessage =
-                    "Advertisement saved successfully as a draft. " +
-                    "You can add photos before submitting it for approval.";
+                    "Advertisement updated successfully.";
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                "================================================");
 
-            Console.WriteLine(
-                "SAVE ADVERTISEMENT ERROR");
-
-            Console.WriteLine(
-                ex.ToString());
-
-            Console.WriteLine(
-                "================================================");
-
-
-            errorMessage =
-                "We couldn’t save your advertisement right now. " +
-                "Please review the information and try again.";
-        }
-        finally
-        {
-            isSaving = false;
-        }
-    }
-private async Task SetPrimarySavedImage(
-    SavedAdvertisementImage image)
-{
-    if (IsBusy)
-    {
-        return;
-    }
-
-    if (draftAdvertisementId is null)
-    {
-        errorMessage =
-            "Please save the advertisement before changing the main photo.";
-
-        return;
-    }
-
-    if (image.AdvertisementImageID <= 0)
-    {
-        errorMessage =
-            "The selected photo could not be identified.";
-
-        return;
-    }
-
-    errorMessage = null;
-    successMessage = null;
-
-    try
-    {
-        isSubmitting = true;
-
-        var success =
-            await AdvertisementApiService
-                .SetPrimaryImageAsync(
-                    draftAdvertisementId.Value,
-                    image.AdvertisementImageID);
-
-        if (!success)
-        {
-            errorMessage =
-                "The main photo could not be changed. " +
-                "Please try again.";
 
             return;
         }
 
-        // Update the local state immediately.
-        foreach (var savedImage in savedImages)
+
+        // ----------------------------------------------------
+        // CREATE NEW ADVERTISEMENT
+        // ----------------------------------------------------
+
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "CREATING ADVERTISEMENT...");
+
+        Console.WriteLine(
+            $"TITLE: {model.Title}");
+
+        Console.WriteLine(
+            $"CATEGORY ID: {model.CategoryID}");
+
+        Console.WriteLine(
+            $"TYPE ID: {model.AdvertisementTypeID}");
+
+        Console.WriteLine(
+            $"WHATSAPP: {model.WhatsAppNumber}");
+
+        Console.WriteLine(
+            $"EMAIL: {model.ContactEmail}");
+
+        Console.WriteLine(
+            $"SHOW WHATSAPP: {model.ShowWhatsAppToPublic}");
+
+        Console.WriteLine(
+            $"SHOW EMAIL: {model.ShowEmailToPublic}");
+
+        Console.WriteLine(
+            $"SELECTED IMAGE COUNT: {selectedImages.Count}");
+
+        Console.WriteLine(
+            "================================================");
+
+
+        // IMPORTANT:
+        // Different variable name from updateResult.
+        var createResult =
+            await AdvertisementApiService
+                .CreateAdvertisementAsync(
+                    model);
+
+
+        if (createResult is null)
         {
-            savedImage.IsPrimary =
-                savedImage.AdvertisementImageID ==
-                image.AdvertisementImageID;
+            errorMessage =
+                "We couldn’t save the advertisement right now. " +
+                "Please review the information and try again.";
+
+            return;
         }
 
-        // Any unsaved image can no longer be the primary
-        // image because the saved image is now primary.
-        foreach (var selectedImage in selectedImages)
-        {
-            selectedImage.IsPrimary = false;
-        }
 
-        successMessage =
-            $"'{image.FileName}' is now the main advertisement photo.";
+        // ----------------------------------------------------
+        // SAVE ADVERTISEMENT ID
+        // ----------------------------------------------------
+
+        draftAdvertisementId =
+            createResult.AdvertisementID;
+
+        isEditMode = true;
+
+
+        Console.WriteLine(
+            "================================================");
+
+        Console.WriteLine(
+            "ADVERTISEMENT CREATED SUCCESSFULLY.");
+
+        Console.WriteLine(
+            $"ADVERTISEMENT ID: {draftAdvertisementId}");
+
+        Console.WriteLine(
+            $"ADVERTISEMENT NUMBER: {createResult.AdvertisementNumber}");
+
+        Console.WriteLine(
+            $"IMAGES TO UPLOAD: {selectedImages.Count}");
+
+        Console.WriteLine(
+            "================================================");
+
+
+        // ----------------------------------------------------
+        // UPLOAD IMAGES
+        // ----------------------------------------------------
+
+        if (selectedImages.Count > 0)
+        {
+            await UploadSelectedImagesAsync();
+        }
+        else
+        {
+            successMessage =
+                "Advertisement saved successfully as a draft. " +
+                "You can add photos before submitting it for approval.";
+        }
     }
     catch (InvalidOperationException ex)
     {
         Console.WriteLine(
-            $"SET PRIMARY IMAGE VALIDATION ERROR: {ex}");
+            $"SAVE VALIDATION ERROR: {ex}");
 
         errorMessage =
             ex.Message;
@@ -3602,7 +5086,7 @@ private async Task SetPrimarySavedImage(
             "================================================");
 
         Console.WriteLine(
-            "SET PRIMARY SAVED IMAGE ERROR");
+            "SAVE ADVERTISEMENT ERROR");
 
         Console.WriteLine(
             ex.ToString());
@@ -3610,15 +5094,116 @@ private async Task SetPrimarySavedImage(
         Console.WriteLine(
             "================================================");
 
+
         errorMessage =
-            "The main photo could not be changed right now. " +
-            "Please try again.";
+            "We couldn’t save your advertisement right now. " +
+            "Please review the information and try again.";
     }
     finally
     {
-        isSubmitting = false;
+        isSaving = false;
     }
 }
+
+
+
+    // ============================================================
+    // SET PRIMARY SAVED IMAGE
+    // ============================================================
+
+    private async Task SetPrimarySavedImage(
+        SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (draftAdvertisementId is null)
+        {
+            errorMessage =
+                "Please save the advertisement before changing the main photo.";
+
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            errorMessage =
+                "The selected photo could not be identified.";
+
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .SetPrimaryImageAsync(
+                        draftAdvertisementId.Value,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The main photo could not be changed. " +
+                    "Please try again.";
+
+                return;
+            }
+
+            foreach (var savedImage in savedImages)
+            {
+                savedImage.IsPrimary =
+                    savedImage.AdvertisementImageID ==
+                    image.AdvertisementImageID;
+            }
+
+            foreach (var selectedImage in selectedImages)
+            {
+                selectedImage.IsPrimary = false;
+            }
+
+            successMessage =
+                $"'{image.FileName}' is now the main advertisement photo.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine(
+                $"SET PRIMARY IMAGE VALIDATION ERROR: {ex}");
+
+            errorMessage =
+                ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "SET PRIMARY SAVED IMAGE ERROR");
+
+            Console.WriteLine(
+                ex.ToString());
+
+            Console.WriteLine(
+                "================================================");
+
+            errorMessage =
+                "The main photo could not be changed right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
 
     // ============================================================
     // UPLOAD PROGRESS
@@ -3682,35 +5267,8 @@ private async Task SetPrimarySavedImage(
             new List<SelectedImage>();
 
 
-        Console.WriteLine(
-            "================================================");
-
-        Console.WriteLine(
-            "STARTING IMAGE UPLOAD");
-
-        Console.WriteLine(
-            $"ADVERTISEMENT ID: " +
-            $"{draftAdvertisementId.Value}");
-
-        Console.WriteLine(
-            $"TOTAL IMAGES: {selectedImages.Count}");
-
-        Console.WriteLine(
-            "================================================");
-
-
         try
         {
-            // ----------------------------------------------------
-            // IMPORTANT:
-            //
-            // Create a snapshot.
-            //
-            // The selectedImages collection can be changed by
-            // the UI after upload starts.
-            //
-            // ----------------------------------------------------
-
             var imagesToUpload =
                 selectedImages.ToList();
 
@@ -3738,15 +5296,6 @@ private async Task SetPrimarySavedImage(
                         "================================================");
 
 
-                    // ------------------------------------------------
-                    // IMPORTANT:
-                    //
-                    // Upload from byte[].
-                    //
-                    // No IBrowserFile is retained here.
-                    //
-                    // ------------------------------------------------
-
                     await using var stream =
                         new MemoryStream(
                             selectedImage.FileBytes,
@@ -3772,20 +5321,11 @@ private async Task SetPrimarySavedImage(
                             $"Uploading photo " +
                             $"{uploadedImageCount} of " +
                             $"{totalImagesToUpload}...";
-
-
-                        Console.WriteLine(
-                            $"IMAGE UPLOAD SUCCESS: " +
-                            $"{selectedImage.FileName}");
                     }
                     else
                     {
                         failedImages.Add(
                             selectedImage);
-
-                        Console.WriteLine(
-                            $"IMAGE UPLOAD FAILED: " +
-                            $"{selectedImage.FileName}");
                     }
                 }
                 catch (Exception ex)
@@ -3794,17 +5334,7 @@ private async Task SetPrimarySavedImage(
                         selectedImage);
 
                     Console.WriteLine(
-                        "================================================");
-
-                    Console.WriteLine(
-                        $"IMAGE UPLOAD FAILED: " +
-                        $"{selectedImage.FileName}");
-
-                    Console.WriteLine(
-                        ex.ToString());
-
-                    Console.WriteLine(
-                        "================================================");
+                        $"IMAGE UPLOAD FAILED: {ex}");
                 }
 
 
@@ -3813,19 +5343,8 @@ private async Task SetPrimarySavedImage(
             }
 
 
-            // ====================================================
-            // ALL IMAGES SUCCESSFULLY UPLOADED
-            // ====================================================
-
             if (failedImages.Count == 0)
             {
-                // Reload images from API.
-                //
-                // This is important because the database now
-                // contains the actual image URLs and primary
-                // status.
-                //
-
                 if (draftAdvertisementId.HasValue)
                 {
                     await LoadSavedImagesAsync(
@@ -3842,20 +5361,10 @@ private async Task SetPrimarySavedImage(
                 errorMessage = null;
 
 
-                // The temporary browser-selected images
-                // are no longer required.
                 selectedImages.Clear();
             }
-
-
-            // ====================================================
-            // PARTIAL SUCCESS
-            // ====================================================
-
             else if (uploadedImageCount > 0)
             {
-                // Reload successful uploads.
-
                 if (draftAdvertisementId.HasValue)
                 {
                     await LoadSavedImagesAsync(
@@ -3876,16 +5385,11 @@ private async Task SetPrimarySavedImage(
                     "You can retry the remaining photo(s).";
 
 
-                // Keep only failed images.
-
                 selectedImages.Clear();
 
                 selectedImages.AddRange(
                     failedImages);
 
-
-                // If the advertisement already has a primary
-                // image, don't create another primary.
 
                 if (!savedImages.Any(x => x.IsPrimary))
                 {
@@ -3904,12 +5408,6 @@ private async Task SetPrimarySavedImage(
                     }
                 }
             }
-
-
-            // ====================================================
-            // EVERYTHING FAILED
-            // ====================================================
-
             else
             {
                 successMessage =
@@ -3935,6 +5433,9 @@ private async Task SetPrimarySavedImage(
     {
         if (!draftAdvertisementId.HasValue)
         {
+            errorMessage =
+                "Please save the advertisement before submitting it.";
+
             return;
         }
 
@@ -3958,11 +5459,79 @@ private async Task SetPrimarySavedImage(
         errorMessage = null;
         successMessage = null;
 
+
+        // --------------------------------------------------------
+        // CLIENT-SIDE CONTACT VALIDATION
+        // --------------------------------------------------------
+
+        if (!ValidateContactInformation(
+                forSubmission: true))
+        {
+            return;
+        }
+
+
         isSubmitting = true;
 
 
         try
         {
+            // ----------------------------------------------------
+            // IMPORTANT:
+            //
+            // Save the latest contact information before submit.
+            //
+            // This guarantees that changing a contact number,
+            // email or visibility switch and immediately pressing
+            // Submit uses the latest values.
+            // ----------------------------------------------------
+
+            model.CountryID =
+                selectedCountryId > 0
+                    ? selectedCountryId
+                    : null;
+
+            model.StateID =
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null;
+
+            model.CityID =
+                selectedCityId > 0
+                    ? selectedCityId
+                    : null;
+
+            model.AreaID =
+                selectedAreaId > 0
+                    ? selectedAreaId
+                    : null;
+
+
+            var updateRequest =
+                BuildUpdateRequest();
+
+
+            var updatedAdvertisement =
+                await AdvertisementApiService
+                    .UpdateAdvertisementAsync(
+                        draftAdvertisementId.Value,
+                        updateRequest);
+
+
+            if (updatedAdvertisement is null)
+            {
+                errorMessage =
+                    "The latest advertisement changes could not be saved. " +
+                    "Please try saving the draft first.";
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // SUBMIT
+            // ----------------------------------------------------
+
             var success =
                 await AdvertisementApiService
                     .SubmitAdvertisementAsync(
@@ -3987,7 +5556,16 @@ private async Task SetPrimarySavedImage(
             await Task.Delay(1200);
 
 
-            Navigation.NavigateTo("/");
+            Navigation.NavigateTo(
+                "/my-ads");
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine(
+                $"SUBMIT VALIDATION ERROR: {ex}");
+
+            errorMessage =
+                ex.Message;
         }
         catch (Exception ex)
         {
@@ -4019,7 +5597,8 @@ private async Task SetPrimarySavedImage(
         }
 
 
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo(
+            "/my-ads");
     }
 
 
