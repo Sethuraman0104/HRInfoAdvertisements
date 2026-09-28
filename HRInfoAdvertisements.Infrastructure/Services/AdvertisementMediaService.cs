@@ -96,7 +96,7 @@ public class AdvertisementMediaService
                 FileName =
                     storedFile.FileName,
 
-                S3Key =
+                StorageKey  =
                     storedFile.FileName,
 
                 FileURL =

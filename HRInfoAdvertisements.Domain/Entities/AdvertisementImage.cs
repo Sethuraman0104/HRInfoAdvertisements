@@ -8,19 +8,17 @@ public class AdvertisementImage
 
     public string FileName { get; set; } = string.Empty;
 
-    public string S3Key { get; set; } = string.Empty;
+    public string FileURL { get; set; } = string.Empty;
 
-    public string? FileURL { get; set; }
+    public string? StorageKey { get; set; }
 
-    public int DisplayOrder { get; set; }
-
-    public bool IsPrimary { get; set; }
+    public string? ContentType { get; set; }
 
     public long? FileSize { get; set; }
 
-    public int? Width { get; set; }
+    public bool IsPrimary { get; set; }
 
-    public int? Height { get; set; }
+    public int DisplayOrder { get; set; }
 
     public DateTime CreatedDate { get; set; }
 
