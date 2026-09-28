@@ -28,30 +28,26 @@ public class AdvertisementImageConfiguration
         builder.Property(x =>
                 x.FileName)
             .HasColumnName("FileName")
-            .HasMaxLength(250)
-            .IsRequired();
-
-        builder.Property(x =>
-                x.S3Key)
-            .HasColumnName("S3Key")
-            .HasMaxLength(1000)
+            .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x =>
                 x.FileURL)
             .HasColumnName("FileURL")
-            .HasMaxLength(1500)
+            .HasMaxLength(1000)
+            .IsRequired();
+
+        builder.Property(x =>
+                x.StorageKey)
+            .HasColumnName("StorageKey")
+            .HasMaxLength(1000)
             .IsRequired(false);
 
         builder.Property(x =>
-                x.DisplayOrder)
-            .HasColumnName("DisplayOrder")
-            .IsRequired();
-
-        builder.Property(x =>
-                x.IsPrimary)
-            .HasColumnName("IsPrimary")
-            .IsRequired();
+                x.ContentType)
+            .HasColumnName("ContentType")
+            .HasMaxLength(100)
+            .IsRequired(false);
 
         builder.Property(x =>
                 x.FileSize)
@@ -59,14 +55,14 @@ public class AdvertisementImageConfiguration
             .IsRequired(false);
 
         builder.Property(x =>
-                x.Width)
-            .HasColumnName("Width")
-            .IsRequired(false);
+                x.IsPrimary)
+            .HasColumnName("IsPrimary")
+            .IsRequired();
 
         builder.Property(x =>
-                x.Height)
-            .HasColumnName("Height")
-            .IsRequired(false);
+                x.DisplayOrder)
+            .HasColumnName("DisplayOrder")
+            .IsRequired();
 
         builder.Property(x =>
                 x.CreatedDate)

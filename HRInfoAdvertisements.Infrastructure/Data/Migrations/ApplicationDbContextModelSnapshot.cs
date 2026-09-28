@@ -502,6 +502,11 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("AdvertisementID");
 
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("ContentType");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreatedDate");
@@ -512,8 +517,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("FileName");
 
                     b.Property<long?>("FileSize")
@@ -521,27 +526,19 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnName("FileSize");
 
                     b.Property<string>("FileURL")
-                        .HasMaxLength(1500)
-                        .HasColumnType("nvarchar(1500)")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
                         .HasColumnName("FileURL");
-
-                    b.Property<int?>("Height")
-                        .HasColumnType("int")
-                        .HasColumnName("Height");
 
                     b.Property<bool>("IsPrimary")
                         .HasColumnType("bit")
                         .HasColumnName("IsPrimary");
 
-                    b.Property<string>("S3Key")
-                        .IsRequired()
+                    b.Property<string>("StorageKey")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("S3Key");
-
-                    b.Property<int?>("Width")
-                        .HasColumnType("int")
-                        .HasColumnName("Width");
+                        .HasColumnName("StorageKey");
 
                     b.HasKey("AdvertisementImageID");
 
