@@ -199,22 +199,7 @@ public class UserManagementApiService
                };
     }
 
-public async Task<bool> UpdateUserProfileAsync(
-    long userId,
-    UpdateUserProfileRequest request)
-{
-    var client = CreateClient();
-
-    var response = await client.PutAsJsonAsync(
-        $"api/v1/users/{userId}/profile",
-        request);
-
-    response.EnsureSuccessStatusCode();
-
-    return true;
-}
-
-public async Task<UserProfileResponse> UpdateUserProfileAsync(
+public async Task<HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse> UpdateUserProfileAsync(
     long userId,
     UpdateUserProfileRequest request)
 {
@@ -233,26 +218,19 @@ public async Task<UserProfileResponse> UpdateUserProfileAsync(
     Console.WriteLine(
         $"STATUS: {(int)response.StatusCode} {response.StatusCode}");
 
-    if (!response.IsSuccessStatusCode)
-    {
-        var error = await response.Content.ReadAsStringAsync();
-
-        Console.WriteLine(
-            $"ERROR RESPONSE: {error}");
-
-        throw new HttpRequestException(
-            $"Unable to update user profile. " +
-            $"Status: {(int)response.StatusCode} " +
-            $"{response.StatusCode}. " +
-            $"Response: {error}");
-    }
+    response.EnsureSuccessStatusCode();
 
     var result =
-        await response.Content.ReadFromJsonAsync<UserProfileResponse>();
+        await response.Content.ReadFromJsonAsync<
+            HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse>();
 
-    return result
-        ?? throw new InvalidOperationException(
-            "The updated user profile response was empty.");
+    if (result == null)
+    {
+        throw new InvalidOperationException(
+            "The API returned an empty user profile response.");
+    }
+
+    return result;
 }
 
     // ============================================================
