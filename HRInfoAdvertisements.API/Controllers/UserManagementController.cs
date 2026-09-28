@@ -3,6 +3,8 @@ using HRInfoAdvertisements.Application.DTOs.UserManagement;
 using HRInfoAdvertisements.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HRInfoAdvertisements.Application.Profile;
+using HRInfoAdvertisements.Application.Profile.DTOs;
 
 namespace HRInfoAdvertisements.API.Controllers;
 
@@ -12,12 +14,15 @@ namespace HRInfoAdvertisements.API.Controllers;
 public class UserManagementController : ControllerBase
 {
     private readonly IUserManagementService _userManagementService;
+private readonly IProfileService _profileService;
 
-    public UserManagementController(
-        IUserManagementService userManagementService)
-    {
-        _userManagementService = userManagementService;
-    }
+public UserManagementController(
+    IUserManagementService userManagementService,
+    IProfileService profileService)
+{
+    _userManagementService = userManagementService;
+    _profileService = profileService;
+}
 
     // ============================================================
     // GET USERS
@@ -58,6 +63,39 @@ public class UserManagementController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpPut("{userId:long}/profile")]
+[Authorize(Policy = "USER_EDIT")]
+public async Task<IActionResult> UpdateUserProfile(
+    long userId,
+    [FromBody] UpdateUserProfileRequest request)
+{
+    try
+    {
+        var result =
+            await _profileService.UpdateProfileAsync(
+                userId,
+                request);
+
+        return Ok(result);
+    }
+    catch (ArgumentException ex)
+    {
+        return BadRequest(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+}
 
     // ============================================================
     // UPDATE ACCOUNT STATUS

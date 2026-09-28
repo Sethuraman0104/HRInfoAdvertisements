@@ -81,6 +81,52 @@ public class ProfileController : ControllerBase
     }
 
     // ------------------------------------------------------------
+// Admin - User Profile
+// ------------------------------------------------------------
+
+[HttpPut("users/{userId:long}/profile")]
+[Authorize(Policy = "USER_EDIT")]
+public async Task<IActionResult> UpdateUserProfileByAdmin(
+    long userId,
+    [FromBody] UpdateUserProfileRequest request)
+{
+    if (userId <= 0)
+    {
+        return BadRequest(new
+        {
+            success = false,
+            message = "Invalid user ID."
+        });
+    }
+
+    try
+    {
+        var result =
+            await _profileService.UpdateProfileAsync(
+                userId,
+                request);
+
+        return Ok(result);
+    }
+    catch (ArgumentException ex)
+    {
+        return BadRequest(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+}
+
+    // ------------------------------------------------------------
     // Addresses
     // ------------------------------------------------------------
 

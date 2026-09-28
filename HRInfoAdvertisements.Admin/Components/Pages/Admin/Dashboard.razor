@@ -16,70 +16,55 @@
 @inject NavigationManager Navigation
 
 <PageTitle>Dashboard | HR INFO ADs</PageTitle>
+   <div class="admin-dashboard">
 
-<div class="admin-dashboard">
+    <PageHeader Icon="bi-speedometer2"
+            Eyebrow="ADMINISTRATION"
+            Title="Dashboard">
 
-    <!-- =========================================================
-         PAGE HEADER
-         ========================================================= -->
+    <DescriptionContent>
+        Welcome back, <strong>@userName</strong>.
+        Here is an overview of the HR INFO ADs platform.
+    </DescriptionContent>
 
-    <section class="dashboard-welcome">
+    <ActionContent>
 
-        <div class="dashboard-welcome-content">
+        <div class="hr-page-info-card">
 
-            <span class="dashboard-eyebrow">
-                ADMINISTRATION
-            </span>
+            <i class="bi bi-calendar3"></i>
 
-            <h1>
-                Dashboard
-            </h1>
+            <div>
+                <small>Today</small>
 
-            <p>
-                Welcome back, <strong>@userName</strong>.
-                Here is an overview of the HR INFO ADs platform.
-            </p>
-
-        </div>
-
-        <div class="dashboard-header-actions">
-
-            <div class="dashboard-date-card">
-                <i class="bi bi-calendar3"></i>
-
-                <div>
-                    <small>Today</small>
-
-                    <strong>
-                        @DateTime.Now.ToString(
-                            "dd MMM yyyy",
-                            CultureInfo.CurrentCulture)
-                    </strong>
-                </div>
+                <strong>
+                    @DateTime.Now.ToString(
+                        "dd MMM yyyy",
+                        CultureInfo.CurrentCulture)
+                </strong>
             </div>
 
-            <button type="button"
-                    class="dashboard-refresh-button"
-                    @onclick="RefreshDashboardAsync"
-                    disabled="@isLoading">
-
-                @if (isLoading)
-                {
-                    <span class="dashboard-spinner"></span>
-                    <span>Refreshing</span>
-                }
-                else
-                {
-                    <i class="bi bi-arrow-clockwise"></i>
-                    <span>Refresh</span>
-                }
-
-            </button>
-
         </div>
 
-    </section>
+        <button type="button"
+                class="hr-page-btn"
+                @onclick="RefreshDashboardAsync"
+                disabled="@isLoading">
 
+            <i class="bi @(isLoading
+                ? "bi-arrow-repeat hr-spin"
+                : "bi-arrow-clockwise")"></i>
+
+            <span>
+                @(isLoading ? "Refreshing" : "Refresh")
+            </span>
+
+        </button>
+
+    </ActionContent>
+
+</PageHeader>
+
+    <!-- the rest of your dashboard stays exactly as it is -->
 
     <!-- =========================================================
          ERROR
@@ -1140,6 +1125,10 @@
         return true;
     }
 
+private string GetDashboardDescription()
+{
+    return $"Welcome back, {userName}. Here is an overview of the HR INFO ADs platform.";
+}
 
     // ============================================================
     // LOAD DASHBOARD

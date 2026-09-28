@@ -1,0 +1,1652 @@
+@page "/admin/categories"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.CategoryManagement
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject CategoryManagementApiService CategoryManagementApiService
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Category Management | HR INFO ADs</PageTitle>
+
+<div class="admin-categories">
+
+    <PageHeader Icon="bi-tags-fill"
+                Eyebrow="CATEGORY MANAGEMENT"
+                Title="Categories"
+                DescriptionContent="@CategoryHeaderDescription"
+                ActionContent="@CategoryHeaderActions" />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="categories-error">
+            <div class="categories-error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="categories-error-content">
+                <strong>Unable to load categories</strong>
+                <span>@errorMessage</span>
+            </div>
+
+            <button type="button"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+                Retry
+            </button>
+        </div>
+    }
+
+    <!-- ============================================================
+         FILTER PANEL
+         ============================================================ -->
+
+    <section class="categories-filter-panel">
+
+        <div class="categories-filter-header">
+
+            <div class="categories-filter-title">
+
+                <div class="categories-filter-icon">
+                    <i class="bi bi-funnel"></i>
+                </div>
+
+                <div>
+                    <h2>Find Categories</h2>
+                    <p>Search and filter advertisement categories.</p>
+                </div>
+
+            </div>
+
+            @if (HasActiveFilters)
+            {
+                <button type="button"
+                        class="categories-clear-filters"
+                        @onclick="ClearFilters"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-x-circle"></i>
+
+                    Clear Filters
+                </button>
+            }
+
+        </div>
+
+        <div class="categories-filter-grid">
+
+            <!-- SEARCH -->
+
+            <div class="categories-filter-field categories-search-field">
+
+                <label for="categorySearch">
+                    Search
+                </label>
+
+                <div class="categories-search-wrapper">
+
+                    <i class="bi bi-search"></i>
+
+                    <input id="categorySearch"
+                           type="text"
+                           class="categories-input"
+                           placeholder="Category name, Arabic name or description..."
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown" />
+
+                    @if (!string.IsNullOrWhiteSpace(searchText))
+                    {
+                        <button type="button"
+                                class="categories-search-clear"
+                                title="Clear search"
+                                @onclick="ClearSearch"
+                                disabled="@isLoading">
+
+                            <i class="bi bi-x"></i>
+
+                        </button>
+                    }
+
+                </div>
+
+            </div>
+
+            <!-- STATUS -->
+
+            <div class="categories-filter-field">
+
+                <label for="categoryStatus">
+                    Status
+                </label>
+
+                <div class="categories-select-wrapper">
+
+                    <i class="bi bi-toggle-on"></i>
+
+                    <select id="categoryStatus"
+                            class="categories-select"
+                            @bind="statusFilter">
+
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- SEARCH BUTTON -->
+
+            <div class="categories-filter-action">
+
+                <button type="button"
+                        class="categories-search-button"
+                        @onclick="SearchAsync"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-search"></i>
+
+                    <span>Search</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+     RESULTS
+     ============================================================ -->
+
+<section class="categories-results-panel">
+
+    <div class="categories-results-header">
+
+        <div>
+
+            <span class="categories-results-eyebrow">
+                CATEGORY DIRECTORY
+            </span>
+
+            <h2>Advertisement Categories</h2>
+
+            <p>@GetResultsDescription()</p>
+
+        </div>
+
+        <div class="categories-results-meta">
+
+            @if (totalRecords > 0)
+            {
+                <span class="categories-result-range">
+
+                    Showing
+                    <strong>@FirstRecordNumber</strong>
+                    –
+                    <strong>@LastRecordNumber</strong>
+                    of
+                    <strong>@totalRecords</strong>
+
+                </span>
+            }
+            else
+            {
+                <span class="categories-result-range">
+                    No categories found
+                </span>
+            }
+
+        </div>
+
+    </div>
+
+
+    @if (isLoading && !hasLoaded)
+    {
+        <div class="categories-loading">
+
+            <div class="categories-loading-spinner"></div>
+
+            <strong>Loading categories</strong>
+
+            <span>
+                Retrieving advertisement categories...
+            </span>
+
+        </div>
+    }
+    else if (categories.Count == 0)
+    {
+        <div class="categories-empty">
+
+            <div class="categories-empty-icon">
+                <i class="bi bi-tags"></i>
+            </div>
+
+            <strong>No categories found</strong>
+
+            <span>
+                @GetEmptyMessage()
+            </span>
+
+            @if (HasActiveFilters)
+            {
+                <button type="button"
+                        @onclick="ClearFilters">
+
+                    Clear Filters
+
+                </button>
+            }
+
+        </div>
+    }
+    else
+    {
+        <div class="categories-table-wrapper">
+
+            <table class="categories-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Category</th>
+
+                        <th>Arabic Name</th>
+
+                        <th>Description</th>
+
+                        <th>Advertisements</th>
+
+                        <th>Display Order</th>
+
+                        <th>Status</th>
+
+                        <th class="categories-action-column">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    @foreach (var category in categories)
+                    {
+                        <tr @key="category.CategoryID">
+
+                            <td>
+
+                                <div class="categories-category-cell">
+
+                                    <div class="categories-category-icon">
+                                        <i class="bi bi-tag-fill"></i>
+                                    </div>
+
+                                    <div class="categories-category-info">
+
+                                        <button type="button"
+                                                class="categories-category-name"
+                                                @onclick="() => OpenEditDialog(category.CategoryID)">
+
+                                            @category.CategoryName
+
+                                        </button>
+
+                                        <small>
+                                            ID #@category.CategoryID
+                                        </small>
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                @if (!string.IsNullOrWhiteSpace(category.CategoryNameAr))
+                                {
+                                    <span class="categories-arabic-name"
+                                          dir="rtl">
+
+                                        @category.CategoryNameAr
+
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="categories-not-specified">
+                                        Not specified
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="categories-description">
+
+                                    @if (!string.IsNullOrWhiteSpace(category.Description))
+                                    {
+                                        <span title="@category.Description">
+                                            @category.Description
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="categories-not-specified">
+                                            No description
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="categories-ad-count">
+
+                                    <div class="categories-ad-count-icon">
+                                        <i class="bi bi-megaphone-fill"></i>
+                                    </div>
+
+                                    <strong>
+                                        @category.AdvertisementCount
+                                    </strong>
+
+                                    <span>
+                                        @(category.AdvertisementCount == 1
+                                            ? "ad"
+                                            : "ads")
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="categories-order">
+
+                                    <span>
+                                        @category.DisplayOrder
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <div class="categories-status-cell">
+
+                                    <span class="@GetStatusClass(category.IsActive)">
+
+                                        <span class="categories-status-dot"></span>
+
+                                        @(category.IsActive
+                                            ? "Active"
+                                            : "Inactive")
+
+                                    </span>
+
+                                </div>
+
+                            </td>
+
+
+                            <td class="categories-action-column">
+
+                                <div class="categories-actions">
+
+                                    <button type="button"
+                                            class="categories-action-button edit"
+                                            title="Edit category"
+                                            @onclick="() => OpenEditDialog(category.CategoryID)">
+
+                                        <i class="bi bi-pencil"></i>
+
+                                    </button>
+
+                                    <button type="button"
+                                            class="@GetStatusActionClass(category.IsActive)"
+                                            title="@(category.IsActive
+                                                ? "Deactivate category"
+                                                : "Activate category")"
+                                            @onclick="() => OpenStatusDialog(category)">
+
+                                        <i class="bi @(category.IsActive
+                                            ? "bi-pause-circle"
+                                            : "bi-play-circle")">
+                                        </i>
+
+                                    </button>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        @if (totalPages > 1)
+        {
+            <div class="categories-pagination">
+
+                <div class="categories-pagination-info">
+
+                    Page
+                    <strong>@pageNumber</strong>
+                    of
+                    <strong>@totalPages</strong>
+
+                </div>
+
+                <div class="categories-pagination-controls">
+
+                    <button type="button"
+                            class="categories-page-button"
+                            @onclick="GoToFirstPageAsync"
+                            disabled="@(pageNumber <= 1 || isLoading)"
+                            title="First page">
+
+                        <i class="bi bi-chevron-double-left"></i>
+
+                    </button>
+
+                    <button type="button"
+                            class="categories-page-button"
+                            @onclick="GoToPreviousPageAsync"
+                            disabled="@(pageNumber <= 1 || isLoading)"
+                            title="Previous page">
+
+                        <i class="bi bi-chevron-left"></i>
+
+                    </button>
+
+                    @foreach (var pageNumberValue in GetPageNumbers())
+                    {
+                        if (pageNumberValue == -1)
+                        {
+                            <span class="categories-page-ellipsis">
+                                …
+                            </span>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="@GetPageButtonClass(pageNumberValue)"
+                                    @onclick="() => GoToPageAsync(pageNumberValue)"
+                                    disabled="@isLoading">
+
+                                @pageNumberValue
+
+                            </button>
+                        }
+                    }
+
+                    <button type="button"
+                            class="categories-page-button"
+                            @onclick="GoToNextPageAsync"
+                            disabled="@(pageNumber >= totalPages || isLoading)"
+                            title="Next page">
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+                    <button type="button"
+                            class="categories-page-button"
+                            @onclick="GoToLastPageAsync"
+                            disabled="@(pageNumber >= totalPages || isLoading)"
+                            title="Last page">
+
+                        <i class="bi bi-chevron-double-right"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+        }
+    }
+
+</section>
+
+
+    <!-- ============================================================
+         ADD / EDIT MODAL
+         ============================================================ -->
+
+    @if (showCategoryDialog)
+    {
+        <div class="categories-modal-backdrop"
+             @onclick="CloseCategoryDialog">
+
+            <div class="categories-modal"
+                 @onclick:stopPropagation="true">
+
+                <div class="categories-modal-header">
+
+                    <div class="categories-modal-title">
+
+                        <div class="categories-modal-icon">
+                            <i class="bi @(isEditMode
+                                ? "bi-pencil-square"
+                                : "bi-plus-lg")">
+                            </i>
+                        </div>
+
+                        <div>
+
+                            <span>
+                                @(isEditMode
+                                    ? "EDIT CATEGORY"
+                                    : "NEW CATEGORY")
+                            </span>
+
+                            <h2>
+                                @(isEditMode
+                                    ? "Edit Category"
+                                    : "Add Category")
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            class="categories-modal-close"
+                            @onclick="CloseCategoryDialog"
+                            disabled="@isSaving">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+
+                <EditForm Model="@categoryForm"
+                          OnValidSubmit="SaveCategoryAsync">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="categories-modal-body">
+
+                        @if (!string.IsNullOrWhiteSpace(dialogErrorMessage))
+                        {
+                            <div class="categories-dialog-error">
+
+                                <i class="bi bi-exclamation-circle"></i>
+
+                                <span>
+                                    @dialogErrorMessage
+                                </span>
+
+                            </div>
+                        }
+
+                        <div class="categories-form-grid">
+
+                            <!-- NAME -->
+
+                            <div class="categories-form-field">
+
+                                <label for="categoryName">
+                                    Category Name
+                                    <span>*</span>
+                                </label>
+
+                                <div class="categories-form-input-wrapper">
+
+                                    <i class="bi bi-tag"></i>
+
+                                    <InputText id="categoryName"
+                                               class="categories-form-input"
+                                               @bind-Value="categoryForm.CategoryName"
+                                               placeholder="e.g. Real Estate" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => categoryForm.CategoryName)" />
+
+                            </div>
+
+
+                            <!-- ARABIC -->
+
+                            <div class="categories-form-field">
+
+                                <label for="categoryNameAr">
+                                    Arabic Category Name
+                                </label>
+
+                                <div class="categories-form-input-wrapper arabic">
+
+                                    <i class="bi bi-translate"></i>
+
+                                    <InputText id="categoryNameAr"
+                                               class="categories-form-input"
+                                               @bind-Value="categoryForm.CategoryNameAr"
+                                               placeholder="مثال: العقارات"
+                                               dir="rtl" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => categoryForm.CategoryNameAr)" />
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+
+                            <div class="categories-form-field full">
+
+                                <label for="categoryDescription">
+                                    Description
+                                </label>
+
+                                <div class="categories-form-textarea-wrapper">
+
+                                    <i class="bi bi-card-text"></i>
+
+                                    <InputTextArea id="categoryDescription"
+                                                   class="categories-form-textarea"
+                                                   @bind-Value="categoryForm.Description"
+                                                   placeholder="Describe what advertisements belong in this category..."
+                                                   rows="4" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => categoryForm.Description)" />
+
+                            </div>
+
+
+                            <!-- DISPLAY ORDER -->
+
+                            <div class="categories-form-field">
+
+                                <label for="displayOrder">
+                                    Display Order
+                                </label>
+
+                                <div class="categories-form-input-wrapper">
+
+                                    <i class="bi bi-sort-numeric-down"></i>
+
+                                    <InputNumber id="displayOrder"
+                                                 class="categories-form-input"
+                                                 @bind-Value="categoryForm.DisplayOrder" />
+
+                                </div>
+
+                                <small class="categories-form-help">
+                                    Lower numbers appear first.
+                                </small>
+
+                            </div>
+
+
+                            <!-- ACTIVE -->
+
+                            <div class="categories-form-field">
+
+                                <label>
+                                    Status
+                                </label>
+
+                                <label class="categories-toggle">
+
+                                    <InputCheckbox @bind-Value="categoryForm.IsActive" />
+
+                                    <span class="categories-toggle-track">
+                                        <span class="categories-toggle-thumb"></span>
+                                    </span>
+
+                                    <span class="categories-toggle-text">
+                                        @(categoryForm.IsActive
+                                            ? "Active"
+                                            : "Inactive")
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="categories-modal-footer">
+
+                        <button type="button"
+                                class="categories-modal-cancel"
+                                @onclick="CloseCategoryDialog"
+                                disabled="@isSaving">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="categories-modal-save"
+                                disabled="@isSaving">
+
+                            @if (isSaving)
+                            {
+                                <span class="categories-button-spinner"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi @(isEditMode
+                                    ? "bi-check-lg"
+                                    : "bi-plus-lg")">
+                                </i>
+
+                                <span>
+                                    @(isEditMode
+                                        ? "Update Category"
+                                        : "Create Category")
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ============================================================
+         STATUS CONFIRMATION
+         ============================================================ -->
+
+    @if (showStatusDialog && selectedCategory is not null)
+    {
+        <div class="categories-modal-backdrop"
+             @onclick="CloseStatusDialog">
+
+            <div class="categories-confirm-dialog"
+                 @onclick:stopPropagation="true">
+
+                <div class="categories-confirm-icon @(selectedCategory.IsActive ? "warning" : "success")">
+
+                    <i class="bi @(selectedCategory.IsActive
+                        ? "bi-pause-circle"
+                        : "bi-play-circle")">
+                    </i>
+
+                </div>
+
+                <h2>
+                    @(selectedCategory.IsActive
+                        ? "Deactivate Category?"
+                        : "Activate Category?")
+                </h2>
+
+                <p>
+                    You are about to
+                    <strong>
+                        @(selectedCategory.IsActive
+                            ? "deactivate"
+                            : "activate")
+                    </strong>
+                    the category
+                    <strong>
+                        @selectedCategory.CategoryName
+                    </strong>.
+                </p>
+
+                @if (selectedCategory.AdvertisementCount > 0 &&
+                     selectedCategory.IsActive)
+                {
+                    <div class="categories-confirm-note">
+
+                        <i class="bi bi-info-circle"></i>
+
+                        <span>
+                            This category currently contains
+                            <strong>
+                                @selectedCategory.AdvertisementCount
+                            </strong>
+                            advertisement@(selectedCategory.AdvertisementCount == 1 ? "" : "s").
+                            Deactivating it will not delete existing advertisements.
+                        </span>
+
+                    </div>
+                }
+
+                <div class="categories-confirm-actions">
+
+                    <button type="button"
+                            class="categories-confirm-cancel"
+                            @onclick="CloseStatusDialog"
+                            disabled="@isStatusSaving">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="button"
+                            class="@GetConfirmButtonClass(selectedCategory.IsActive)"
+                            @onclick="ConfirmStatusChangeAsync"
+                            disabled="@isStatusSaving">
+
+                        @if (isStatusSaving)
+                        {
+                            <span class="categories-button-spinner"></span>
+                            <span>Updating...</span>
+                        }
+                        else
+                        {
+                            <i class="bi @(selectedCategory.IsActive
+                                ? "bi-pause-circle"
+                                : "bi-play-circle")">
+                            </i>
+
+                            <span>
+                                @(selectedCategory.IsActive
+                                    ? "Deactivate"
+                                    : "Activate")
+                            </span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private List<CategoryListItemResponse> categories = new();
+
+    private string? searchText;
+
+    private string? statusFilter;
+
+    private int pageNumber = 1;
+    private int pageSize = 20;
+
+    private int totalRecords;
+    private int totalPages;
+
+    private bool isLoading;
+    private bool hasLoaded;
+
+    private string? errorMessage;
+
+
+    // ============================================================
+    // CATEGORY DIALOG
+    // ============================================================
+
+    private bool showCategoryDialog;
+    private bool isEditMode;
+    private bool isSaving;
+
+    private int editingCategoryId;
+
+    private string? dialogErrorMessage;
+
+    private CategoryFormModel categoryForm =
+        new();
+
+
+    // ============================================================
+    // STATUS DIALOG
+    // ============================================================
+
+    private bool showStatusDialog;
+    private bool isStatusSaving;
+
+    private CategoryListItemResponse? selectedCategory;
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AdminAuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+
+            return;
+        }
+
+        await LoadCategoriesAsync();
+    }
+
+
+    // ============================================================
+    // PAGE HEADER
+    // ============================================================
+
+    private RenderFragment CategoryHeaderDescription => @<text>
+        Manage advertisement categories, ordering and availability.
+    </text>;
+
+    private RenderFragment CategoryHeaderActions => @<text>
+
+        <button type="button"
+                class="hr-page-btn"
+                @onclick="OpenCreateDialog">
+
+            <i class="bi bi-plus-lg"></i>
+
+            <span>Add Category</span>
+
+        </button>
+
+        <button type="button"
+                class="hr-page-btn"
+                @onclick="RefreshAsync"
+                disabled="@isLoading">
+
+            <i class="bi @(isLoading
+                ? "bi-arrow-repeat hr-spin"
+                : "bi-arrow-clockwise")">
+            </i>
+
+            <span>Refresh</span>
+
+        </button>
+
+    </text>;
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadCategoriesAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            bool? activeFilter =
+                statusFilter switch
+                {
+                    "ACTIVE" => true,
+                    "INACTIVE" => false,
+                    _ => null
+                };
+
+            var result =
+                await CategoryManagementApiService
+                    .GetCategoriesAsync(
+                        search: searchText,
+                        isActive: activeFilter,
+                        pageNumber: pageNumber,
+                        pageSize: pageSize);
+
+            if (result == null)
+            {
+                categories = new();
+                totalRecords = 0;
+                totalPages = 0;
+
+                errorMessage =
+                    "The category information could not be retrieved. " +
+                    "Your session may have expired or you may not have permission to view categories.";
+
+                return;
+            }
+
+            categories =
+                result.Items ??
+                new List<CategoryListItemResponse>();
+
+            pageNumber = result.PageNumber;
+            pageSize = result.PageSize;
+
+            totalRecords = result.TotalRecords;
+            totalPages = result.TotalPages;
+
+            hasLoaded = true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CATEGORY MANAGEMENT ERROR: {ex}");
+
+            categories = new();
+
+            errorMessage =
+                "The category information could not be loaded. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // SEARCH / FILTERS
+    // ============================================================
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task HandleSearchKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAsync();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchText = null;
+        pageNumber = 1;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task ClearFilters()
+    {
+        searchText = null;
+        statusFilter = null;
+
+        pageNumber = 1;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        await LoadCategoriesAsync();
+    }
+
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private async Task GoToPageAsync(int page)
+    {
+        if (page < 1 ||
+            page > totalPages ||
+            page == pageNumber ||
+            isLoading)
+        {
+            return;
+        }
+
+        pageNumber = page;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task GoToFirstPageAsync()
+    {
+        if (pageNumber <= 1)
+        {
+            return;
+        }
+
+        pageNumber = 1;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task GoToPreviousPageAsync()
+    {
+        if (pageNumber <= 1)
+        {
+            return;
+        }
+
+        pageNumber--;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task GoToNextPageAsync()
+    {
+        if (pageNumber >= totalPages)
+        {
+            return;
+        }
+
+        pageNumber++;
+
+        await LoadCategoriesAsync();
+    }
+
+    private async Task GoToLastPageAsync()
+    {
+        if (pageNumber >= totalPages)
+        {
+            return;
+        }
+
+        pageNumber = totalPages;
+
+        await LoadCategoriesAsync();
+    }
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        if (totalPages <= 7)
+        {
+            return Enumerable.Range(
+                1,
+                totalPages);
+        }
+
+        var pages =
+            new List<int>
+            {
+                1
+            };
+
+        if (pageNumber > 4)
+        {
+            pages.Add(-1);
+        }
+
+        var start =
+            Math.Max(
+                2,
+                pageNumber - 1);
+
+        var end =
+            Math.Min(
+                totalPages - 1,
+                pageNumber + 1);
+
+        for (var i = start; i <= end; i++)
+        {
+            pages.Add(i);
+        }
+
+        if (pageNumber < totalPages - 3)
+        {
+            pages.Add(-1);
+        }
+
+        pages.Add(totalPages);
+
+        return pages.Distinct();
+    }
+
+    private string GetPageButtonClass(int page)
+    {
+        return page == pageNumber
+            ? "categories-page-button active"
+            : "categories-page-button";
+    }
+
+
+    // ============================================================
+    // CREATE / EDIT
+    // ============================================================
+
+    private void OpenCreateDialog()
+    {
+        editingCategoryId = 0;
+
+        isEditMode = false;
+
+        dialogErrorMessage = null;
+
+        categoryForm =
+            new CategoryFormModel
+            {
+                IsActive = true,
+                DisplayOrder = 0
+            };
+
+        showCategoryDialog = true;
+    }
+
+    private async Task OpenEditDialog(
+        int categoryId)
+    {
+        if (categoryId <= 0 ||
+            isSaving)
+        {
+            return;
+        }
+
+        dialogErrorMessage = null;
+
+        try
+        {
+            var category =
+                await CategoryManagementApiService
+                    .GetCategoryByIdAsync(
+                        categoryId);
+
+            if (category == null)
+            {
+                dialogErrorMessage =
+                    "The selected category could not be found.";
+
+                return;
+            }
+
+            editingCategoryId =
+                category.CategoryID;
+
+            isEditMode = true;
+
+            categoryForm =
+                new CategoryFormModel
+                {
+                    CategoryName =
+                        category.CategoryName,
+
+                    CategoryNameAr =
+                        category.CategoryNameAr,
+
+                    Description =
+                        category.Description,
+
+                    IsActive =
+                        category.IsActive,
+
+                    DisplayOrder =
+                        category.DisplayOrder
+                };
+
+            showCategoryDialog = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CATEGORY EDIT ERROR: {ex}");
+
+            errorMessage =
+                "Unable to retrieve the category details. " +
+                "Please try again.";
+        }
+    }
+
+    private void CloseCategoryDialog()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        showCategoryDialog = false;
+
+        dialogErrorMessage = null;
+    }
+
+    private async Task SaveCategoryAsync()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        dialogErrorMessage = null;
+
+        try
+        {
+            if (isEditMode)
+            {
+                var request =
+                    new UpdateCategoryRequest
+                    {
+                        CategoryName =
+                            categoryForm.CategoryName,
+
+                        CategoryNameAr =
+                            categoryForm.CategoryNameAr,
+
+                        Description =
+                            categoryForm.Description,
+
+                        IsActive =
+                            categoryForm.IsActive,
+
+                        DisplayOrder =
+                            categoryForm.DisplayOrder
+                    };
+
+                var updated =
+                    await CategoryManagementApiService
+                        .UpdateCategoryAsync(
+                            editingCategoryId,
+                            request);
+
+                if (!updated)
+                {
+                    dialogErrorMessage =
+                        "The category could not be updated.";
+
+                    return;
+                }
+            }
+            else
+            {
+                var request =
+                    new CreateCategoryRequest
+                    {
+                        CategoryName =
+                            categoryForm.CategoryName,
+
+                        CategoryNameAr =
+                            categoryForm.CategoryNameAr,
+
+                        Description =
+                            categoryForm.Description,
+
+                        IsActive =
+                            categoryForm.IsActive,
+
+                        DisplayOrder =
+                            categoryForm.DisplayOrder
+                    };
+
+                var categoryId =
+                    await CategoryManagementApiService
+                        .CreateCategoryAsync(
+                            request);
+
+                if (!categoryId.HasValue)
+                {
+                    dialogErrorMessage =
+                        "The category could not be created.";
+
+                    return;
+                }
+            }
+
+            showCategoryDialog = false;
+
+            await LoadCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CATEGORY SAVE ERROR: {ex}");
+
+            dialogErrorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    isEditMode
+                        ? "Unable to update the category."
+                        : "Unable to create the category.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATUS
+    // ============================================================
+
+    private void OpenStatusDialog(
+        CategoryListItemResponse category)
+    {
+        selectedCategory = category;
+
+        isStatusSaving = false;
+
+        showStatusDialog = true;
+    }
+
+    private void CloseStatusDialog()
+    {
+        if (isStatusSaving)
+        {
+            return;
+        }
+
+        showStatusDialog = false;
+
+        selectedCategory = null;
+    }
+
+    private async Task ConfirmStatusChangeAsync()
+    {
+        if (selectedCategory == null ||
+            isStatusSaving)
+        {
+            return;
+        }
+
+        isStatusSaving = true;
+
+        try
+        {
+            var newStatus =
+                !selectedCategory.IsActive;
+
+            var updated =
+                await CategoryManagementApiService
+                    .UpdateCategoryStatusAsync(
+                        selectedCategory.CategoryID,
+                        newStatus);
+
+            if (!updated)
+            {
+                errorMessage =
+                    "The category status could not be updated.";
+
+                return;
+            }
+
+            showStatusDialog = false;
+
+            selectedCategory = null;
+
+            await LoadCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CATEGORY STATUS ERROR: {ex}");
+
+            errorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    "Unable to update the category status.");
+        }
+        finally
+        {
+            isStatusSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // DISPLAY HELPERS
+    // ============================================================
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchText) ||
+        !string.IsNullOrWhiteSpace(statusFilter);
+
+    private int FirstRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : ((pageNumber - 1) * pageSize) + 1;
+
+    private int LastRecordNumber =>
+        Math.Min(
+            pageNumber * pageSize,
+            totalRecords);
+
+    private string GetResultsDescription()
+    {
+        if (totalRecords == 0)
+        {
+            return HasActiveFilters
+                ? "No categories match the selected search criteria."
+                : "There are currently no advertisement categories.";
+        }
+
+        if (HasActiveFilters)
+        {
+            return "Categories matching your current search and filter criteria.";
+        }
+
+        return "All advertisement categories available on the platform.";
+    }
+
+    private string GetEmptyMessage()
+    {
+        if (HasActiveFilters)
+        {
+            return "Try changing your search terms or clearing the filters.";
+        }
+
+        return "Advertisement categories will appear here.";
+    }
+
+    private static string GetStatusClass(
+        bool isActive)
+    {
+        return isActive
+            ? "categories-status active"
+            : "categories-status inactive";
+    }
+
+    private static string GetStatusActionClass(
+        bool isActive)
+    {
+        return isActive
+            ? "categories-action-button deactivate"
+            : "categories-action-button activate";
+    }
+
+    private static string GetConfirmButtonClass(
+        bool isActive)
+    {
+        return isActive
+            ? "categories-confirm-danger"
+            : "categories-confirm-success";
+    }
+
+    private static string GetApiErrorMessage(
+        Exception ex,
+        string fallback)
+    {
+        if (ex is HttpRequestException &&
+            !string.IsNullOrWhiteSpace(ex.Message))
+        {
+            if (ex.Message.Contains(
+                    "already exist",
+                    StringComparison.OrdinalIgnoreCase) ||
+                ex.Message.Contains(
+                    "already in use",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return "A category with this name already exists.";
+            }
+        }
+
+        return fallback;
+    }
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private sealed class CategoryFormModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(
+            ErrorMessage = "Category name is required.")]
+        [System.ComponentModel.DataAnnotations.MaxLength(
+            150,
+            ErrorMessage = "Category name cannot exceed 150 characters.")]
+        public string CategoryName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.MaxLength(
+            150,
+            ErrorMessage = "Arabic category name cannot exceed 150 characters.")]
+        public string? CategoryNameAr { get; set; }
+
+        [System.ComponentModel.DataAnnotations.MaxLength(
+            500,
+            ErrorMessage = "Description cannot exceed 500 characters.")]
+        public string? Description { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public int DisplayOrder { get; set; }
+    }
+}

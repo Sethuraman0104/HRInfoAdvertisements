@@ -1,0 +1,56 @@
+<header class="hr-page-header">
+
+    <div class="hr-page-header-main">
+
+        <div class="hr-page-header-icon">
+            <i class="bi @Icon"></i>
+        </div>
+
+        <div class="hr-page-header-text">
+
+            @if (!string.IsNullOrWhiteSpace(Eyebrow))
+            {
+                <span class="hr-page-header-eyebrow">
+                    @Eyebrow
+                </span>
+            }
+
+            <h1>@Title</h1>
+
+            @if (DescriptionContent is not null)
+            {
+                <div class="hr-page-header-description">
+                    @DescriptionContent
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+    @if (ActionContent is not null)
+    {
+        <div class="hr-page-header-actions">
+            @ActionContent
+        </div>
+    }
+
+</header>
+
+@code {
+
+    [Parameter]
+    public string Icon { get; set; } = "bi-grid-1x2-fill";
+
+    [Parameter]
+    public string? Eyebrow { get; set; }
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public RenderFragment? DescriptionContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActionContent { get; set; }
+}

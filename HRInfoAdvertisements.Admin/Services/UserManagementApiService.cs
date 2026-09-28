@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 
 using HRInfoAdvertisements.Application.DTOs.UserManagement;
+using HRInfoAdvertisements.Application.Profile.DTOs;
 
 namespace HRInfoAdvertisements.Admin.Services;
 
@@ -197,6 +198,62 @@ public class UserManagementApiService
                    PageSize = pageSize
                };
     }
+
+public async Task<bool> UpdateUserProfileAsync(
+    long userId,
+    UpdateUserProfileRequest request)
+{
+    var client = CreateClient();
+
+    var response = await client.PutAsJsonAsync(
+        $"api/v1/users/{userId}/profile",
+        request);
+
+    response.EnsureSuccessStatusCode();
+
+    return true;
+}
+
+public async Task<UserProfileResponse> UpdateUserProfileAsync(
+    long userId,
+    UpdateUserProfileRequest request)
+{
+    var client = CreateClient();
+
+    Console.WriteLine("================================================");
+    Console.WriteLine("USER MANAGEMENT - UPDATE USER PROFILE");
+    Console.WriteLine(
+        $"PUT: api/v1/users/{userId}/profile");
+    Console.WriteLine("================================================");
+
+    var response = await client.PutAsJsonAsync(
+        $"api/v1/users/{userId}/profile",
+        request);
+
+    Console.WriteLine(
+        $"STATUS: {(int)response.StatusCode} {response.StatusCode}");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        var error = await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(
+            $"ERROR RESPONSE: {error}");
+
+        throw new HttpRequestException(
+            $"Unable to update user profile. " +
+            $"Status: {(int)response.StatusCode} " +
+            $"{response.StatusCode}. " +
+            $"Response: {error}");
+    }
+
+    var result =
+        await response.Content.ReadFromJsonAsync<UserProfileResponse>();
+
+    return result
+        ?? throw new InvalidOperationException(
+            "The updated user profile response was empty.");
+}
 
     // ============================================================
     // GET USER BY ID

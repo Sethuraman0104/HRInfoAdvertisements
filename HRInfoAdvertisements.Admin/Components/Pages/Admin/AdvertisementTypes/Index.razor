@@ -1,0 +1,1627 @@
+@page "/admin/advertisement-types"
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using System.ComponentModel.DataAnnotations
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.AdvertisementTypeManagement
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject AdvertisementTypeManagementApiService AdvertisementTypeManagementApiService
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Advertisement Type Management | HR INFO ADs</PageTitle>
+
+<div class="admin-advertisement-types">
+
+    <PageHeader Icon="bi-ui-checks-grid"
+                Eyebrow="ADVERTISEMENT TYPE MANAGEMENT"
+                Title="Advertisement Types"
+                DescriptionContent="@AdvertisementTypeHeaderDescription"
+                ActionContent="@AdvertisementTypeHeaderActions" />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="advertisement-types-error">
+            <div class="advertisement-types-error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="advertisement-types-error-content">
+                <strong>Unable to load advertisement types</strong>
+                <span>@errorMessage</span>
+            </div>
+
+            <button type="button"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+                Retry
+            </button>
+        </div>
+    }
+
+    <!-- ============================================================
+         FILTER PANEL
+         ============================================================ -->
+
+    <section class="advertisement-types-filter-panel">
+
+        <div class="advertisement-types-filter-header">
+
+            <div class="advertisement-types-filter-title">
+
+                <div class="advertisement-types-filter-icon">
+                    <i class="bi bi-funnel"></i>
+                </div>
+
+                <div>
+                    <h2>Find Advertisement Types</h2>
+                    <p>Search and filter available advertisement types.</p>
+                </div>
+
+            </div>
+
+            @if (HasActiveFilters)
+            {
+                <button type="button"
+                        class="advertisement-types-clear-filters"
+                        @onclick="ClearFilters"
+                        disabled="@isLoading">
+                    <i class="bi bi-x-circle"></i>
+                    Clear Filters
+                </button>
+            }
+
+        </div>
+
+        <div class="advertisement-types-filter-grid">
+
+            <div class="advertisement-types-filter-field advertisement-types-search-field">
+
+                <label for="advertisementTypeSearch">
+                    Search
+                </label>
+
+                <div class="advertisement-types-search-wrapper">
+
+                    <i class="bi bi-search"></i>
+
+                    <input id="advertisementTypeSearch"
+                           type="text"
+                           class="advertisement-types-input"
+                           placeholder="Type name, Arabic name or description..."
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown" />
+
+                    @if (!string.IsNullOrWhiteSpace(searchText))
+                    {
+                        <button type="button"
+                                class="advertisement-types-search-clear"
+                                title="Clear search"
+                                @onclick="ClearSearch"
+                                disabled="@isLoading">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
+
+                </div>
+
+            </div>
+
+            <div class="advertisement-types-filter-field">
+
+                <label for="advertisementTypeStatus">
+                    Status
+                </label>
+
+                <div class="advertisement-types-select-wrapper">
+
+                    <i class="bi bi-toggle-on"></i>
+
+                    <select id="advertisementTypeStatus"
+                            class="advertisement-types-select"
+                            @bind="statusFilter">
+
+                        <option value="">All Statuses</option>
+                        <option value="ACTIVE">Active</option>
+                        <option value="INACTIVE">Inactive</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="advertisement-types-filter-action">
+
+                <button type="button"
+                        class="advertisement-types-search-button"
+                        @onclick="SearchAsync"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-search"></i>
+                    <span>Search</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         RESULTS PANEL
+         ============================================================ -->
+
+    <section class="advertisement-types-results-panel">
+
+        <div class="advertisement-types-results-header">
+
+            <div>
+
+                <span class="advertisement-types-results-eyebrow">
+                    ADVERTISEMENT TYPE DIRECTORY
+                </span>
+
+                <h2>Available Advertisement Types</h2>
+
+                <p>@GetResultsDescription()</p>
+
+            </div>
+
+            <div class="advertisement-types-results-meta">
+
+                @if (totalRecords > 0)
+                {
+                    <span class="advertisement-types-result-range">
+                        Showing <strong>@FirstRecordNumber</strong> –
+                        <strong>@LastRecordNumber</strong> of
+                        <strong>@totalRecords</strong>
+                    </span>
+                }
+                else
+                {
+                    <span class="advertisement-types-result-range">
+                        No advertisement types found
+                    </span>
+                }
+
+            </div>
+
+        </div>
+
+
+        @if (isLoading && !hasLoaded)
+        {
+            <div class="advertisement-types-loading">
+
+                <div class="advertisement-types-loading-spinner"></div>
+
+                <strong>Loading advertisement types</strong>
+
+                <span>
+                    Retrieving advertisement types...
+                </span>
+
+            </div>
+        }
+        else if (advertisementTypes.Count == 0)
+        {
+            <div class="advertisement-types-empty">
+
+                <div class="advertisement-types-empty-icon">
+                    <i class="bi bi-ui-checks-grid"></i>
+                </div>
+
+                <strong>No advertisement types found</strong>
+
+                <span>@GetEmptyMessage()</span>
+
+                @if (HasActiveFilters)
+                {
+                    <button type="button"
+                            @onclick="ClearFilters">
+                        Clear Filters
+                    </button>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="advertisement-types-table-wrapper">
+
+                <table class="advertisement-types-table">
+
+                    <thead>
+                        <tr>
+                            <th>Advertisement Type</th>
+                            <th>Arabic Name</th>
+                            <th>Description</th>
+                            <th>Advertisements</th>
+                            <th>Status</th>
+                            <th class="advertisement-types-action-column">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var advertisementType in advertisementTypes)
+                        {
+                            <tr @key="advertisementType.AdvertisementTypeID">
+
+                                <!-- TYPE -->
+
+                                <td>
+
+                                    <div class="advertisement-types-type-cell">
+
+                                        <div class="advertisement-types-type-icon">
+                                            <i class="@GetTypeIcon(advertisementType.TypeName)"></i>
+                                        </div>
+
+                                        <div class="advertisement-types-type-info">
+
+                                            <button type="button"
+                                                    class="advertisement-types-type-name"
+                                                    @onclick="() => OpenEditDialog(advertisementType.AdvertisementTypeID)">
+
+                                                @advertisementType.TypeName
+
+                                            </button>
+
+                                            <small>
+                                                ID #@advertisementType.AdvertisementTypeID
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ARABIC -->
+
+                                <td>
+
+                                    @if (!string.IsNullOrWhiteSpace(advertisementType.TypeNameAr))
+                                    {
+                                        <span class="advertisement-types-arabic-name"
+                                              dir="rtl">
+
+                                            @advertisementType.TypeNameAr
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="advertisement-types-not-specified">
+                                            Not specified
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- DESCRIPTION -->
+
+                                <td>
+
+                                    <div class="advertisement-types-description">
+
+                                        @if (!string.IsNullOrWhiteSpace(advertisementType.Description))
+                                        {
+                                            <span title="@advertisementType.Description">
+                                                @advertisementType.Description
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="advertisement-types-not-specified">
+                                                No description
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- AD COUNT -->
+
+                                <td>
+
+                                    <div class="advertisement-types-ad-count">
+
+                                        <div class="advertisement-types-ad-count-icon">
+                                            <i class="bi bi-megaphone-fill"></i>
+                                        </div>
+
+                                        <strong>
+                                            @advertisementType.AdvertisementCount
+                                        </strong>
+
+                                        <span>
+                                            @(advertisementType.AdvertisementCount == 1
+                                                ? "ad"
+                                                : "ads")
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <div class="advertisement-types-status-cell">
+
+                                        <span class="@GetStatusClass(advertisementType.IsActive)">
+
+                                            <span class="advertisement-types-status-dot"></span>
+
+                                            @(advertisementType.IsActive
+                                                ? "Active"
+                                                : "Inactive")
+
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ACTIONS -->
+
+                                <td class="advertisement-types-action-column">
+
+                                    <div class="advertisement-types-actions">
+
+                                        <button type="button"
+                                                class="advertisement-types-action-button edit"
+                                                title="Edit advertisement type"
+                                                @onclick="() => OpenEditDialog(advertisementType.AdvertisementTypeID)">
+
+                                            <i class="bi bi-pencil"></i>
+
+                                        </button>
+
+                                        <button type="button"
+                                                class="@GetStatusActionClass(advertisementType.IsActive)"
+                                                title="@(advertisementType.IsActive
+                                                    ? "Deactivate advertisement type"
+                                                    : "Activate advertisement type")"
+                                                @onclick="() => OpenStatusDialog(advertisementType)">
+
+                                            <i class="bi @(advertisementType.IsActive
+                                                ? "bi-pause-circle"
+                                                : "bi-play-circle")"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- ====================================================
+                 PAGINATION
+                 ==================================================== -->
+
+            @if (totalPages > 1)
+            {
+                <div class="advertisement-types-pagination">
+
+                    <div class="advertisement-types-pagination-info">
+
+                        Page <strong>@pageNumber</strong>
+                        of <strong>@totalPages</strong>
+
+                    </div>
+
+                    <div class="advertisement-types-pagination-controls">
+
+                        <button type="button"
+                                class="advertisement-types-page-button"
+                                @onclick="GoToFirstPageAsync"
+                                disabled="@(pageNumber <= 1 || isLoading)"
+                                title="First page">
+
+                            <i class="bi bi-chevron-double-left"></i>
+
+                        </button>
+
+                        <button type="button"
+                                class="advertisement-types-page-button"
+                                @onclick="GoToPreviousPageAsync"
+                                disabled="@(pageNumber <= 1 || isLoading)"
+                                title="Previous page">
+
+                            <i class="bi bi-chevron-left"></i>
+
+                        </button>
+
+
+                        @foreach (var pageNumberValue in GetPageNumbers())
+                        {
+                            if (pageNumberValue == -1)
+                            {
+                                <span class="advertisement-types-page-ellipsis">
+                                    …
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button"
+                                        class="@GetPageButtonClass(pageNumberValue)"
+                                        @onclick="() => GoToPageAsync(pageNumberValue)"
+                                        disabled="@isLoading">
+
+                                    @pageNumberValue
+
+                                </button>
+                            }
+                        }
+
+
+                        <button type="button"
+                                class="advertisement-types-page-button"
+                                @onclick="GoToNextPageAsync"
+                                disabled="@(pageNumber >= totalPages || isLoading)"
+                                title="Next page">
+
+                            <i class="bi bi-chevron-right"></i>
+
+                        </button>
+
+                        <button type="button"
+                                class="advertisement-types-page-button"
+                                @onclick="GoToLastPageAsync"
+                                disabled="@(pageNumber >= totalPages || isLoading)"
+                                title="Last page">
+
+                            <i class="bi bi-chevron-double-right"></i>
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+        }
+
+    </section>
+
+
+    <!-- ============================================================
+         ADD / EDIT MODAL
+         ============================================================ -->
+
+    @if (showAdvertisementTypeDialog)
+    {
+        <div class="advertisement-types-modal-backdrop"
+             @onclick="CloseAdvertisementTypeDialog">
+
+            <div class="advertisement-types-modal"
+                 @onclick:stopPropagation="true">
+
+                <div class="advertisement-types-modal-header">
+
+                    <div class="advertisement-types-modal-title">
+
+                        <div class="advertisement-types-modal-icon">
+
+                            <i class="bi @(isEditMode
+                                ? "bi-pencil-square"
+                                : "bi-plus-lg")"></i>
+
+                        </div>
+
+                        <div>
+
+                            <span>
+                                @(isEditMode
+                                    ? "EDIT ADVERTISEMENT TYPE"
+                                    : "NEW ADVERTISEMENT TYPE")
+                            </span>
+
+                            <h2>
+                                @(isEditMode
+                                    ? "Edit Advertisement Type"
+                                    : "Add Advertisement Type")
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            class="advertisement-types-modal-close"
+                            @onclick="CloseAdvertisementTypeDialog"
+                            disabled="@isSaving">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+
+                <EditForm Model="@advertisementTypeForm"
+                          OnValidSubmit="SaveAdvertisementTypeAsync">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="advertisement-types-modal-body">
+
+                        @if (!string.IsNullOrWhiteSpace(dialogErrorMessage))
+                        {
+                            <div class="advertisement-types-dialog-error">
+
+                                <i class="bi bi-exclamation-circle"></i>
+
+                                <span>
+                                    @dialogErrorMessage
+                                </span>
+
+                            </div>
+                        }
+
+
+                        <div class="advertisement-types-form-grid">
+
+                            <!-- TYPE NAME -->
+
+                            <div class="advertisement-types-form-field">
+
+                                <label for="advertisementTypeName">
+                                    Type Name <span>*</span>
+                                </label>
+
+                                <div class="advertisement-types-form-input-wrapper">
+
+                                    <i class="bi bi-ui-checks-grid"></i>
+
+                                    <InputText id="advertisementTypeName"
+                                               class="advertisement-types-form-input"
+                                               @bind-Value="advertisementTypeForm.TypeName"
+                                               placeholder="e.g. For Sale" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => advertisementTypeForm.TypeName)" />
+
+                            </div>
+
+
+                            <!-- ARABIC TYPE NAME -->
+
+                            <div class="advertisement-types-form-field">
+
+                                <label for="advertisementTypeNameAr">
+                                    Arabic Type Name
+                                </label>
+
+                                <div class="advertisement-types-form-input-wrapper arabic">
+
+                                    <i class="bi bi-translate"></i>
+
+                                    <InputText id="advertisementTypeNameAr"
+                                               class="advertisement-types-form-input"
+                                               @bind-Value="advertisementTypeForm.TypeNameAr"
+                                               placeholder="مثال: للبيع"
+                                               dir="rtl" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => advertisementTypeForm.TypeNameAr)" />
+
+                            </div>
+
+
+                            <!-- DESCRIPTION -->
+
+                            <div class="advertisement-types-form-field full">
+
+                                <label for="advertisementTypeDescription">
+                                    Description
+                                </label>
+
+                                <div class="advertisement-types-form-textarea-wrapper">
+
+                                    <i class="bi bi-card-text"></i>
+
+                                    <InputTextArea id="advertisementTypeDescription"
+                                                   class="advertisement-types-form-textarea"
+                                                   @bind-Value="advertisementTypeForm.Description"
+                                                   placeholder="Describe the purpose of this advertisement type..."
+                                                   rows="4" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => advertisementTypeForm.Description)" />
+
+                            </div>
+
+
+                            <!-- STATUS -->
+
+                            <div class="advertisement-types-form-field full">
+
+                                <label>
+                                    Status
+                                </label>
+
+                                <label class="advertisement-types-toggle">
+
+                                    <InputCheckbox @bind-Value="advertisementTypeForm.IsActive" />
+
+                                    <span class="advertisement-types-toggle-track">
+                                        <span class="advertisement-types-toggle-thumb"></span>
+                                    </span>
+
+                                    <span class="advertisement-types-toggle-text">
+                                        @(advertisementTypeForm.IsActive
+                                            ? "Active"
+                                            : "Inactive")
+                                    </span>
+
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MODAL FOOTER -->
+
+                    <div class="advertisement-types-modal-footer">
+
+                        <button type="button"
+                                class="advertisement-types-modal-cancel"
+                                @onclick="CloseAdvertisementTypeDialog"
+                                disabled="@isSaving">
+
+                            Cancel
+
+                        </button>
+
+                        <button type="submit"
+                                class="advertisement-types-modal-save"
+                                disabled="@isSaving">
+
+                            @if (isSaving)
+                            {
+                                <span class="advertisement-types-button-spinner"></span>
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi @(isEditMode
+                                    ? "bi-check-lg"
+                                    : "bi-plus-lg")"></i>
+
+                                <span>
+                                    @(isEditMode
+                                        ? "Update Type"
+                                        : "Create Type")
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ============================================================
+         STATUS CONFIRMATION
+         ============================================================ -->
+
+    @if (showStatusDialog && selectedAdvertisementType is not null)
+    {
+        <div class="advertisement-types-modal-backdrop"
+             @onclick="CloseStatusDialog">
+
+            <div class="advertisement-types-confirm-dialog"
+                 @onclick:stopPropagation="true">
+
+                <div class="advertisement-types-confirm-icon @(selectedAdvertisementType.IsActive
+                    ? "warning"
+                    : "success")">
+
+                    <i class="bi @(selectedAdvertisementType.IsActive
+                        ? "bi-pause-circle"
+                        : "bi-play-circle")"></i>
+
+                </div>
+
+                <h2>
+                    @(selectedAdvertisementType.IsActive
+                        ? "Deactivate Advertisement Type?"
+                        : "Activate Advertisement Type?")
+                </h2>
+
+                <p>
+
+                    You are about to
+                    <strong>
+                        @(selectedAdvertisementType.IsActive
+                            ? "deactivate"
+                            : "activate")
+                    </strong>
+
+                    the advertisement type
+
+                    <strong>
+                        @selectedAdvertisementType.TypeName
+                    </strong>.
+
+                </p>
+
+
+                @if (selectedAdvertisementType.AdvertisementCount > 0 &&
+                     selectedAdvertisementType.IsActive)
+                {
+                    <div class="advertisement-types-confirm-note">
+
+                        <i class="bi bi-info-circle"></i>
+
+                        <span>
+
+                            This advertisement type currently has
+
+                            <strong>
+                                @selectedAdvertisementType.AdvertisementCount
+                            </strong>
+
+                            advertisement@(selectedAdvertisementType.AdvertisementCount == 1
+                                ? ""
+                                : "s").
+
+                            Deactivating it will not delete existing
+                            advertisements.
+
+                        </span>
+
+                    </div>
+                }
+
+
+                <div class="advertisement-types-confirm-actions">
+
+                    <button type="button"
+                            class="advertisement-types-confirm-cancel"
+                            @onclick="CloseStatusDialog"
+                            disabled="@isStatusSaving">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="button"
+                            class="@GetConfirmButtonClass(selectedAdvertisementType.IsActive)"
+                            @onclick="ConfirmStatusChangeAsync"
+                            disabled="@isStatusSaving">
+
+                        @if (isStatusSaving)
+                        {
+                            <span class="advertisement-types-button-spinner"></span>
+                            <span>Updating...</span>
+                        }
+                        else
+                        {
+                            <i class="bi @(selectedAdvertisementType.IsActive
+                                ? "bi-pause-circle"
+                                : "bi-play-circle")"></i>
+
+                            <span>
+                                @(selectedAdvertisementType.IsActive
+                                    ? "Deactivate"
+                                    : "Activate")
+                            </span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private List<AdvertisementTypeListItemResponse>
+        advertisementTypes = new();
+
+    private string searchText = string.Empty;
+
+    private string statusFilter = string.Empty;
+
+    private int pageNumber = 1;
+
+    private const int pageSize = 20;
+
+    private int totalRecords;
+
+    private int totalPages;
+
+    private bool isLoading;
+
+    private bool hasLoaded;
+
+    private string? errorMessage;
+
+
+    // ============================================================
+    // ADD / EDIT DIALOG
+    // ============================================================
+
+    private bool showAdvertisementTypeDialog;
+
+    private bool isEditMode;
+
+    private bool isSaving;
+
+    private int editingAdvertisementTypeId;
+
+    private string? dialogErrorMessage;
+
+    private AdvertisementTypeFormModel
+        advertisementTypeForm = new();
+
+
+    // ============================================================
+    // STATUS DIALOG
+    // ============================================================
+
+    private bool showStatusDialog;
+
+    private bool isStatusSaving;
+
+    private AdvertisementTypeListItemResponse?
+        selectedAdvertisementType;
+
+
+    // ============================================================
+    // PAGE HEADER
+    // ============================================================
+
+    private RenderFragment AdvertisementTypeHeaderDescription =>
+        @<span>
+            Manage advertisement types, availability and usage.
+        </span>;
+
+
+    private RenderFragment AdvertisementTypeHeaderActions =>
+        @<div class="advertisement-types-header-actions">
+
+            <button type="button"
+                    class="advertisement-types-header-button primary"
+                    @onclick="OpenCreateDialog"
+                    disabled="@isLoading">
+
+                <i class="bi bi-plus-lg"></i>
+                <span>Add Advertisement Type</span>
+
+            </button>
+
+            <button type="button"
+                    class="advertisement-types-header-button secondary"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+
+                <i class="bi bi-arrow-clockwise @(isLoading ? "advertisement-types-refresh-spin" : "")"></i>
+                <span>Refresh</span>
+
+            </button>
+
+        </div>;
+
+
+    // ============================================================
+    // FILTER STATE
+    // ============================================================
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchText) ||
+        !string.IsNullOrWhiteSpace(statusFilter);
+
+
+    private bool? GetStatusFilterValue()
+    {
+        return statusFilter switch
+        {
+            "ACTIVE" => true,
+            "INACTIVE" => false,
+            _ => null
+        };
+    }
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AdminAuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                forceLoad: true);
+
+            return;
+        }
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadAdvertisementTypesAsync()
+    {
+        if (isLoading)
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result =
+                await AdvertisementTypeManagementApiService
+                    .GetAdvertisementTypesAsync(
+                        searchText,
+                        GetStatusFilterValue(),
+                        pageNumber,
+                        pageSize);
+
+            advertisementTypes =
+                result.Items ?? new List<AdvertisementTypeListItemResponse>();
+
+            pageNumber = result.PageNumber;
+
+            totalRecords = result.TotalRecords;
+
+            totalPages = result.TotalPages;
+
+            hasLoaded = true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    "Unable to retrieve advertisement types.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+
+    private async Task SearchAsync()
+    {
+        pageNumber = 1;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task HandleSearchKeyDown(
+        KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAsync();
+        }
+    }
+
+
+    private async Task ClearFilters()
+    {
+        searchText = string.Empty;
+        statusFilter = string.Empty;
+        pageNumber = 1;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task ClearSearch()
+    {
+        searchText = string.Empty;
+        pageNumber = 1;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task RefreshAsync()
+    {
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private int FirstRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : ((pageNumber - 1) * pageSize) + 1;
+
+
+    private int LastRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : Math.Min(
+                pageNumber * pageSize,
+                totalRecords);
+
+
+    private async Task GoToFirstPageAsync()
+    {
+        if (pageNumber <= 1)
+            return;
+
+        pageNumber = 1;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task GoToPreviousPageAsync()
+    {
+        if (pageNumber <= 1)
+            return;
+
+        pageNumber--;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task GoToNextPageAsync()
+    {
+        if (pageNumber >= totalPages)
+            return;
+
+        pageNumber++;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task GoToLastPageAsync()
+    {
+        if (pageNumber >= totalPages)
+            return;
+
+        pageNumber = totalPages;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private async Task GoToPageAsync(
+        int selectedPage)
+    {
+        if (selectedPage < 1 ||
+            selectedPage > totalPages ||
+            selectedPage == pageNumber)
+        {
+            return;
+        }
+
+        pageNumber = selectedPage;
+
+        await LoadAdvertisementTypesAsync();
+    }
+
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        if (totalPages <= 7)
+        {
+            return Enumerable
+                .Range(1, totalPages);
+        }
+
+        var pages = new List<int>();
+
+        pages.Add(1);
+
+        if (pageNumber > 4)
+        {
+            pages.Add(-1);
+        }
+
+        var start =
+            Math.Max(2, pageNumber - 1);
+
+        var end =
+            Math.Min(totalPages - 1, pageNumber + 1);
+
+        for (var i = start; i <= end; i++)
+        {
+            pages.Add(i);
+        }
+
+        if (pageNumber < totalPages - 3)
+        {
+            pages.Add(-1);
+        }
+
+        pages.Add(totalPages);
+
+        return pages;
+    }
+
+
+    // ============================================================
+    // CREATE
+    // ============================================================
+
+    private void OpenCreateDialog()
+    {
+        isEditMode = false;
+
+        editingAdvertisementTypeId = 0;
+
+        dialogErrorMessage = null;
+
+        advertisementTypeForm =
+            new AdvertisementTypeFormModel
+            {
+                TypeName = string.Empty,
+                TypeNameAr = string.Empty,
+                Description = string.Empty,
+                IsActive = true
+            };
+
+        showAdvertisementTypeDialog = true;
+    }
+
+
+    // ============================================================
+    // EDIT
+    // ============================================================
+
+    private async Task OpenEditDialog(
+        int advertisementTypeId)
+    {
+        if (isSaving)
+            return;
+
+        dialogErrorMessage = null;
+
+        try
+        {
+            var advertisementType =
+                await AdvertisementTypeManagementApiService
+                    .GetAdvertisementTypeByIdAsync(
+                        advertisementTypeId);
+
+            if (advertisementType is null)
+            {
+                errorMessage =
+                    "The selected advertisement type could not be found.";
+
+                return;
+            }
+
+            editingAdvertisementTypeId =
+                advertisementType.AdvertisementTypeID;
+
+            advertisementTypeForm =
+                new AdvertisementTypeFormModel
+                {
+                    TypeName =
+                        advertisementType.TypeName,
+
+                    TypeNameAr =
+                        advertisementType.TypeNameAr,
+
+                    Description =
+                        advertisementType.Description,
+
+                    IsActive =
+                        advertisementType.IsActive
+                };
+
+            isEditMode = true;
+
+            showAdvertisementTypeDialog = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    "Unable to retrieve the advertisement type.");
+        }
+    }
+
+
+    // ============================================================
+    // CLOSE ADD / EDIT
+    // ============================================================
+
+    private void CloseAdvertisementTypeDialog()
+    {
+        if (isSaving)
+            return;
+
+        showAdvertisementTypeDialog = false;
+
+        dialogErrorMessage = null;
+    }
+
+
+    // ============================================================
+    // SAVE
+    // ============================================================
+
+    private async Task SaveAdvertisementTypeAsync()
+    {
+        if (isSaving)
+            return;
+
+        isSaving = true;
+
+        dialogErrorMessage = null;
+
+        try
+        {
+            if (isEditMode)
+            {
+                var request =
+                    new UpdateAdvertisementTypeRequest
+                    {
+                        TypeName =
+                            advertisementTypeForm.TypeName.Trim(),
+
+                        TypeNameAr =
+                            string.IsNullOrWhiteSpace(
+                                advertisementTypeForm.TypeNameAr)
+                                ? null
+                                : advertisementTypeForm.TypeNameAr.Trim(),
+
+                        Description =
+                            string.IsNullOrWhiteSpace(
+                                advertisementTypeForm.Description)
+                                ? null
+                                : advertisementTypeForm.Description.Trim(),
+
+                        IsActive =
+                            advertisementTypeForm.IsActive
+                    };
+
+                await AdvertisementTypeManagementApiService
+                    .UpdateAdvertisementTypeAsync(
+                        editingAdvertisementTypeId,
+                        request);
+            }
+            else
+            {
+                var request =
+                    new CreateAdvertisementTypeRequest
+                    {
+                        TypeName =
+                            advertisementTypeForm.TypeName.Trim(),
+
+                        TypeNameAr =
+                            string.IsNullOrWhiteSpace(
+                                advertisementTypeForm.TypeNameAr)
+                                ? null
+                                : advertisementTypeForm.TypeNameAr.Trim(),
+
+                        Description =
+                            string.IsNullOrWhiteSpace(
+                                advertisementTypeForm.Description)
+                                ? null
+                                : advertisementTypeForm.Description.Trim(),
+
+                        IsActive =
+                            advertisementTypeForm.IsActive
+                    };
+
+                await AdvertisementTypeManagementApiService
+                    .CreateAdvertisementTypeAsync(request);
+            }
+
+            showAdvertisementTypeDialog = false;
+
+            await LoadAdvertisementTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            dialogErrorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    isEditMode
+                        ? "Unable to update the advertisement type."
+                        : "Unable to create the advertisement type.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATUS DIALOG
+    // ============================================================
+
+    private void OpenStatusDialog(
+        AdvertisementTypeListItemResponse advertisementType)
+    {
+        if (isStatusSaving)
+            return;
+
+        selectedAdvertisementType =
+            advertisementType;
+
+        showStatusDialog = true;
+    }
+
+
+    private void CloseStatusDialog()
+    {
+        if (isStatusSaving)
+            return;
+
+        showStatusDialog = false;
+
+        selectedAdvertisementType = null;
+    }
+
+
+    private async Task ConfirmStatusChangeAsync()
+    {
+        if (isStatusSaving ||
+            selectedAdvertisementType is null)
+        {
+            return;
+        }
+
+        isStatusSaving = true;
+
+        try
+        {
+            var newStatus =
+                !selectedAdvertisementType.IsActive;
+
+            await AdvertisementTypeManagementApiService
+                .UpdateAdvertisementTypeStatusAsync(
+                    selectedAdvertisementType.AdvertisementTypeID,
+                    newStatus);
+
+            showStatusDialog = false;
+
+            selectedAdvertisementType = null;
+
+            await LoadAdvertisementTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetApiErrorMessage(
+                    ex,
+                    "Unable to update advertisement type status.");
+
+            showStatusDialog = false;
+
+            selectedAdvertisementType = null;
+        }
+        finally
+        {
+            isStatusSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // DISPLAY HELPERS
+    // ============================================================
+
+    private string GetResultsDescription()
+    {
+        if (HasActiveFilters)
+        {
+            return "Advertisement types matching your current filters.";
+        }
+
+        return "Manage the types available when users post advertisements.";
+    }
+
+
+    private string GetEmptyMessage()
+    {
+        if (HasActiveFilters)
+        {
+            return "Try changing your search or status filter.";
+        }
+
+        return "No advertisement types have been configured yet.";
+    }
+
+
+    private string GetStatusClass(bool isActive)
+    {
+        return isActive
+            ? "advertisement-types-status active"
+            : "advertisement-types-status inactive";
+    }
+
+
+    private string GetStatusActionClass(bool isActive)
+    {
+        return isActive
+            ? "advertisement-types-action-button deactivate"
+            : "advertisement-types-action-button activate";
+    }
+
+
+    private string GetConfirmButtonClass(bool isActive)
+    {
+        return isActive
+            ? "advertisement-types-confirm-danger"
+            : "advertisement-types-confirm-success";
+    }
+
+
+    private string GetPageButtonClass(int value)
+    {
+        return value == pageNumber
+            ? "advertisement-types-page-button active"
+            : "advertisement-types-page-button";
+    }
+
+
+    private string GetTypeIcon(string? typeName)
+    {
+        if (string.IsNullOrWhiteSpace(typeName))
+        {
+            return "bi bi-ui-checks-grid";
+        }
+
+        return typeName.Trim().ToLowerInvariant() switch
+        {
+            "for sale" =>
+                "bi bi-tag-fill",
+
+            "for rent" =>
+                "bi bi-house-door-fill",
+
+            "wanted" =>
+                "bi bi-search-heart-fill",
+
+            "offer" =>
+                "bi bi-gift-fill",
+
+            "service" =>
+                "bi bi-tools",
+
+            _ =>
+                "bi bi-ui-checks-grid"
+        };
+    }
+
+
+    // ============================================================
+    // ERROR MESSAGE
+    // ============================================================
+
+    private string GetApiErrorMessage(
+        Exception exception,
+        string fallback)
+    {
+        var message =
+            exception.Message ?? string.Empty;
+
+        if (message.Contains(
+                "already exist",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "already in use",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return "An advertisement type with this name already exists.";
+        }
+
+        if (message.Contains(
+                "Unauthorized",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "access token",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return "Your administrator session has expired. Please sign in again.";
+        }
+
+        return string.IsNullOrWhiteSpace(message)
+            ? fallback
+            : message;
+    }
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private sealed class AdvertisementTypeFormModel
+    {
+        [Required]
+        [MaxLength(100)]
+        public string TypeName { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string? TypeNameAr { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        public bool IsActive { get; set; } = true;
+    }
+}

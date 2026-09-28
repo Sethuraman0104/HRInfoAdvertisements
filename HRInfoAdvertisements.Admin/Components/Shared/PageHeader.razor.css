@@ -1,0 +1,307 @@
+/* ============================================================
+   SHARED PAGE HEADER
+   PageHeader.razor.css
+   ============================================================ */
+
+.hr-page-header {
+    --ph-primary: #790000;
+    --ph-accent: #d30505;
+
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    width: 100%;
+    min-width: 0;
+
+    margin-bottom: 25px;
+    padding: 25px 28px;
+
+    overflow: hidden;
+    box-sizing: border-box;
+
+    border: 1px solid rgba(121, 0, 0, 0.08);
+    border-radius: 18px;
+
+    background:
+        linear-gradient(135deg, #ffffff 0%, #fffafa 55%, #fdf5f5 100%);
+
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.07);
+
+    animation: hrPageHeaderFadeUp 0.45s ease both;
+}
+
+.hr-page-header *,
+.hr-page-header *::before,
+.hr-page-header *::after {
+    box-sizing: border-box;
+}
+
+/* Left accent bar */
+.hr-page-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg, var(--ph-primary), var(--ph-accent));
+}
+
+/* Soft corner glow */
+.hr-page-header::after {
+    content: "";
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    right: -80px;
+    top: -95px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(121, 0, 0, 0.08) 0%, rgba(121, 0, 0, 0) 70%);
+    pointer-events: none;
+}
+
+
+/* ---------- Left side ---------- */
+
+.hr-page-header-main {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    min-width: 0;
+}
+
+.hr-page-header-icon {
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+    color: #ffffff;
+    font-size: 24px;
+
+    background: linear-gradient(135deg, var(--ph-primary), var(--ph-accent));
+    box-shadow: 0 8px 20px rgba(121, 0, 0, 0.22);
+
+    animation: hrPageHeaderIconFloat 3.5s ease-in-out infinite;
+}
+
+.hr-page-header-text {
+    min-width: 0;
+}
+
+.hr-page-header-eyebrow {
+    display: block;
+    margin: 0 0 4px;
+
+    color: var(--ph-primary);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+.hr-page-header-text h1 {
+    margin: 0 0 5px;
+
+    color: #292929;
+    font-size: 27px;
+    font-weight: 750;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+}
+
+.hr-page-header-text p {
+    margin: 0;
+
+    color: #666666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.hr-page-header-text p ::deep strong {
+    color: #333333;
+    font-weight: 650;
+}
+
+
+/* ---------- Right side (actions slot) ---------- */
+
+.hr-page-header-actions {
+    position: relative;
+    z-index: 2;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Neutral button (Refresh etc.) */
+.hr-page-header-actions ::deep .hr-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    min-height: 43px;
+    padding: 0 17px;
+
+    border: 1px solid #dedede;
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #444444;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 650;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.hr-page-header-actions ::deep .hr-page-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    color: #790000;
+    border-color: rgba(121, 0, 0, 0.25);
+    background: #fffafa;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.hr-page-header-actions ::deep .hr-page-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.hr-page-header-actions ::deep .hr-page-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Small info card (date etc.) */
+.hr-page-header-actions ::deep .hr-page-info-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    min-height: 43px;
+    padding: 0 14px;
+
+    border: 1px solid #e7e7e7;
+    border-radius: 10px;
+    background: #fafafa;
+}
+
+.hr-page-header-actions ::deep .hr-page-info-card > i {
+    color: #790000;
+    font-size: 16px;
+}
+
+.hr-page-header-actions ::deep .hr-page-info-card small {
+    display: block;
+    color: #999999;
+    font-size: 10px;
+    line-height: 1;
+}
+
+.hr-page-header-actions ::deep .hr-page-info-card strong {
+    display: block;
+    margin-top: 3px;
+    color: #333333;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.hr-page-header-actions ::deep .hr-spin {
+    animation: hrPageHeaderSpin 0.9s linear infinite;
+}
+
+
+/* ---------- Animations ---------- */
+
+@keyframes hrPageHeaderFadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hrPageHeaderIconFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-2px); }
+}
+
+@keyframes hrPageHeaderSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 850px) {
+    .hr-page-header {
+        align-items: flex-start;
+        padding: 20px;
+        border-radius: 15px;
+    }
+
+    .hr-page-header-icon {
+        flex-basis: 50px;
+        width: 50px;
+        height: 50px;
+        border-radius: 13px;
+        font-size: 21px;
+    }
+
+    .hr-page-header-text h1 { font-size: 23px; }
+    .hr-page-header-text p  { font-size: 12.5px; }
+}
+
+@media (max-width: 600px) {
+    .hr-page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 17px;
+        padding: 18px;
+    }
+
+    .hr-page-header-main { align-items: flex-start; }
+
+    .hr-page-header-text h1 { font-size: 21px; }
+    .hr-page-header-text p  { font-size: 11.5px; }
+
+    .hr-page-header-actions {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hr-page-header-actions ::deep .hr-page-btn,
+    .hr-page-header-actions ::deep .hr-page-info-card {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hr-page-header,
+    .hr-page-header-icon,
+    .hr-page-header-actions ::deep .hr-spin {
+        animation: none !important;
+    }
+}

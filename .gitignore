@@ -32,3 +32,5 @@ appsettings.Local.json
 # User-specific files
 *.userosscache
 *.sln.docstates
+# Runtime uploaded advertisement media
+HRInfoAdvertisements.API/wwwroot/uploads/

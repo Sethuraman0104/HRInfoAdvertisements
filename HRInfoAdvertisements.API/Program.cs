@@ -33,13 +33,16 @@ builder.Services.AddHttpContextAccessor();
 // ------------------------------------------------------------
 
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "HRInfoAdvertisements.API",
-        Version = "v1"
-    });
+    options.SwaggerDoc(
+        "v1",
+        new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "HRInfoAdvertisements.API",
+            Version = "v1"
+        });
 
     options.AddSecurityDefinition(
         "Bearer",
@@ -50,7 +53,8 @@ builder.Services.AddSwaggerGen(options =>
             Scheme = "bearer",
             BearerFormat = "JWT",
             In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-            Description = "Enter your JWT access token. Example: Bearer {token}"
+            Description =
+                "Enter your JWT access token. Example: Bearer {token}"
         });
 
     options.AddSecurityRequirement(
@@ -62,15 +66,18 @@ builder.Services.AddSwaggerGen(options =>
                     Reference =
                         new Microsoft.OpenApi.Models.OpenApiReference
                         {
-                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Type =
+                                Microsoft.OpenApi.Models.ReferenceType
+                                    .SecurityScheme,
+
                             Id = "Bearer"
                         }
                 },
+
                 Array.Empty<string>()
             }
         });
 });
-
 
 // ------------------------------------------------------------
 // Database
@@ -81,22 +88,22 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         builder.Configuration.GetConnectionString(
             "DefaultConnection")));
 
-
 // ------------------------------------------------------------
 // CORS
 // ------------------------------------------------------------
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DevelopmentPolicy", policy =>
-    {
-        policy
-            .AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
+    options.AddPolicy(
+        "DevelopmentPolicy",
+        policy =>
+        {
+            policy
+                .AllowAnyOrigin()
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
 });
-
 
 // ------------------------------------------------------------
 // JWT Settings
@@ -104,7 +111,6 @@ builder.Services.AddCors(options =>
 
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("JwtSettings"));
-
 
 // ------------------------------------------------------------
 // Application Services
@@ -120,13 +126,17 @@ builder.Services.AddScoped<
     IAuthService,
     AuthService>();
 
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<
+    IDashboardService,
+    DashboardService>();
 
 builder.Services.AddScoped<
     IDashboardStatisticsService,
     DashboardStatisticsService>();
 
-builder.Services.AddScoped<IUserManagementService, UserManagementService>();
+builder.Services.AddScoped<
+    IUserManagementService,
+    UserManagementService>();
 
 builder.Services.AddScoped<
     IReportManagementService,
@@ -136,7 +146,9 @@ builder.Services.AddScoped<
     IAdvertisementService,
     AdvertisementService>();
 
-builder.Services.AddScoped< IAdvertisementLookupService, AdvertisementLookupService>();
+builder.Services.AddScoped<
+    IAdvertisementLookupService,
+    AdvertisementLookupService>();
 
 builder.Services.AddScoped<
     IAdvertisementMediaService,
@@ -154,17 +166,33 @@ builder.Services.AddScoped<
     IAdvertisementFavoriteService,
     AdvertisementFavoriteService>();
 
-builder.Services.AddScoped<IAdvertisementEnquiryService, AdvertisementEnquiryService>();
+builder.Services.AddScoped<
+    IAdvertisementEnquiryService,
+    AdvertisementEnquiryService>();
 
-builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<
+    IMessageService,
+    MessageService>();
 
 builder.Services.AddScoped<
     INotificationService,
     NotificationService>();
 
-builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<
+    IProfileService,
+    ProfileService>();
 
-builder.Services.AddScoped<IRoleManagementService, RoleManagementService>();
+builder.Services.AddScoped<
+    IRoleManagementService,
+    RoleManagementService>();
+
+builder.Services.AddScoped<
+    ICategoryManagementService,
+    CategoryManagementService>();
+
+builder.Services.AddScoped<
+    IAdvertisementTypeManagementService,
+    AdvertisementTypeManagementService>();
 
 builder.Services.AddScoped<
     IPermissionManagementService,
@@ -182,7 +210,9 @@ builder.Services.AddScoped<
     IReportSubmissionService,
     ReportSubmissionService>();
 
-builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<
+    IAuditLogService,
+    AuditLogService>();
 
 builder.Services.AddScoped<
     IFileStorageService,
@@ -199,13 +229,11 @@ var jwtSettings =
     ?? throw new InvalidOperationException(
         "JwtSettings configuration is missing.");
 
-
 if (string.IsNullOrWhiteSpace(jwtSettings.SecretKey))
 {
     throw new InvalidOperationException(
         "JWT SecretKey is not configured.");
 }
-
 
 if (jwtSettings.SecretKey.Length < 32)
 {
@@ -213,13 +241,11 @@ if (jwtSettings.SecretKey.Length < 32)
         "JWT SecretKey must be at least 32 characters.");
 }
 
-
 if (string.IsNullOrWhiteSpace(jwtSettings.Issuer))
 {
     throw new InvalidOperationException(
         "JWT Issuer is not configured.");
 }
-
 
 if (string.IsNullOrWhiteSpace(jwtSettings.Audience))
 {
@@ -227,12 +253,10 @@ if (string.IsNullOrWhiteSpace(jwtSettings.Audience))
         "JWT Audience is not configured.");
 }
 
-
 var signingKey =
     new SymmetricSecurityKey(
         Encoding.UTF8.GetBytes(
             jwtSettings.SecretKey));
-
 
 builder.Services
     .AddAuthentication(
@@ -335,60 +359,168 @@ builder.Services
             };
     });
 
-
-// ------------------------------------------------------------
-// Authorization
-// ------------------------------------------------------------
-
 // ------------------------------------------------------------
 // Authorization
 // ------------------------------------------------------------
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("USER_VIEW", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-        policy.RequireClaim("permission", "USER_VIEW");
-    });
+    // --------------------------------------------------------
+    // User Management
+    // --------------------------------------------------------
 
-    options.AddPolicy("USER_EDIT", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-        policy.RequireClaim("permission", "USER_EDIT");
-    });
+    options.AddPolicy(
+        "USER_VIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "USER_VIEW");
+        });
 
-    options.AddPolicy("USER_SUSPEND", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-        policy.RequireClaim("permission", "USER_SUSPEND");
-    });
+    options.AddPolicy(
+        "USER_EDIT",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "USER_EDIT");
+        });
 
-    options.AddPolicy("REPORT_VIEW", policy =>
-{
-    policy.RequireAuthenticatedUser();
-    policy.RequireClaim("permission", "REPORT_VIEW");
+    options.AddPolicy(
+        "USER_SUSPEND",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "USER_SUSPEND");
+        });
+
+    // --------------------------------------------------------
+    // Advertisement Management
+    // --------------------------------------------------------
+
+    options.AddPolicy(
+        "ADVERTISEMENT_VIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_VIEW");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_CREATE",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_CREATE");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_EDIT",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_EDIT");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_DELETE",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_DELETE");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_APPROVE",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_APPROVE");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_REJECT",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_REJECT");
+        });
+
+    options.AddPolicy(
+        "ADVERTISEMENT_SUSPEND",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "ADVERTISEMENT_SUSPEND");
+        });
+
+    // --------------------------------------------------------
+    // Reports
+    // --------------------------------------------------------
+
+    options.AddPolicy(
+        "REPORT_VIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "REPORT_VIEW");
+        });
+
+    options.AddPolicy(
+        "REPORT_REVIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "REPORT_REVIEW");
+        });
+
+    // --------------------------------------------------------
+    // Audit
+    // --------------------------------------------------------
+
+    options.AddPolicy(
+        "AUDIT_VIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+            policy.RequireClaim(
+                "permission",
+                "AUDIT_VIEW");
+        });
 });
-
-options.AddPolicy("REPORT_REVIEW", policy =>
-{
-    policy.RequireAuthenticatedUser();
-    policy.RequireClaim("permission", "REPORT_REVIEW");
-});
-
-options.AddPolicy("AUDIT_VIEW", policy =>
-{
-    policy.RequireAuthenticatedUser();
-    policy.RequireClaim("permission", "AUDIT_VIEW");
-});
-});
-
 
 // ------------------------------------------------------------
 // Build Application
 // ------------------------------------------------------------
 
 var app = builder.Build();
+
+// ------------------------------------------------------------
+// Dependency Injection Check
+// ------------------------------------------------------------
 
 using (var scope = app.Services.CreateScope())
 {
@@ -427,7 +559,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
 // ------------------------------------------------------------
 // Swagger
 // ------------------------------------------------------------
@@ -438,12 +569,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
 // ------------------------------------------------------------
 // HTTP Pipeline
 // ------------------------------------------------------------
 
-//app.UseHttpsRedirection();
+// HTTPS redirection intentionally disabled for local development.
+// app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 

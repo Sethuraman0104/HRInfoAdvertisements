@@ -1,0 +1,1625 @@
+@page "/admin/roles"
+
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.AdminManagement
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject RoleManagementApiService RoleManagementApiService
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<div class="admin-roles">
+
+    @* ============================================================
+       PAGE ERROR
+       ============================================================ *@
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="roles-error" role="alert">
+
+            <div class="roles-error-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="roles-error-content">
+                <strong>Something went wrong</strong>
+                <span>@ErrorMessage</span>
+            </div>
+
+            <button type="button"
+                    class="roles-error-retry"
+                    @onclick="LoadRolesAsync"
+                    disabled="@IsLoading">
+
+                <i class="bi bi-arrow-clockwise @(IsLoading ? "roles-spin" : "")"></i>
+
+                <span>Retry</span>
+
+            </button>
+
+            <button type="button"
+                    class="roles-error-close"
+                    @onclick="ClearError"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    @* ============================================================
+       PAGE HEADER
+       ============================================================ *@
+
+    <PageHeader Title="Roles">
+
+        <DescriptionContent>
+
+            <p class="roles-page-description">
+                Manage administrator roles, access status and permissions.
+            </p>
+
+        </DescriptionContent>
+
+
+        <ActionContent>
+
+            <div class="roles-header-actions">
+
+                <button type="button"
+                        class="roles-btn roles-btn-secondary"
+                        @onclick="LoadRolesAsync"
+                        disabled="@IsLoading">
+
+                    <i class="bi bi-arrow-clockwise @(IsLoading ? "roles-spin" : "")"></i>
+
+                    <span>Refresh</span>
+
+                </button>
+
+
+                <button type="button"
+                        class="roles-btn roles-btn-primary"
+                        @onclick="OpenCreateModal">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                    <span>Add Role</span>
+
+                </button>
+
+            </div>
+
+        </ActionContent>
+
+    </PageHeader>
+
+
+    @* ============================================================
+       FILTER PANEL
+       ============================================================ *@
+
+    <section class="roles-filter-panel">
+
+        <div class="roles-filter-heading">
+
+            <div class="roles-filter-heading-icon">
+                <i class="bi bi-funnel-fill"></i>
+            </div>
+
+            <div>
+
+                <strong>Filter Roles</strong>
+
+                <span>
+                    Search and filter the role list.
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="roles-filter-fields">
+
+            @* SEARCH *@
+
+            <div class="roles-filter-field roles-filter-search">
+
+                <label for="roleSearch">
+                    Search
+                </label>
+
+                <div class="roles-filter-input-wrapper">
+
+                    <i class="bi bi-search"></i>
+
+                    <input id="roleSearch"
+                           type="text"
+                           class="roles-filter-input"
+                           placeholder="Search role name or description..."
+                           @bind="SearchText"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown" />
+
+                    @if (!string.IsNullOrWhiteSpace(SearchText))
+                    {
+                        <button type="button"
+                                class="roles-filter-clear"
+                                @onclick="ClearSearch"
+                                aria-label="Clear search">
+
+                            <i class="bi bi-x"></i>
+
+                        </button>
+                    }
+
+                </div>
+
+            </div>
+
+
+            @* STATUS *@
+
+            <div class="roles-filter-field">
+
+                <label for="roleStatus">
+                    Status
+                </label>
+
+                <div class="roles-filter-select-wrapper">
+
+                    <i class="bi bi-toggle-on"></i>
+
+                    <select id="roleStatus"
+                            class="roles-filter-select"
+                            @bind="StatusFilter">
+
+                        <option value="all">
+                            All Statuses
+                        </option>
+
+                        <option value="active">
+                            Active
+                        </option>
+
+                        <option value="inactive">
+                            Inactive
+                        </option>
+
+                    </select>
+
+                    <i class="bi bi-chevron-down roles-select-arrow"></i>
+
+                </div>
+
+            </div>
+
+
+            @* FILTER BUTTONS *@
+
+            <div class="roles-filter-buttons">
+
+                <button type="button"
+                        class="roles-btn roles-btn-filter"
+                        @onclick="ApplyFilters">
+
+                    <i class="bi bi-search"></i>
+
+                    <span>Search</span>
+
+                </button>
+
+
+                @if (HasActiveFilters)
+                {
+                    <button type="button"
+                            class="roles-btn roles-btn-clear"
+                            @onclick="ClearFilters">
+
+                        <i class="bi bi-x-circle"></i>
+
+                        <span>Clear</span>
+
+                    </button>
+                }
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    @* ============================================================
+       RESULTS
+       ============================================================ *@
+
+    <section class="roles-results">
+
+        @* RESULTS HEADER *@
+
+        <div class="roles-results-header">
+
+            <div class="roles-results-title">
+
+                <div class="roles-results-icon">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+
+                <div>
+
+                    <h2>
+                        System Roles
+                    </h2>
+
+                    <span>
+                        @FilteredRoles.Count
+                        @(FilteredRoles.Count == 1 ? "role" : "roles")
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            @if (!IsLoading && FilteredRoles.Count > 0)
+            {
+                <div class="roles-results-summary">
+
+                    <span class="roles-summary-active">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        @ActiveRoleCount active
+
+                    </span>
+
+                    <span class="roles-summary-inactive">
+
+                        <i class="bi bi-dash-circle-fill"></i>
+
+                        @InactiveRoleCount inactive
+
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+
+        @* ========================================================
+           LOADING
+           ======================================================== *@
+
+        @if (IsLoading)
+        {
+            <div class="roles-loading">
+
+                <div class="roles-loading-spinner">
+                    <div></div>
+                </div>
+
+                <div class="roles-loading-text">
+
+                    <strong>
+                        Loading roles
+                    </strong>
+
+                    <span>
+                        Please wait...
+                    </span>
+
+                </div>
+
+            </div>
+        }
+
+        @* ========================================================
+           EMPTY
+           ======================================================== *@
+
+        else if (FilteredRoles.Count == 0)
+        {
+            <div class="roles-empty">
+
+                <div class="roles-empty-icon">
+                    <i class="bi bi-shield-slash"></i>
+                </div>
+
+
+                @if (HasActiveFilters)
+                {
+                    <h3>
+                        No roles found
+                    </h3>
+
+                    <p>
+                        No roles match the current search or status filter.
+                    </p>
+
+                    <button type="button"
+                            class="roles-btn roles-btn-secondary"
+                            @onclick="ClearFilters">
+
+                        <i class="bi bi-arrow-counterclockwise"></i>
+
+                        <span>Clear Filters</span>
+
+                    </button>
+                }
+                else
+                {
+                    <h3>
+                        No roles available
+                    </h3>
+
+                    <p>
+                        There are currently no roles configured in the system.
+                    </p>
+
+                    <button type="button"
+                            class="roles-btn roles-btn-primary"
+                            @onclick="OpenCreateModal">
+
+                        <i class="bi bi-plus-lg"></i>
+
+                        <span>Add First Role</span>
+
+                    </button>
+                }
+
+            </div>
+        }
+
+        @* ========================================================
+           TABLE
+           ======================================================== *@
+
+        else
+        {
+            <div class="roles-table-wrapper">
+
+                <table class="roles-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="roles-col-role">
+                                Role
+                            </th>
+
+                            <th class="roles-col-description">
+                                Description
+                            </th>
+
+                            <th class="roles-col-users">
+                                Users
+                            </th>
+
+                            <th class="roles-col-permissions">
+                                Permissions
+                            </th>
+
+                            <th class="roles-col-status">
+                                Status
+                            </th>
+
+                            <th class="roles-col-actions">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var role in FilteredRoles)
+                        {
+                            var isSuperAdmin = IsSuperAdmin(role);
+
+                            <tr @key="role.RoleID">
+
+                                @* ROLE *@
+
+                                <td class="roles-role-cell">
+
+                                    <div class="roles-role-icon @(isSuperAdmin
+                                        ? "roles-role-icon-protected"
+                                        : "")">
+
+                                        <i class="bi @(isSuperAdmin
+                                            ? "bi-shield-fill-check"
+                                            : "bi-shield-fill")"></i>
+
+                                    </div>
+
+
+                                    <div class="roles-role-info">
+
+                                        <div class="roles-role-name-row">
+
+                                            <span class="roles-role-name">
+                                                @role.RoleName
+                                            </span>
+
+
+                                            @if (isSuperAdmin)
+                                            {
+                                                <span class="roles-protected-badge">
+
+                                                    <i class="bi bi-lock-fill"></i>
+
+                                                    Protected
+
+                                                </span>
+                                            }
+
+                                        </div>
+
+
+                                        <span class="roles-role-id">
+                                            Role ID: @role.RoleID
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* DESCRIPTION *@
+
+                                <td class="roles-description-cell">
+
+                                    @if (string.IsNullOrWhiteSpace(role.RoleDescription))
+                                    {
+                                        <span class="roles-no-description">
+                                            No description
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span title="@role.RoleDescription">
+                                            @role.RoleDescription
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* USERS *@
+
+                                <td class="roles-count-cell">
+
+                                    <div class="roles-count-box">
+
+                                        <div class="roles-count-icon">
+                                            <i class="bi bi-people-fill"></i>
+                                        </div>
+
+                                        <div class="roles-count-content">
+
+                                            <strong>
+                                                @role.UserCount
+                                            </strong>
+
+                                            <span>
+                                                @(role.UserCount == 1
+                                                    ? "user"
+                                                    : "users")
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* PERMISSIONS *@
+
+                                <td class="roles-count-cell">
+
+                                    <div class="roles-count-box roles-permission-count">
+
+                                        <div class="roles-count-icon">
+                                            <i class="bi bi-key-fill"></i>
+                                        </div>
+
+                                        <div class="roles-count-content">
+
+                                            <strong>
+                                                @role.PermissionCount
+                                            </strong>
+
+                                            <span>
+                                                @(role.PermissionCount == 1
+                                                    ? "permission"
+                                                    : "permissions")
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* STATUS *@
+
+                                <td class="roles-status-cell">
+
+                                    @if (role.IsActive)
+                                    {
+                                        <span class="roles-status roles-status-active">
+
+                                            <span class="roles-status-dot"></span>
+
+                                            Active
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="roles-status roles-status-inactive">
+
+                                            <span class="roles-status-dot"></span>
+
+                                            Inactive
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* ACTIONS *@
+
+                                <td class="roles-actions-cell">
+
+                                    <div class="roles-row-actions">
+
+                                        @* EDIT *@
+
+                                        <button type="button"
+                                                class="roles-action-btn roles-action-edit"
+                                                title="Edit role"
+                                                @onclick="() => OpenEditModal(role)">
+
+                                            <i class="bi bi-pencil-fill"></i>
+
+                                        </button>
+
+
+                                        @* STATUS *@
+
+                                        @if (role.IsActive)
+                                        {
+                                            @if (!isSuperAdmin && role.UserCount == 0)
+                                            {
+                                                <button type="button"
+                                                        class="roles-action-btn roles-action-deactivate"
+                                                        title="Deactivate role"
+                                                        @onclick="() => OpenStatusConfirmation(role, false)">
+
+                                                    <i class="bi bi-toggle-off"></i>
+
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button"
+                                                        class="roles-action-btn roles-action-disabled"
+                                                        title="This role cannot be deactivated"
+                                                        disabled>
+
+                                                    <i class="bi bi-toggle-off"></i>
+
+                                                </button>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <button type="button"
+                                                    class="roles-action-btn roles-action-activate"
+                                                    title="Activate role"
+                                                    @onclick="() => OpenStatusConfirmation(role, true)">
+
+                                                <i class="bi bi-toggle-on"></i>
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </section>
+
+
+    @* ============================================================
+       CREATE / EDIT ROLE MODAL
+       ============================================================ *@
+
+    @if (ShowRoleModal)
+    {
+        <div class="roles-modal-backdrop"
+             @onclick="CloseRoleModal">
+
+            <div class="roles-modal"
+                 @onclick:stopPropagation="true">
+
+                <div class="roles-modal-header">
+
+                    <div class="roles-modal-title">
+
+                        <div class="roles-modal-icon @(IsEditMode
+                            ? "roles-modal-icon-edit"
+                            : "roles-modal-icon-create")">
+
+                            <i class="bi @(IsEditMode
+                                ? "bi-pencil-fill"
+                                : "bi-shield-plus")"></i>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="roles-modal-eyebrow">
+
+                                @(IsEditMode
+                                    ? "ROLE MANAGEMENT"
+                                    : "NEW ROLE")
+
+                            </span>
+
+
+                            <h2>
+
+                                @(IsEditMode
+                                    ? "Edit Role"
+                                    : "Add Role")
+
+                            </h2>
+
+
+                            <p>
+
+                                @(IsEditMode
+                                    ? "Update the role information below."
+                                    : "Create a new administrator role.")
+
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <button type="button"
+                            class="roles-modal-close"
+                            @onclick="CloseRoleModal"
+                            aria-label="Close">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+
+                @if (!string.IsNullOrWhiteSpace(ModalError))
+                {
+                    <div class="roles-modal-error">
+
+                        <i class="bi bi-exclamation-circle-fill"></i>
+
+                        <span>
+                            @ModalError
+                        </span>
+
+                    </div>
+                }
+
+
+                <EditForm Model="@RoleForm"
+                          OnValidSubmit="SaveRoleAsync">
+
+                    <DataAnnotationsValidator />
+
+
+                    <div class="roles-modal-body">
+
+                        @* ROLE NAME *@
+
+                        <div class="roles-form-field">
+
+                            <label for="roleName">
+
+                                Role Name
+
+                                <span class="roles-required">
+                                    *
+                                </span>
+
+                            </label>
+
+
+                            <div class="roles-form-input-wrapper">
+
+                                <i class="bi bi-shield-fill"></i>
+
+                                <InputText id="roleName"
+                                           class="roles-form-input"
+                                           @bind-Value="RoleForm.RoleName"
+                                           placeholder="Enter role name"
+                                           maxlength="50"
+                                           disabled="@IsSaving" />
+
+                            </div>
+
+
+                            <ValidationMessage For="@(() => RoleForm.RoleName)" />
+
+                        </div>
+
+
+                        @* DESCRIPTION *@
+
+                        <div class="roles-form-field">
+
+                            <label for="roleDescription">
+
+                                Description
+
+                                <span class="roles-optional">
+                                    Optional
+                                </span>
+
+                            </label>
+
+
+                            <div class="roles-form-textarea-wrapper">
+
+                                <i class="bi bi-card-text"></i>
+
+                                <InputTextArea id="roleDescription"
+                                               class="roles-form-textarea"
+                                               @bind-Value="RoleForm.RoleDescription"
+                                               placeholder="Describe the purpose and access level of this role..."
+                                               maxlength="500"
+                                               rows="5"
+                                               disabled="@IsSaving" />
+
+                            </div>
+
+
+                            <ValidationMessage For="@(() => RoleForm.RoleDescription)" />
+
+                        </div>
+
+
+                        @* EXISTING ROLE INFORMATION *@
+
+                        @if (IsEditMode && SelectedRole != null)
+                        {
+                            <div class="roles-form-information">
+
+                                <div class="roles-info-item">
+
+                                    <span class="roles-info-label">
+                                        Role ID
+                                    </span>
+
+                                    <strong>
+                                        @SelectedRole.RoleID
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="roles-info-item">
+
+                                    <span class="roles-info-label">
+                                        Assigned Users
+                                    </span>
+
+                                    <strong>
+                                        @SelectedRole.UserCount
+                                    </strong>
+
+                                </div>
+
+
+                                <div class="roles-info-item">
+
+                                    <span class="roles-info-label">
+                                        Permissions
+                                    </span>
+
+                                    <strong>
+                                        @SelectedRole.PermissionCount
+                                    </strong>
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+
+                    @* MODAL FOOTER *@
+
+                    <div class="roles-modal-footer">
+
+                        <button type="button"
+                                class="roles-btn roles-btn-secondary"
+                                @onclick="CloseRoleModal"
+                                disabled="@IsSaving">
+
+                            <span>
+                                Cancel
+                            </span>
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="roles-btn roles-btn-primary"
+                                disabled="@IsSaving">
+
+                            @if (IsSaving)
+                            {
+                                <span class="roles-button-spinner"></span>
+
+                                <span>
+                                    Saving...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi @(IsEditMode
+                                    ? "bi-check-lg"
+                                    : "bi-plus-lg")"></i>
+
+                                <span>
+
+                                    @(IsEditMode
+                                        ? "Save Changes"
+                                        : "Create Role")
+
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+    }
+
+
+    @* ============================================================
+       STATUS CONFIRMATION
+       ============================================================ *@
+
+    @if (ShowStatusConfirmation && SelectedRole != null)
+    {
+        <div class="roles-dialog-backdrop"
+             @onclick="CloseStatusConfirmation">
+
+            <div class="roles-confirm-dialog"
+                 @onclick:stopPropagation="true">
+
+                <div class="roles-confirm-icon @(StatusTarget
+                    ? "roles-confirm-icon-activate"
+                    : "roles-confirm-icon-deactivate")">
+
+                    <i class="bi @(StatusTarget
+                        ? "bi-toggle-on"
+                        : "bi-toggle-off")"></i>
+
+                </div>
+
+
+                <h2>
+
+                    @(StatusTarget
+                        ? "Activate Role?"
+                        : "Deactivate Role?")
+
+                </h2>
+
+
+                <p>
+
+                    Are you sure you want to
+
+                    <strong>
+                        @(StatusTarget
+                            ? "activate"
+                            : "deactivate")
+                    </strong>
+
+                    the role
+
+                    <strong>
+                        @SelectedRole.RoleName
+                    </strong>?
+
+                </p>
+
+
+                @if (!StatusTarget && SelectedRole.UserCount > 0)
+                {
+                    <div class="roles-confirm-warning">
+
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+
+                        <span>
+
+                            This role is currently assigned to
+                            <strong>
+                                @SelectedRole.UserCount
+                            </strong>
+                            @(SelectedRole.UserCount == 1
+                                ? "user"
+                                : "users").
+
+                            Users must be reassigned before the role can
+                            be deactivated.
+
+                        </span>
+
+                    </div>
+                }
+
+
+                <div class="roles-confirm-actions">
+
+                    <button type="button"
+                            class="roles-btn roles-btn-secondary"
+                            @onclick="CloseStatusConfirmation"
+                            disabled="@IsChangingStatus">
+
+                        <span>
+                            Cancel
+                        </span>
+
+                    </button>
+
+
+                    <button type="button"
+                            class="roles-btn @(StatusTarget
+                                ? "roles-btn-primary"
+                                : "roles-btn-danger")"
+                            @onclick="ChangeRoleStatusAsync"
+                            disabled="@IsChangingStatus">
+
+                        @if (IsChangingStatus)
+                        {
+                            <span class="roles-button-spinner"></span>
+
+                            <span>
+                                Updating...
+                            </span>
+                        }
+                        else
+                        {
+                            <i class="bi @(StatusTarget
+                                ? "bi-check-lg"
+                                : "bi-toggle-off")"></i>
+
+                            <span>
+
+                                @(StatusTarget
+                                    ? "Activate Role"
+                                    : "Deactivate Role")
+
+                            </span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private List<RoleListResponse> Roles { get; set; } = new();
+
+    private List<RoleListResponse> FilteredRoles { get; set; } = new();
+
+
+    // ============================================================
+    // FILTERS
+    // ============================================================
+
+    private string SearchText { get; set; } = string.Empty;
+
+    private string StatusFilter { get; set; } = "all";
+
+    private string AppliedSearchText { get; set; } = string.Empty;
+
+    private string AppliedStatusFilter { get; set; } = "all";
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private bool IsLoading { get; set; }
+
+    private bool IsSaving { get; set; }
+
+    private bool IsChangingStatus { get; set; }
+
+
+    // ============================================================
+    // MESSAGES
+    // ============================================================
+
+    private string? ErrorMessage { get; set; }
+
+    private string? ModalError { get; set; }
+
+
+    // ============================================================
+    // MODALS
+    // ============================================================
+
+    private bool ShowRoleModal { get; set; }
+
+    private bool ShowStatusConfirmation { get; set; }
+
+    private bool IsEditMode { get; set; }
+
+    private bool StatusTarget { get; set; }
+
+
+    // ============================================================
+    // SELECTED ROLE
+    // ============================================================
+
+    private RoleListResponse? SelectedRole { get; set; }
+
+
+    // ============================================================
+    // FORM
+    // ============================================================
+
+    private RoleFormModel RoleForm { get; set; } = new();
+
+
+    // ============================================================
+    // COMPUTED VALUES
+    // ============================================================
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(AppliedSearchText)
+        ||
+        !string.Equals(
+            AppliedStatusFilter,
+            "all",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private int ActiveRoleCount =>
+        FilteredRoles.Count(x => x.IsActive);
+
+
+    private int InactiveRoleCount =>
+        FilteredRoles.Count(x => !x.IsActive);
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState =
+            await AdminAuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        if (!(authState.User.Identity?.IsAuthenticated ?? false))
+        {
+            Navigation.NavigateTo("/admin");
+            return;
+        }
+
+        await LoadRolesAsync();
+    }
+
+
+    // ============================================================
+    // LOAD ROLES
+    // ============================================================
+
+    private async Task LoadRolesAsync()
+    {
+        try
+        {
+            IsLoading = true;
+
+            ErrorMessage = null;
+
+            Roles =
+                await RoleManagementApiService
+                    .GetRolesAsync();
+
+            ApplyFilters();
+        }
+        catch (HttpRequestException)
+        {
+            ErrorMessage =
+                "Unable to connect to the API. Please verify that the HRInfoAdvertisements API is running.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to load roles."
+                    : ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // APPLY FILTERS
+    // ============================================================
+
+    private void ApplyFilters()
+    {
+        AppliedSearchText =
+            SearchText.Trim();
+
+        AppliedStatusFilter =
+            StatusFilter;
+
+        IEnumerable<RoleListResponse> query =
+            Roles;
+
+
+        if (!string.IsNullOrWhiteSpace(AppliedSearchText))
+        {
+            var search =
+                AppliedSearchText.Trim();
+
+            query =
+                query.Where(x =>
+                    x.RoleName.Contains(
+                        search,
+                        StringComparison.OrdinalIgnoreCase)
+                    ||
+                    (
+                        !string.IsNullOrWhiteSpace(
+                            x.RoleDescription)
+                        &&
+                        x.RoleDescription.Contains(
+                            search,
+                            StringComparison.OrdinalIgnoreCase)
+                    ));
+        }
+
+
+        if (string.Equals(
+                AppliedStatusFilter,
+                "active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            query =
+                query.Where(x => x.IsActive);
+        }
+        else if (string.Equals(
+                     AppliedStatusFilter,
+                     "inactive",
+                     StringComparison.OrdinalIgnoreCase))
+        {
+            query =
+                query.Where(x => !x.IsActive);
+        }
+
+
+        FilteredRoles =
+            query
+                .OrderBy(x => x.RoleID)
+                .ToList();
+    }
+
+
+    // ============================================================
+    // CLEAR FILTERS
+    // ============================================================
+
+    private void ClearFilters()
+    {
+        SearchText = string.Empty;
+
+        StatusFilter = "all";
+
+        ApplyFilters();
+    }
+
+
+    // ============================================================
+    // CLEAR SEARCH
+    // ============================================================
+
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+
+        ApplyFilters();
+    }
+
+
+    // ============================================================
+    // SEARCH KEY
+    // ============================================================
+
+    private void HandleSearchKeyDown(
+        KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            ApplyFilters();
+        }
+    }
+
+
+    // ============================================================
+    // ERROR
+    // ============================================================
+
+    private void ClearError()
+    {
+        ErrorMessage = null;
+    }
+
+
+    // ============================================================
+    // CREATE MODAL
+    // ============================================================
+
+    private void OpenCreateModal()
+    {
+        IsEditMode = false;
+
+        SelectedRole = null;
+
+        ModalError = null;
+
+        RoleForm =
+            new RoleFormModel();
+
+        ShowRoleModal = true;
+    }
+
+
+    // ============================================================
+    // EDIT MODAL
+    // ============================================================
+
+    private void OpenEditModal(
+        RoleListResponse role)
+    {
+        IsEditMode = true;
+
+        SelectedRole = role;
+
+        ModalError = null;
+
+        RoleForm =
+            new RoleFormModel
+            {
+                RoleName = role.RoleName,
+                RoleDescription = role.RoleDescription
+            };
+
+        ShowRoleModal = true;
+    }
+
+
+    // ============================================================
+    // CLOSE ROLE MODAL
+    // ============================================================
+
+    private void CloseRoleModal()
+    {
+        if (IsSaving)
+            return;
+
+        ShowRoleModal = false;
+
+        ModalError = null;
+
+        SelectedRole = null;
+    }
+
+
+    // ============================================================
+    // SAVE ROLE
+    // ============================================================
+
+    private async Task SaveRoleAsync()
+    {
+        if (IsSaving)
+            return;
+
+        ModalError = null;
+
+        try
+        {
+            IsSaving = true;
+
+
+            if (string.IsNullOrWhiteSpace(
+                    RoleForm.RoleName))
+            {
+                ModalError =
+                    "Role name is required.";
+
+                return;
+            }
+
+
+            if (IsEditMode &&
+                SelectedRole != null)
+            {
+                var request =
+                    new UpdateRoleRequest
+                    {
+                        RoleName =
+                            RoleForm.RoleName.Trim(),
+
+                        RoleDescription =
+                            string.IsNullOrWhiteSpace(
+                                RoleForm.RoleDescription)
+                                ? null
+                                : RoleForm.RoleDescription.Trim()
+                    };
+
+
+                var result =
+                    await RoleManagementApiService
+                        .UpdateRoleAsync(
+                            SelectedRole.RoleID,
+                            request);
+
+
+                if (!result.Success)
+                {
+                    ModalError =
+                        result.Message;
+
+                    return;
+                }
+            }
+            else
+            {
+                var request =
+                    new CreateRoleRequest
+                    {
+                        RoleName =
+                            RoleForm.RoleName.Trim(),
+
+                        RoleDescription =
+                            string.IsNullOrWhiteSpace(
+                                RoleForm.RoleDescription)
+                                ? null
+                                : RoleForm.RoleDescription.Trim()
+                    };
+
+
+                var result =
+                    await RoleManagementApiService
+                        .CreateRoleAsync(request);
+
+
+                if (!result.Success)
+                {
+                    ModalError =
+                        result.Message;
+
+                    return;
+                }
+            }
+
+
+            ShowRoleModal = false;
+
+            SelectedRole = null;
+
+            await LoadRolesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            ModalError =
+                "Unable to connect to the API.";
+        }
+        catch (Exception ex)
+        {
+            ModalError =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to save the role."
+                    : ex.Message;
+        }
+        finally
+        {
+            IsSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATUS CONFIRMATION
+    // ============================================================
+
+    private void OpenStatusConfirmation(
+        RoleListResponse role,
+        bool activate)
+    {
+        SelectedRole = role;
+
+        StatusTarget = activate;
+
+        ShowStatusConfirmation = true;
+
+        ErrorMessage = null;
+    }
+
+
+    // ============================================================
+    // CLOSE STATUS CONFIRMATION
+    // ============================================================
+
+    private void CloseStatusConfirmation()
+    {
+        if (IsChangingStatus)
+            return;
+
+        ShowStatusConfirmation = false;
+
+        SelectedRole = null;
+    }
+
+
+    // ============================================================
+    // CHANGE ROLE STATUS
+    // ============================================================
+
+    private async Task ChangeRoleStatusAsync()
+    {
+        if (IsChangingStatus ||
+            SelectedRole == null)
+        {
+            return;
+        }
+
+
+        try
+        {
+            IsChangingStatus = true;
+
+
+            var result =
+                await RoleManagementApiService
+                    .UpdateRoleStatusAsync(
+                        SelectedRole.RoleID,
+                        StatusTarget);
+
+
+            if (!result.Success)
+            {
+                ErrorMessage =
+                    result.Message;
+
+                ShowStatusConfirmation = false;
+
+                return;
+            }
+
+
+            ShowStatusConfirmation = false;
+
+            SelectedRole = null;
+
+            await LoadRolesAsync();
+        }
+        catch (HttpRequestException)
+        {
+            ErrorMessage =
+                "Unable to connect to the API.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to update role status."
+                    : ex.Message;
+        }
+        finally
+        {
+            IsChangingStatus = false;
+        }
+    }
+
+
+    // ============================================================
+    // SUPER ADMIN CHECK
+    // ============================================================
+
+    private static bool IsSuperAdmin(
+        RoleListResponse role)
+    {
+        return string.Equals(
+            role.RoleName,
+            "SuperAdmin",
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private sealed class RoleFormModel
+    {
+        [Required(
+            ErrorMessage = "Role name is required.")]
+        [StringLength(
+            50,
+            ErrorMessage = "Role name cannot exceed 50 characters.")]
+        public string RoleName { get; set; } = string.Empty;
+
+
+        [StringLength(
+            500,
+            ErrorMessage = "Description cannot exceed 500 characters.")]
+        public string? RoleDescription { get; set; }
+    }
+}

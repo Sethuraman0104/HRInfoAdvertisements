@@ -9,79 +9,15 @@
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Users | HR INFO ADs</PageTitle>
+<PageTitle>User Management | HR INFO ADs</PageTitle>
 
 <div class="admin-users">
 
-    <!-- =========================================================
-         PAGE HEADER
-         ========================================================= -->
-
-    <section class="users-page-header">
-
-        <div class="users-page-header-content">
-
-            <span class="users-eyebrow">
-                USER MANAGEMENT
-            </span>
-
-            <h1>
-                Users
-            </h1>
-
-            <p>
-                Manage registered HR INFO ADs platform accounts,
-                account status, roles and access.
-            </p>
-
-        </div>
-
-        <div class="users-header-actions">
-
-            <div class="users-count-card">
-
-                <div class="users-count-icon">
-                    <i class="bi bi-people"></i>
-                </div>
-
-                <div>
-                    <small>Total Users</small>
-
-                    <strong>
-                        @totalRecords.ToString("N0")
-                    </strong>
-                </div>
-
-            </div>
-
-            <button type="button"
-                    class="users-refresh-button"
-                    @onclick="RefreshAsync"
-                    disabled="@isLoading">
-
-                @if (isLoading)
-                {
-                    <span class="users-spinner"></span>
-
-                    <span>
-                        Loading
-                    </span>
-                }
-                else
-                {
-                    <i class="bi bi-arrow-clockwise"></i>
-
-                    <span>
-                        Refresh
-                    </span>
-                }
-
-            </button>
-
-        </div>
-
-    </section>
-
+    <PageHeader Icon="bi-people-fill"
+                Eyebrow="USER MANAGEMENT"
+                Title="Users"
+                DescriptionContent="@UserHeaderDescription"
+                ActionContent="@UserHeaderActions" />
 
     <!-- =========================================================
          ERROR
@@ -824,6 +760,25 @@
 
         await LoadUsersAsync();
     }
+
+private RenderFragment UserHeaderDescription => @<text>
+    Manage registered platform accounts, status, roles and access.
+</text>;
+
+private RenderFragment UserHeaderActions => @<text>
+    <button type="button"
+            class="hr-page-btn"
+            @onclick="RefreshAsync"
+            disabled="@isLoading">
+
+        <i class="bi @(isLoading ? "bi-arrow-repeat hr-spin" : "bi-arrow-clockwise")"></i>
+
+        <span>
+            Refresh
+        </span>
+
+    </button>
+</text>;
 
     // ============================================================
     // LOAD

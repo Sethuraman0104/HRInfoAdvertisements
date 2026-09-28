@@ -193,9 +193,14 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     AdvertisementApiService>();
 
+builder.Services.AddScoped<RoleManagementApiService>();
+
 builder.Services.AddScoped<UserManagementApiService>();
 
+builder.Services.AddScoped<CategoryManagementApiService>();
 
+builder.Services.AddScoped<
+    AdvertisementTypeManagementApiService>();
 // ============================================================
 // ADMIN MODERATION SERVICE
 // ============================================================

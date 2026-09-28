@@ -26,6 +26,19 @@
         Roboto,
         Arial,
         sans-serif;
+
+        /* Layout shell (used by MainLayout.razor.css) */
+    --hr-sidebar-width: 250px;
+    --hr-topbar-height: 72px;
+    --hr-footer-height: 50px;
+
+    /* Missing colour tokens */
+    --hr-primary-light: #2061C5;
+    --hr-surface: #FFFFFF;
+    --hr-text: #071F4D;
+    --hr-text-secondary: #667085;
+    --hr-text-muted: #98A2B3;
+    --hr-border-light: #EDF1F7;
 }
 
 

@@ -1,0 +1,1454 @@
+@page "/admin/users/{UserId:long}"
+
+@using HRInfoAdvertisements.Application.DTOs.AdminManagement
+@using HRInfoAdvertisements.Application.DTOs.UserManagement
+@using HRInfoAdvertisements.Application.Profile.DTOs
+@using HRInfoAdvertisements.Admin.Services
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject UserManagementApiService UserManagementApiService
+@inject RoleManagementApiService RoleManagementApiService
+@inject NavigationManager Navigation
+
+<PageTitle>User Details | HR INFO ADs</PageTitle>
+
+<div class="admin-user-details">
+
+    <PageHeader Icon="bi-person-badge-fill"
+                Eyebrow="USER MANAGEMENT"
+                Title="User Details" />
+
+    @if (isLoading)
+    {
+        <div class="user-details-loading">
+            <div class="user-loading-spinner">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+
+            <div>
+                <strong>Loading user information...</strong>
+                <span>Please wait while the account details are retrieved.</span>
+            </div>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage) && user is null)
+    {
+        <section class="user-details-message error">
+            <div class="message-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="message-content">
+                <strong>Unable to load user</strong>
+                <span>@errorMessage</span>
+            </div>
+
+            <button type="button"
+                    class="user-message-button"
+                    @onclick="LoadUserAsync">
+                <i class="bi bi-arrow-clockwise"></i>
+                Retry
+            </button>
+        </section>
+    }
+    else if (user is not null)
+    {
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <section class="user-details-message success">
+                <div class="message-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div class="message-content">
+                    <strong>Success</strong>
+                    <span>@successMessage</span>
+                </div>
+
+                <button type="button"
+                        class="message-close"
+                        @onclick="ClearMessages">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </section>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <section class="user-details-message error">
+                <div class="message-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+
+                <div class="message-content">
+                    <strong>Action could not be completed</strong>
+                    <span>@errorMessage</span>
+                </div>
+
+                <button type="button"
+                        class="message-close"
+                        @onclick="ClearMessages">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </section>
+        }
+
+        <!-- =========================================================
+             TOP USER PROFILE
+             ========================================================= -->
+
+        <section class="user-profile-hero">
+
+            <div class="user-profile-identity">
+
+                <div class="user-profile-avatar">
+
+                    @if (!string.IsNullOrWhiteSpace(user.Profile?.ProfilePhotoURL))
+                    {
+                        <img src="@user.Profile.ProfilePhotoURL"
+                             alt="@DisplayName" />
+                    }
+                    else
+                    {
+                        <span>@GetInitials()</span>
+                    }
+
+                    <span class="avatar-status @GetStatusClass()"></span>
+                </div>
+
+                <div class="user-profile-main">
+
+                    <div class="user-profile-name-row">
+
+                        <h2>@DisplayName</h2>
+
+                        <span class="user-status-badge @GetStatusClass()">
+                            <i class="bi @GetStatusIcon()"></i>
+                            @DisplayStatus
+                        </span>
+
+                    </div>
+
+                    <div class="user-profile-username">
+                        <i class="bi bi-at"></i>
+                        @user.UserName
+                    </div>
+
+                    <div class="user-profile-meta">
+
+                        <span>
+                            <i class="bi bi-hash"></i>
+                            User ID: @user.UserID
+                        </span>
+
+                        <span>
+                            <i class="bi bi-calendar3"></i>
+                            Joined @FormatDate(user.CreatedDate)
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="user-profile-actions">
+
+                <button type="button"
+                        class="user-action secondary"
+                        @onclick="GoBack">
+
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Back to Users</span>
+
+                </button>
+
+                @if (!isEditMode)
+                {
+                    <button type="button"
+                            class="user-action primary"
+                            @onclick="StartEdit">
+
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Edit Profile</span>
+
+                    </button>
+                }
+
+            </div>
+
+        </section>
+
+        <!-- =========================================================
+             PROFILE EDIT
+             ========================================================= -->
+
+        @if (isEditMode)
+        {
+            <section class="user-card edit-card">
+
+                <div class="user-card-header">
+
+                    <div>
+                        <span class="card-eyebrow">PROFILE EDITOR</span>
+                        <h3>Edit User Profile</h3>
+                        <p>
+                            Update the personal and business information
+                            associated with this account.
+                        </p>
+                    </div>
+
+                    <div class="edit-card-actions">
+
+                        <button type="button"
+                                class="user-action secondary"
+                                @onclick="CancelEdit"
+                                disabled="@isSaving">
+
+                            <i class="bi bi-x-lg"></i>
+                            Cancel
+
+                        </button>
+
+                        <button type="button"
+                                class="user-action primary"
+                                @onclick="SaveProfileAsync"
+                                disabled="@isSaving">
+
+                            <i class="bi @(isSaving
+                                ? "bi-arrow-repeat user-spin"
+                                : "bi-check-lg")"></i>
+
+                            @(isSaving ? "Saving..." : "Save Changes")
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="user-form-grid">
+
+                    <div class="user-form-field">
+                        <label for="firstName">
+                            First Name
+                        </label>
+
+                        <input id="firstName"
+                               class="user-form-input"
+                               @bind="editFirstName"
+                               maxlength="100" />
+                    </div>
+
+                    <div class="user-form-field">
+                        <label for="lastName">
+                            Last Name
+                        </label>
+
+                        <input id="lastName"
+                               class="user-form-input"
+                               @bind="editLastName"
+                               maxlength="100" />
+                    </div>
+
+                    <div class="user-form-field">
+                        <label for="nationality">
+                            Nationality
+                        </label>
+
+                        <input id="nationality"
+                               class="user-form-input"
+                               @bind="editNationality"
+                               maxlength="100" />
+                    </div>
+
+                    <div class="user-form-field">
+                        <label for="preferredLanguage">
+                            Preferred Language
+                        </label>
+
+                        <select id="preferredLanguage"
+                                class="user-form-input"
+                                @bind="editPreferredLanguage">
+
+                            <option value="en">English</option>
+                            <option value="ar">Arabic</option>
+
+                        </select>
+                    </div>
+
+                    <div class="user-form-field full-width">
+
+                        <label class="user-checkbox-field">
+
+                            <input type="checkbox"
+                                   @bind="editIsBusinessAccount" />
+
+                            <span class="user-checkbox-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span>
+                                <strong>Business Account</strong>
+                                <small>
+                                    This account represents a business or company.
+                                </small>
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                    @if (editIsBusinessAccount)
+                    {
+                        <div class="user-form-field full-width">
+
+                            <label for="companyName">
+                                Company Name
+                            </label>
+
+                            <input id="companyName"
+                                   class="user-form-input"
+                                   @bind="editCompanyName"
+                                   maxlength="250" />
+
+                        </div>
+                    }
+
+                    <div class="user-form-field full-width">
+
+                        <label for="profilePhotoUrl">
+                            Profile Photo URL
+                        </label>
+
+                        <input id="profilePhotoUrl"
+                               class="user-form-input"
+                               @bind="editProfilePhotoUrl"
+                               maxlength="1000"
+                               placeholder="https://..." />
+
+                    </div>
+
+                </div>
+
+            </section>
+        }
+
+        <!-- =========================================================
+             MAIN CONTENT
+             ========================================================= -->
+
+        <div class="user-details-grid">
+
+            <!-- =====================================================
+                 LEFT COLUMN
+                 ===================================================== -->
+
+            <div class="user-details-main">
+
+                <!-- Contact -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+                        <div>
+                            <span class="card-eyebrow">CONTACT</span>
+                            <h3>Contact Information</h3>
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </span>
+                    </div>
+
+                    <div class="user-info-grid">
+
+                        <div class="user-info-item">
+                            <span class="info-label">Email</span>
+
+                            <span class="info-value">
+                                <i class="bi bi-envelope"></i>
+                                @user.Email
+                            </span>
+
+                            <span class="verification-badge @(user.IsEmailVerified ? "verified" : "unverified")">
+                                <i class="bi @(user.IsEmailVerified
+                                    ? "bi-check-circle-fill"
+                                    : "bi-x-circle-fill")"></i>
+
+                                @(user.IsEmailVerified
+                                    ? "Verified"
+                                    : "Not verified")
+                            </span>
+                        </div>
+
+                        <div class="user-info-item">
+                            <span class="info-label">Mobile</span>
+
+                            <span class="info-value">
+                                <i class="bi bi-phone"></i>
+                                @(string.IsNullOrWhiteSpace(user.MobileNo)
+                                    ? "Not provided"
+                                    : user.MobileNo)
+                            </span>
+
+                            @if (!string.IsNullOrWhiteSpace(user.MobileNo))
+                            {
+                                <span class="verification-badge @(user.IsMobileVerified ? "verified" : "unverified")">
+                                    <i class="bi @(user.IsMobileVerified
+                                        ? "bi-check-circle-fill"
+                                        : "bi-x-circle-fill")"></i>
+
+                                    @(user.IsMobileVerified
+                                        ? "Verified"
+                                        : "Not verified")
+                                </span>
+                            }
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- Profile -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+                            <span class="card-eyebrow">PROFILE</span>
+                            <h3>Personal Information</h3>
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-person-vcard-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="user-info-grid">
+
+                        <div class="user-info-item">
+                            <span class="info-label">First Name</span>
+                            <span class="info-value">
+                                @(user.Profile?.FirstName ?? "—")
+                            </span>
+                        </div>
+
+                        <div class="user-info-item">
+                            <span class="info-label">Last Name</span>
+                            <span class="info-value">
+                                @(user.Profile?.LastName ?? "—")
+                            </span>
+                        </div>
+
+                        <div class="user-info-item">
+                            <span class="info-label">Nationality</span>
+                            <span class="info-value">
+                                @(user.Profile?.Nationality ?? "—")
+                            </span>
+                        </div>
+
+                        <div class="user-info-item">
+                            <span class="info-label">Preferred Language</span>
+                            <span class="info-value">
+                                @(user.Profile?.PreferredLanguage?.ToUpperInvariant() ?? "EN")
+                            </span>
+                        </div>
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Account Type
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi @(user.Profile?.IsBusinessAccount == true
+                                    ? "bi-building"
+                                    : "bi-person")"></i>
+
+                                @(user.Profile?.IsBusinessAccount == true
+                                    ? "Business Account"
+                                    : "Individual Account")
+
+                            </span>
+
+                        </div>
+
+                        @if (user.Profile?.IsBusinessAccount == true)
+                        {
+                            <div class="user-info-item">
+                                <span class="info-label">Company</span>
+                                <span class="info-value">
+                                    @(user.Profile.CompanyName ?? "—")
+                                </span>
+                            </div>
+                        }
+
+                    </div>
+
+                </section>
+
+                <!-- Roles -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+                            <span class="card-eyebrow">ACCESS CONTROL</span>
+                            <h3>Roles & Access</h3>
+                            <p>
+                                Manage the roles assigned to this account.
+                            </p>
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="assigned-roles">
+
+                        @if (user.Roles.Count == 0)
+                        {
+                            <div class="empty-roles">
+                                <i class="bi bi-shield-x"></i>
+                                <strong>No roles assigned</strong>
+                                <span>
+                                    This account currently has no assigned roles.
+                                </span>
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var role in user.Roles)
+                            {
+                                <div class="role-item">
+
+                                    <div class="role-item-icon">
+                                        <i class="bi bi-shield-fill-check"></i>
+                                    </div>
+
+                                    <div class="role-item-content">
+                                        <strong>@role.RoleName</strong>
+
+                                        @if (!string.IsNullOrWhiteSpace(role.RoleDescription))
+                                        {
+                                            <span>
+                                                @role.RoleDescription
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="role-item-status">
+                                        <span class="role-status @(role.IsActive ? "active" : "inactive")">
+                                            @(role.IsActive ? "Active" : "Inactive")
+                                        </span>
+
+                                        <button type="button"
+                                                class="role-remove-button"
+                                                title="Remove role"
+                                                @onclick="() => ConfirmRemoveRole(role.RoleID, role.RoleName)">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            }
+                        }
+
+                    </div>
+
+                    @if (availableRoles.Count > 0)
+                    {
+                        <div class="assign-role-panel">
+
+                            <div class="assign-role-title">
+                                <i class="bi bi-plus-circle-fill"></i>
+                                <span>Assign Role</span>
+                            </div>
+
+                            <div class="assign-role-row">
+
+                                <select class="user-form-input"
+                                        @bind="selectedRoleId">
+
+                                    <option value="0">
+                                        Select a role...
+                                    </option>
+
+                                    @foreach (var role in AvailableRoles)
+                                    {
+                                        <option value="@role.RoleID">
+                                            @role.RoleName
+                                        </option>
+                                    }
+
+                                </select>
+
+                                <button type="button"
+                                        class="user-action primary"
+                                        @onclick="AssignRoleAsync"
+                                        disabled="@(selectedRoleId == 0 || isRoleSaving)">
+
+                                    <i class="bi @(isRoleSaving
+                                        ? "bi-arrow-repeat user-spin"
+                                        : "bi-person-plus-fill")"></i>
+
+                                    @(isRoleSaving ? "Assigning..." : "Assign Role")
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </section>
+
+            </div>
+
+            <!-- =====================================================
+                 RIGHT COLUMN
+                 ===================================================== -->
+
+            <aside class="user-details-side">
+
+                <!-- Security -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+                            <span class="card-eyebrow">SECURITY</span>
+                            <h3>Account Security</h3>
+                        </div>
+
+                        <span class="card-icon security">
+                            <i class="bi bi-shield-check"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="security-list">
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-envelope-check"></i>
+                            </div>
+
+                            <div>
+                                <strong>Email Verification</strong>
+                                <span>
+                                    @(user.IsEmailVerified
+                                        ? "Verified"
+                                        : "Not verified")
+                                </span>
+                            </div>
+
+                            <i class="bi @(user.IsEmailVerified
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-exclamation-circle-fill security-warning")"></i>
+
+                        </div>
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-phone-fill"></i>
+                            </div>
+
+                            <div>
+                                <strong>Mobile Verification</strong>
+                                <span>
+                                    @(user.IsMobileVerified
+                                        ? "Verified"
+                                        : "Not verified")
+                                </span>
+                            </div>
+
+                            <i class="bi @(user.IsMobileVerified
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-exclamation-circle-fill security-warning")"></i>
+
+                        </div>
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-fingerprint"></i>
+                            </div>
+
+                            <div>
+                                <strong>Multi-Factor Authentication</strong>
+                                <span>
+                                    @(user.IsMFAEnabled
+                                        ? "Enabled"
+                                        : "Disabled")
+                                </span>
+                            </div>
+
+                            <i class="bi @(user.IsMFAEnabled
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-dash-circle-fill security-neutral")"></i>
+
+                        </div>
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-exclamation-diamond-fill"></i>
+                            </div>
+
+                            <div>
+                                <strong>Failed Login Attempts</strong>
+                                <span>
+                                    @user.FailedLoginAttempts attempt(s)
+                                </span>
+                            </div>
+
+                            <span class="security-count
+                                @(user.FailedLoginAttempts > 0
+                                    ? "warning"
+                                    : "normal")">
+                                @user.FailedLoginAttempts
+                            </span>
+
+                        </div>
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-lock-fill"></i>
+                            </div>
+
+                            <div>
+                                <strong>Lock Status</strong>
+                                <span>
+                                    @(IsLocked
+                                        ? "Account is locked"
+                                        : "Account is unlocked")
+                                </span>
+                            </div>
+
+                            <i class="bi @(IsLocked
+                                ? "bi-lock-fill security-warning"
+                                : "bi-unlock-fill security-good")"></i>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- Administrative Actions -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+                            <span class="card-eyebrow">ADMINISTRATION</span>
+                            <h3>Account Actions</h3>
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-gear-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="admin-actions">
+
+                        @if (IsLocked)
+                        {
+                            <button type="button"
+                                    class="admin-action success"
+                                    @onclick="UnlockUserAsync"
+                                    disabled="@isActionSaving">
+
+                                <i class="bi bi-unlock-fill"></i>
+
+                                <span>
+                                    <strong>Unlock Account</strong>
+                                    <small>Allow the user to sign in again.</small>
+                                </span>
+
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="admin-action warning"
+                                    @onclick="LockUserAsync"
+                                    disabled="@isActionSaving">
+
+                                <i class="bi bi-lock-fill"></i>
+
+                                <span>
+                                    <strong>Lock Account</strong>
+                                    <small>Prevent the user from signing in.</small>
+                                </span>
+
+                            </button>
+                        }
+
+                        <button type="button"
+                                class="admin-action @(IsActive ? "danger" : "success")"
+                                @onclick="ToggleStatusAsync"
+                                disabled="@isActionSaving">
+
+                            <i class="bi @(IsActive
+                                ? "bi-person-x-fill"
+                                : "bi-person-check-fill")"></i>
+
+                            <span>
+                                <strong>
+                                    @(IsActive
+                                        ? "Deactivate Account"
+                                        : "Activate Account")
+                                </strong>
+
+                                <small>
+                                    @(IsActive
+                                        ? "Disable this user account."
+                                        : "Enable this user account.")
+                                </small>
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+                <!-- Account Timeline -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+                            <span class="card-eyebrow">ACCOUNT</span>
+                            <h3>Account Timeline</h3>
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="account-timeline">
+
+                        <div class="timeline-item">
+                            <span class="timeline-dot created"></span>
+
+                            <div>
+                                <strong>Account Created</strong>
+                                <span>@FormatDateTime(user.CreatedDate)</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <span class="timeline-dot login"></span>
+
+                            <div>
+                                <strong>Last Login</strong>
+                                <span>
+                                    @(user.LastLoginDate.HasValue
+                                        ? FormatDateTime(user.LastLoginDate.Value)
+                                        : "Never")
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <span class="timeline-dot modified"></span>
+
+                            <div>
+                                <strong>Last Modified</strong>
+                                <span>
+                                    @(user.ModifiedDate.HasValue
+                                        ? FormatDateTime(user.ModifiedDate.Value)
+                                        : "Not modified")
+                                </span>
+                            </div>
+                        </div>
+
+                        @if (user.LockoutEndDate.HasValue)
+                        {
+                            <div class="timeline-item">
+                                <span class="timeline-dot lock"></span>
+
+                                <div>
+                                    <strong>Lockout End</strong>
+                                    <span>
+                                        @FormatDateTime(user.LockoutEndDate.Value)
+                                    </span>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+
+    }
+
+</div>
+
+@if (showRoleRemoveConfirmation)
+{
+    <div class="user-modal-backdrop">
+
+        <div class="user-modal">
+
+            <div class="user-modal-icon warning">
+                <i class="bi bi-shield-x"></i>
+            </div>
+
+            <h3>Remove Role?</h3>
+
+            <p>
+                Are you sure you want to remove
+                <strong>@roleToRemoveName</strong>
+                from this user?
+            </p>
+
+            <div class="user-modal-actions">
+
+                <button type="button"
+                        class="user-action secondary"
+                        @onclick="CancelRemoveRole">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="user-action danger"
+                        @onclick="RemoveRoleAsync"
+                        disabled="@isRoleSaving">
+                    <i class="bi bi-trash3"></i>
+                    Remove Role
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public long UserId { get; set; }
+
+    private UserDetailResponse? user;
+
+    private List<RoleListResponse> availableRoles = new();
+
+    private bool isLoading;
+    private bool isSaving;
+    private bool isRoleSaving;
+    private bool isActionSaving;
+    private bool isEditMode;
+
+    private string? errorMessage;
+    private string? successMessage;
+
+    private int selectedRoleId;
+
+    private int roleToRemoveId;
+    private string roleToRemoveName = string.Empty;
+    private bool showRoleRemoveConfirmation;
+
+    private string editFirstName = string.Empty;
+    private string? editLastName;
+    private string? editNationality;
+    private string editPreferredLanguage = "en";
+    private bool editIsBusinessAccount;
+    private string? editCompanyName;
+    private string? editProfilePhotoUrl;
+
+    private bool IsLocked =>
+        user?.LockoutEndDate.HasValue == true &&
+        user.LockoutEndDate.Value > DateTime.UtcNow;
+
+    private bool IsActive =>
+        string.Equals(
+            user?.AccountStatus,
+            "Active",
+            StringComparison.OrdinalIgnoreCase);
+
+    private string DisplayName =>
+        string.Join(
+            " ",
+            new[]
+            {
+                user?.Profile?.FirstName,
+                user?.Profile?.LastName
+            }
+            .Where(x => !string.IsNullOrWhiteSpace(x)))
+        .Trim()
+        is { Length: > 0 } name
+            ? name
+            : user?.UserName ?? "User";
+
+    private string DisplayStatus =>
+        string.IsNullOrWhiteSpace(user?.AccountStatus)
+            ? "Unknown"
+            : user.AccountStatus;
+
+    private IEnumerable<RoleListResponse> AvailableRoles =>
+        availableRoles
+            .Where(role =>
+                role.IsActive &&
+                user?.Roles.All(
+                    assigned => assigned.RoleID != role.RoleID) == true)
+            .OrderBy(role => role.RoleName);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserAsync();
+    }
+
+    private async Task LoadUserAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            user =
+                await UserManagementApiService
+                    .GetUserByIdAsync(UserId);
+
+            if (user is null)
+            {
+                errorMessage =
+                    "The requested user could not be found.";
+
+                return;
+            }
+
+            availableRoles =
+                await RoleManagementApiService
+                    .GetRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to load user details.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void StartEdit()
+    {
+        if (user is null)
+            return;
+
+        editFirstName =
+            user.Profile?.FirstName ?? string.Empty;
+
+        editLastName =
+            user.Profile?.LastName;
+
+        editNationality =
+            user.Profile?.Nationality;
+
+        editPreferredLanguage =
+            string.IsNullOrWhiteSpace(
+                user.Profile?.PreferredLanguage)
+                ? "en"
+                : user.Profile!.PreferredLanguage;
+
+        editIsBusinessAccount =
+            user.Profile?.IsBusinessAccount == true;
+
+        editCompanyName =
+            user.Profile?.CompanyName;
+
+        editProfilePhotoUrl =
+            user.Profile?.ProfilePhotoURL;
+
+        errorMessage = null;
+        successMessage = null;
+
+        isEditMode = true;
+    }
+
+    private void CancelEdit()
+    {
+        if (isSaving)
+            return;
+
+        isEditMode = false;
+        errorMessage = null;
+    }
+
+    private async Task SaveProfileAsync()
+    {
+        if (user is null || isSaving)
+            return;
+
+        isSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var request =
+                new UpdateUserProfileRequest
+                {
+                    FirstName =
+                        editFirstName,
+
+                    LastName =
+                        editLastName,
+
+                    Nationality =
+                        editNationality,
+
+                    PreferredLanguage =
+                        editPreferredLanguage,
+
+                    IsBusinessAccount =
+                        editIsBusinessAccount,
+
+                    CompanyName =
+                        editCompanyName,
+
+                    ProfilePhotoURL =
+                        editProfilePhotoUrl
+                };
+
+            await UserManagementApiService
+                .UpdateUserProfileAsync(
+                    UserId,
+                    request);
+
+            await LoadUserAsync();
+
+            isEditMode = false;
+
+            successMessage =
+                "User profile updated successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to update the user profile.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private async Task ToggleStatusAsync()
+    {
+        if (user is null || isActionSaving)
+            return;
+
+        isActionSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var newStatus =
+                IsActive
+                    ? "Inactive"
+                    : "Active";
+
+            await UserManagementApiService
+                .UpdateUserStatusAsync(
+                    UserId,
+                    newStatus);
+
+            await LoadUserAsync();
+
+            successMessage =
+                $"Account {newStatus.ToLowerInvariant()} successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to update the account status.");
+        }
+        finally
+        {
+            isActionSaving = false;
+        }
+    }
+
+    private async Task LockUserAsync()
+    {
+        if (user is null || isActionSaving)
+            return;
+
+        isActionSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            var lockoutEnd =
+                DateTime.UtcNow.AddYears(10);
+
+            await UserManagementApiService
+                .UpdateUserLockAsync(
+                    UserId,
+                    true,
+                    lockoutEnd);
+
+            await LoadUserAsync();
+
+            successMessage =
+                "User account locked successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to lock the user account.");
+        }
+        finally
+        {
+            isActionSaving = false;
+        }
+    }
+
+    private async Task UnlockUserAsync()
+    {
+        if (user is null || isActionSaving)
+            return;
+
+        isActionSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            await UserManagementApiService
+                .UpdateUserLockAsync(
+                    UserId,
+                    false,
+                    null);
+
+            await LoadUserAsync();
+
+            successMessage =
+                "User account unlocked successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to unlock the user account.");
+        }
+        finally
+        {
+            isActionSaving = false;
+        }
+    }
+
+    private async Task AssignRoleAsync()
+    {
+        if (user is null ||
+            selectedRoleId <= 0 ||
+            isRoleSaving)
+            return;
+
+        isRoleSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            await UserManagementApiService
+                .AssignRoleAsync(
+                    UserId,
+                    selectedRoleId);
+
+            selectedRoleId = 0;
+
+            await LoadUserAsync();
+
+            successMessage =
+                "Role assigned successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to assign the selected role.");
+        }
+        finally
+        {
+            isRoleSaving = false;
+        }
+    }
+
+    private void ConfirmRemoveRole(
+        int roleId,
+        string roleName)
+    {
+        roleToRemoveId = roleId;
+        roleToRemoveName = roleName;
+        showRoleRemoveConfirmation = true;
+
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private void CancelRemoveRole()
+    {
+        showRoleRemoveConfirmation = false;
+        roleToRemoveId = 0;
+        roleToRemoveName = string.Empty;
+    }
+
+    private async Task RemoveRoleAsync()
+    {
+        if (user is null ||
+            roleToRemoveId <= 0 ||
+            isRoleSaving)
+            return;
+
+        isRoleSaving = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            await UserManagementApiService
+                .RemoveRoleAsync(
+                    UserId,
+                    roleToRemoveId);
+
+            CancelRemoveRole();
+
+            await LoadUserAsync();
+
+            successMessage =
+                "Role removed successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to remove the selected role.");
+        }
+        finally
+        {
+            isRoleSaving = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/users");
+    }
+
+    private void ClearMessages()
+    {
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private string GetInitials()
+    {
+        var first =
+            user?.Profile?.FirstName;
+
+        var last =
+            user?.Profile?.LastName;
+
+        if (!string.IsNullOrWhiteSpace(first) &&
+            !string.IsNullOrWhiteSpace(last))
+        {
+            return
+                $"{char.ToUpperInvariant(first[0])}" +
+                $"{char.ToUpperInvariant(last[0])}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(first))
+            return char.ToUpperInvariant(first[0]).ToString();
+
+        if (!string.IsNullOrWhiteSpace(user?.UserName))
+            return char.ToUpperInvariant(user.UserName[0]).ToString();
+
+        return "?";
+    }
+
+    private string GetStatusClass()
+    {
+        if (IsLocked)
+            return "locked";
+
+        if (IsActive)
+            return "active";
+
+        return "inactive";
+    }
+
+    private string GetStatusIcon()
+    {
+        if (IsLocked)
+            return "bi-lock-fill";
+
+        if (IsActive)
+            return "bi-check-circle-fill";
+
+        return "bi-pause-circle-fill";
+    }
+
+    private static string FormatDate(DateTime date)
+    {
+        return date.ToLocalTime().ToString(
+            "dd MMM yyyy");
+    }
+
+    private static string FormatDateTime(DateTime date)
+    {
+        return date.ToLocalTime().ToString(
+            "dd MMM yyyy, hh:mm tt");
+    }
+
+    private static string GetExceptionMessage(
+        Exception ex,
+        string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(ex.Message))
+            return ex.Message;
+
+        return fallback;
+    }
+}
