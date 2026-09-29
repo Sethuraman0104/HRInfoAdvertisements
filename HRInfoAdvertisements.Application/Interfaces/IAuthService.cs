@@ -23,6 +23,10 @@ public interface IAuthService
     Task<bool> ResetPasswordAsync(
         ResetPasswordRequest request);
 
+    Task<bool> ChangePasswordAsync(
+        long userId,
+        ChangePasswordRequest request);
+
     Task<AuthResponse> GetCurrentUserAsync(
         long userId);
 }

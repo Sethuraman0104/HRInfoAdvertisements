@@ -2,6 +2,8 @@
    HR INFO ADs
    PUBLIC TOP BAR
    PublicTopBar.razor.css
+
+   PUBLIC MARKETPLACE THEME
    ============================================================ */
 
 
@@ -18,19 +20,18 @@
 
     background:
         linear-gradient(
-            135deg,
-            #ffffff 0%,
-            #fffdfb 48%,
-            #f8f3ef 100%
+            180deg,
+            rgba(255, 255, 255, 0.98) 0%,
+            rgba(255, 255, 255, 0.96) 100%
         );
 
-    border-bottom: 1px solid rgba(102, 51, 51, 0.12);
+    border-bottom: 1px solid rgba(227, 232, 240, 0.95);
 
     box-shadow:
-        0 4px 18px rgba(54, 30, 30, 0.08);
+        0 5px 20px rgba(10, 40, 90, 0.06);
 
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 
@@ -47,6 +48,7 @@
 
     display: flex;
     align-items: center;
+
     gap: 28px;
 }
 
@@ -60,6 +62,7 @@
 
     display: inline-flex;
     align-items: center;
+
     gap: 12px;
 
     min-width: 250px;
@@ -68,11 +71,13 @@
 
     border: 0;
     outline: 0;
+
     background: transparent;
 
-    color: #663333;
+    color: #071d41;
 
     cursor: pointer;
+
     text-align: left;
 
     transition:
@@ -82,7 +87,8 @@
 
 .public-topbar-brand:hover {
     transform: translateY(-1px);
-    opacity: 0.92;
+
+    opacity: 0.94;
 }
 
 
@@ -96,30 +102,31 @@
     width: 48px;
     height: 48px;
 
+    flex: 0 0 48px;
+
     display: flex;
     align-items: center;
     justify-content: center;
-
-    flex: 0 0 48px;
 
     border-radius: 14px;
 
     background:
         linear-gradient(
             145deg,
-            #663333 0%,
-            #8a4141 52%,
-            #cc3333 100%
+            #153a7c 0%,
+            #2868d7 55%,
+            #3f82f7 100%
         );
 
     color: #ffffff;
 
     font-size: 17px;
     font-weight: 800;
+
     letter-spacing: -0.5px;
 
     box-shadow:
-        0 7px 18px rgba(102, 51, 51, 0.25);
+        0 7px 18px rgba(40, 104, 215, 0.22);
 
     overflow: hidden;
 }
@@ -129,15 +136,16 @@
 
     position: absolute;
 
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
 
     top: -8px;
     right: -8px;
 
     border-radius: 50%;
 
-    background: rgba(255, 255, 255, 0.18);
+    background:
+        rgba(255, 255, 255, 0.18);
 }
 
 .public-topbar-logo::after {
@@ -153,7 +161,8 @@
 
     border-radius: 50%;
 
-    background: rgba(255, 191, 0, 0.85);
+    background:
+        rgba(255, 255, 255, 0.65);
 }
 
 
@@ -169,28 +178,30 @@
 }
 
 .public-topbar-brand-name {
-    color: #663333;
+    color: #071d41;
 
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 750;
 
     letter-spacing: -0.4px;
 }
 
 .public-topbar-brand-name strong {
-    color: #cc3333;
-    font-weight: 800;
+    color: #2868d7;
+
+    font-weight: 850;
 }
 
 .public-topbar-brand-subtitle {
     margin-top: 6px;
 
-    color: #886666;
+    color: #68758a;
 
     font-size: 10px;
     font-weight: 600;
 
     letter-spacing: 0.55px;
+
     text-transform: uppercase;
 }
 
@@ -206,7 +217,7 @@
     align-items: center;
     justify-content: center;
 
-    gap: 6px;
+    gap: 5px;
 }
 
 .public-topbar-nav-link {
@@ -225,7 +236,7 @@
 
     background: transparent;
 
-    color: #5d5151;
+    color: #68758a;
 
     font-size: 14px;
     font-weight: 600;
@@ -254,19 +265,21 @@
     background:
         linear-gradient(
             90deg,
-            #663333,
-            #cc3333
+            #2868d7,
+            #3f82f7
         );
 
     transform: translateX(-50%);
 
-    transition: width 0.22s ease;
+    transition:
+        width 0.22s ease;
 }
 
 .public-topbar-nav-link:hover {
-    color: #663333;
+    color: #153a7c;
 
-    background: rgba(102, 51, 51, 0.055);
+    background:
+        rgba(63, 130, 247, 0.055);
 
     transform: translateY(-1px);
 }
@@ -276,9 +289,10 @@
 }
 
 .public-topbar-nav-link.active {
-    color: #663333;
+    color: #1d4fa8;
 
-    background: rgba(102, 51, 51, 0.075);
+    background:
+        rgba(63, 130, 247, 0.085);
 }
 
 .public-topbar-nav-link.active::after {
@@ -318,7 +332,7 @@
 
     background: transparent;
 
-    color: #663333;
+    color: #1d4fa8;
 
     font-size: 13px;
     font-weight: 600;
@@ -332,9 +346,10 @@
 }
 
 .public-topbar-text-button:hover {
-    background: rgba(102, 51, 51, 0.07);
+    background:
+        rgba(63, 130, 247, 0.07);
 
-    color: #cc3333;
+    color: #153a7c;
 
     transform: translateY(-1px);
 }
@@ -356,17 +371,18 @@
 
     padding: 0;
 
-    border: 1px solid rgba(102, 51, 51, 0.10);
+    border: 1px solid #e3e8f0;
+
     border-radius: 10px;
 
     background: #ffffff;
 
-    color: #663333;
+    color: #1d4fa8;
 
     cursor: pointer;
 
     box-shadow:
-        0 2px 7px rgba(54, 30, 30, 0.05);
+        0 3px 10px rgba(10, 40, 90, 0.045);
 
     transition:
         color 0.2s ease,
@@ -381,7 +397,9 @@
     height: 19px;
 
     fill: none;
+
     stroke: currentColor;
+
     stroke-width: 1.8;
 
     stroke-linecap: round;
@@ -393,16 +411,16 @@
 }
 
 .public-topbar-icon-button:hover {
-    color: #cc3333;
+    color: #2868d7;
 
-    background: #fff8f6;
+    background: #f4f8ff;
 
-    border-color: rgba(204, 51, 51, 0.20);
+    border-color: #cfe0ff;
 
     transform: translateY(-2px);
 
     box-shadow:
-        0 6px 14px rgba(102, 51, 51, 0.10);
+        0 7px 16px rgba(10, 40, 90, 0.09);
 }
 
 .public-topbar-icon-button:hover svg {
@@ -423,12 +441,13 @@
 
     padding: 0 17px;
 
-    border: 1px solid rgba(102, 51, 51, 0.18);
+    border: 1px solid #cfe0ff;
+
     border-radius: 10px;
 
     background: #ffffff;
 
-    color: #663333;
+    color: #1d4fa8;
 
     font-size: 13px;
     font-weight: 700;
@@ -436,7 +455,7 @@
     cursor: pointer;
 
     box-shadow:
-        0 2px 7px rgba(54, 30, 30, 0.04);
+        0 3px 9px rgba(10, 40, 90, 0.04);
 
     transition:
         background 0.2s ease,
@@ -447,16 +466,16 @@
 }
 
 .public-topbar-signup-button:hover {
-    background: #663333;
+    background: #1d4fa8;
 
     color: #ffffff;
 
-    border-color: #663333;
+    border-color: #1d4fa8;
 
     transform: translateY(-2px);
 
     box-shadow:
-        0 7px 16px rgba(102, 51, 51, 0.20);
+        0 8px 18px rgba(29, 79, 168, 0.20);
 }
 
 
@@ -478,14 +497,15 @@
     padding: 0 17px;
 
     border: 0;
+
     border-radius: 11px;
 
     background:
         linear-gradient(
             135deg,
-            #663333 0%,
-            #8f3838 50%,
-            #cc3333 100%
+            #1d4fa8 0%,
+            #2868d7 52%,
+            #3f82f7 100%
         );
 
     color: #ffffff;
@@ -498,7 +518,7 @@
     overflow: hidden;
 
     box-shadow:
-        0 7px 17px rgba(102, 51, 51, 0.22);
+        0 7px 18px rgba(29, 79, 168, 0.22);
 
     transition:
         transform 0.2s ease,
@@ -520,20 +540,21 @@
         linear-gradient(
             90deg,
             transparent,
-            rgba(255, 255, 255, 0.18),
+            rgba(255, 255, 255, 0.20),
             transparent
         );
 
     transform: skewX(-20deg);
 
-    transition: left 0.55s ease;
+    transition:
+        left 0.55s ease;
 }
 
 .public-topbar-post-button:hover {
     transform: translateY(-2px);
 
     box-shadow:
-        0 10px 22px rgba(102, 51, 51, 0.28);
+        0 11px 24px rgba(29, 79, 168, 0.28);
 }
 
 .public-topbar-post-button:hover::before {
@@ -547,7 +568,9 @@
     height: 17px;
 
     fill: none;
+
     stroke: currentColor;
+
     stroke-width: 2;
 
     stroke-linecap: round;
@@ -569,12 +592,13 @@
 
     padding: 0 12px 0 7px;
 
-    border: 1px solid rgba(102, 51, 51, 0.12);
+    border: 1px solid #e3e8f0;
+
     border-radius: 11px;
 
     background: #ffffff;
 
-    color: #663333;
+    color: #1d4fa8;
 
     font-size: 13px;
     font-weight: 700;
@@ -582,7 +606,7 @@
     cursor: pointer;
 
     box-shadow:
-        0 2px 7px rgba(54, 30, 30, 0.04);
+        0 3px 9px rgba(10, 40, 90, 0.04);
 
     transition:
         background 0.2s ease,
@@ -592,14 +616,14 @@
 }
 
 .public-topbar-account-button:hover {
-    background: #fff8f6;
+    background: #f4f8ff;
 
-    border-color: rgba(102, 51, 51, 0.22);
+    border-color: #cfe0ff;
 
     transform: translateY(-1px);
 
     box-shadow:
-        0 6px 14px rgba(102, 51, 51, 0.09);
+        0 7px 16px rgba(10, 40, 90, 0.09);
 }
 
 .public-topbar-account-icon {
@@ -615,8 +639,8 @@
     background:
         linear-gradient(
             145deg,
-            #663333,
-            #cc3333
+            #153a7c,
+            #2868d7
         );
 
     color: #ffffff;
@@ -627,7 +651,9 @@
     height: 16px;
 
     fill: none;
+
     stroke: currentColor;
+
     stroke-width: 1.7;
 
     stroke-linecap: round;
@@ -643,6 +669,7 @@
 
     .public-topbar-shell {
         gap: 18px;
+
         padding: 0 20px;
     }
 
@@ -685,6 +712,7 @@
 
     .public-topbar-nav-link {
         padding: 0 9px;
+
         font-size: 13px;
     }
 
@@ -699,7 +727,9 @@
 
     .public-topbar-shell {
         min-height: 66px;
+
         padding: 0 15px;
+
         gap: 12px;
     }
 
@@ -710,6 +740,7 @@
     .public-topbar-logo {
         width: 42px;
         height: 42px;
+
         flex-basis: 42px;
     }
 
@@ -719,7 +750,9 @@
 
     .public-topbar-nav-link {
         height: 38px;
+
         padding: 0 8px;
+
         font-size: 12px;
     }
 
@@ -736,6 +769,7 @@
     .public-topbar-post-button {
         width: 40px;
         height: 40px;
+
         padding: 0;
     }
 
@@ -754,6 +788,7 @@
 
     .public-topbar-nav-link {
         padding: 0 6px;
+
         font-size: 11px;
     }
 

@@ -13,47 +13,87 @@
 
 <div class="my-favorites-page">
 
- <PublicTopBar />
+    <PublicTopBar />
+
     <!-- ============================================================
-         PAGE HEADER
+         PUBLIC PAGE CONTEXT
          ============================================================ -->
 
-    <section class="my-favorites-header">
+    <section class="my-favorites-context">
 
-        <div class="my-favorites-header-inner">
+        <div class="my-favorites-context-inner">
 
-            <div class="my-favorites-header-left">
+            <div class="my-favorites-context-left">
 
                 <button type="button"
-                        class="favorites-back-button"
+                        class="favorites-context-back"
                         @onclick="BackToMarketplace">
 
                     <i class="bi bi-arrow-left"></i>
 
-                    <span>
-                        Back to Marketplace
-                    </span>
+                    <span>Back to Marketplace</span>
 
                 </button>
 
-                <div class="favorites-title-row">
+                <span class="favorites-context-separator">
+                    /
+                </span>
+
+                <span class="favorites-context-current">
+                    My Favorites
+                </span>
+
+            </div>
+
+            <div class="favorites-context-right">
+
+                <span class="favorites-context-count">
+                    <i class="bi bi-heart-fill"></i>
+
+                    @allFavorites.Count
+                    @(allFavorites.Count == 1
+                        ? "Saved Advertisement"
+                        : "Saved Advertisements")
+                </span>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+
+    <header class="my-favorites-header">
+
+        <div class="my-favorites-header-inner">
+
+            <div class="my-favorites-header-content">
+
+                <span class="favorites-eyebrow">
+                    MY COLLECTION
+                </span>
+
+                <div class="favorites-heading-row">
 
                     <div class="favorites-title-icon">
+
                         <i class="bi bi-heart-fill"></i>
+
                     </div>
 
                     <div>
-
-                        <span class="favorites-eyebrow">
-                            MY COLLECTION
-                        </span>
 
                         <h1>
                             My Favorites
                         </h1>
 
                         <p>
-                            Advertisements you have saved for later.
+                            Keep track of advertisements you have saved
+                            and return to them whenever you need.
                         </p>
 
                     </div>
@@ -66,18 +106,24 @@
             <div class="favorites-header-summary">
 
                 <div class="favorites-summary-icon">
-                    <i class="bi bi-heart"></i>
+
+                    <i class="bi bi-bookmark-heart-fill"></i>
+
                 </div>
 
-                <div>
+                <div class="favorites-summary-content">
 
                     <span>
-                        Saved Advertisements
+                        SAVED ADVERTISEMENTS
                     </span>
 
                     <strong>
-                        @filteredFavorites.Count
+                        @allFavorites.Count.ToString("N0")
                     </strong>
+
+                    <small>
+                        In your favorites
+                    </small>
 
                 </div>
 
@@ -85,7 +131,7 @@
 
         </div>
 
-    </section>
+    </header>
 
 
     <!-- ============================================================
@@ -96,27 +142,38 @@
 
         @if (isLoading)
         {
-            <section class="favorites-loading-state">
+            <section class="favorites-state-card">
 
                 <div class="favorites-loading-spinner"></div>
+
+                <span class="favorites-state-eyebrow">
+                    MY FAVORITES
+                </span>
 
                 <h2>
                     Loading your favorites
                 </h2>
 
                 <p>
-                    Please wait while we retrieve your saved advertisements.
+                    Please wait while we retrieve your saved
+                    advertisements.
                 </p>
 
             </section>
         }
         else if (!string.IsNullOrWhiteSpace(errorMessage))
         {
-            <section class="favorites-error-state">
+            <section class="favorites-state-card favorites-error-card">
 
                 <div class="favorites-state-icon error">
-                    <i class="bi bi-exclamation-triangle"></i>
+
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
                 </div>
+
+                <span class="favorites-state-eyebrow">
+                    SOMETHING WENT WRONG
+                </span>
 
                 <h2>
                     Unable to load favorites
@@ -132,7 +189,7 @@
 
                     <i class="bi bi-arrow-clockwise"></i>
 
-                    Try Again
+                    <span>Try Again</span>
 
                 </button>
 
@@ -146,18 +203,28 @@
 
             <section class="favorites-toolbar">
 
-                <div class="favorites-toolbar-left">
+                <div class="favorites-toolbar-heading">
 
-                    <div class="favorites-result-count">
+                    <div class="favorites-toolbar-icon">
+
+                        <i class="bi bi-heart-fill"></i>
+
+                    </div>
+
+                    <div>
 
                         <strong>
-                            @filteredFavorites.Count
+                            Saved Advertisements
                         </strong>
 
                         <span>
+                            @filteredFavorites.Count
                             @(filteredFavorites.Count == 1
-                                ? "favorite"
-                                : "favorites")
+                                ? "advertisement"
+                                : "advertisements")
+                            @(string.IsNullOrWhiteSpace(searchText)
+                                ? "in your collection"
+                                : "matching your search")
                         </span>
 
                     </div>
@@ -165,16 +232,18 @@
                 </div>
 
 
-                <div class="favorites-toolbar-right">
+                <div class="favorites-toolbar-actions">
 
                     <div class="favorites-search">
 
-                        <i class="bi bi-search"></i>
+                        <i class="bi bi-search favorites-search-icon"></i>
 
                         <input type="text"
-                               placeholder="Search your favorites..."
+                               placeholder="Search favorites..."
+                               aria-label="Search favorites"
                                @bind="searchText"
-                               @bind:event="oninput" />
+                               @bind:event="oninput"
+                               @onkeyup="HandleSearchKeyUp" />
 
                         @if (!string.IsNullOrWhiteSpace(searchText))
                         {
@@ -184,12 +253,13 @@
                                     aria-label="Clear search"
                                     @onclick="ClearSearch">
 
-                                <i class="bi bi-x"></i>
+                                <i class="bi bi-x-lg"></i>
 
                             </button>
                         }
 
                     </div>
+
 
                     <button type="button"
                             class="favorites-refresh-button"
@@ -198,13 +268,44 @@
                             @onclick="LoadFavoritesAsync"
                             disabled="@isLoading">
 
-                        <i class="bi bi-arrow-clockwise"></i>
+                        <i class="bi bi-arrow-clockwise @(isLoading ? "favorites-spin" : "")"></i>
 
                     </button>
 
                 </div>
 
             </section>
+
+
+            <!-- ====================================================
+                 SEARCH RESULT MESSAGE
+                 ==================================================== -->
+
+            @if (!string.IsNullOrWhiteSpace(searchText)
+                 && filteredFavorites.Count > 0)
+            {
+                <div class="favorites-search-result">
+
+                    <div>
+
+                        <i class="bi bi-search"></i>
+
+                        <span>
+                            Showing results for
+                            <strong>"@searchText"</strong>
+                        </span>
+
+                    </div>
+
+                    <button type="button"
+                            @onclick="ClearSearch">
+
+                        Clear Search
+
+                    </button>
+
+                </div>
+            }
 
 
             <!-- ====================================================
@@ -215,14 +316,27 @@
             {
                 <section class="favorites-empty-state">
 
-                    <div class="favorites-empty-heart">
+                    <div class="favorites-empty-visual">
 
-                        <i class="bi bi-heart"></i>
+                        <div class="favorites-empty-circle">
+
+                            <i class="bi bi-heart"></i>
+
+                        </div>
+
+                        <span class="favorites-empty-dot dot-one"></span>
+                        <span class="favorites-empty-dot dot-two"></span>
+                        <span class="favorites-empty-dot dot-three"></span>
 
                     </div>
 
+
                     @if (allFavorites.Count == 0)
                     {
+                        <span class="favorites-state-eyebrow">
+                            YOUR COLLECTION IS EMPTY
+                        </span>
+
                         <h2>
                             No favorites yet
                         </h2>
@@ -230,17 +344,34 @@
                         <p>
                             When you find an advertisement you like,
                             click the heart icon to save it here.
+                            Your saved advertisements will appear
+                            in this collection.
                         </p>
+
+                        <button type="button"
+                                class="favorites-primary-button"
+                                @onclick="BackToMarketplace">
+
+                            <i class="bi bi-grid"></i>
+
+                            <span>Browse Advertisements</span>
+
+                        </button>
                     }
                     else
                     {
+                        <span class="favorites-state-eyebrow">
+                            SEARCH RESULTS
+                        </span>
+
                         <h2>
                             No matching favorites
                         </h2>
 
                         <p>
                             We couldn't find any saved advertisements
-                            matching "@searchText".
+                            matching
+                            <strong>"@searchText"</strong>.
                         </p>
 
                         <button type="button"
@@ -249,20 +380,11 @@
 
                             <i class="bi bi-x-circle"></i>
 
-                            Clear Search
+                            <span>Clear Search</span>
 
                         </button>
+
                     }
-
-                    <button type="button"
-                            class="favorites-primary-button"
-                            @onclick="BackToMarketplace">
-
-                        <i class="bi bi-grid"></i>
-
-                        Browse Advertisements
-
-                    </button>
 
                 </section>
             }
@@ -289,8 +411,11 @@
                                     @if (favorite.IsFeatured)
                                     {
                                         <span class="favorite-featured-badge">
+
                                             <i class="bi bi-star-fill"></i>
+
                                             Featured
+
                                         </span>
                                     }
 
@@ -298,11 +423,16 @@
                                             favorite.StatusName))
                                     {
                                         <span class="favorite-status-badge">
+
+                                            <span class="favorite-status-dot"></span>
+
                                             @favorite.StatusName
+
                                         </span>
                                     }
 
                                 </div>
+
 
                                 <button type="button"
                                         class="favorite-remove-button"
@@ -332,6 +462,8 @@
 
                             <div class="favorite-card-body">
 
+                                <!-- CATEGORY -->
+
                                 <div class="favorite-card-category">
 
                                     @if (!string.IsNullOrWhiteSpace(
@@ -346,10 +478,10 @@
                                             favorite.AdvertisementTypeName))
                                     {
                                         <span class="favorite-category-separator">
-                                            •
+                                            /
                                         </span>
 
-                                        <span>
+                                        <span class="favorite-type">
                                             @favorite.AdvertisementTypeName
                                         </span>
                                     }
@@ -357,16 +489,25 @@
                                 </div>
 
 
+                                <!-- TITLE -->
+
                                 <h2 class="favorite-card-title">
-                                    @(string.IsNullOrWhiteSpace(favorite.Title)
+
+                                    @(string.IsNullOrWhiteSpace(
+                                        favorite.Title)
                                         ? "Untitled Advertisement"
                                         : favorite.Title)
+
                                 </h2>
 
 
+                                <!-- ADVERTISEMENT NUMBER -->
+
                                 <div class="favorite-ad-number">
 
-                                    <i class="bi bi-hash"></i>
+                                    <span class="favorite-ad-number-label">
+                                        AD
+                                    </span>
 
                                     <span>
                                         @favorite.AdvertisementNumber
@@ -375,12 +516,14 @@
                                 </div>
 
 
+                                <!-- LOCATION -->
+
                                 @if (!string.IsNullOrWhiteSpace(
                                         favorite.AddressLine))
                                 {
                                     <div class="favorite-card-location">
 
-                                        <i class="bi bi-geo-alt"></i>
+                                        <i class="bi bi-geo-alt-fill"></i>
 
                                         <span>
                                             @favorite.AddressLine
@@ -390,11 +533,13 @@
                                 }
 
 
-                                <!-- =================================
-                                     PRICE
-                                     ================================= -->
+                                <!-- PRICE -->
 
-                                <div class="favorite-card-price-row">
+                                <div class="favorite-card-price-section">
+
+                                    <span class="favorite-price-label">
+                                        PRICE
+                                    </span>
 
                                     <div class="favorite-card-price">
 
@@ -420,24 +565,27 @@
                                 </div>
 
 
-                                <!-- =================================
-                                     META
-                                     ================================= -->
+                                <!-- META -->
 
                                 <div class="favorite-card-meta">
 
                                     <div class="favorite-meta-item">
 
-                                        <i class="bi bi-heart-fill"></i>
+                                        <div class="favorite-meta-icon heart">
+
+                                            <i class="bi bi-heart-fill"></i>
+
+                                        </div>
 
                                         <div>
 
                                             <span>
-                                                Favorited
+                                                FAVORITED
                                             </span>
 
                                             <strong>
-                                                @FormatDate(favorite.FavoritedDate)
+                                                @FormatDate(
+                                                    favorite.FavoritedDate)
                                             </strong>
 
                                         </div>
@@ -449,12 +597,16 @@
                                     {
                                         <div class="favorite-meta-item">
 
-                                            <i class="bi bi-calendar-check"></i>
+                                            <div class="favorite-meta-icon">
+
+                                                <i class="bi bi-calendar-check"></i>
+
+                                            </div>
 
                                             <div>
 
                                                 <span>
-                                                    Published
+                                                    PUBLISHED
                                                 </span>
 
                                                 <strong>
@@ -538,13 +690,13 @@
             authenticationState.User;
 
         if (user?.Identity?.IsAuthenticated != true)
-{
-    Navigation.NavigateTo(
-        "/",
-        forceLoad: false);
+        {
+            Navigation.NavigateTo(
+                "/",
+                forceLoad: false);
 
-    return;
-}
+            return;
+        }
 
         await LoadFavoritesAsync();
     }
@@ -619,15 +771,13 @@
         if (string.IsNullOrWhiteSpace(searchText))
         {
             filteredFavorites =
-                allFavorites
-                    .ToList();
+                allFavorites.ToList();
 
             return;
         }
 
         var search =
-            searchText
-                .Trim();
+            searchText.Trim();
 
         filteredFavorites =
             allFavorites
@@ -679,6 +829,13 @@
     {
         searchText = string.Empty;
 
+        ApplySearch();
+    }
+
+
+    private void HandleSearchKeyUp(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
         ApplySearch();
     }
 
@@ -753,10 +910,9 @@
     private void ViewAdvertisement(
         long advertisementId)
     {
-        // The public advertisement-detail route will be
-        // connected here once that route is confirmed.
-        //
-        // For now, return to the marketplace.
+        // Keep the existing behavior until
+        // the public advertisement-detail route
+        // is confirmed.
 
         Navigation.NavigateTo("/");
     }
@@ -769,7 +925,8 @@
     private static string FormatDate(
         DateTime date)
     {
-        return date.ToLocalTime()
+        return date
+            .ToLocalTime()
             .ToString("dd MMM yyyy");
     }
 

@@ -146,6 +146,56 @@ public class AuthApiService
             .ReadFromJsonAsync<AuthResponse>();
     }
 
+    public async Task<bool> ChangePasswordAsync(
+        string accessToken,
+        ChangePasswordRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return false;
+        }
+
+        if (request is null)
+        {
+            return false;
+        }
+
+        var client =
+            _httpClientFactory.CreateClient(
+                "HRInfoAdvertisementsAPI");
+
+        using var httpRequest =
+            new HttpRequestMessage(
+                HttpMethod.Post,
+                "api/v1/Auth/change-password");
+
+        httpRequest.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        httpRequest.Content =
+            JsonContent.Create(request);
+
+        var response =
+            await client.SendAsync(httpRequest);
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        Console.WriteLine(
+            $"CHANGE PASSWORD STATUS: " +
+            $"{(int)response.StatusCode} {response.StatusCode}");
+
+        if (!string.IsNullOrWhiteSpace(responseBody))
+        {
+            Console.WriteLine(
+                $"CHANGE PASSWORD RESPONSE: {responseBody}");
+        }
+
+        return response.IsSuccessStatusCode;
+    }
+
     public async Task<bool> LogoutAsync(
         string refreshToken)
     {

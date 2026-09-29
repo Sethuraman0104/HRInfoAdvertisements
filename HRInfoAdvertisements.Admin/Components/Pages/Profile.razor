@@ -1,0 +1,2075 @@
+@page "/profile"
+
+@using System.Security.Claims
+@using System.Net.Http.Json
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Authorization
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Profile.DTOs
+@using HRInfoAdvertisements.Application.DTOs.Authentication
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject PublicAuthenticationStateProvider PublicAuthStateProvider
+@inject AuthApiService AuthApiService
+@inject IHttpClientFactory HttpClientFactory
+@inject NavigationManager Navigation
+
+<PageTitle>My Profile | HR INFO ADs</PageTitle>
+
+<div class="profile-page">
+
+    <PublicTopBar />
+
+    <!-- ============================================================
+         PROFILE CONTEXT BAR
+         ============================================================ -->
+
+    <section class="profile-context">
+
+        <div class="profile-context-inner">
+
+            <div class="profile-context-left">
+
+                <div class="profile-context-icon">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+
+                <div>
+                    <span class="profile-context-eyebrow">
+                        ACCOUNT
+                    </span>
+
+                    <h1>
+                        My Profile
+                    </h1>
+
+                    <p>
+                        Manage your personal information, account details and preferences.
+                    </p>
+                </div>
+
+            </div>
+
+            <div class="profile-context-right">
+
+                <button type="button"
+                        class="profile-back-button"
+                        @onclick="GoToAccount">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    <span>Account</span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         MAIN PROFILE CONTENT
+         ============================================================ -->
+
+    <main class="profile-container">
+
+        @if (isLoading)
+        {
+            <section class="profile-loading">
+
+                <div class="profile-loading-icon">
+                    <i class="bi bi-person"></i>
+                </div>
+
+                <strong>Loading your profile...</strong>
+
+                <span>
+                    Please wait while we load your account information.
+                </span>
+
+            </section>
+        }
+        else if (!isAuthenticated)
+        {
+            <section class="profile-auth-required">
+
+                <div class="profile-auth-icon">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+
+                <h2>
+                    Sign in required
+                </h2>
+
+                <p>
+                    Please sign in to manage your profile and account settings.
+                </p>
+
+                <button type="button"
+                        class="profile-primary-button"
+                        @onclick="OpenLogin">
+
+                    <i class="bi bi-box-arrow-in-right"></i>
+
+                    <span>Sign In</span>
+
+                </button>
+
+            </section>
+        }
+        else
+        {
+            <!-- ====================================================
+                 GLOBAL PROFILE MESSAGE
+                 ==================================================== -->
+
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <div class="profile-alert profile-alert-success">
+                    <i class="bi bi-check-circle"></i>
+
+                    <span>
+                        @successMessage
+                    </span>
+
+                    <button type="button"
+                            class="profile-alert-close"
+                            @onclick="ClearMessages">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="profile-alert profile-alert-error">
+                    <i class="bi bi-exclamation-circle"></i>
+
+                    <span>
+                        @errorMessage
+                    </span>
+
+                    <button type="button"
+                            class="profile-alert-close"
+                            @onclick="ClearMessages">
+                        <i class="bi bi-x"></i>
+                    </button>
+                </div>
+            }
+
+
+            <!-- ====================================================
+                 PROFILE HEADER CARD
+                 ==================================================== -->
+
+            <section class="profile-header-card">
+
+                <div class="profile-avatar">
+
+                    @if (!string.IsNullOrWhiteSpace(profileInitials))
+                    {
+                        <span>@profileInitials</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-person"></i>
+                    }
+
+                </div>
+
+                <div class="profile-header-content">
+
+                    <span class="profile-eyebrow">
+                        MY ACCOUNT
+                    </span>
+
+                    <h2>
+                        @displayName
+                    </h2>
+
+                    <p>
+                        @email
+                    </p>
+
+                    <div class="profile-status-row">
+
+                        <span class="profile-status active">
+                            <span class="profile-status-dot"></span>
+                            Active Account
+                        </span>
+
+                        <span class="profile-member-label">
+                            HR INFO ADs Member
+                        </span>
+
+                    </div>
+
+                </div>
+
+                <div class="profile-header-action">
+
+                    <button type="button"
+                            class="profile-secondary-button"
+                            disabled="@isRefreshing"
+                            @onclick="RefreshProfile">
+
+                        @if (isRefreshing)
+                        {
+                            <span class="profile-button-spinner"></span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-arrow-clockwise"></i>
+                        }
+
+                        <span>
+                            @(isRefreshing ? "Refreshing..." : "Refresh")
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================================
+                 PROFILE GRID
+                 ==================================================== -->
+
+            <div class="profile-grid">
+
+                <!-- ================================================
+                     PERSONAL INFORMATION
+                     ================================================ -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div class="profile-card-icon personal">
+                            <i class="bi bi-person-vcard"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="profile-card-eyebrow">
+                                PERSONAL
+                            </span>
+
+                            <h2>
+                                Personal Information
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <p class="profile-card-description">
+                        Keep your personal information up to date so your
+                        account information remains accurate.
+                    </p>
+
+
+                    @if (!string.IsNullOrWhiteSpace(profileErrorMessage))
+                    {
+                        <div class="profile-inline-alert profile-inline-alert-error">
+                            <i class="bi bi-exclamation-circle"></i>
+
+                            <span>
+                                @profileErrorMessage
+                            </span>
+                        </div>
+                    }
+
+
+                    <div class="profile-form-grid">
+
+                        <div class="profile-form-group">
+
+                            <label for="firstName">
+                                First Name
+                                <span class="profile-required">*</span>
+                            </label>
+
+                            <input id="firstName"
+                                   class="profile-form-input"
+                                   type="text"
+                                   maxlength="100"
+                                   @bind="firstName"
+                                   placeholder="Enter your first name" />
+
+                        </div>
+
+
+                        <div class="profile-form-group">
+
+                            <label for="lastName">
+                                Last Name
+                            </label>
+
+                            <input id="lastName"
+                                   class="profile-form-input"
+                                   type="text"
+                                   maxlength="100"
+                                   @bind="lastName"
+                                   placeholder="Enter your last name" />
+
+                        </div>
+
+
+                        <div class="profile-form-group">
+
+                            <label for="nationality">
+                                Nationality
+                            </label>
+
+                            <input id="nationality"
+                                   class="profile-form-input"
+                                   type="text"
+                                   maxlength="100"
+                                   @bind="nationality"
+                                   placeholder="Enter your nationality" />
+
+                        </div>
+
+
+                        <div class="profile-form-group">
+
+                            <label for="preferredLanguage">
+                                Preferred Language
+                            </label>
+
+                            <select id="preferredLanguage"
+                                    class="profile-form-input"
+                                    @bind="preferredLanguage">
+
+                                <option value="en">
+                                    English
+                                </option>
+
+                                <option value="ar">
+                                    Arabic
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ============================================
+                         BUSINESS ACCOUNT
+                         ============================================ -->
+
+                    <div class="profile-business-section">
+
+                        <label class="profile-preference-option">
+
+                            <input type="checkbox"
+                                   @bind="isBusinessAccount" />
+
+                            <span class="profile-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="profile-preference-content">
+
+                                <strong>
+                                    Business Account
+                                </strong>
+
+                                <small>
+                                    Enable this option if this account represents
+                                    a business or company.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+                        @if (isBusinessAccount)
+                        {
+                            <div class="profile-form-group profile-business-company">
+
+                                <label for="companyName">
+                                    Company Name
+                                    <span class="profile-required">*</span>
+                                </label>
+
+                                <input id="companyName"
+                                       class="profile-form-input"
+                                       type="text"
+                                       maxlength="250"
+                                       @bind="companyName"
+                                       placeholder="Enter company name" />
+
+                            </div>
+                        }
+
+                    </div>
+
+
+                    <div class="profile-readonly-note">
+
+                        <i class="bi bi-info-circle"></i>
+
+                        <span>
+                            Email address and mobile number are managed separately
+                            from your public profile information.
+                        </span>
+
+                    </div>
+
+
+                    <div class="profile-card-footer">
+
+                        <button type="button"
+                                class="profile-primary-button"
+                                disabled="@isSavingProfile"
+                                @onclick="SaveProfile">
+
+                            @if (isSavingProfile)
+                            {
+                                <span class="profile-button-spinner"></span>
+
+                                <span>
+                                    Saving...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check2"></i>
+
+                                <span>
+                                    Save Changes
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ================================================
+                     ACCOUNT INFORMATION
+                     ================================================ -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div class="profile-card-icon account">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="profile-card-eyebrow">
+                                ACCOUNT
+                            </span>
+
+                            <h2>
+                                Account Information
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <p class="profile-card-description">
+                        Your account information is managed securely and is used
+                        to identify your HR INFO ADs account.
+                    </p>
+
+                    <div class="profile-information-list">
+
+                        <div class="profile-information-row">
+
+                            <div class="profile-information-label">
+
+                                <i class="bi bi-envelope"></i>
+
+                                <span>Email Address</span>
+
+                            </div>
+
+                            <strong>
+                                @email
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-information-row">
+
+                            <div class="profile-information-label">
+
+                                <i class="bi bi-person"></i>
+
+                                <span>Account Name</span>
+
+                            </div>
+
+                            <strong>
+                                @displayName
+                            </strong>
+
+                        </div>
+
+
+                        <div class="profile-information-row">
+
+                            <div class="profile-information-label">
+
+                                <i class="bi bi-briefcase"></i>
+
+                                <span>Account Type</span>
+
+                            </div>
+
+                            <strong>
+                                @(isBusinessAccount
+                                    ? "Business Account"
+                                    : "Personal Account")
+                            </strong>
+
+                        </div>
+
+
+                        @if (isBusinessAccount &&
+                             !string.IsNullOrWhiteSpace(companyName))
+                        {
+                            <div class="profile-information-row">
+
+                                <div class="profile-information-label">
+
+                                    <i class="bi bi-building"></i>
+
+                                    <span>Company</span>
+
+                                </div>
+
+                                <strong>
+                                    @companyName
+                                </strong>
+
+                            </div>
+                        }
+
+
+                        <div class="profile-information-row">
+
+                            <div class="profile-information-label">
+
+                                <i class="bi bi-shield-check"></i>
+
+                                <span>Account Status</span>
+
+                            </div>
+
+                            <span class="profile-badge enabled">
+                                Active
+                            </span>
+
+                        </div>
+
+
+                        <div class="profile-information-row">
+
+                            <div class="profile-information-label">
+
+                                <i class="bi bi-calendar3"></i>
+
+                                <span>Membership</span>
+
+                            </div>
+
+                            <strong>
+                                HR INFO ADs Member
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ================================================
+                     PASSWORD
+                     ================================================ -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div class="profile-card-icon security">
+                            <i class="bi bi-shield-lock"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="profile-card-eyebrow">
+                                SECURITY
+                            </span>
+
+                            <h2>
+                                Password &amp; Security
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <p class="profile-card-description">
+                        Change your password regularly to help keep your account
+                        secure.
+                    </p>
+
+
+                    @if (!string.IsNullOrWhiteSpace(passwordErrorMessage))
+                    {
+                        <div class="profile-inline-alert profile-inline-alert-error">
+                            <i class="bi bi-exclamation-circle"></i>
+
+                            <span>
+                                @passwordErrorMessage
+                            </span>
+                        </div>
+                    }
+
+
+                    <div class="profile-form-group">
+
+                        <label for="currentPassword">
+                            Current Password
+                            <span class="profile-required">*</span>
+                        </label>
+
+                        <div class="profile-password-input">
+
+                            <input id="currentPassword"
+                                   class="profile-form-input"
+                                   type="@currentPasswordType"
+                                   @bind="currentPassword"
+                                   autocomplete="current-password"
+                                   placeholder="Enter current password" />
+
+                            <button type="button"
+                                    class="profile-password-toggle"
+                                    @onclick="ToggleCurrentPassword"
+                                    aria-label="Show or hide current password">
+
+                                <i class="bi @(showCurrentPassword
+                                    ? "bi-eye-slash"
+                                    : "bi-eye")"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-form-grid">
+
+                        <div class="profile-form-group">
+
+                            <label for="newPassword">
+                                New Password
+                                <span class="profile-required">*</span>
+                            </label>
+
+                            <div class="profile-password-input">
+
+                                <input id="newPassword"
+                                       class="profile-form-input"
+                                       type="@newPasswordType"
+                                       @bind="newPassword"
+                                       autocomplete="new-password"
+                                       placeholder="Enter new password" />
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="profile-form-group">
+
+                            <label for="confirmPassword">
+                                Confirm Password
+                                <span class="profile-required">*</span>
+                            </label>
+
+                            <div class="profile-password-input">
+
+                                <input id="confirmPassword"
+                                       class="profile-form-input"
+                                       type="@confirmPasswordType"
+                                       @bind="confirmPassword"
+                                       autocomplete="new-password"
+                                       placeholder="Confirm new password" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-security-note">
+
+                        <i class="bi bi-info-circle"></i>
+
+                        <span>
+                            Your new password must contain at least 8 characters.
+                            Use a combination of letters, numbers and special
+                            characters for better security.
+                        </span>
+
+                    </div>
+
+
+                    <div class="profile-card-footer">
+
+                        <button type="button"
+                                class="profile-primary-button"
+                                disabled="@isChangingPassword"
+                                @onclick="ChangePassword">
+
+                            @if (isChangingPassword)
+                            {
+                                <span class="profile-button-spinner"></span>
+
+                                <span>
+                                    Changing Password...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-key"></i>
+
+                                <span>
+                                    Change Password
+                                </span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ================================================
+                     PREFERENCES
+                     ================================================ -->
+
+                <section class="profile-card">
+
+                    <div class="profile-card-header">
+
+                        <div class="profile-card-icon preferences">
+                            <i class="bi bi-sliders"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="profile-card-eyebrow">
+                                PREFERENCES
+                            </span>
+
+                            <h2>
+                                Notification Preferences
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+                    <p class="profile-card-description">
+                        Choose how you would like HR INFO ADs to keep you
+                        informed about your account and advertisements.
+                    </p>
+
+
+                    <div class="profile-preference-not-available">
+
+                        <div class="profile-preference-not-available-icon">
+                            <i class="bi bi-info-circle"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Notification preferences are coming soon
+                            </strong>
+
+                            <p>
+                                Your current notification system supports
+                                notifications, read status and notification
+                                templates. Individual user delivery preferences
+                                have not yet been configured in the account
+                                database.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="profile-preference-list profile-preference-disabled">
+
+                        <label class="profile-preference-option">
+
+                            <input type="checkbox"
+                                   checked="@emailNotifications"
+                                   disabled />
+
+                            <span class="profile-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="profile-preference-content">
+
+                                <strong>
+                                    Email Notifications
+                                </strong>
+
+                                <small>
+                                    Receive important account and marketplace
+                                    notifications by email.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+                        <label class="profile-preference-option">
+
+                            <input type="checkbox"
+                                   checked="@advertisementNotifications"
+                                   disabled />
+
+                            <span class="profile-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="profile-preference-content">
+
+                                <strong>
+                                    Advertisement Updates
+                                </strong>
+
+                                <small>
+                                    Receive updates related to your posted
+                                    advertisements and account activity.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+                        <label class="profile-preference-option">
+
+                            <input type="checkbox"
+                                   checked="@favoriteNotifications"
+                                   disabled />
+
+                            <span class="profile-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="profile-preference-content">
+
+                                <strong>
+                                    Favorite Advertisement Updates
+                                </strong>
+
+                                <small>
+                                    Stay informed about changes to advertisements
+                                    you have saved.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+
+                    <div class="profile-card-footer">
+
+                        <button type="button"
+                                class="profile-secondary-button profile-full-button"
+                                disabled>
+
+                            <i class="bi bi-sliders"></i>
+
+                            <span>
+                                Preferences Not Yet Configured
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- ====================================================
+                 ACCOUNT ACTIONS
+                 ==================================================== -->
+
+            <section class="profile-account-actions">
+
+                <div class="profile-account-actions-content">
+
+                    <div class="profile-account-actions-icon">
+                        <i class="bi bi-person-gear"></i>
+                    </div>
+
+                    <div>
+
+                        <span class="profile-card-eyebrow">
+                            ACCOUNT MANAGEMENT
+                        </span>
+
+                        <h2>
+                            Manage Your Account
+                        </h2>
+
+                        <p>
+                            Review your account information or return to your
+                            account dashboard.
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="profile-account-actions-buttons">
+
+                    <button type="button"
+                            class="profile-secondary-button"
+                            @onclick="GoToFavorites">
+
+                        <i class="bi bi-heart"></i>
+
+                        <span>
+                            My Favorites
+                        </span>
+
+                    </button>
+
+                    <button type="button"
+                            class="profile-primary-button"
+                            @onclick="GoToAccount">
+
+                        <i class="bi bi-grid"></i>
+
+                        <span>
+                            Account Dashboard
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+        }
+
+    </main>
+
+
+    <!-- ============================================================
+         AUTH MODAL
+         ============================================================ -->
+
+    <PublicAuthModal IsOpen="@showAuthModal"
+                 IsOpenChanged="@OnAuthModalVisibilityChanged"
+                 Mode="@authMode"
+                 ModeChanged="@OnAuthModalModeChanged"
+                 OnAuthenticated="@OnAuthenticated" />
+
+</div>
+
+
+@code {
+
+    // ================================================================
+    // PAGE STATE
+    // ================================================================
+
+    private bool isLoading = true;
+    private bool isRefreshing;
+
+    private bool isAuthenticated;
+
+    private bool showAuthModal;
+
+    private PublicAuthModal.AuthMode authMode =
+        PublicAuthModal.AuthMode.SignIn;
+
+
+    // ================================================================
+    // USER DISPLAY INFORMATION
+    // ================================================================
+
+    private string displayName = "HR INFO ADs User";
+
+    private string email = string.Empty;
+
+    private string firstName = string.Empty;
+
+    private string lastName = string.Empty;
+
+    private string nationality = string.Empty;
+
+    private string preferredLanguage = "en";
+
+    private bool isBusinessAccount;
+
+    private string companyName = string.Empty;
+
+    private string profileInitials = "U";
+
+
+    // ================================================================
+    // PASSWORD
+    // ================================================================
+
+    private string currentPassword = string.Empty;
+
+    private string newPassword = string.Empty;
+
+    private string confirmPassword = string.Empty;
+
+    private bool showCurrentPassword;
+
+    private bool isChangingPassword;
+
+
+    // ================================================================
+    // NOTIFICATION DISPLAY
+    //
+    // These remain display-only until user notification preferences
+    // are introduced into the database/application layer.
+    // ================================================================
+
+    private bool emailNotifications = true;
+
+    private bool advertisementNotifications = true;
+
+    private bool favoriteNotifications = true;
+
+
+    // ================================================================
+    // SAVE STATES
+    // ================================================================
+
+    private bool isSavingProfile;
+
+    private string? successMessage;
+
+    private string? errorMessage;
+
+    private string? profileErrorMessage;
+
+    private string? passwordErrorMessage;
+
+
+    // ================================================================
+    // PASSWORD INPUT TYPES
+    // ================================================================
+
+    private string currentPasswordType =>
+        showCurrentPassword
+            ? "text"
+            : "password";
+
+    private string newPasswordType =>
+        "password";
+
+    private string confirmPasswordType =>
+        "password";
+
+
+    // ================================================================
+    // INITIALIZATION
+    // ================================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProfile();
+    }
+
+
+    // ================================================================
+    // LOAD PROFILE
+    // ================================================================
+
+    private async Task LoadProfile()
+    {
+        isLoading = true;
+
+        ClearMessages();
+
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user =
+                authenticationState.User;
+
+            isAuthenticated =
+                user.Identity?.IsAuthenticated == true;
+
+            if (!isAuthenticated)
+            {
+                return;
+            }
+
+
+            // --------------------------------------------------------
+            // Read identity information from the authentication state.
+            // --------------------------------------------------------
+
+            email =
+                user.FindFirst(ClaimTypes.Email)?.Value
+                ?? user.FindFirst("email")?.Value
+                ?? string.Empty;
+
+            displayName =
+                user.FindFirst(ClaimTypes.Name)?.Value
+                ?? user.FindFirst("name")?.Value
+                ?? user.FindFirst("unique_name")?.Value
+                ?? "HR INFO ADs User";
+
+
+            // --------------------------------------------------------
+            // Load the actual profile from the API.
+            // --------------------------------------------------------
+
+            var profile =
+                await GetProfileAsync();
+
+            if (profile != null)
+            {
+                firstName =
+                    profile.FirstName ?? string.Empty;
+
+                lastName =
+                    profile.LastName ?? string.Empty;
+
+                nationality =
+                    profile.Nationality ?? string.Empty;
+
+                preferredLanguage =
+                    string.IsNullOrWhiteSpace(
+                        profile.PreferredLanguage)
+                        ? "en"
+                        : profile.PreferredLanguage;
+
+                isBusinessAccount =
+                    profile.IsBusinessAccount;
+
+                companyName =
+                    profile.CompanyName ?? string.Empty;
+
+
+                // ----------------------------------------------------
+                // Build display name from actual profile information.
+                // ----------------------------------------------------
+
+                var profileDisplayName =
+                    string.Join(
+                        " ",
+                        new[]
+                        {
+                            firstName,
+                            lastName
+                        }
+                        .Where(x =>
+                            !string.IsNullOrWhiteSpace(x)));
+
+                if (!string.IsNullOrWhiteSpace(
+                        profileDisplayName))
+                {
+                    displayName =
+                        profileDisplayName;
+                }
+            }
+            else
+            {
+                // ----------------------------------------------------
+                // Fallback to authentication claims if the profile
+                // record does not exist yet.
+                // ----------------------------------------------------
+
+                if (string.IsNullOrWhiteSpace(firstName))
+                {
+                    firstName =
+                        GetFirstName(displayName);
+                }
+
+                if (string.IsNullOrWhiteSpace(lastName))
+                {
+                    lastName =
+                        GetLastName(displayName);
+                }
+            }
+
+            BuildProfileInitials();
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to load your profile."
+                    : ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"PROFILE LOAD ERROR: {ex}");
+
+            errorMessage =
+                "Unable to load your profile. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ================================================================
+    // GET PROFILE API
+    // ================================================================
+
+    private async Task<UserProfileResponse?> GetProfileAsync()
+    {
+        var accessToken =
+            PublicAuthStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return null;
+        }
+
+        var client =
+            HttpClientFactory.CreateClient(
+                "HRInfoAdvertisementsAPI");
+
+        using var request =
+            new HttpRequestMessage(
+                HttpMethod.Get,
+                "api/v1/profile");
+
+        request.Headers.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        var response =
+            await client.SendAsync(request);
+
+        if (response.StatusCode ==
+            System.Net.HttpStatusCode.Unauthorized)
+        {
+            PublicAuthStateProvider.SignOut();
+
+            isAuthenticated = false;
+
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var responseBody =
+                await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(
+                $"Unable to load profile. " +
+                $"HTTP {(int)response.StatusCode} " +
+                $"({response.StatusCode}). " +
+                $"{responseBody}");
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<UserProfileResponse>();
+    }
+
+
+    // ================================================================
+    // BUILD PROFILE INITIALS
+    // ================================================================
+
+    private void BuildProfileInitials()
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            profileInitials = "U";
+            return;
+        }
+
+        var parts =
+            displayName
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            profileInitials =
+                parts[0].Length > 0
+                    ? parts[0][0]
+                        .ToString()
+                        .ToUpperInvariant()
+                    : "U";
+
+            return;
+        }
+
+        profileInitials =
+            $"{parts[0][0]}{parts[^1][0]}"
+                .ToUpperInvariant();
+    }
+
+
+    // ================================================================
+    // NAME HELPERS
+    // ================================================================
+
+    private static string GetFirstName(
+        string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var parts =
+            value.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length > 0
+            ? parts[0]
+            : string.Empty;
+    }
+
+
+    private static string GetLastName(
+        string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var parts =
+            value.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        return parts.Length > 1
+            ? parts[^1]
+            : string.Empty;
+    }
+
+
+    // ================================================================
+    // REFRESH
+    // ================================================================
+
+    private async Task RefreshProfile()
+    {
+        if (isRefreshing)
+        {
+            return;
+        }
+
+        isRefreshing = true;
+
+        try
+        {
+            await LoadProfile();
+        }
+        finally
+        {
+            isRefreshing = false;
+        }
+    }
+
+
+    // ================================================================
+    // SAVE PROFILE
+    // ================================================================
+
+    private async Task SaveProfile()
+    {
+        if (isSavingProfile)
+        {
+            return;
+        }
+
+        ClearMessages();
+
+        profileErrorMessage = null;
+
+        // ------------------------------------------------------------
+        // Client-side validation
+        // ------------------------------------------------------------
+
+        firstName =
+            firstName?.Trim() ?? string.Empty;
+
+        lastName =
+            lastName?.Trim() ?? string.Empty;
+
+        nationality =
+            nationality?.Trim() ?? string.Empty;
+
+        preferredLanguage =
+            preferredLanguage?.Trim() ?? "en";
+
+        companyName =
+            companyName?.Trim() ?? string.Empty;
+
+
+        if (string.IsNullOrWhiteSpace(firstName))
+        {
+            profileErrorMessage =
+                "First name is required.";
+
+            return;
+        }
+
+        if (firstName.Length > 100)
+        {
+            profileErrorMessage =
+                "First name cannot exceed 100 characters.";
+
+            return;
+        }
+
+        if (lastName.Length > 100)
+        {
+            profileErrorMessage =
+                "Last name cannot exceed 100 characters.";
+
+            return;
+        }
+
+        if (nationality.Length > 100)
+        {
+            profileErrorMessage =
+                "Nationality cannot exceed 100 characters.";
+
+            return;
+        }
+
+        if (preferredLanguage.Length > 10)
+        {
+            profileErrorMessage =
+                "Preferred language cannot exceed 10 characters.";
+
+            return;
+        }
+
+        if (isBusinessAccount &&
+            string.IsNullOrWhiteSpace(companyName))
+        {
+            profileErrorMessage =
+                "Company name is required for a business account.";
+
+            return;
+        }
+
+        if (companyName.Length > 250)
+        {
+            profileErrorMessage =
+                "Company name cannot exceed 250 characters.";
+
+            return;
+        }
+
+
+        var accessToken =
+            PublicAuthStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            profileErrorMessage =
+                "Your session has expired. Please sign in again.";
+
+            PublicAuthStateProvider.SignOut();
+
+            isAuthenticated = false;
+
+            return;
+        }
+
+
+        isSavingProfile = true;
+
+        try
+        {
+            var request =
+                new UpdateUserProfileRequest
+                {
+                    FirstName = firstName,
+
+                    LastName =
+                        string.IsNullOrWhiteSpace(lastName)
+                            ? null
+                            : lastName,
+
+                    ProfilePhotoURL = null,
+
+                    Nationality =
+                        string.IsNullOrWhiteSpace(nationality)
+                            ? null
+                            : nationality,
+
+                    PreferredLanguage =
+                        string.IsNullOrWhiteSpace(
+                            preferredLanguage)
+                            ? "en"
+                            : preferredLanguage,
+
+                    IsBusinessAccount =
+                        isBusinessAccount,
+
+                    CompanyName =
+                        isBusinessAccount &&
+                        !string.IsNullOrWhiteSpace(companyName)
+                            ? companyName
+                            : null
+                };
+
+
+            var client =
+                HttpClientFactory.CreateClient(
+                    "HRInfoAdvertisementsAPI");
+
+            using var httpRequest =
+                new HttpRequestMessage(
+                    HttpMethod.Put,
+                    "api/v1/profile");
+
+            httpRequest.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    accessToken);
+
+            httpRequest.Content =
+                JsonContent.Create(request);
+
+
+            var response =
+                await client.SendAsync(httpRequest);
+
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                PublicAuthStateProvider.SignOut();
+
+                isAuthenticated = false;
+
+                profileErrorMessage =
+                    "Your session has expired. Please sign in again.";
+
+                return;
+            }
+
+
+            var responseBody =
+                await response.Content
+                    .ReadAsStringAsync();
+
+
+            if (!response.IsSuccessStatusCode)
+            {
+                profileErrorMessage =
+                    ExtractApiErrorMessage(
+                        responseBody,
+                        "Unable to save your profile.");
+
+                return;
+            }
+
+
+            var updatedProfile =
+                JsonSerializer.Deserialize<
+                    UserProfileResponse>(
+                        responseBody,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+
+            if (updatedProfile != null)
+            {
+                firstName =
+                    updatedProfile.FirstName ?? string.Empty;
+
+                lastName =
+                    updatedProfile.LastName ?? string.Empty;
+
+                nationality =
+                    updatedProfile.Nationality ?? string.Empty;
+
+                preferredLanguage =
+                    string.IsNullOrWhiteSpace(
+                        updatedProfile.PreferredLanguage)
+                        ? "en"
+                        : updatedProfile.PreferredLanguage;
+
+                isBusinessAccount =
+                    updatedProfile.IsBusinessAccount;
+
+                companyName =
+                    updatedProfile.CompanyName ?? string.Empty;
+            }
+
+
+            displayName =
+                string.Join(
+                    " ",
+                    new[]
+                    {
+                        firstName,
+                        lastName
+                    }
+                    .Where(x =>
+                        !string.IsNullOrWhiteSpace(x)));
+
+
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                displayName =
+                    "HR INFO ADs User";
+            }
+
+            BuildProfileInitials();
+
+
+            successMessage =
+                "Your profile information has been saved successfully.";
+        }
+        catch (HttpRequestException ex)
+        {
+            profileErrorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to save your profile."
+                    : ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"PROFILE SAVE ERROR: {ex}");
+
+            profileErrorMessage =
+                "Unable to save your profile. Please try again.";
+        }
+        finally
+        {
+            isSavingProfile = false;
+        }
+    }
+
+
+    // ================================================================
+    // CHANGE PASSWORD
+    // ================================================================
+
+    private async Task ChangePassword()
+    {
+        if (isChangingPassword)
+        {
+            return;
+        }
+
+        ClearMessages();
+
+        passwordErrorMessage = null;
+
+
+        currentPassword =
+            currentPassword?.Trim() ?? string.Empty;
+
+        newPassword =
+            newPassword ?? string.Empty;
+
+        confirmPassword =
+            confirmPassword ?? string.Empty;
+
+
+        if (string.IsNullOrWhiteSpace(currentPassword))
+        {
+            passwordErrorMessage =
+                "Current password is required.";
+
+            return;
+        }
+
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+        {
+            passwordErrorMessage =
+                "New password is required.";
+
+            return;
+        }
+
+
+        if (newPassword.Length < 8)
+        {
+            passwordErrorMessage =
+                "New password must contain at least 8 characters.";
+
+            return;
+        }
+
+
+        if (string.IsNullOrWhiteSpace(confirmPassword))
+        {
+            passwordErrorMessage =
+                "Please confirm your new password.";
+
+            return;
+        }
+
+
+        if (!string.Equals(
+                newPassword,
+                confirmPassword,
+                StringComparison.Ordinal))
+        {
+            passwordErrorMessage =
+                "New password and confirmation password do not match.";
+
+            return;
+        }
+
+
+        if (string.Equals(
+                currentPassword,
+                newPassword,
+                StringComparison.Ordinal))
+        {
+            passwordErrorMessage =
+                "The new password must be different from your current password.";
+
+            return;
+        }
+
+
+        var accessToken =
+            PublicAuthStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            passwordErrorMessage =
+                "Your session has expired. Please sign in again.";
+
+            PublicAuthStateProvider.SignOut();
+
+            isAuthenticated = false;
+
+            return;
+        }
+
+
+        isChangingPassword = true;
+
+        try
+        {
+            var request =
+                new ChangePasswordRequest
+                {
+                    CurrentPassword =
+                        currentPassword,
+
+                    NewPassword =
+                        newPassword,
+
+                    ConfirmPassword =
+                        confirmPassword
+                };
+
+
+            var changed =
+                await AuthApiService.ChangePasswordAsync(
+                    accessToken,
+                    request);
+
+
+            if (!changed)
+            {
+                passwordErrorMessage =
+                    "The current password is incorrect, " +
+                    "the new password is invalid, " +
+                    "or the password could not be changed.";
+
+                return;
+            }
+
+
+            // --------------------------------------------------------
+            // ChangePasswordAsync on the API revokes all active
+            // refresh tokens. Therefore this browser session must
+            // also be cleared.
+            // --------------------------------------------------------
+
+            currentPassword = string.Empty;
+
+            newPassword = string.Empty;
+
+            confirmPassword = string.Empty;
+
+            showCurrentPassword = false;
+
+
+            PublicAuthStateProvider.SignOut();
+
+isAuthenticated = false;
+
+successMessage =
+    "Your password was changed successfully. " +
+    "Please sign in again using your new password.";
+
+authMode =
+    PublicAuthModal.AuthMode.SignIn;
+
+showAuthModal = true;
+
+await InvokeAsync(
+    StateHasChanged);
+        }
+        catch (HttpRequestException ex)
+        {
+            passwordErrorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to change your password."
+                    : ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CHANGE PASSWORD ERROR: {ex}");
+
+            passwordErrorMessage =
+                "Unable to change your password. Please try again.";
+        }
+        finally
+        {
+            isChangingPassword = false;
+        }
+    }
+
+
+    // ================================================================
+    // PASSWORD VISIBILITY
+    // ================================================================
+
+    private void ToggleCurrentPassword()
+    {
+        showCurrentPassword =
+            !showCurrentPassword;
+    }
+
+
+    // ================================================================
+    // MESSAGES
+    // ================================================================
+
+    private void ClearMessages()
+    {
+        successMessage = null;
+        errorMessage = null;
+        profileErrorMessage = null;
+        passwordErrorMessage = null;
+    }
+
+
+    private static string ExtractApiErrorMessage(
+        string responseBody,
+        string fallback)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return fallback;
+        }
+
+        try
+        {
+            using var document =
+                JsonDocument.Parse(responseBody);
+
+            var root =
+                document.RootElement;
+
+
+            if (root.TryGetProperty(
+                    "message",
+                    out var messageProperty))
+            {
+                var message =
+                    messageProperty.GetString();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    return message;
+                }
+            }
+
+
+            if (root.TryGetProperty(
+                    "Message",
+                    out var messagePropertyUpper))
+            {
+                var message =
+                    messagePropertyUpper.GetString();
+
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    return message;
+                }
+            }
+
+
+            if (root.TryGetProperty(
+                    "errors",
+                    out var errorsProperty))
+            {
+                var messages =
+                    new List<string>();
+
+                foreach (var property in
+                         errorsProperty.EnumerateObject())
+                {
+                    if (property.Value.ValueKind ==
+                        JsonValueKind.Array)
+                    {
+                        foreach (var item in
+                                 property.Value.EnumerateArray())
+                        {
+                            var value =
+                                item.GetString();
+
+                            if (!string.IsNullOrWhiteSpace(value))
+                            {
+                                messages.Add(value);
+                            }
+                        }
+                    }
+                }
+
+                if (messages.Count > 0)
+                {
+                    return string.Join(
+                        " ",
+                        messages);
+                }
+            }
+        }
+        catch
+        {
+            // Ignore JSON parsing errors and use fallback.
+        }
+
+        return fallback;
+    }
+
+
+    // ================================================================
+    // AUTH MODAL
+    // ================================================================
+
+    private async Task OpenLogin()
+{
+    authMode =
+        PublicAuthModal.AuthMode.SignIn;
+
+    showAuthModal = true;
+
+    await InvokeAsync(
+        StateHasChanged);
+}
+
+private async Task OnAuthModalVisibilityChanged(
+    bool isOpen)
+{
+    showAuthModal = isOpen;
+
+    await InvokeAsync(
+        StateHasChanged);
+}
+
+
+private async Task OnAuthModalModeChanged(
+    PublicAuthModal.AuthMode mode)
+{
+    authMode = mode;
+
+    await InvokeAsync(
+        StateHasChanged);
+}
+
+
+private async Task OnAuthenticated()
+{
+    showAuthModal = false;
+
+    authMode =
+        PublicAuthModal.AuthMode.SignIn;
+
+    isAuthenticated = true;
+
+    await LoadProfile();
+
+    await InvokeAsync(
+        StateHasChanged);
+}
+
+
+    // ================================================================
+    // NAVIGATION
+    // ================================================================
+
+    private void GoToAccount()
+    {
+        Navigation.NavigateTo(
+            "/account");
+    }
+
+
+    private void GoToFavorites()
+    {
+        Navigation.NavigateTo(
+            "/my-favorites");
+    }
+
+}

@@ -1000,6 +1000,151 @@ public class AuthService : IAuthService
     }
 
     // ============================================================
+// CHANGE PASSWORD
+// ============================================================
+
+public async Task<bool> ChangePasswordAsync(
+    long userId,
+    ChangePasswordRequest request)
+{
+    // --------------------------------------------------------
+    // Validate request
+    // --------------------------------------------------------
+
+    if (userId <= 0)
+    {
+        return false;
+    }
+
+    if (request == null)
+    {
+        return false;
+    }
+
+    if (string.IsNullOrWhiteSpace(
+            request.CurrentPassword))
+    {
+        return false;
+    }
+
+    if (string.IsNullOrWhiteSpace(
+            request.NewPassword))
+    {
+        return false;
+    }
+
+    if (string.IsNullOrWhiteSpace(
+            request.ConfirmPassword))
+    {
+        return false;
+    }
+
+    if (!string.Equals(
+            request.NewPassword,
+            request.ConfirmPassword,
+            StringComparison.Ordinal))
+    {
+        return false;
+    }
+
+    if (request.NewPassword.Length < 8)
+    {
+        return false;
+    }
+
+    if (string.Equals(
+            request.CurrentPassword,
+            request.NewPassword,
+            StringComparison.Ordinal))
+    {
+        return false;
+    }
+
+    // --------------------------------------------------------
+    // Find User
+    // --------------------------------------------------------
+
+    var user =
+        await _context.Users
+            .FirstOrDefaultAsync(x =>
+                x.UserID == userId);
+
+    if (user == null)
+    {
+        return false;
+    }
+
+    // --------------------------------------------------------
+    // Check Account Status
+    // --------------------------------------------------------
+
+    if (!string.Equals(
+            user.AccountStatus,
+            "Active",
+            StringComparison.OrdinalIgnoreCase))
+    {
+        return false;
+    }
+
+    // --------------------------------------------------------
+    // Verify Current Password
+    // --------------------------------------------------------
+
+    var currentPasswordValid =
+        _passwordService.VerifyPassword(
+            user,
+            user.PasswordHash,
+            request.CurrentPassword);
+
+    if (!currentPasswordValid)
+    {
+        return false;
+    }
+
+    // --------------------------------------------------------
+    // Hash New Password
+    // --------------------------------------------------------
+
+    user.PasswordHash =
+        _passwordService.HashPassword(
+            user,
+            request.NewPassword);
+
+    user.ModifiedDate =
+        DateTime.UtcNow;
+
+    // --------------------------------------------------------
+    // Revoke Existing Refresh Tokens
+    //
+    // Changing the password invalidates existing refresh
+    // sessions so another previously authenticated session
+    // cannot continue using its refresh token.
+    // --------------------------------------------------------
+
+    var activeRefreshTokens =
+        await _context.RefreshTokens
+            .Where(x =>
+                x.UserID == user.UserID &&
+                !x.RevokedAt.HasValue &&
+                x.ExpiresAt > DateTime.UtcNow)
+            .ToListAsync();
+
+    foreach (var token in activeRefreshTokens)
+    {
+        token.RevokedAt =
+            DateTime.UtcNow;
+    }
+
+    // --------------------------------------------------------
+    // Save Changes
+    // --------------------------------------------------------
+
+    await _context.SaveChangesAsync();
+
+    return true;
+}
+
+    // ============================================================
     // CURRENT USER
     // ============================================================
 

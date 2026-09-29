@@ -19,767 +19,360 @@
 
 <div class="marketplace">
 
-    <!-- ============================================================
-         HEADER
-         ============================================================ -->
-
-    <PublicTopBar OnSignIn="OpenLogin"
-              OnSignUp="OpenSignup" />
+    <PublicTopBar OnSignIn="OpenLogin" OnSignUp="OpenSignup" />
 
 
-    <!-- ============================================================
-         HERO
-         ============================================================ -->
+<!-- ===================== 1. BACKGROUND IMAGE ===================== -->
+<section class="hero-background" aria-label="Marketplace banner">
+    <div class="hero-background-overlay"></div>
+    <span class="hero-blob blob-1" aria-hidden="true"></span>
+    <span class="hero-blob blob-2" aria-hidden="true"></span>
+    <span class="hero-blob blob-3" aria-hidden="true"></span>
+</section>
 
-    <section class="hero-section">
+<!-- ===================== 2. SEARCH BAR ===================== -->
+<section class="hero-tools-section">
+    <div class="hero-tools">
 
-        <div class="hero-container">
+        <div class="search-card">
+            <div class="search-input">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-4-4" />
+                </svg>
 
-            <div class="hero-content">
+                <input @bind="searchText"
+                       @bind:event="oninput"
+                       @onkeydown="HandleSearchKeyDown"
+                       placeholder="Search advertisements, products, locations..."
+                       aria-label="Search advertisements" />
 
-                <span class="hero-eyebrow">
-                    HR INFO ADs
-                </span>
-
-
-                <h1>
-
-                    Find what you're looking for.
-
-                    <span>
-                        Sell what you no longer need.
-                    </span>
-
-                </h1>
-
-
-                <p>
-                    Discover trusted advertisements across properties,
-                    vehicles, services and more.
-                </p>
-
+                @if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    <button type="button"
+                            class="search-clear"
+                            aria-label="Clear search"
+                            @onclick="ClearSearchAsync">
+                        &times;
+                    </button>
+                }
             </div>
 
-
-            <!-- MAIN SEARCH -->
-
-            <div class="hero-search-card">
-
-                <div class="hero-search-input">
-
-                    <span class="search-icon"
-                          aria-hidden="true">
-
-                        <svg viewBox="0 0 24 24">
-
-                            <circle cx="11"
-                                    cy="11"
-                                    r="7" />
-
-                            <path d="m20 20-4-4" />
-
-                        </svg>
-
-                    </span>
-
-
-                    <input @bind="searchText"
-                           @bind:event="oninput"
-                           @onkeydown="HandleSearchKeyDown"
-                           placeholder="Search advertisements, products, locations..."
-                           aria-label="Search advertisements" />
-
-                </div>
-
-
-                <button type="button"
-                        class="hero-search-button"
-                        @onclick="SearchAdvertisements"
-                        disabled="@isLoading">
-
-                    @if (isLoading)
-                    {
-                        <span class="button-loading-spinner"></span>
-
-                        <span>
-                            Searching...
-                        </span>
-                    }
-                    else
-                    {
-                        <svg viewBox="0 0 24 24"
-                             aria-hidden="true">
-
-                            <circle cx="11"
-                                    cy="11"
-                                    r="7" />
-
-                            <path d="m20 20-4-4" />
-
-                        </svg>
-
-                        <span>
-                            Search
-                        </span>
-                    }
-
-                </button>
-
-            </div>
-
-
-            <!-- POPULAR SEARCHES -->
-
-            <div class="popular-searches">
-
-                <span>
-                    Popular searches:
-                </span>
-
-
-                <button type="button"
-                        @onclick="@(() => SetSearch("Property"))">
-
-                    Property
-
-                </button>
-
-
-                <button type="button"
-                        @onclick="@(() => SetSearch("Car"))">
-
-                    Cars
-
-                </button>
-
-
-                <button type="button"
-                        @onclick="@(() => SetSearch("Apartment"))">
-
-                    Apartments
-
-                </button>
-
-
-                <button type="button"
-                        @onclick="@(() => SetSearch("Villa"))">
-
-                    Villas
-
-                </button>
-
-            </div>
-
+            <button type="button"
+                    class="btn-primary search-btn"
+                    @onclick="SearchAdvertisements"
+                    disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span class="spinner"></span>
+                    <span>Searching...</span>
+                }
+                else
+                {
+                    <span>Search</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 12h14" />
+                        <path d="m13 6 6 6-6 6" />
+                    </svg>
+                }
+            </button>
         </div>
 
-    </section>
+        <!-- ===================== 3. POPULAR FILTERS ===================== -->
+        <div class="popular">
+            <span class="popular-label">
+                <span class="popular-star">✦</span>
+                Popular:
+            </span>
 
-
-    <!-- ============================================================
-         MAIN CONTENT
-         ============================================================ -->
-
-    <main class="marketplace-content"
-          id="browse">
-
-        <div class="content-container">
-
-
-            <!-- ====================================================
-                 FILTER PANEL
-                 ==================================================== -->
-
-            <section class="filter-panel">
-
-                <div class="filter-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            SEARCH &amp; FILTER
-                        </span>
-
-                        <h2>
-                            Refine your search
-                        </h2>
-
-                    </div>
-
+            <div class="popular-chips">
+                @foreach (var term in PopularTerms)
+                {
+                    var t = term.Value;
 
                     <button type="button"
-                            class="clear-filters-button"
-                            @onclick="ClearFilters"
-                            disabled="@isLoading">
-
-                        <svg viewBox="0 0 24 24"
-                             aria-hidden="true">
-
-                            <path d="M3 6h18" />
-
-                            <path d="M8 6V4h8v2" />
-
-                            <path d="m19 6-1 15H6L5 6" />
-
-                            <path d="M10 11v6" />
-
-                            <path d="M14 11v6" />
-
-                        </svg>
-
-                        <span>
-                            Clear all
-                        </span>
-
+                            class="chip @(searchText == t ? "active" : "")"
+                            aria-pressed="@(searchText == t)"
+                            @onclick="@(() => SetSearch(t))">
+                        @term.Label
                     </button>
-
-                </div>
-
-
-                <div class="filter-grid">
-
-
-                    <!-- CATEGORY -->
-
-                    <div class="filter-field">
-
-                        <label for="category-filter">
-                            Category
-                        </label>
-
-
-                        <select id="category-filter"
-                                @bind="categoryId">
-
-                            <option value="">
-                                All Categories
-                            </option>
-
-
-                            @foreach (var category in Categories)
-                            {
-                                <option value="@category.CategoryID">
-                                    @category.CategoryName
-                                </option>
-                            }
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- ADVERTISEMENT TYPE -->
-
-                    <div class="filter-field">
-
-                        <label for="type-filter">
-                            Advertisement Type
-                        </label>
-
-
-                        <select id="type-filter"
-                                @bind="typeId">
-
-                            <option value="">
-                                All Types
-                            </option>
-
-
-                            @foreach (var type in AdvertisementTypes)
-                            {
-                                <option value="@type.AdvertisementTypeID">
-                                    @type.TypeName
-                                </option>
-                            }
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- COUNTRY -->
-
-                    <div class="filter-field">
-
-                        <label for="country-filter">
-                            Country
-                        </label>
-
-
-                        <input id="country-filter"
-                               type="number"
-                               @bind="countryId"
-                               placeholder="Country ID" />
-
-                    </div>
-
-
-                    <!-- STATE -->
-
-                    <div class="filter-field">
-
-                        <label for="state-filter">
-                            State / Region
-                        </label>
-
-
-                        <input id="state-filter"
-                               type="number"
-                               @bind="stateId"
-                               placeholder="State ID" />
-
-                    </div>
-
-
-                    <!-- CITY -->
-
-                    <div class="filter-field">
-
-                        <label for="city-filter">
-                            City
-                        </label>
-
-
-                        <input id="city-filter"
-                               type="number"
-                               @bind="cityId"
-                               placeholder="City ID" />
-
-                    </div>
-
-
-                    <!-- AREA -->
-
-                    <div class="filter-field">
-
-                        <label for="area-filter">
-                            Area
-                        </label>
-
-
-                        <input id="area-filter"
-                               type="number"
-                               @bind="areaId"
-                               placeholder="Area ID" />
-
-                    </div>
-
-
-                    <!-- MINIMUM PRICE -->
-
-                    <div class="filter-field">
-
-                        <label for="minimum-price">
-                            Minimum Price
-                        </label>
-
-
-                        <input id="minimum-price"
-                               type="number"
-                               step="0.001"
-                               @bind="minPrice"
-                               placeholder="Min price" />
-
-                    </div>
-
-
-                    <!-- MAXIMUM PRICE -->
-
-                    <div class="filter-field">
-
-                        <label for="maximum-price">
-                            Maximum Price
-                        </label>
-
-
-                        <input id="maximum-price"
-                               type="number"
-                               step="0.001"
-                               @bind="maxPrice"
-                               placeholder="Max price" />
-
-                    </div>
-
-
-                    <!-- BEDROOMS -->
-
-                    <div class="filter-field">
-
-                        <label for="bedrooms-filter">
-                            Bedrooms
-                        </label>
-
-
-                        <select id="bedrooms-filter"
-                                @bind="minBedrooms">
-
-                            <option value="">
-                                Any bedrooms
-                            </option>
-
-                            <option value="1">
-                                1+
-                            </option>
-
-                            <option value="2">
-                                2+
-                            </option>
-
-                            <option value="3">
-                                3+
-                            </option>
-
-                            <option value="4">
-                                4+
-                            </option>
-
-                            <option value="5">
-                                5+
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <!-- BATHROOMS -->
-
-                    <div class="filter-field">
-
-                        <label for="bathrooms-filter">
-                            Bathrooms
-                        </label>
-
-
-                        <select id="bathrooms-filter"
-                                @bind="minBathrooms">
-
-                            <option value="">
-                                Any bathrooms
-                            </option>
-
-                            <option value="1">
-                                1+
-                            </option>
-
-                            <option value="2">
-                                2+
-                            </option>
-
-                            <option value="3">
-                                3+
-                            </option>
-
-                            <option value="4">
-                                4+
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                <!-- FILTER FOOTER -->
-
-                <div class="filter-footer">
-
-                    <label class="check-filter">
-
-                        <input type="checkbox"
-                               @bind="negotiableFilterEnabled" />
-
-                        <span class="custom-checkbox"></span>
-
-                        <span>
-                            Negotiable price
-                        </span>
-
-                    </label>
-
-
-                    <label class="check-filter">
-
-                        <input type="checkbox"
-                               @bind="featuredFilterEnabled" />
-
-                        <span class="custom-checkbox"></span>
-
-                        <span>
-                            Featured only
-                        </span>
-
-                    </label>
-
-
-                    <button type="button"
-                            class="apply-filter-button"
-                            @onclick="ApplyFilters"
-                            disabled="@isLoading">
-
-                        @if (isLoading)
-                        {
-                            <span class="button-loading-spinner"></span>
-
-                            <span>
-                                Loading...
-                            </span>
-                        }
-                        else
-                        {
-                            <svg viewBox="0 0 24 24"
-                                 aria-hidden="true">
-
-                                <path d="M4 6h16" />
-
-                                <path d="M7 12h10" />
-
-                                <path d="M10 18h4" />
-
-                            </svg>
-
-                            <span>
-                                Apply Filters
-                            </span>
-                        }
-
+                }
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ===================== 4, 5, 6. CENTERED BRAND & TEXT ===================== -->
+<section class="hero-intro">
+    <div class="hero-intro-inner">
+
+        <!-- 4. Brand -->
+        <div class="hero-eyebrow">
+            <span class="hero-brand-dot"></span>
+            <span>HR INFO <strong>ADs</strong></span>
+        </div>
+
+        <!-- 5. Headline -->
+        <h1>
+            Find what you're looking for.
+            <span>Sell what you no longer need.</span>
+        </h1>
+
+        <!-- 6. Italic description -->
+        <p class="hero-sub">
+            Discover trusted advertisements across properties, vehicles,
+            services and more.
+        </p>
+
+    </div>
+</section>
+
+    <main class="content" id="browse">
+        <div class="container">
+
+            <!-- ====================== CATEGORY QUICK BAR ====================== -->
+            @if (Categories.Count > 0)
+            {
+                <nav class="quick-cats" aria-label="Quick categories">
+                    <button type="button" class="quick-cat @(categoryId is null ? "active" : "")" @onclick="@(() => SelectCategory(null))">
+                        All
                     </button>
+                    @foreach (var category in Categories)
+                    {
+                        var cid = category.CategoryID;
+                        <button type="button" class="quick-cat @(categoryId == cid ? "active" : "")" @onclick="@(() => SelectCategory(cid))">
+                            @category.CategoryName
+                        </button>
+                    }
+                </nav>
+            }
 
+            <!-- =========================== TOOLBAR =========================== -->
+            <section class="toolbar" aria-label="Results toolbar">
+                <div class="toolbar-title">
+                    <span class="section-label">MARKETPLACE</span>
+                    <h2>Latest Advertisements</h2>
+                    @if (Advertisements is not null)
+                    {
+                        <p class="results-count"><strong>@Advertisements.TotalRecords</strong> advertisements available</p>
+                    }
                 </div>
 
-
-                @if (negotiableFilterEnabled || featuredFilterEnabled ||
-     minBedrooms.HasValue || minBathrooms.HasValue)
-{
-    <p class="filter-partial-note">
-        Bedrooms, bathrooms, negotiable and featured filters
-        currently narrow only the advertisements already
-        loaded on this page — the page count above may not
-        match what you see below.
-    </p>
-}
-
-            </section>
-
-
-            <!-- ====================================================
-                 RESULTS
-                 ==================================================== -->
-
-            <section class="results-section">
-
-                <div class="results-header">
-
-                    <div>
-
-                        <span class="section-label">
-                            MARKETPLACE
-                        </span>
-
-
-                        <h2>
-                            Latest Advertisements
-                        </h2>
-
-
-                        @if (Advertisements is not null)
+                <div class="toolbar-actions">
+                    <button type="button" class="btn-ghost filter-toggle @(showFilters ? "open" : "")" @onclick="ToggleFilters" aria-expanded="@showFilters">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16" /><path d="M7 12h10" /><path d="M10 18h4" /></svg>
+                        <span>Filters</span>
+                        @if (ActiveFilterCount > 0)
                         {
-                            <p class="results-count">
-
-                                @Advertisements.TotalRecords
-                                advertisements available
-
-                            </p>
+                            <em class="badge-count">@ActiveFilterCount</em>
                         }
-
-                    </div>
-
-
-                    <!-- SORT -->
+                    </button>
 
                     <div class="sort-control">
-
-                        <label for="sort-by">
-                            Sort by
-                        </label>
-
-
-                        <select id="sort-by"
-                                @bind="sortBy">
-
-                            <option value="createddate">
-                                Newest
-                            </option>
-
-                            <option value="price">
-                                Price
-                            </option>
-
-                            <option value="title">
-                                Title
-                            </option>
-
-                            <option value="bedrooms">
-                                Bedrooms
-                            </option>
-
-                            <option value="landarea">
-                                Land Area
-                            </option>
-
-                            <option value="builtuparea">
-                                Built-up Area
-                            </option>
-
+                        <label for="sort-by">Sort</label>
+                        <select id="sort-by" @bind="sortBy" @bind:after="ApplyFilters">
+                            <option value="createddate">Newest</option>
+                            <option value="price">Price</option>
+                            <option value="title">Title</option>
+                            <option value="bedrooms">Bedrooms</option>
+                            <option value="landarea">Land Area</option>
+                            <option value="builtuparea">Built-up Area</option>
                         </select>
-
-
-                        <select @bind="sortDirection"
-                                aria-label="Sort direction">
-
-                            <option value="desc">
-                                Descending
-                            </option>
-
-                            <option value="asc">
-                                Ascending
-                            </option>
-
+                        <select @bind="sortDirection" @bind:after="ApplyFilters" aria-label="Sort direction">
+                            <option value="desc">Desc</option>
+                            <option value="asc">Asc</option>
                         </select>
-
-
-                        <button type="button"
-                                class="sort-apply-button"
-                                @onclick="ApplyFilters"
-                                disabled="@isLoading">
-
-                            Apply
-
-                        </button>
-
                     </div>
 
+                    <div class="view-toggle" role="group" aria-label="View mode">
+                        <button type="button" class="@(!listView ? "active" : "")" title="Grid view" aria-label="Grid view" @onclick="() => listView = false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4z" /><path d="M13 4h7v7h-7z" /><path d="M4 13h7v7H4z" /><path d="M13 13h7v7h-7z" /></svg>
+                        </button>
+                        <button type="button" class="@(listView ? "active" : "")" title="List view" aria-label="List view" @onclick="() => listView = true">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16" /><path d="M4 12h16" /><path d="M4 18h16" /></svg>
+                        </button>
+                    </div>
                 </div>
+            </section>
 
+            <!-- ========================== FILTER PANEL ========================== -->
+            @if (showFilters)
+            {
+                <section class="filter-panel" aria-label="Filters">
+                    <div class="filter-head">
+                        <h3>Refine your search</h3>
+                        <button type="button" class="link-btn" @onclick="ClearFilters" disabled="@isLoading">Clear all</button>
+                    </div>
 
-                <!-- RESULTS STATE -->
+                    <div class="filter-grid">
+                        <div class="field">
+                            <label for="category-filter">Category</label>
+                            <select id="category-filter" @bind="categoryId">
+                                <option value="">All Categories</option>
+                                @foreach (var category in Categories)
+                                {
+                                    <option value="@category.CategoryID">@category.CategoryName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="type-filter">Advertisement Type</label>
+                            <select id="type-filter" @bind="typeId">
+                                <option value="">All Types</option>
+                                @foreach (var type in AdvertisementTypes)
+                                {
+                                    <option value="@type.AdvertisementTypeID">@type.TypeName</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="country-filter">Country</label>
+                            <input id="country-filter" type="number" @bind="countryId" placeholder="Country ID" />
+                        </div>
+
+                        <div class="field">
+                            <label for="state-filter">State / Region</label>
+                            <input id="state-filter" type="number" @bind="stateId" placeholder="State ID" />
+                        </div>
+
+                        <div class="field">
+                            <label for="city-filter">City</label>
+                            <input id="city-filter" type="number" @bind="cityId" placeholder="City ID" />
+                        </div>
+
+                        <div class="field">
+                            <label for="area-filter">Area</label>
+                            <input id="area-filter" type="number" @bind="areaId" placeholder="Area ID" />
+                        </div>
+
+                        <div class="field">
+                            <label for="minimum-price">Minimum Price</label>
+                            <input id="minimum-price" type="number" step="0.001" @bind="minPrice" placeholder="Min price" />
+                        </div>
+
+                        <div class="field">
+                            <label for="maximum-price">Maximum Price</label>
+                            <input id="maximum-price" type="number" step="0.001" @bind="maxPrice" placeholder="Max price" />
+                        </div>
+
+                        <div class="field">
+                            <label for="bedrooms-filter">Bedrooms</label>
+                            <select id="bedrooms-filter" @bind="minBedrooms">
+                                <option value="">Any bedrooms</option>
+                                <option value="1">1+</option>
+                                <option value="2">2+</option>
+                                <option value="3">3+</option>
+                                <option value="4">4+</option>
+                                <option value="5">5+</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label for="bathrooms-filter">Bathrooms</label>
+                            <select id="bathrooms-filter" @bind="minBathrooms">
+                                <option value="">Any bathrooms</option>
+                                <option value="1">1+</option>
+                                <option value="2">2+</option>
+                                <option value="3">3+</option>
+                                <option value="4">4+</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="filter-foot">
+                        <label class="check">
+                            <input type="checkbox" @bind="negotiableFilterEnabled" />
+                            <span class="check-box"></span>
+                            <span>Negotiable price</span>
+                        </label>
+
+                        <label class="check">
+                            <input type="checkbox" @bind="featuredFilterEnabled" />
+                            <span class="check-box"></span>
+                            <span>Featured only</span>
+                        </label>
+
+                        <button type="button" class="btn-primary apply-btn" @onclick="ApplyFilters" disabled="@isLoading">
+                            @if (isLoading)
+                            {
+                                <span class="spinner"></span>
+                                <span>Loading...</span>
+                            }
+                            else
+                            {
+                                <span>Apply Filters</span>
+                            }
+                        </button>
+                    </div>
+
+                    @if (negotiableFilterEnabled || featuredFilterEnabled || minBedrooms.HasValue || minBathrooms.HasValue)
+                    {
+                        <p class="filter-note">
+                            Bedrooms, bathrooms, negotiable and featured filters currently narrow only the
+                            advertisements already loaded on this page — the total count may not match what you see.
+                        </p>
+                    }
+                </section>
+            }
+
+            <!-- ============================ RESULTS ============================ -->
+            <section class="results" aria-live="polite">
 
                 @if (isLoading)
                 {
-                    <div class="loading-state">
-
-                        <div class="loading-spinner"
-                             aria-hidden="true">
-                        </div>
-
-                        <p>
-                            Loading advertisements...
-                        </p>
-
+                    <div class="ad-grid @(listView ? "list" : "")">
+                        @for (var s = 0; s < 6; s++)
+                        {
+                            <div class="ad-card skeleton" aria-hidden="true">
+                                <div class="ad-media"></div>
+                                <div class="ad-body">
+                                    <span class="sk-line w40"></span>
+                                    <span class="sk-line w80 tall"></span>
+                                    <span class="sk-line w60"></span>
+                                    <span class="sk-line w30 tall"></span>
+                                </div>
+                            </div>
+                        }
                     </div>
                 }
                 else if (loadError)
                 {
-                    <div class="empty-state error-state">
-
-                        <div class="empty-icon">
-
-                            <svg viewBox="0 0 24 24"
-                                 aria-hidden="true">
-
-                                <path d="M12 3 2.5 20h19L12 3Z" />
-
-                                <path d="M12 9v5" />
-
-                                <path d="M12 17h.01" />
-
-                            </svg>
-
+                    <div class="state-card error">
+                        <div class="state-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z" /><path d="M12 9v5" /><path d="M12 17h.01" /></svg>
                         </div>
-
-
-                        <h3>
-                            Unable to load advertisements
-                        </h3>
-
-
-                        <p>
-                            We could not retrieve the advertisements
-                            at the moment. Please try again.
-                        </p>
-
-
-                        <button type="button"
-                                @onclick="LoadAdvertisementsAsync">
-
-                            Try Again
-
-                        </button>
-
+                        <h3>Unable to load advertisements</h3>
+                        <p>We could not retrieve the advertisements at the moment. Please try again.</p>
+                        <button type="button" class="btn-primary" @onclick="LoadAdvertisementsAsync">Try Again</button>
                     </div>
                 }
-                else if (Advertisements?.Items is null ||
-                         Advertisements.Items.Count == 0)
+                else if (Advertisements?.Items is null || Advertisements.Items.Count == 0)
                 {
-                    <div class="empty-state">
-
-                        <div class="empty-icon">
-
-                            <svg viewBox="0 0 24 24"
-                                 aria-hidden="true">
-
-                                <circle cx="11"
-                                        cy="11"
-                                        r="7" />
-
-                                <path d="m20 20-4-4" />
-
-                            </svg>
-
+                    <div class="state-card">
+                        <div class="state-icon">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
                         </div>
-
-
-                        <h3>
-                            No advertisements found
-                        </h3>
-
-
-                        <p>
-                            Try changing your search criteria or filters.
-                        </p>
-
-
-                        <button type="button"
-                                @onclick="ClearFilters">
-
-                            Clear Filters
-
-                        </button>
-
+                        <h3>No advertisements found</h3>
+                        <p>Try changing your search criteria or filters.</p>
+                        <button type="button" class="btn-primary" @onclick="ClearFilters">Clear Filters</button>
                     </div>
                 }
                 else
                 {
+                    var cardIndex = 0;
+
                     @foreach (var group in GroupedAdvertisements())
                     {
-                        <div class="category-group">
-
-                            <div class="category-group-header">
-
-                                <h3 class="category-group-title">
-                                    @group.Key
-                                </h3>
-
-                                <span class="category-group-count">
-                                    @group.Count()
-                                    @(group.Count() == 1 ? "listing" : "listings")
-                                </span>
-
+                        <div class="group">
+                            <div class="group-head">
+                                <h3>@group.Key</h3>
+                                <span class="group-count">@group.Count() @(group.Count() == 1 ? "listing" : "listings")</span>
                             </div>
 
-
-                            <div class="advertisement-grid">
-
+                            <div class="ad-grid @(listView ? "list" : "")">
                                 @foreach (var advertisement in group)
                                 {
                                     var images =
@@ -790,952 +383,379 @@
                                             .ToList();
 
                                     var adKey = (long)advertisement.AdvertisementID;
-                                    var activeIndex = GetImageIndex(adKey);
+                                    var activeIndex = Math.Min(GetImageIndex(adKey), Math.Max(images.Count - 1, 0));
+                                    var isFav = favoriteAdvertisementIds.Contains(adKey);
+                                    var isFavLoading = favoriteLoadingIds.Contains(adKey);
+                                    var delay = Math.Min(cardIndex++, 11);
 
-                                    <article class="advertisement-card">
+                                    <article class="ad-card"
+                                             style="--i:@delay"
+                                             tabindex="0"
+                                             role="link"
+                                             aria-label="@($"View details: {advertisement.Title}")"
+                                             @onclick="@(() => OpenDetails(adKey))"
+                                             @onkeydown="@(e => HandleCardKeyDown(e, adKey))">
 
-
-                                        <!-- IMAGE / CAROUSEL -->
-
-                                        <div class="advertisement-image">
-
+                                        <!-- MEDIA -->
+                                        <div class="ad-media">
                                             @if (advertisement.IsFeatured)
                                             {
-                                                <span class="featured-badge">
-
-                                                    <svg viewBox="0 0 24 24"
-                                                         aria-hidden="true">
-
-                                                        <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
-
-                                                    </svg>
-
+                                                <span class="badge-featured">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" /></svg>
                                                     Featured
-
                                                 </span>
                                             }
 
-
                                             @if (images.Count > 0)
                                             {
-                                                <div class="carousel-track">
-
+                                                <div class="slides">
                                                     @for (var i = 0; i < images.Count; i++)
                                                     {
                                                         var slideIndex = i;
-                                                        var isActive = slideIndex == activeIndex;
-
-                                                        <div class="carousel-slide @(isActive ? "active" : "")">
-
-                                                            <img src="@images[slideIndex].FileURL"
-                                                                 alt=""
-                                                                 aria-hidden="true"
-                                                                 class="advertisement-card-image-bg"
-                                                                 loading="lazy" />
-
+                                                        <div class="slide @(slideIndex == activeIndex ? "active" : "")">
+                                                            <img src="@images[slideIndex].FileURL" alt="" aria-hidden="true" class="slide-bg" loading="lazy" />
                                                             <img src="@images[slideIndex].FileURL"
                                                                  alt="@advertisement.Title"
-                                                                 class="advertisement-card-image"
+                                                                 class="slide-img"
                                                                  loading="lazy"
-                                                                 onerror="this.closest('.carousel-slide').classList.add('image-failed')" />
-
+                                                                 onerror="this.closest('.slide').classList.add('image-failed')" />
                                                         </div>
                                                     }
-
                                                 </div>
-
 
                                                 @if (images.Count > 1)
                                                 {
-                                                    <button type="button"
-                                                            class="carousel-nav prev"
-                                                            aria-label="Previous image"
-                                                            @onclick="@(() => PreviousImage(adKey, images.Count))"
-                                                            @onclick:stopPropagation="true">
-
-                                                        <svg viewBox="0 0 24 24"
-                                                             aria-hidden="true">
-
-                                                            <path d="m15 6-6 6 6 6" />
-
-                                                        </svg>
-
+                                                    <button type="button" class="nav prev" aria-label="Previous image"
+                                                            @onclick="@(() => PreviousImage(adKey, images.Count))" @onclick:stopPropagation="true">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6" /></svg>
                                                     </button>
 
-
-                                                    <button type="button"
-                                                            class="carousel-nav next"
-                                                            aria-label="Next image"
-                                                            @onclick="@(() => NextImage(adKey, images.Count))"
-                                                            @onclick:stopPropagation="true">
-
-                                                        <svg viewBox="0 0 24 24"
-                                                             aria-hidden="true">
-
-                                                            <path d="m9 6 6 6-6 6" />
-
-                                                        </svg>
-
+                                                    <button type="button" class="nav next" aria-label="Next image"
+                                                            @onclick="@(() => NextImage(adKey, images.Count))" @onclick:stopPropagation="true">
+                                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
                                                     </button>
 
-
-                                                    <div class="carousel-dots">
-
+                                                    <div class="dots">
                                                         @for (var i = 0; i < images.Count; i++)
                                                         {
                                                             var dotIndex = i;
-
                                                             <button type="button"
-                                                                    class="carousel-dot @(dotIndex == activeIndex ? "active" : "")"
+                                                                    class="dot @(dotIndex == activeIndex ? "active" : "")"
                                                                     aria-label="@($"Show image {dotIndex + 1}")"
                                                                     @onclick="@(() => SetImageIndex(adKey, dotIndex))"
-                                                                    @onclick:stopPropagation="true">
-                                                            </button>
+                                                                    @onclick:stopPropagation="true"></button>
                                                         }
-
                                                     </div>
 
-
-                                                    <span class="carousel-count">
-                                                        @(activeIndex + 1) / @images.Count
-                                                    </span>
+                                                    <span class="img-count">@(activeIndex + 1) / @images.Count</span>
                                                 }
                                             }
                                             else
                                             {
-                                                <div class="image-placeholder">
-
-                                                    <span>
-                                                        HR
-                                                    </span>
-
-                                                </div>
+                                                <div class="placeholder"><span>HR</span></div>
                                             }
-
 
                                             <button type="button"
-        class="favorite-button @(favoriteAdvertisementIds.Contains(adKey) ? "is-favorite" : "") @(favoriteLoadingIds.Contains(adKey) ? "is-loading" : "")"
-        title="@(favoriteAdvertisementIds.Contains(adKey) ? "Remove from favorites" : "Add to favorites")"
-        aria-label="@(favoriteAdvertisementIds.Contains(adKey) ? "Remove from favorites" : "Add to favorites")"
-        disabled="@favoriteLoadingIds.Contains(adKey)"
-        @onclick="@(() => ToggleFavoriteAsync(adKey))"
-        @onclick:stopPropagation="true">
-
-    @if (favoriteLoadingIds.Contains(adKey))
-    {
-        <span class="favorite-spinner"
-              aria-hidden="true">
-        </span>
-    }
-    else
-    {
-        <svg viewBox="0 0 24 24"
-             aria-hidden="true">
-
-            <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
-
-        </svg>
-    }
-
-</button>
-
+                                                    class="fav @(isFav ? "is-fav" : "") @(isFavLoading ? "is-loading" : "")"
+                                                    title="@(isFav ? "Remove from favorites" : "Add to favorites")"
+                                                    aria-label="@(isFav ? "Remove from favorites" : "Add to favorites")"
+                                                    disabled="@isFavLoading"
+                                                    @onclick="@(() => ToggleFavoriteAsync(adKey))"
+                                                    @onclick:stopPropagation="true">
+                                                @if (isFavLoading)
+                                                {
+                                                    <span class="spinner small" aria-hidden="true"></span>
+                                                }
+                                                else
+                                                {
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" /></svg>
+                                                }
+                                            </button>
                                         </div>
 
-
                                         <!-- BODY -->
+                                        <div class="ad-body">
 
-                                        <div class="advertisement-body">
-
-
-                                            <!-- CATEGORY -->
-
-                                            <div class="advertisement-category">
-
-                                                @if (!string.IsNullOrWhiteSpace(
-                                                    advertisement.CategoryName))
+                                            <div class="ad-meta">
+                                                <span>@(string.IsNullOrWhiteSpace(advertisement.CategoryName) ? "Advertisement" : advertisement.CategoryName)</span>
+                                                @if (!string.IsNullOrWhiteSpace(advertisement.AdvertisementTypeName))
                                                 {
-                                                    <span>
-                                                        @advertisement.CategoryName
-                                                    </span>
+                                                    <span class="sep">•</span>
+                                                    <span>@advertisement.AdvertisementTypeName</span>
                                                 }
-                                                else
-                                                {
-                                                    <span>
-                                                        Advertisement
-                                                    </span>
-                                                }
-
-
-                                                @if (!string.IsNullOrWhiteSpace(
-                                                    advertisement.AdvertisementTypeName))
-                                                {
-                                                    <span class="category-separator">
-                                                        •
-                                                    </span>
-
-                                                    <span>
-                                                        @advertisement.AdvertisementTypeName
-                                                    </span>
-                                                }
-
                                             </div>
 
-
-                                            <!-- TITLE -->
-
-                                            <h3>
-
-                                                @if (!string.IsNullOrWhiteSpace(
-                                                    advertisement.Title))
-                                                {
-                                                    @advertisement.Title
-                                                }
-                                                else
-                                                {
-                                                    <span>
-                                                        Untitled Advertisement
-                                                    </span>
-                                                }
-
+                                            <h3 class="ad-title">
+                                                @(string.IsNullOrWhiteSpace(advertisement.Title) ? "Untitled Advertisement" : advertisement.Title)
                                             </h3>
 
-
-                                            <!-- LOCATION -->
-
-                                            @if (!string.IsNullOrWhiteSpace(
-                                                advertisement.AddressLine))
+                                            @if (!string.IsNullOrWhiteSpace(advertisement.AddressLine))
                                             {
-                                                <div class="advertisement-location">
-
-                                                    <svg viewBox="0 0 24 24"
-                                                         aria-hidden="true">
-
-                                                        <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
-
-                                                        <circle cx="12"
-                                                                cy="10"
-                                                                r="2.5" />
-
-                                                    </svg>
-
-                                                    <span>
-                                                        @advertisement.AddressLine
-                                                    </span>
-
+                                                <div class="ad-location">
+                                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></svg>
+                                                    <span>@advertisement.AddressLine</span>
                                                 </div>
                                             }
 
-
-                                            <!-- DETAILS -->
-
-                                            <div class="advertisement-details">
-
-                                                @if (advertisement.Bedrooms.HasValue)
-                                                {
-                                                    <span>
-
-                                                        <svg viewBox="0 0 24 24"
-                                                             aria-hidden="true">
-
-                                                            <path d="M3 11v8" />
-
-                                                            <path d="M21 11v8" />
-
-                                                            <path d="M3 15h18" />
-
-                                                            <path d="M5 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
-
-                                                            <path d="M12 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
-
-                                                        </svg>
-
-                                                        @advertisement.Bedrooms Beds
-
-                                                    </span>
-                                                }
-
-
-                                                @if (advertisement.Bathrooms.HasValue)
-                                                {
-                                                    <span>
-
-                                                        <svg viewBox="0 0 24 24"
-                                                             aria-hidden="true">
-
-                                                            <path d="M4 12h16" />
-
-                                                            <path d="M6 12v4a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-4" />
-
-                                                            <path d="M6 12V7a3 3 0 0 1 6 0v1" />
-
-                                                        </svg>
-
-                                                        @advertisement.Bathrooms Baths
-
-                                                    </span>
-                                                }
-
-
-                                                @if (advertisement.BuiltUpArea.HasValue)
-                                                {
-                                                    <span>
-
-                                                        <svg viewBox="0 0 24 24"
-                                                             aria-hidden="true">
-
-                                                            <path d="M4 4h16v16H4z" />
-
-                                                            <path d="M8 8h8v8H8z" />
-
-                                                        </svg>
-
-                                                        @advertisement.BuiltUpArea
-
-                                                    </span>
-                                                }
-
-                                            </div>
-
-
-                                            <!-- CONTACT -->
-
-                                            @if ((advertisement.ShowWhatsAppToPublic &&
-                                                  !string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber)) ||
-                                                 (advertisement.ShowEmailToPublic &&
-                                                  !string.IsNullOrWhiteSpace(advertisement.ContactEmail)))
+                                            @if (advertisement.Bedrooms.HasValue || advertisement.Bathrooms.HasValue || advertisement.BuiltUpArea.HasValue)
                                             {
-                                                <div class="advertisement-contact">
-
-                                                    <div class="advertisement-contact-header">
-
-                                                        <span class="advertisement-contact-icon">
-
-                                                            <svg viewBox="0 0 24 24"
-                                                                 aria-hidden="true">
-
-                                                                <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-4.1-1l-4.4 1 1-4.2a8.3 8.3 0 0 1-1-4.3A8.5 8.5 0 1 1 21 11.5Z" />
-
-                                                                <path d="M8.5 8.5c.4-.5.8-.5 1.2-.2l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.4.3.8-.2 1.2-.5.5-1.2.7-1.8.5-2-.6-3.8-1.8-5.1-3.4-1.3-1.6-2.1-3.5-2.3-5.6-.1-.7.2-1.4.7-1.9Z" />
-
-                                                            </svg>
-
-                                                        </span>
-
+                                                <div class="ad-details">
+                                                    @if (advertisement.Bedrooms.HasValue)
+                                                    {
                                                         <span>
-                                                            Contact Advertiser
+                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11v8" /><path d="M21 11v8" /><path d="M3 15h18" /><path d="M5 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" /><path d="M12 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" /></svg>
+                                                            @advertisement.Bedrooms Beds
                                                         </span>
-
-                                                    </div>
-
-
-                                                    <div class="advertisement-contact-actions">
-
-                                                        @if (advertisement.ShowWhatsAppToPublic &&
-                                                             !string.IsNullOrWhiteSpace(
-                                                                 advertisement.WhatsAppNumber))
-                                                        {
-                                                            var whatsappNumber =
-                                                                advertisement.WhatsAppNumber
-                                                                    .Replace(" ", "")
-                                                                    .Replace("-", "")
-                                                                    .Replace("(", "")
-                                                                    .Replace(")", "");
-
-                                                            <a href="@($"https://wa.me/{whatsappNumber}")"
-                                                               target="_blank"
-                                                               rel="noopener noreferrer"
-                                                               class="advertisement-contact-button whatsapp">
-
-                                                                <span class="contact-button-icon">
-
-                                                                    <svg viewBox="0 0 24 24"
-                                                                         aria-hidden="true">
-
-                                                                        <path d="M20.5 11.5a8.5 8.5 0 0 1-12.9 7.3L3 20l1.3-4.4a8.5 8.5 0 1 1 16.2-4.1Z" />
-
-                                                                        <path d="M8.3 7.8c.3-.4.7-.4 1-.1l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.3.3.7-.1 1-.4.4-.9.6-1.4.5-1.8-.4-3.5-1.4-4.7-2.8-1.2-1.4-2-3.1-2.2-5-.1-.5.1-1.1.4-1.5Z" />
-
-                                                                    </svg>
-
-                                                                </span>
-
-                                                                <span>
-                                                                    WhatsApp
-                                                                </span>
-
-                                                            </a>
-                                                        }
-
-                                                        @if (advertisement.ShowEmailToPublic &&
-                                                             !string.IsNullOrWhiteSpace(
-                                                                 advertisement.ContactEmail))
-                                                        {
-                                                            <a href="@($"mailto:{advertisement.ContactEmail}")"
-                                                               class="advertisement-contact-button email">
-
-                                                                <span class="contact-button-icon">
-
-                                                                    <svg viewBox="0 0 24 24"
-                                                                         aria-hidden="true">
-
-                                                                        <rect x="3"
-                                                                              y="5"
-                                                                              width="18"
-                                                                              height="14"
-                                                                              rx="2" />
-
-                                                                        <path d="m3 7 9 6 9-6" />
-
-                                                                    </svg>
-
-                                                                </span>
-
-                                                                <span>
-                                                                    Email
-                                                                </span>
-
-                                                            </a>
-                                                        }
-
-                                                    </div>
-
+                                                    }
+                                                    @if (advertisement.Bathrooms.HasValue)
+                                                    {
+                                                        <span>
+                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16" /><path d="M6 12v4a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-4" /><path d="M6 12V7a3 3 0 0 1 6 0v1" /></svg>
+                                                            @advertisement.Bathrooms Baths
+                                                        </span>
+                                                    }
+                                                    @if (advertisement.BuiltUpArea.HasValue)
+                                                    {
+                                                        <span>
+                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v16H4z" /><path d="M8 8h8v8H8z" /></svg>
+                                                            @advertisement.BuiltUpArea
+                                                        </span>
+                                                    }
                                                 </div>
                                             }
 
-
-                                            <!-- FOOTER -->
-
-                                            <div class="advertisement-footer">
-
-                                                <!-- PRICE -->
-
-                                                <div class="advertisement-price">
-
+                                            <div class="ad-footer">
+                                                <div class="ad-price">
                                                     @if (advertisement.Price.HasValue)
                                                     {
-                                                        <span class="price-value">
-                                                            @advertisement.Price.Value.ToString("N0")
-                                                        </span>
-
-                                                        @if (!string.IsNullOrWhiteSpace(
-                                                            advertisement.CurrencyCode))
+                                                        <span class="price-value">@advertisement.Price.Value.ToString("N0")</span>
+                                                        @if (!string.IsNullOrWhiteSpace(advertisement.CurrencyCode))
                                                         {
-                                                            <span class="price-currency">
-                                                                @advertisement.CurrencyCode
-                                                            </span>
+                                                            <span class="price-currency">@advertisement.CurrencyCode</span>
                                                         }
                                                     }
                                                     else
                                                     {
-                                                        <span class="price-on-request">
-                                                            Price on request
-                                                        </span>
+                                                        <span class="price-request">Price on request</span>
                                                     }
 
+                                                    @if (advertisement.IsNegotiable)
+                                                    {
+                                                        <span class="negotiable">Negotiable</span>
+                                                    }
                                                 </div>
 
+                                                <div class="ad-actions">
+                                                    @if (advertisement.ShowWhatsAppToPublic && !string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber))
+                                                    {
+                                                        var whatsappNumber =
+                                                            advertisement.WhatsAppNumber
+                                                                .Replace(" ", "").Replace("-", "").Replace("(", "").Replace(")", "").TrimStart('+');
 
-                                                <!-- NEGOTIABLE -->
+                                                        <a href="@($"https://wa.me/{whatsappNumber}")"
+                                                           target="_blank" rel="noopener noreferrer"
+                                                           class="contact-btn whatsapp"
+                                                           title="Contact on WhatsApp" aria-label="Contact on WhatsApp"
+                                                           @onclick:stopPropagation="true">
+                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.5a8.5 8.5 0 0 1-12.9 7.3L3 20l1.3-4.4a8.5 8.5 0 1 1 16.2-4.1Z" /><path d="M8.3 7.8c.3-.4.7-.4 1-.1l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.3.3.7-.1 1-.4.4-.9.6-1.4.5-1.8-.4-3.5-1.4-4.7-2.8-1.2-1.4-2-3.1-2.2-5-.1-.5.1-1.1.4-1.5Z" /></svg>
+                                                            <span>WhatsApp</span>
+                                                        </a>
+                                                    }
 
-                                                @if (advertisement.IsNegotiable)
-                                                {
-                                                    <span class="negotiable">
-                                                        Negotiable
-                                                    </span>
-                                                }
-
+                                                    @if (advertisement.ShowEmailToPublic && !string.IsNullOrWhiteSpace(advertisement.ContactEmail))
+                                                    {
+                                                        <a href="@($"mailto:{advertisement.ContactEmail}")"
+                                                           class="contact-btn email"
+                                                           title="Send an email" aria-label="Send an email"
+                                                           @onclick:stopPropagation="true">
+                                                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                                                            <span>Email</span>
+                                                        </a>
+                                                    }
+                                                </div>
                                             </div>
 
+                                            <span class="view-more" aria-hidden="true">
+                                                View details
+                                                <svg viewBox="0 0 24 24"><path d="M5 12h13" /><path d="m13 6 6 6-6 6" /></svg>
+                                            </span>
                                         </div>
-
                                     </article>
                                 }
-
                             </div>
-
                         </div>
                     }
 
-
                     <!-- PAGINATION -->
-
                     @if (Advertisements.TotalPages > 1)
                     {
                         <div class="pagination">
+                            <button type="button" disabled="@(currentPage <= 1 || isLoading)" @onclick="PreviousPage" aria-label="Previous page">‹</button>
 
-                            <button type="button"
-                                    disabled="@(currentPage <= 1 || isLoading)"
-                                    @onclick="PreviousPage"
-                                    aria-label="Previous page">
-
-                                ‹
-
-                            </button>
-
-
-                            @for (var page = 1;
-                                  page <= Advertisements.TotalPages;
-                                  page++)
+                            @for (var page = 1; page <= Advertisements.TotalPages; page++)
                             {
                                 var pageNumber = page;
-
                                 <button type="button"
                                         class="@(pageNumber == currentPage ? "active" : "")"
                                         disabled="@isLoading"
                                         @onclick="@(() => GoToPage(pageNumber))"
                                         aria-label="@($"Go to page {pageNumber}")">
-
                                     @pageNumber
-
                                 </button>
                             }
 
-
-                            <button type="button"
-                                    disabled="@(currentPage >= Advertisements.TotalPages || isLoading)"
-                                    @onclick="NextPage"
-                                    aria-label="Next page">
-
-                                ›
-
-                            </button>
-
+                            <button type="button" disabled="@(currentPage >= Advertisements.TotalPages || isLoading)" @onclick="NextPage" aria-label="Next page">›</button>
                         </div>
                     }
-
                 }
-
             </section>
 
-
-            <!-- ====================================================
-                 CATEGORIES
-                 ==================================================== -->
-
-            <section class="categories-section"
-                     id="categories">
-
-                <div class="section-heading-centered">
-
-                    <span class="section-label">
-                        EXPLORE
-                    </span>
-
-
-                    <h2>
-                        Browse by category
-                    </h2>
-
-
-                    <p>
-                        Explore advertisements based on what you are
-                        looking for.
-                    </p>
-
+            <!-- ========================== CATEGORIES ========================== -->
+            <section class="categories" id="categories">
+                <div class="section-heading">
+                    <span class="section-label">EXPLORE</span>
+                    <h2>Browse by category</h2>
+                    <p>Explore advertisements based on what you are looking for.</p>
                 </div>
 
-
                 <div class="category-cards">
-
                     @foreach (var category in Categories)
                     {
-                        <button type="button"
-                                class="category-card"
-                                @onclick="@(() => SelectCategory(category.CategoryID))">
-
-                            <span class="category-card-icon"
-                                  aria-hidden="true">
-
-                                <svg viewBox="0 0 24 24">
-
-                                    <path d="M4 4h7v7H4z" />
-
-                                    <path d="M13 4h7v7h-7z" />
-
-                                    <path d="M4 13h7v7H4z" />
-
-                                    <path d="M13 13h7v7h-7z" />
-
-                                </svg>
-
+                        var cid = category.CategoryID;
+                        <button type="button" class="category-card" @onclick="@(() => SelectCategory(cid, true))">
+                            <span class="category-card-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4z" /><path d="M13 4h7v7h-7z" /><path d="M4 13h7v7H4z" /><path d="M13 13h7v7h-7z" /></svg>
                             </span>
-
-                            <span class="category-card-name">
-                                @category.CategoryName
-                            </span>
-
+                            <span class="category-card-name">@category.CategoryName</span>
                         </button>
                     }
-
 
                     @if (Categories.Count == 0)
                     {
-                        <div class="category-empty">
-
-                            Categories will appear here when
-                            advertisements are available.
-
-                        </div>
+                        <div class="category-empty">Categories will appear here when advertisements are available.</div>
                     }
-
                 </div>
-
             </section>
 
-
-            <!-- ====================================================
-                 HOW IT WORKS
-                 ==================================================== -->
-
-            <section class="how-it-works"
-                     id="how-it-works">
-
-                <div class="section-heading-centered">
-
-                    <span class="section-label">
-                        SIMPLE &amp; CONVENIENT
-                    </span>
-
-
-                    <h2>
-                        How HR INFO ADs works
-                    </h2>
-
-
-                    <p>
-                        Everything you need to discover or publish
-                        advertisements in one place.
-                    </p>
-
+            <!-- ========================== HOW IT WORKS ========================== -->
+            <section class="how" id="how-it-works">
+                <div class="section-heading">
+                    <span class="section-label">SIMPLE &amp; CONVENIENT</span>
+                    <h2>How HR INFO ADs works</h2>
+                    <p>Everything you need to discover or publish advertisements in one place.</p>
                 </div>
 
-
-                <div class="steps-grid">
-
-
-                    <!-- STEP 1 -->
-
-                    <div class="step-card">
-
-                        <div class="step-number">
-                            01
-                        </div>
-
-
-                        <h3>
-                            Search
-                        </h3>
-
-
-                        <p>
-                            Find advertisements using keywords,
-                            categories, prices and locations.
-                        </p>
-
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">01</div>
+                        <h3>Search</h3>
+                        <p>Find advertisements using keywords, categories, prices and locations.</p>
                     </div>
-
-
-                    <!-- STEP 2 -->
-
-                    <div class="step-card">
-
-                        <div class="step-number">
-                            02
-                        </div>
-
-
-                        <h3>
-                            Connect
-                        </h3>
-
-
-                        <p>
-                            Review advertisement details and
-                            contact the advertiser.
-                        </p>
-
+                    <div class="step">
+                        <div class="step-number">02</div>
+                        <h3>Connect</h3>
+                        <p>Review advertisement details and contact the advertiser.</p>
                     </div>
-
-
-                    <!-- STEP 3 -->
-
-                    <div class="step-card">
-
-                        <div class="step-number">
-                            03
-                        </div>
-
-
-                        <h3>
-                            Advertise
-                        </h3>
-
-
-                        <p>
-                            Create your own advertisement and
-                            reach interested buyers.
-                        </p>
-
+                    <div class="step">
+                        <div class="step-number">03</div>
+                        <h3>Advertise</h3>
+                        <p>Create your own advertisement and reach interested buyers.</p>
                     </div>
-
                 </div>
 
+                <div class="cta">
+                    <div>
+                        <h3>Have something to sell?</h3>
+                        <p>Post your advertisement and reach buyers today.</p>
+                    </div>
+                    <button type="button" class="btn-light" @onclick="HandlePostAdvertisement">Post Advertisement</button>
+                </div>
             </section>
-
         </div>
-
     </main>
 
-
-    <!-- ============================================================
-         FOOTER
-         ============================================================ -->
-
+    <!-- ============================== FOOTER ============================== -->
     <footer class="site-footer">
-
         <div class="footer-inner">
-
-
-            <!-- FOOTER BRAND -->
-
             <div class="footer-brand">
-
-                <div class="brand-logo footer-logo">
-                    HR
-                </div>
-
-
+                <div class="brand-logo">HR</div>
                 <div>
-
-                    <strong>
-                        HR INFO ADs
-                    </strong>
-
-
-                    <p>
-                        A simple marketplace for buyers,
-                        sellers and service providers.
-                    </p>
-
+                    <strong>HR INFO ADs</strong>
+                    <p>A simple marketplace for buyers, sellers and service providers.</p>
                 </div>
-
             </div>
 
-
-            <!-- FOOTER LINKS -->
-
             <div class="footer-links">
-
-
                 <div>
-
-                    <h4>
-                        Marketplace
-                    </h4>
-
-
-                    <a href="#browse">
-                        Browse Advertisements
-                    </a>
-
-
-                    <a href="#categories">
-                        Categories
-                    </a>
-
-
-                    <a href="#how-it-works">
-                        How It Works
-                    </a>
-
+                    <h4>Marketplace</h4>
+                    <a href="#browse">Browse Advertisements</a>
+                    <a href="#categories">Categories</a>
+                    <a href="#how-it-works">How It Works</a>
                 </div>
 
-
                 <div>
-
-                    <h4>
-                        Account
-                    </h4>
-
-
+                    <h4>Account</h4>
                     @if (isAuthenticated)
                     {
-                        <button type="button"
-                                @onclick="OpenMyAdvertisements">
-
-                            My Advertisements
-
-                        </button>
-
-                        <button type="button"
-                                @onclick="OpenAccount">
-
-                            My Account
-
-                        </button>
-
-                        <button type="button"
-                                @onclick="HandleSignOut">
-
-                            Sign Out
-
-                        </button>
+                        <button type="button" @onclick="OpenMyAdvertisements">My Advertisements</button>
+                        <button type="button" @onclick="OpenFavorites">My Favorites</button>
+                        <button type="button" @onclick="OpenAccount">My Account</button>
+                        <button type="button" @onclick="HandleSignOut">Sign Out</button>
                     }
                     else
                     {
-                        <button type="button"
-                                @onclick="OpenLogin">
-
-                            Sign In
-
-                        </button>
-
-                        <button type="button"
-                                @onclick="OpenSignup">
-
-                            Sign Up
-
-                        </button>
+                        <button type="button" @onclick="OpenLogin">Sign In</button>
+                        <button type="button" @onclick="OpenSignup">Sign Up</button>
                     }
-
-                    <button type="button"
-                            @onclick="OpenLogin">
-
-                        Post Advertisement
-
-                    </button>
-
+                    <button type="button" @onclick="HandlePostAdvertisement">Post Advertisement</button>
                 </div>
-
             </div>
-
         </div>
-
 
         <div class="footer-bottom">
-
-            <span>
-                © @DateTime.Now.Year HR INFO ADs.
-                All rights reserved.
-            </span>
-
-
-            <span>
-                Terms · Privacy · Contact
-            </span>
-
+            <span>© @DateTime.Now.Year HR INFO ADs. All rights reserved.</span>
+            <span>Terms · Privacy · Contact</span>
         </div>
-
     </footer>
 
-
-    <!-- ============================================================
-         AUTHENTICATION MODAL
-         ============================================================ -->
-
+    <!-- ========================== AUTHENTICATION MODAL ========================== -->
     @if (showAuthModal)
     {
-        <div class="auth-modal-overlay"
-             @onclick="CloseAuthModal">
-
+        <div class="auth-overlay" @onclick="CloseAuthModal">
             <section class="auth-modal"
                      role="dialog"
                      aria-modal="true"
                      aria-labelledby="auth-modal-title"
                      @onclick:stopPropagation="true">
 
-                <div class="auth-modal-accent"></div>
+                <div class="auth-accent"></div>
 
-
-                <!-- CLOSE -->
-
-                <button type="button"
-                        class="auth-modal-close"
-                        title="Close"
-                        aria-label="Close"
-                        @onclick="CloseAuthModal">
-
-                    <svg viewBox="0 0 24 24"
-                         aria-hidden="true">
-
-                        <path d="M6 6l12 12" />
-
-                        <path d="M18 6 6 18" />
-
-                    </svg>
-
+                <button type="button" class="auth-close" title="Close" aria-label="Close" @onclick="CloseAuthModal">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12" /><path d="M18 6 6 18" /></svg>
                 </button>
 
-
-                <!-- BRAND -->
-
-                <div class="auth-modal-header">
-
+                <div class="auth-header">
                     <div class="auth-brand">
-
-                        <div class="auth-brand-logo">
-                            HR
+                        <div class="auth-brand-logo">HR</div>
+                        <div>
+                            <div class="auth-brand-name">HR INFO <strong>ADs</strong></div>
+                            <div class="auth-brand-sub">Advertisement Marketplace</div>
                         </div>
-
-                        <div class="auth-brand-text">
-
-                            <div class="auth-brand-name">
-                                HR INFO <strong>ADs</strong>
-                            </div>
-
-                            <div class="auth-brand-subtitle">
-                                Advertisement Marketplace
-                            </div>
-
-                        </div>
-
                     </div>
 
-
-                    <!-- WELCOME -->
-
                     <div class="auth-welcome">
-
                         <div class="auth-welcome-icon">
-
                             @if (authMode == AuthMode.SignIn)
                             {
-                                <svg viewBox="0 0 24 24"
-                                     aria-hidden="true">
-
-                                    <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
-
-                                    <path d="M10 12h10" />
-
-                                    <path d="m17 8 4 4-4 4" />
-
-                                </svg>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" /><path d="M10 12h10" /><path d="m17 8 4 4-4 4" /></svg>
                             }
                             else
                             {
-                                <svg viewBox="0 0 24 24"
-                                     aria-hidden="true">
-
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-
-                                    <circle cx="9"
-                                            cy="7"
-                                            r="4" />
-
-                                    <path d="M19 8v6" />
-
-                                    <path d="M22 11h-6" />
-
-                                </svg>
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6" /><path d="M22 11h-6" /></svg>
                             }
-
                         </div>
-
-
                         <div>
-
                             <h2 id="auth-modal-title">
-
                                 @if (authMode == AuthMode.SignIn)
                                 {
                                     @:Welcome back
@@ -1744,12 +764,8 @@
                                 {
                                     @:Create your account
                                 }
-
                             </h2>
-
-
                             <p>
-
                                 @if (authMode == AuthMode.SignIn)
                                 {
                                     @:Sign in to manage your advertisements and account.
@@ -1758,526 +774,156 @@
                                 {
                                     @:Join HR INFO ADs and start managing your advertisements.
                                 }
-
                             </p>
-
                         </div>
-
                     </div>
-
                 </div>
-
-
-                <!-- TABS -->
 
                 <div class="auth-tabs">
-
-                    <button type="button"
-                            class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")"
-                            @onclick="ShowSignIn">
-
-                        <svg viewBox="0 0 24 24"
-                             aria-hidden="true">
-
-                            <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
-
-                            <path d="M10 12h10" />
-
-                            <path d="m17 8 4 4-4 4" />
-
-                        </svg>
-
-                        <span>
-                            Sign In
-                        </span>
-
-                    </button>
-
-
-                    <button type="button"
-                            class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")"
-                            @onclick="ShowSignUp">
-
-                        <svg viewBox="0 0 24 24"
-                             aria-hidden="true">
-
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-
-                            <circle cx="9"
-                                    cy="7"
-                                    r="4" />
-
-                            <path d="M19 8v6" />
-
-                            <path d="M22 11h-6" />
-
-                        </svg>
-
-                        <span>
-                            Sign Up
-                        </span>
-
-                    </button>
-
+                    <button type="button" class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")" @onclick="ShowSignIn">Sign In</button>
+                    <button type="button" class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")" @onclick="ShowSignUp">Sign Up</button>
                 </div>
-
 
                 @if (authMode == AuthMode.SignIn)
                 {
-                    <!-- =================================================
-                         SIGN IN FORM
-                         ================================================= -->
-
-                    <EditForm Model="@loginModel"
-                              OnValidSubmit="@HandleLogin"
-                              FormName="PublicLoginForm">
-
+                    <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin" FormName="PublicLoginForm">
                         <DataAnnotationsValidator />
 
                         <div class="auth-form">
 
-
-                            <!-- EMAIL -->
-
                             <div class="auth-field">
-
-                                <label for="auth-email">
-                                    Email Address
-                                </label>
-
-
+                                <label for="auth-email">Email Address</label>
                                 <div class="auth-input-box">
-
                                     <span class="auth-input-icon">
-
-                                        <svg viewBox="0 0 24 24"
-                                             aria-hidden="true">
-
-                                            <rect x="3"
-                                                  y="5"
-                                                  width="18"
-                                                  height="14"
-                                                  rx="2" />
-
-                                            <path d="m3 7 9 6 9-6" />
-
-                                        </svg>
-
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
                                     </span>
-
-
-                                    <InputText id="auth-email"
-                                               class="auth-input"
-                                               @bind-Value="loginModel.Email"
-                                               autocomplete="username"
-                                               placeholder="Enter your email address" />
-
+                                    <InputText id="auth-email" class="auth-input" @bind-Value="loginModel.Email"
+                                               autocomplete="username" placeholder="Enter your email address" />
                                 </div>
-
-
                                 <ValidationMessage For="@(() => loginModel.Email)" />
-
                             </div>
 
-
-                            <!-- PASSWORD -->
-
                             <div class="auth-field">
-
                                 <div class="auth-label-row">
-
-                                    <label for="auth-password">
-                                        Password
-                                    </label>
-
-
-                                    <button type="button"
-                                            class="auth-forgot"
-                                            @onclick="ForgotPassword">
-
-                                        Forgot password?
-
-                                    </button>
-
+                                    <label for="auth-password">Password</label>
+                                    <button type="button" class="auth-forgot" @onclick="ForgotPassword">Forgot password?</button>
                                 </div>
-
-
                                 <div class="auth-input-box">
-
                                     <span class="auth-input-icon">
-
-                                        <svg viewBox="0 0 24 24"
-                                             aria-hidden="true">
-
-                                            <rect x="4"
-                                                  y="10"
-                                                  width="16"
-                                                  height="11"
-                                                  rx="2" />
-
-                                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-
-                                        </svg>
-
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2" /><path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg>
                                     </span>
-
-
-                                    <InputText id="auth-password"
-                                               class="auth-input"
+                                    <InputText id="auth-password" class="auth-input"
                                                type="@(showPassword ? "text" : "password")"
                                                @bind-Value="loginModel.Password"
-                                               autocomplete="current-password"
-                                               placeholder="Enter your password" />
-
-
-                                    <button type="button"
-                                            class="auth-password-toggle"
-                                            title="Show / hide password"
-                                            aria-label="Show / hide password"
-                                            @onclick="TogglePassword">
-
+                                               autocomplete="current-password" placeholder="Enter your password" />
+                                    <button type="button" class="auth-password-toggle" title="Show / hide password"
+                                            aria-label="Show / hide password" @onclick="TogglePassword">
                                         @if (showPassword)
                                         {
-                                            <svg viewBox="0 0 24 24"
-                                                 aria-hidden="true">
-
-                                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-
-                                                <circle cx="12"
-                                                        cy="12"
-                                                        r="3" />
-
-                                            </svg>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" /></svg>
                                         }
                                         else
                                         {
-                                            <svg viewBox="0 0 24 24"
-                                                 aria-hidden="true">
-
-                                                <path d="m3 3 18 18" />
-
-                                                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-
-                                                <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
-
-                                                <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
-
-                                            </svg>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 3 18 18" /><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" /><path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" /><path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" /></svg>
                                         }
-
                                     </button>
-
                                 </div>
-
-
                                 <ValidationMessage For="@(() => loginModel.Password)" />
-
                             </div>
-
-
-                            <!-- ERROR -->
 
                             @if (!string.IsNullOrWhiteSpace(errorMessage))
                             {
-                                <div class="auth-error"
-                                     role="alert">
-
-                                    <div class="auth-error-icon">
-                                        !
-                                    </div>
-
-
+                                <div class="auth-error" role="alert">
+                                    <div class="auth-error-icon">!</div>
                                     <div class="auth-error-content">
-
-                                        <strong>
-                                            Sign in failed
-                                        </strong>
-
-                                        <span>
-                                            @errorMessage
-                                        </span>
-
+                                        <strong>Sign in failed</strong>
+                                        <span>@errorMessage</span>
                                     </div>
-
-
-                                    <button type="button"
-                                            class="auth-error-close"
-                                            aria-label="Close error"
-                                            @onclick="ClearError">
-
-                                        ×
-
-                                    </button>
-
+                                    <button type="button" class="auth-error-close" aria-label="Close error" @onclick="ClearError">×</button>
                                 </div>
                             }
 
-
-                            <!-- SUBMIT -->
-
-                            <button type="submit"
-                                    class="auth-submit"
-                                    disabled="@isLoginLoading">
-
+                            <button type="submit" class="btn-primary auth-submit" disabled="@isLoginLoading">
                                 @if (isLoginLoading)
                                 {
-                                    <span class="auth-spinner"></span>
-
-                                    <span>
-                                        Signing in...
-                                    </span>
+                                    <span class="spinner"></span>
+                                    <span>Signing in...</span>
                                 }
                                 else
                                 {
-                                    <span>
-                                        Sign In
-                                    </span>
-
-                                    <svg viewBox="0 0 24 24"
-                                         aria-hidden="true">
-
-                                        <path d="M5 12h13" />
-
-                                        <path d="m13 6 6 6-6 6" />
-
-                                    </svg>
+                                    <span>Sign In</span>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13" /><path d="m13 6 6 6-6 6" /></svg>
                                 }
-
                             </button>
 
-
-                            <!-- SECURITY -->
-
                             <div class="auth-security">
-
                                 <div class="auth-security-icon">
-
-                                    <svg viewBox="0 0 24 24"
-                                         aria-hidden="true">
-
-                                        <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
-
-                                        <path d="m9 12 2 2 4-4" />
-
-                                    </svg>
-
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" /><path d="m9 12 2 2 4-4" /></svg>
                                 </div>
-
-
                                 <div>
-
-                                    <strong>
-                                        Secure account access
-                                    </strong>
-
-                                    <span>
-                                        Your credentials are transmitted securely.
-                                    </span>
-
+                                    <strong>Secure account access</strong>
+                                    <span>Your credentials are transmitted securely.</span>
                                 </div>
-
                             </div>
-
                         </div>
-
                     </EditForm>
                 }
                 else
                 {
-                    <!-- =================================================
-                         SIGN UP
-                         ================================================= -->
-
                     <div class="auth-form">
-
-                        <div class="signup-information">
-
-                            <div class="signup-information-icon">
-
-                                <svg viewBox="0 0 24 24"
-                                     aria-hidden="true">
-
-                                    <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" />
-
-                                    <path d="M12 8v5" />
-
-                                    <circle cx="12"
-                                            cy="16.5"
-                                            r=".8" />
-
-                                </svg>
-
+                        <div class="signup-info">
+                            <div class="auth-security-icon">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" /><path d="M12 8v5" /><circle cx="12" cy="16.5" r=".8" /></svg>
                             </div>
-
-
                             <div>
-
-                                <strong>
-                                    Advertiser registration
-                                </strong>
-
-                                <p>
-                                    Create an account to publish and
-                                    manage your advertisements.
-                                </p>
-
+                                <strong>Advertiser registration</strong>
+                                <p>Create an account to publish and manage your advertisements.</p>
                             </div>
-
                         </div>
-
-
-                        <!-- NAME -->
 
                         <div class="auth-field">
-
-                            <label for="signup-name">
-                                Full Name
-                            </label>
-
-
+                            <label for="signup-name">Full Name</label>
                             <div class="auth-input-box">
-
                                 <span class="auth-input-icon">
-
-                                    <svg viewBox="0 0 24 24"
-                                         aria-hidden="true">
-
-                                        <circle cx="12"
-                                                cy="8"
-                                                r="4" />
-
-                                        <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
-
-                                    </svg>
-
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" /></svg>
                                 </span>
-
-
-                                <input id="signup-name"
-                                       class="auth-input"
-                                       type="text"
-                                       @bind="signupModel.FullName"
-                                       placeholder="Enter your full name" />
-
+                                <input id="signup-name" class="auth-input" type="text" @bind="signupModel.FullName" placeholder="Enter your full name" />
                             </div>
-
                         </div>
-
-
-                        <!-- EMAIL -->
 
                         <div class="auth-field">
-
-                            <label for="signup-email">
-                                Email Address
-                            </label>
-
-
+                            <label for="signup-email">Email Address</label>
                             <div class="auth-input-box">
-
                                 <span class="auth-input-icon">
-
-                                    <svg viewBox="0 0 24 24"
-                                         aria-hidden="true">
-
-                                        <rect x="3"
-                                              y="5"
-                                              width="18"
-                                              height="14"
-                                              rx="2" />
-
-                                        <path d="m3 7 9 6 9-6" />
-
-                                    </svg>
-
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
                                 </span>
-
-
-                                <input id="signup-email"
-                                       class="auth-input"
-                                       type="email"
-                                       @bind="signupModel.Email"
-                                       placeholder="Enter your email address" />
-
+                                <input id="signup-email" class="auth-input" type="email" @bind="signupModel.Email" placeholder="Enter your email address" />
                             </div>
-
                         </div>
 
-
-                        <!-- REQUEST ACCOUNT -->
-
-                        <button type="button"
-                                class="auth-submit"
-                                @onclick="RequestRegistration">
-
-                            <span>
-                                Request an Account
-                            </span>
-
-                            <svg viewBox="0 0 24 24"
-                                 aria-hidden="true">
-
-                                <path d="M5 12h13" />
-
-                                <path d="m13 6 6 6-6 6" />
-
-                            </svg>
-
+                        <button type="button" class="btn-primary auth-submit" @onclick="RequestRegistration">
+                            <span>Request an Account</span>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13" /><path d="m13 6 6 6-6 6" /></svg>
                         </button>
-
 
                         @if (!string.IsNullOrWhiteSpace(signupMessage))
                         {
-                            <div class="signup-message">
-
-                                <span>
-                                    @signupMessage
-                                </span>
-
-                            </div>
+                            <div class="signup-message"><span>@signupMessage</span></div>
                         }
 
-
                         <div class="auth-signup-note">
-
                             Already have an account?
-
-                            <button type="button"
-                                    @onclick="ShowSignIn">
-
-                                Sign In
-
-                            </button>
-
+                            <button type="button" @onclick="ShowSignIn">Sign In</button>
                         </div>
-
                     </div>
                 }
 
-
-                <!-- MODAL FOOTER -->
-
-                <div class="auth-modal-footer">
-
-                    <span>
-                        © @DateTime.Now.Year HR INFO ADs
-                    </span>
-
-                    <span class="auth-footer-dot">
-                        •
-                    </span>
-
-                    <button type="button"
-                            @onclick="CloseAuthModal">
-
-                        Return to marketplace
-
-                    </button>
-
+                <div class="auth-footer">
+                    <span>© @DateTime.Now.Year HR INFO ADs</span>
+                    <span class="dot-sep">•</span>
+                    <button type="button" @onclick="CloseAuthModal">Return to marketplace</button>
                 </div>
-
             </section>
-
         </div>
     }
 
@@ -2287,217 +933,151 @@
 @code {
 
     // ============================================================
-    // DATA
+    // CONFIG
+    // ============================================================
+
+    // Change this if your details page uses a different route.
+    private static string DetailsUrl(long id) => $"/my-ads/{id}";
+
+    private sealed record PopularTerm(string Label, string Value);
+
+    private static readonly PopularTerm[] PopularTerms =
+    {
+        new("Property", "Property"),
+        new("Cars", "Car"),
+        new("Apartments", "Apartment"),
+        new("Villas", "Villa")
+    };
+
+
+    // ============================================================
+    // DATA / STATE
     // ============================================================
 
     private AdvertisementListResponse Advertisements { get; set; } = new();
 
-
-    // ============================================================
-    // PAGE STATE
-    // ============================================================
-
     private bool isLoading;
-
     private bool loadError;
-
-
-    // ============================================================
-    // SEARCH
-    // ============================================================
+    private bool showFilters;
+    private bool listView;
 
     private string searchText = string.Empty;
 
-
-    // ============================================================
-    // FILTERS
-    // ============================================================
-
     private int? categoryId;
-
     private int? typeId;
-
     private int? countryId;
-
     private int? stateId;
-
     private int? cityId;
-
     private int? areaId;
-
     private decimal? minPrice;
-
     private decimal? maxPrice;
-
     private int? minBedrooms;
-
     private int? minBathrooms;
 
-
-    // ============================================================
-    // OPTIONAL FILTER FLAGS
-    // These four are NOT sent to the API — see ApplyClientSideFilters.
-    // They only narrow the current page's already-loaded items, so
-    // TotalRecords/TotalPages above can disagree with what's shown.
-    // To fix properly, add matching parameters to
-    // AdvertisementApiService.GetPublishedAdvertisementsAsync and the
-    // server-side query, then pass them from LoadAdvertisementsAsync
-    // the same way categoryId/minPrice/maxPrice already are.
-    // ============================================================
-
+    // Client-side only (narrow the loaded page, not sent to the API).
     private bool negotiableFilterEnabled;
-
     private bool featuredFilterEnabled;
 
-
-    // ============================================================
-    // SORT
-    // ============================================================
-
+    // Client-side sort (current page only).
     private string sortBy = "createddate";
-
     private string sortDirection = "desc";
 
-
-    // ============================================================
-    // PAGINATION
-    // ============================================================
-
     private int currentPage = 1;
-
     private const int PageSize = 12;
 
-
-    // ============================================================
-    // LOOKUP OPTIONS
-    // ============================================================
-
     private List<CategoryOption> Categories { get; set; } = new();
-
     private List<AdvertisementTypeOption> AdvertisementTypes { get; set; } = new();
-
-
-    // ============================================================
-    // CAROUSEL STATE (per advertisement)
-    // ============================================================
 
     private readonly Dictionary<long, int> imageIndexByAd = new();
 
-
-    // ============================================================
-    // AUTHENTICATION MODAL
-    // ============================================================
-
+    // Auth
     private bool showAuthModal;
-
     private AuthMode authMode = AuthMode.SignIn;
-
     private bool isLoginLoading;
-
     private bool showPassword;
-
     private string? errorMessage;
-
     private string? signupMessage;
-
-
     private readonly LoginModel loginModel = new();
-
     private readonly SignupModel signupModel = new();
-
     private bool isAuthenticated;
-
     private string currentUserName = string.Empty;
 
-    // ============================================================
-// FAVORITES
-// ============================================================
-//
-// Contains AdvertisementID values currently favorited by the
-// signed-in user.
-//
-// HashSet provides fast lookup when rendering each card.
-// ============================================================
+    // Favorites
+    private readonly HashSet<long> favoriteAdvertisementIds = new();
+    private readonly HashSet<long> favoriteLoadingIds = new();
 
-private readonly HashSet<long> favoriteAdvertisementIds = new();
-
-private readonly HashSet<long> favoriteLoadingIds = new();
+    private int ActiveFilterCount =>
+        (categoryId.HasValue ? 1 : 0) +
+        (typeId.HasValue ? 1 : 0) +
+        (countryId.HasValue ? 1 : 0) +
+        (stateId.HasValue ? 1 : 0) +
+        (cityId.HasValue ? 1 : 0) +
+        (areaId.HasValue ? 1 : 0) +
+        (minPrice.HasValue ? 1 : 0) +
+        (maxPrice.HasValue ? 1 : 0) +
+        (minBedrooms.HasValue ? 1 : 0) +
+        (minBathrooms.HasValue ? 1 : 0) +
+        (negotiableFilterEnabled ? 1 : 0) +
+        (featuredFilterEnabled ? 1 : 0);
 
 
     // ============================================================
     // INITIALIZE
     // ============================================================
 
-    // ============================================================
-// INITIALIZE
-// ============================================================
-
-protected override async Task OnInitializedAsync()
-{
-    await LoadAuthenticationStateAsync();
-
-    await LoadMyFavoritesAsync();
-
-    await LoadAdvertisementsAsync();
-
-    HandleAuthenticationQuery();
-}
-
-// ============================================================
-// AUTHENTICATION QUERY
-// ============================================================
-
-private void HandleAuthenticationQuery()
-{
-    var absoluteUri =
-        Navigation.ToAbsoluteUri(
-            Navigation.Uri);
-
-    var query =
-        QueryHelpers.ParseQuery(
-            absoluteUri.Query);
-
-    if (!query.TryGetValue(
-            "auth",
-            out var authValue))
+    protected override async Task OnInitializedAsync()
     {
-        return;
+        await LoadAuthenticationStateAsync();
+        await LoadMyFavoritesAsync();
+        await LoadAdvertisementsAsync();
+        HandleAuthenticationQuery();
     }
 
-    var authModeValue =
-        authValue.ToString();
+    private void HandleAuthenticationQuery()
+    {
+        var query = QueryHelpers.ParseQuery(Navigation.ToAbsoluteUri(Navigation.Uri).Query);
 
-    if (string.Equals(
-            authModeValue,
-            "signin",
-            StringComparison.OrdinalIgnoreCase))
-    {
-        OpenLogin();
+        if (!query.TryGetValue("auth", out var authValue))
+        {
+            return;
+        }
+
+        var value = authValue.ToString();
+
+        if (string.Equals(value, "signin", StringComparison.OrdinalIgnoreCase))
+        {
+            OpenLogin();
+        }
+        else if (string.Equals(value, "signup", StringComparison.OrdinalIgnoreCase))
+        {
+            OpenSignup();
+        }
     }
-    else if (string.Equals(
-                 authModeValue,
-                 "signup",
-                 StringComparison.OrdinalIgnoreCase))
-    {
-        OpenSignup();
-    }
-}
 
     private async Task LoadAuthenticationStateAsync()
     {
-        var authenticationState =
-            await AuthenticationStateProvider
-                .GetAuthenticationStateAsync();
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = state.User;
 
-        var user = authenticationState.User;
-
-        isAuthenticated =
-            user.Identity?.IsAuthenticated == true;
-
-        currentUserName =
-            user.Identity?.Name ?? string.Empty;
+        isAuthenticated = user.Identity?.IsAuthenticated == true;
+        currentUserName = user.Identity?.Name ?? string.Empty;
     }
 
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void OpenDetails(long advertisementId) =>
+        Navigation.NavigateTo(DetailsUrl(advertisementId));
+
+    private void HandleCardKeyDown(KeyboardEventArgs args, long advertisementId)
+    {
+        if (args.Key == "Enter" || args.Key == " ")
+        {
+            OpenDetails(advertisementId);
+        }
+    }
 
     private void HandlePostAdvertisement()
     {
@@ -2510,143 +1090,91 @@ private void HandleAuthenticationQuery()
         OpenLogin();
     }
 
+    private void OpenAccount() => Navigation.NavigateTo("/account");
 
-    private void OpenAccount()
+    private void OpenMyAdvertisements() => Navigation.NavigateTo("/my-ads");
+
+    private void OpenFavorites()
     {
-        Navigation.NavigateTo("/account");
-    }
-// ============================================================
-// LOAD USER FAVORITES
-// ============================================================
-
-private async Task LoadMyFavoritesAsync()
-{
-    favoriteAdvertisementIds.Clear();
-
-    if (!isAuthenticated)
-    {
-        return;
-    }
-
-    try
-    {
-        var favorites =
-            await PublicFavoritesApiService
-                .GetMyFavoritesAsync();
-
-        foreach (var favorite in favorites)
+        if (!isAuthenticated)
         {
-            favoriteAdvertisementIds.Add(
-                favorite.AdvertisementID);
+            OpenLogin();
+            return;
         }
-    }
-    catch
-    {
-        // Favorite loading should not prevent the marketplace
-        // itself from loading.
-        favoriteAdvertisementIds.Clear();
-    }
-}
-// ============================================================
-// TOGGLE FAVORITE
-// ============================================================
 
-private async Task ToggleFavoriteAsync(
-    long advertisementId)
-{
-    // ------------------------------------------------------------
-    // USER MUST BE AUTHENTICATED
-    // ------------------------------------------------------------
-
-    if (!isAuthenticated)
-    {
-        OpenLogin();
-        return;
-    }
-
-
-    // ------------------------------------------------------------
-    // PREVENT DOUBLE CLICK
-    // ------------------------------------------------------------
-
-    if (favoriteLoadingIds.Contains(advertisementId))
-    {
-        return;
-    }
-
-
-    favoriteLoadingIds.Add(
-        advertisementId);
-
-    try
-    {
-        // --------------------------------------------------------
-        // REMOVE EXISTING FAVORITE
-        // --------------------------------------------------------
-
-        if (favoriteAdvertisementIds.Contains(
-                advertisementId))
-        {
-            await PublicFavoritesApiService
-                .RemoveFavoriteAsync(
-                    advertisementId);
-
-            favoriteAdvertisementIds.Remove(
-                advertisementId);
-        }
-        else
-        {
-            // ----------------------------------------------------
-            // ADD NEW FAVORITE
-            // ----------------------------------------------------
-
-            await PublicFavoritesApiService
-                .AddFavoriteAsync(
-                    advertisementId);
-
-            favoriteAdvertisementIds.Add(
-                advertisementId);
-        }
-    }
-    catch (HttpRequestException)
-    {
-        // Keep the existing UI state if the API operation failed.
-    }
-    catch
-    {
-        // Do not allow a favorite failure to break the page.
-    }
-    finally
-    {
-        favoriteLoadingIds.Remove(
-            advertisementId);
-    }
-}
-
-// ============================================================
-// OPEN FAVORITES
-// ============================================================
-
-private void OpenFavorites()
-{
-    if (!isAuthenticated)
-    {
-        OpenLogin();
-        return;
-    }
-
-    Navigation.NavigateTo(
-        "/my-favorites");
-}
-
-    private void OpenMyAdvertisements()
-    {
-        Navigation.NavigateTo("/my-ads");
+        Navigation.NavigateTo("/my-favorites");
     }
 
 
     // ============================================================
-    // GROUPING (category-first display for the loaded page)
+    // FAVORITES
+    // ============================================================
+
+    private async Task LoadMyFavoritesAsync()
+    {
+        favoriteAdvertisementIds.Clear();
+
+        if (!isAuthenticated)
+        {
+            return;
+        }
+
+        try
+        {
+            var favorites = await PublicFavoritesApiService.GetMyFavoritesAsync();
+
+            foreach (var favorite in favorites)
+            {
+                favoriteAdvertisementIds.Add(favorite.AdvertisementID);
+            }
+        }
+        catch
+        {
+            favoriteAdvertisementIds.Clear();
+        }
+    }
+
+    private async Task ToggleFavoriteAsync(long advertisementId)
+    {
+        if (!isAuthenticated)
+        {
+            OpenLogin();
+            return;
+        }
+
+        if (favoriteLoadingIds.Contains(advertisementId))
+        {
+            return;
+        }
+
+        favoriteLoadingIds.Add(advertisementId);
+
+        try
+        {
+            if (favoriteAdvertisementIds.Contains(advertisementId))
+            {
+                await PublicFavoritesApiService.RemoveFavoriteAsync(advertisementId);
+                favoriteAdvertisementIds.Remove(advertisementId);
+            }
+            else
+            {
+                await PublicFavoritesApiService.AddFavoriteAsync(advertisementId);
+                favoriteAdvertisementIds.Add(advertisementId);
+            }
+        }
+        catch
+        {
+            // Keep existing UI state if the API operation failed.
+        }
+        finally
+        {
+            favoriteLoadingIds.Remove(advertisementId);
+        }
+    }
+
+
+    // ============================================================
+    // GROUPING
     // ============================================================
 
     private IEnumerable<IGrouping<string, AdvertisementResponse>> GroupedAdvertisements()
@@ -2657,54 +1185,29 @@ private void OpenFavorites()
         }
 
         return Advertisements.Items
-            .GroupBy(x =>
-                string.IsNullOrWhiteSpace(x.CategoryName)
-                    ? "Other"
-                    : x.CategoryName);
+            .GroupBy(x => string.IsNullOrWhiteSpace(x.CategoryName) ? "Other" : x.CategoryName);
     }
 
 
     // ============================================================
-    // CAROUSEL HELPERS
+    // CAROUSEL
     // ============================================================
 
-    private int GetImageIndex(long advertisementId)
+    private int GetImageIndex(long id) =>
+        imageIndexByAd.TryGetValue(id, out var index) ? index : 0;
+
+    private void SetImageIndex(long id, int index) => imageIndexByAd[id] = index;
+
+    private void NextImage(long id, int total)
     {
-        return imageIndexByAd.TryGetValue(advertisementId, out var index)
-            ? index
-            : 0;
+        if (total <= 0) return;
+        imageIndexByAd[id] = (GetImageIndex(id) + 1) % total;
     }
 
-
-    private void SetImageIndex(long advertisementId, int index)
+    private void PreviousImage(long id, int total)
     {
-        imageIndexByAd[advertisementId] = index;
-    }
-
-
-    private void NextImage(long advertisementId, int totalImages)
-    {
-        if (totalImages <= 0)
-        {
-            return;
-        }
-
-        var current = GetImageIndex(advertisementId);
-
-        imageIndexByAd[advertisementId] = (current + 1) % totalImages;
-    }
-
-
-    private void PreviousImage(long advertisementId, int totalImages)
-    {
-        if (totalImages <= 0)
-        {
-            return;
-        }
-
-        var current = GetImageIndex(advertisementId);
-
-        imageIndexByAd[advertisementId] = (current - 1 + totalImages) % totalImages;
+        if (total <= 0) return;
+        imageIndexByAd[id] = (GetImageIndex(id) - 1 + total) % total;
     }
 
 
@@ -2725,73 +1228,35 @@ private void OpenFavorites()
         try
         {
             var result =
-                await AdvertisementApiService
-                    .GetPublishedAdvertisementsAsync(
-                        pageNumber: currentPage,
-                        pageSize: PageSize,
-                        search: searchText,
-                        categoryId: categoryId,
-                        typeId: typeId,
-                        countryId: countryId,
-                        stateId: stateId,
-                        cityId: cityId,
-                        areaId: areaId,
-                        minPrice: minPrice,
-                        maxPrice: maxPrice);
-                    // ^ sortBy/sortDirection added here so the Sort control
-                    // actually does something. If GetPublishedAdvertisementsAsync
-                    // does not yet declare these two parameters, this line
-                    // will fail to compile — add them to that method's
-                    // signature (and pass them into the underlying query),
-                    // or remove these two named arguments here and tell me
-                    // the method's real signature so I can wire it up
-                    // correctly instead.
+                await AdvertisementApiService.GetPublishedAdvertisementsAsync(
+                    pageNumber: currentPage,
+                    pageSize: PageSize,
+                    search: searchText,
+                    categoryId: categoryId,
+                    typeId: typeId,
+                    countryId: countryId,
+                    stateId: stateId,
+                    cityId: cityId,
+                    areaId: areaId,
+                    minPrice: minPrice,
+                    maxPrice: maxPrice);
 
             if (result is null)
             {
                 Advertisements = new();
-
-                Categories = new();
-                AdvertisementTypes = new();
-
                 loadError = true;
-
                 return;
             }
 
             Advertisements = result;
 
             BuildFilterOptions();
-
             ApplyClientSideFilters();
-
             ApplySortOrder();
-        }
-        catch (HttpRequestException)
-        {
-            Advertisements = new();
-
-            Categories = new();
-            AdvertisementTypes = new();
-
-            loadError = true;
-        }
-        catch (TaskCanceledException)
-        {
-            Advertisements = new();
-
-            Categories = new();
-            AdvertisementTypes = new();
-
-            loadError = true;
         }
         catch
         {
             Advertisements = new();
-
-            Categories = new();
-            AdvertisementTypes = new();
-
             loadError = true;
         }
         finally
@@ -2800,152 +1265,72 @@ private void OpenFavorites()
         }
     }
 
-
-    // ============================================================
-    // BUILD FILTER OPTIONS
-    // ============================================================
-
+    // Merges options into the existing lists so category chips do not
+    // disappear after a category is selected.
     private void BuildFilterOptions()
     {
         var items = Advertisements.Items;
 
-        if (items is null ||
-            items.Count == 0)
+        if (items is null || items.Count == 0)
         {
-            Categories = new();
-
-            AdvertisementTypes = new();
-
             return;
         }
 
+        foreach (var x in items.Where(x => x.CategoryID > 0 && !string.IsNullOrWhiteSpace(x.CategoryName)))
+        {
+            if (Categories.All(c => c.CategoryID != x.CategoryID))
+            {
+                Categories.Add(new CategoryOption { CategoryID = x.CategoryID, CategoryName = x.CategoryName });
+            }
+        }
 
-        Categories =
-            items
-                .Where(x =>
-                    x.CategoryID > 0 &&
-                    !string.IsNullOrWhiteSpace(
-                        x.CategoryName))
-                .GroupBy(x => new
-                {
-                    x.CategoryID,
-                    x.CategoryName
-                })
-                .Select(x =>
-                    new CategoryOption
-                    {
-                        CategoryID =
-                            x.Key.CategoryID,
+        foreach (var x in items.Where(x => x.AdvertisementTypeID > 0 && !string.IsNullOrWhiteSpace(x.AdvertisementTypeName)))
+        {
+            if (AdvertisementTypes.All(t => t.AdvertisementTypeID != x.AdvertisementTypeID))
+            {
+                AdvertisementTypes.Add(new AdvertisementTypeOption { AdvertisementTypeID = x.AdvertisementTypeID, TypeName = x.AdvertisementTypeName });
+            }
+        }
 
-                        CategoryName =
-                            x.Key.CategoryName
-                    })
-                .OrderBy(x =>
-                    x.CategoryName)
-                .ToList();
-
-
-        AdvertisementTypes =
-            items
-                .Where(x =>
-                    x.AdvertisementTypeID > 0 &&
-                    !string.IsNullOrWhiteSpace(
-                        x.AdvertisementTypeName))
-                .GroupBy(x => new
-                {
-                    x.AdvertisementTypeID,
-                    x.AdvertisementTypeName
-                })
-                .Select(x =>
-                    new AdvertisementTypeOption
-                    {
-                        AdvertisementTypeID =
-                            x.Key.AdvertisementTypeID,
-
-                        TypeName =
-                            x.Key.AdvertisementTypeName
-                    })
-                .OrderBy(x =>
-                    x.TypeName)
-                .ToList();
+        Categories = Categories.OrderBy(x => x.CategoryName).ToList();
+        AdvertisementTypes = AdvertisementTypes.OrderBy(x => x.TypeName).ToList();
     }
-
-
-    // ============================================================
-    // CLIENT-SIDE FILTERS
-    // (see the note on negotiableFilterEnabled/featuredFilterEnabled
-    // above — these only see the current page, not the full result set)
-    // ============================================================
 
     private void ApplyClientSideFilters()
     {
-        if (Advertisements.Items is null ||
-            Advertisements.Items.Count == 0)
+        if (Advertisements.Items is null || Advertisements.Items.Count == 0)
         {
             return;
         }
 
-
-        IEnumerable<AdvertisementResponse> filteredItems =
-            Advertisements.Items;
-
+        IEnumerable<AdvertisementResponse> filtered = Advertisements.Items;
 
         if (negotiableFilterEnabled)
         {
-            filteredItems =
-                filteredItems
-                    .Where(x =>
-                        x.IsNegotiable);
+            filtered = filtered.Where(x => x.IsNegotiable);
         }
-
 
         if (featuredFilterEnabled)
         {
-            filteredItems =
-                filteredItems
-                    .Where(x =>
-                        x.IsFeatured);
+            filtered = filtered.Where(x => x.IsFeatured);
         }
-
 
         if (minBedrooms.HasValue)
         {
-            filteredItems =
-                filteredItems
-                    .Where(x =>
-                        x.Bedrooms.HasValue &&
-                        x.Bedrooms.Value >=
-                        minBedrooms.Value);
+            filtered = filtered.Where(x => x.Bedrooms.HasValue && x.Bedrooms.Value >= minBedrooms.Value);
         }
-
 
         if (minBathrooms.HasValue)
         {
-            filteredItems =
-                filteredItems
-                    .Where(x =>
-                        x.Bathrooms.HasValue &&
-                        x.Bathrooms.Value >=
-                        minBathrooms.Value);
+            filtered = filtered.Where(x => x.Bathrooms.HasValue && x.Bathrooms.Value >= minBathrooms.Value);
         }
 
-
-        Advertisements.Items =
-            filteredItems.ToList();
+        Advertisements.Items = filtered.ToList();
     }
-
-        // ============================================================
-    // CLIENT-SIDE SORT
-    // GetPublishedAdvertisementsAsync has no sortBy/sortDirection
-    // parameters, so this sorts only the items already on the
-    // current page — same limitation as the four checkbox filters
-    // above, not a true across-all-pages sort.
-    // ============================================================
 
     private void ApplySortOrder()
     {
-        if (Advertisements.Items is null ||
-            Advertisements.Items.Count == 0)
+        if (Advertisements.Items is null || Advertisements.Items.Count == 0)
         {
             return;
         }
@@ -2970,161 +1355,72 @@ private void OpenFavorites()
 
 
     // ============================================================
-    // SEARCH
+    // SEARCH / FILTER ACTIONS
     // ============================================================
+
+    private void ToggleFilters() => showFilters = !showFilters;
 
     private async Task SearchAdvertisements()
     {
         currentPage = 1;
-
         await LoadAdvertisementsAsync();
     }
 
-
-    // ============================================================
-    // APPLY FILTERS
-    // ============================================================
+    private async Task ClearSearchAsync()
+    {
+        searchText = string.Empty;
+        await SearchAdvertisements();
+    }
 
     private async Task ApplyFilters()
     {
         currentPage = 1;
-
         await LoadAdvertisementsAsync();
     }
-
-
-    // ============================================================
-    // CLEAR FILTERS
-    // ============================================================
 
     private async Task ClearFilters()
     {
         searchText = string.Empty;
-
         categoryId = null;
-
         typeId = null;
-
         countryId = null;
-
         stateId = null;
-
         cityId = null;
-
         areaId = null;
-
         minPrice = null;
-
         maxPrice = null;
-
         minBedrooms = null;
-
         minBathrooms = null;
-
         negotiableFilterEnabled = false;
-
         featuredFilterEnabled = false;
-
         sortBy = "createddate";
-
         sortDirection = "desc";
-
         currentPage = 1;
 
         await LoadAdvertisementsAsync();
     }
 
-
-    // ============================================================
-    // CATEGORY
-    // ============================================================
-
-    private async Task SelectCategory(
-        int selectedCategoryId)
+    private async Task SelectCategory(int? selectedCategoryId, bool scrollToResults = false)
     {
         categoryId = selectedCategoryId;
-
         currentPage = 1;
 
         await LoadAdvertisementsAsync();
-    }
 
-
-    // ============================================================
-    // PAGINATION
-    // ============================================================
-
-    private async Task GoToPage(int page)
-    {
-        if (page < 1 ||
-            page > Advertisements.TotalPages)
+        if (scrollToResults)
         {
-            return;
+            Navigation.NavigateTo("#browse");
         }
-
-
-        if (isLoading)
-        {
-            return;
-        }
-
-
-        currentPage = page;
-
-        await LoadAdvertisementsAsync();
     }
-
-
-    private async Task PreviousPage()
-    {
-        if (currentPage <= 1 ||
-            isLoading)
-        {
-            return;
-        }
-
-
-        currentPage--;
-
-        await LoadAdvertisementsAsync();
-    }
-
-
-    private async Task NextPage()
-    {
-        if (currentPage >= Advertisements.TotalPages ||
-            isLoading)
-        {
-            return;
-        }
-
-
-        currentPage++;
-
-        await LoadAdvertisementsAsync();
-    }
-
-
-    // ============================================================
-    // POPULAR SEARCH
-    // ============================================================
 
     private async Task SetSearch(string value)
     {
         searchText = value;
-
         currentPage = 1;
-
         await LoadAdvertisementsAsync();
     }
 
-
-    // ============================================================
-    // SEARCH KEYBOARD
-    // ============================================================
-
-    private async Task HandleSearchKeyDown(
-        KeyboardEventArgs args)
+    private async Task HandleSearchKeyDown(KeyboardEventArgs args)
     {
         if (args.Key == "Enter")
         {
@@ -3134,108 +1430,84 @@ private void OpenFavorites()
 
 
     // ============================================================
-    // OPEN LOGIN
+    // PAGINATION
+    // ============================================================
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > Advertisements.TotalPages || isLoading)
+        {
+            return;
+        }
+
+        currentPage = page;
+        await LoadAdvertisementsAsync();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage <= 1 || isLoading) return;
+        currentPage--;
+        await LoadAdvertisementsAsync();
+    }
+
+    private async Task NextPage()
+    {
+        if (currentPage >= Advertisements.TotalPages || isLoading) return;
+        currentPage++;
+        await LoadAdvertisementsAsync();
+    }
+
+
+    // ============================================================
+    // AUTH MODAL
     // ============================================================
 
     private void OpenLogin()
     {
         errorMessage = null;
-
         signupMessage = null;
-
         showPassword = false;
-
         authMode = AuthMode.SignIn;
-
         showAuthModal = true;
     }
-
-
-    // ============================================================
-    // OPEN SIGN UP
-    // ============================================================
 
     private void OpenSignup()
     {
         errorMessage = null;
-
         signupMessage = null;
-
         showPassword = false;
-
         authMode = AuthMode.SignUp;
-
         showAuthModal = true;
     }
 
-
-    // ============================================================
-    // CLOSE AUTH MODAL
-    // ============================================================
-
     private void CloseAuthModal()
     {
-        if (isLoginLoading)
-        {
-            return;
-        }
-
+        if (isLoginLoading) return;
 
         showAuthModal = false;
-
         errorMessage = null;
-
         signupMessage = null;
-
         showPassword = false;
     }
-
-
-    // ============================================================
-    // SIGN IN TAB
-    // ============================================================
 
     private void ShowSignIn()
     {
         authMode = AuthMode.SignIn;
-
         errorMessage = null;
-
         signupMessage = null;
-
         showPassword = false;
     }
-
-
-    // ============================================================
-    // SIGN UP TAB
-    // ============================================================
 
     private void ShowSignUp()
     {
         authMode = AuthMode.SignUp;
-
         errorMessage = null;
-
         signupMessage = null;
-
         showPassword = false;
     }
 
-
-    // ============================================================
-    // PASSWORD
-    // ============================================================
-
-    private void TogglePassword()
-    {
-        showPassword = !showPassword;
-    }
-
-
-    // ============================================================
-    // LOGIN
-    // ============================================================
+    private void TogglePassword() => showPassword = !showPassword;
 
     private async Task HandleLogin()
     {
@@ -3244,26 +1516,19 @@ private void OpenFavorites()
 
         try
         {
-            var result =
-                await AuthApiService.LoginAsync(
-                    loginModel.Email,
-                    loginModel.Password);
+            var result = await AuthApiService.LoginAsync(loginModel.Email, loginModel.Password);
 
             if (result is null)
             {
-                errorMessage =
-                    "Invalid email address or password.";
-
+                errorMessage = "Invalid email address or password.";
                 return;
             }
 
             if (!result.Success)
             {
-                errorMessage =
-                    string.IsNullOrWhiteSpace(result.Message)
-                        ? "Login failed. Please check your credentials."
-                        : result.Message;
-
+                errorMessage = string.IsNullOrWhiteSpace(result.Message)
+                    ? "Login failed. Please check your credentials."
+                    : result.Message;
                 return;
             }
 
@@ -3279,7 +1544,9 @@ private void OpenFavorites()
 
             isAuthenticated = true;
             currentUserName = result.UserName;
+
             await LoadMyFavoritesAsync();
+
             showAuthModal = false;
             errorMessage = null;
             showPassword = false;
@@ -3288,13 +1555,11 @@ private void OpenFavorites()
         }
         catch (HttpRequestException)
         {
-            errorMessage =
-                "Unable to connect to the authentication service. Please try again.";
+            errorMessage = "Unable to connect to the authentication service. Please try again.";
         }
         catch
         {
-            errorMessage =
-                "An unexpected error occurred while signing in.";
+            errorMessage = "An unexpected error occurred while signing in.";
         }
         finally
         {
@@ -3302,58 +1567,33 @@ private void OpenFavorites()
         }
     }
 
+    private void ClearError() => errorMessage = null;
 
-    // ============================================================
-    // CLEAR LOGIN ERROR
-    // ============================================================
-
-    private void ClearError()
-    {
-        errorMessage = null;
-    }
-
-
-    // ============================================================
-    // FORGOT PASSWORD
-    // ============================================================
-
-    private void ForgotPassword()
-    {
-        errorMessage =
-            "Please contact the HR INFO ADs administrator to reset your password.";
-    }
-
+    private void ForgotPassword() =>
+        errorMessage = "Please contact the HR INFO ADs administrator to reset your password.";
 
     private void HandleSignOut()
-{
-    AuthenticationStateProvider.SignOut();
-
-    isAuthenticated = false;
-    currentUserName = string.Empty;
-
-    favoriteAdvertisementIds.Clear();
-    favoriteLoadingIds.Clear();
-
-    showAuthModal = false;
-    errorMessage = null;
-    signupMessage = null;
-    showPassword = false;
-}
-
-
-    // ============================================================
-    // SIGN-UP REQUEST
-    // ============================================================
-
-    private void RequestRegistration()
     {
-        signupMessage =
-            "Account registration is currently handled by the HR INFO ADs administration team.";
+        AuthenticationStateProvider.SignOut();
+
+        isAuthenticated = false;
+        currentUserName = string.Empty;
+
+        favoriteAdvertisementIds.Clear();
+        favoriteLoadingIds.Clear();
+
+        showAuthModal = false;
+        errorMessage = null;
+        signupMessage = null;
+        showPassword = false;
     }
 
+    private void RequestRegistration() =>
+        signupMessage = "Account registration is currently handled by the HR INFO ADs administration team.";
+
 
     // ============================================================
-    // AUTH MODE
+    // MODELS
     // ============================================================
 
     private enum AuthMode
@@ -3362,65 +1602,31 @@ private void OpenFavorites()
         SignUp
     }
 
-
-    // ============================================================
-    // LOGIN MODEL
-    // ============================================================
-
     private sealed class LoginModel
     {
-        [Required(
-            ErrorMessage = "Email address is required.")]
-        [EmailAddress(
-            ErrorMessage = "Please enter a valid email address.")]
-        public string Email { get; set; } =
-            string.Empty;
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
 
-
-        [Required(
-            ErrorMessage = "Password is required.")]
-        public string Password { get; set; } =
-            string.Empty;
+        [Required(ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
     }
-
-
-    // ============================================================
-    // SIGN-UP MODEL
-    // ============================================================
 
     private sealed class SignupModel
     {
-        public string FullName { get; set; } =
-            string.Empty;
-
-        public string Email { get; set; } =
-            string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
     }
-
-
-    // ============================================================
-    // CATEGORY OPTION
-    // ============================================================
 
     private sealed class CategoryOption
     {
         public int CategoryID { get; set; }
-
-        public string CategoryName { get; set; } =
-            string.Empty;
+        public string CategoryName { get; set; } = string.Empty;
     }
-
-
-    // ============================================================
-    // ADVERTISEMENT TYPE OPTION
-    // ============================================================
 
     private sealed class AdvertisementTypeOption
     {
         public int AdvertisementTypeID { get; set; }
-
-        public string TypeName { get; set; } =
-            string.Empty;
+        public string TypeName { get; set; } = string.Empty;
     }
-
 }

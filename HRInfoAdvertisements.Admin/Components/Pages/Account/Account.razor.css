@@ -1,0 +1,1479 @@
+/* ============================================================
+   HR INFO ADs
+   PUBLIC ACCOUNT PAGE
+   Account.razor.css
+   BLUE / NAVY MARKETPLACE THEME
+   ============================================================ */
+
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.account-page {
+    --blue-50: #f4f8ff;
+    --blue-100: #e8f1ff;
+    --blue-200: #cfe0ff;
+    --blue-300: #9fc2ff;
+    --blue-400: #6fa5ff;
+    --blue-500: #3f82f7;
+    --blue-600: #2868d7;
+    --blue-700: #1d4fa8;
+    --blue-800: #153a7c;
+    --blue-900: #0b2758;
+
+    --navy: #071d41;
+    --text: #172033;
+    --muted: #68758a;
+    --light-text: #98a3b4;
+
+    --white: #ffffff;
+    --surface: #f7f9fc;
+    --border: #e3e8f0;
+
+    --green: #16a34a;
+    --orange: #f59e0b;
+    --red: #dc3545;
+
+    --radius-sm: 10px;
+    --radius-md: 15px;
+    --radius-lg: 22px;
+    --radius-xl: 30px;
+
+    --shadow-sm: 0 5px 20px rgba(10, 40, 90, 0.06);
+    --shadow-md: 0 14px 40px rgba(10, 40, 90, 0.10);
+    --shadow-lg: 0 25px 70px rgba(10, 40, 90, 0.16);
+
+    width: 100%;
+    min-height: 100vh;
+
+    overflow-x: hidden;
+
+    color: var(--text);
+
+    background:
+        radial-gradient(
+            circle at 5% 5%,
+            rgba(63, 130, 247, 0.08),
+            transparent 25%
+        ),
+        radial-gradient(
+            circle at 95% 20%,
+            rgba(40, 104, 215, 0.07),
+            transparent 25%
+        ),
+        #f7f9fc;
+
+    font-family:
+        Inter,
+        "Segoe UI",
+        Roboto,
+        Arial,
+        sans-serif;
+
+    line-height: 1.5;
+}
+
+
+/* ============================================================
+   ACCOUNT CONTEXT BAR
+   ============================================================ */
+
+.account-page-context {
+    width: calc(100% - 48px);
+    max-width: 1440px;
+    min-height: 72px;
+
+    margin: 18px auto 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 12px 16px 12px 14px;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+/* ============================================================
+   CONTEXT LEFT
+   ============================================================ */
+
+.account-context-left {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.account-context-icon {
+    flex: 0 0 38px;
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--white);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--blue-800) 0%,
+            var(--blue-600) 58%,
+            var(--blue-500) 100%
+        );
+
+    border-radius: var(--radius-sm);
+
+    box-shadow:
+        0 5px 14px rgba(40, 104, 215, 0.20);
+}
+
+
+.account-context-icon i {
+    font-size: 18px;
+}
+
+
+.account-context-text {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.account-context-eyebrow {
+    color: var(--blue-700);
+
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1.2;
+
+    letter-spacing: 0.11em;
+}
+
+
+.account-context-description {
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.4;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   CONTEXT BUTTON
+   ============================================================ */
+
+.account-context-button {
+    flex: 0 0 auto;
+
+    height: 38px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 15px;
+
+    color: var(--blue-700);
+
+    background: var(--white);
+
+    border: 1px solid var(--blue-200);
+    border-radius: 9px;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.account-context-button:hover {
+    background: var(--blue-50);
+
+    border-color: var(--blue-300);
+
+    color: var(--blue-800);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 13px rgba(10, 40, 90, 0.07);
+}
+
+
+.account-context-button i {
+    font-size: 14px;
+}
+
+
+/* ============================================================
+   MAIN
+   ============================================================ */
+
+.account-main {
+    width: calc(100% - 48px);
+    max-width: 1440px;
+
+    margin: 0 auto;
+
+    padding: 26px 0 60px;
+}
+
+
+/* ============================================================
+   HERO
+   ============================================================ */
+
+.account-hero {
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.35fr)
+        minmax(340px, 0.65fr);
+
+    gap: 28px;
+
+    min-height: 390px;
+
+    padding: 48px;
+
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 100% 0%,
+            rgba(63, 130, 247, 0.11),
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at 0% 100%,
+            rgba(40, 104, 215, 0.07),
+            transparent 30%
+        ),
+        var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow-md);
+}
+
+
+/* ============================================================
+   AUTHENTICATED HERO
+   ============================================================ */
+
+.authenticated-account-hero {
+    min-height: 420px;
+
+    grid-template-columns:
+        minmax(0, 1.35fr)
+        minmax(340px, 0.65fr);
+}
+
+
+/* ============================================================
+   HERO DECORATIVE LINE
+   ============================================================ */
+
+.account-hero::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 4px;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--blue-800) 0%,
+            var(--blue-600) 55%,
+            var(--blue-400) 100%
+        );
+}
+
+
+/* ============================================================
+   HERO CONTENT
+   ============================================================ */
+
+.account-hero-content {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+
+    max-width: 700px;
+}
+
+
+.account-hero-eyebrow {
+    margin-bottom: 12px;
+
+    color: var(--blue-600);
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.14em;
+}
+
+
+.account-hero-content h1 {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: clamp(34px, 4vw, 54px);
+    font-weight: 800;
+
+    line-height: 1.08;
+
+    letter-spacing: -0.035em;
+}
+
+
+.account-hero-content h1 span {
+    display: block;
+
+    color: var(--blue-600);
+}
+
+
+.account-hero-description {
+    max-width: 610px;
+
+    margin: 20px 0 0;
+
+    color: var(--muted);
+
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+
+/* ============================================================
+   AUTHENTICATED USER SUMMARY
+   ============================================================ */
+
+.account-user-summary {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-top: 22px;
+}
+
+
+.account-user-summary-item {
+    min-width: 190px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    padding: 10px 13px;
+
+    background: rgba(255, 255, 255, 0.86);
+
+    border: 1px solid var(--border);
+    border-radius: 11px;
+
+    box-shadow:
+        0 4px 12px rgba(10, 40, 90, 0.035);
+}
+
+
+.account-user-summary-icon {
+    flex: 0 0 34px;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--blue-700);
+
+    background: var(--blue-50);
+
+    border: 1px solid var(--blue-100);
+    border-radius: 9px;
+}
+
+
+.account-user-summary-icon i {
+    font-size: 15px;
+}
+
+
+.account-user-summary-item > div {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+}
+
+
+.account-user-summary-item small {
+    color: var(--light-text);
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: 0.10em;
+}
+
+
+.account-user-summary-item strong {
+    max-width: 220px;
+
+    color: var(--text);
+
+    font-size: 12px;
+    font-weight: 750;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* ============================================================
+   HERO ACTIONS
+   ============================================================ */
+
+.account-hero-actions {
+    display: flex;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-top: 30px;
+}
+
+
+/* ============================================================
+   PRIMARY BUTTON
+   ============================================================ */
+
+.account-primary-button {
+    min-height: 48px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    padding: 0 18px;
+
+    color: var(--white);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--blue-800) 0%,
+            var(--blue-700) 45%,
+            var(--blue-500) 100%
+        );
+
+    border: 0;
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 18px rgba(29, 79, 168, 0.20);
+
+    transition:
+        transform 0.22s ease,
+        box-shadow 0.22s ease,
+        filter 0.22s ease;
+}
+
+
+.account-primary-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 12px 25px rgba(29, 79, 168, 0.25);
+
+    filter: brightness(1.04);
+}
+
+
+.account-button-icon {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.13);
+
+    border-radius: 7px;
+}
+
+
+.account-button-icon i {
+    font-size: 14px;
+}
+
+
+.account-button-arrow {
+    margin-left: 4px;
+
+    font-size: 13px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+.account-primary-button:hover .account-button-arrow {
+    transform: translateX(3px);
+}
+
+
+/* ============================================================
+   SECONDARY BUTTON
+   ============================================================ */
+
+.account-secondary-button {
+    min-height: 48px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    padding: 0 18px;
+
+    color: var(--blue-700);
+
+    background: var(--white);
+
+    border: 1px solid var(--blue-200);
+    border-radius: 10px;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.account-secondary-button:hover {
+    background: var(--blue-50);
+
+    border-color: var(--blue-300);
+
+    color: var(--blue-800);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 16px rgba(10, 40, 90, 0.07);
+}
+
+
+.account-secondary-button i {
+    font-size: 15px;
+}
+
+
+/* ============================================================
+   HERO ACCOUNT CARD
+   ============================================================ */
+
+.account-hero-card {
+    position: relative;
+    z-index: 1;
+
+    align-self: center;
+
+    padding: 26px;
+
+    background:
+        linear-gradient(
+            145deg,
+            var(--blue-800) 0%,
+            var(--blue-700) 50%,
+            var(--blue-900) 100%
+        );
+
+    border-radius: 17px;
+
+    color: var(--white);
+
+    box-shadow:
+        0 18px 34px rgba(10, 40, 90, 0.20);
+}
+
+
+/* ============================================================
+   AUTHENTICATED ACCOUNT CARD
+   ============================================================ */
+
+.authenticated-account-hero .account-hero-card {
+    background:
+        linear-gradient(
+            145deg,
+            var(--blue-700) 0%,
+            var(--blue-800) 50%,
+            var(--navy) 100%
+        );
+
+    box-shadow:
+        0 20px 38px rgba(10, 40, 90, 0.23);
+}
+
+
+.account-hero-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 22px;
+}
+
+
+.account-hero-card-icon {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+}
+
+
+.account-hero-card-icon i {
+    font-size: 21px;
+}
+
+
+.account-hero-card-status {
+    color: rgba(255, 255, 255, 0.70);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.13em;
+}
+
+
+.account-hero-card-title {
+    color: var(--white);
+
+    font-size: 22px;
+    font-weight: 600;
+
+    line-height: 1.3;
+}
+
+
+.account-hero-card-title strong {
+    color: var(--blue-300);
+
+    font-weight: 800;
+}
+
+
+.account-hero-card p {
+    margin: 10px 0 0;
+
+    color: rgba(255, 255, 255, 0.70);
+
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+
+.account-hero-card-divider {
+    height: 1px;
+
+    margin: 21px 0;
+
+    background: rgba(255, 255, 255, 0.12);
+}
+
+
+/* ============================================================
+   MINI FEATURES
+   ============================================================ */
+
+.account-mini-feature {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-top: 13px;
+}
+
+
+.account-mini-feature > span {
+    flex: 0 0 22px;
+
+    width: 22px;
+    height: 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--blue-300);
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border-radius: 6px;
+}
+
+
+.account-mini-feature > span i {
+    font-size: 13px;
+}
+
+
+.account-mini-feature div {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 1px;
+}
+
+
+.account-mini-feature strong {
+    color: var(--white);
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.account-mini-feature small {
+    color: rgba(255, 255, 255, 0.57);
+
+    font-size: 10px;
+    line-height: 1.4;
+
+    overflow-wrap: anywhere;
+}
+
+
+/* ============================================================
+   FEATURES SECTION
+   ============================================================ */
+
+.account-features-section {
+    margin-top: 54px;
+}
+
+
+.account-section-heading {
+    max-width: 650px;
+
+    margin: 0 auto 26px;
+
+    text-align: center;
+}
+
+
+.account-section-eyebrow {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: var(--blue-600);
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.14em;
+}
+
+
+.account-section-heading h2 {
+    margin: 0;
+
+    color: var(--navy);
+
+    font-size: 27px;
+    font-weight: 800;
+
+    letter-spacing: -0.02em;
+}
+
+
+.account-section-heading p {
+    margin: 9px 0 0;
+
+    color: var(--muted);
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+
+/* ============================================================
+   FEATURE GRID
+   ============================================================ */
+
+.account-feature-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+
+    gap: 15px;
+}
+
+
+/* ============================================================
+   FEATURE CARD
+   ============================================================ */
+
+.account-feature-card {
+    position: relative;
+
+    min-height: 205px;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 23px;
+
+    overflow: hidden;
+
+    background: var(--white);
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    box-shadow:
+        0 5px 16px rgba(10, 40, 90, 0.04);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+
+/* Cards that have @onclick */
+
+.account-feature-card[onclick] {
+    cursor: pointer;
+}
+
+
+.account-feature-card:hover {
+    transform: translateY(-4px);
+
+    border-color: var(--blue-200);
+
+    box-shadow:
+        0 14px 28px rgba(10, 40, 90, 0.09);
+}
+
+
+.account-feature-card:active {
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   FEATURE ICON
+   ============================================================ */
+
+.account-feature-icon {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 18px;
+
+    color: var(--blue-700);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--blue-50),
+            var(--blue-100)
+        );
+
+    border: 1px solid var(--blue-200);
+    border-radius: 11px;
+}
+
+
+.account-feature-icon i {
+    font-size: 18px;
+}
+
+
+/* ============================================================
+   FEATURE CONTENT
+   ============================================================ */
+
+.account-feature-content {
+    position: relative;
+    z-index: 1;
+}
+
+
+.account-feature-content h3 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 14px;
+    font-weight: 800;
+}
+
+
+.account-feature-content p {
+    margin: 8px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.65;
+}
+
+
+/* ============================================================
+   FEATURE NUMBER
+   ============================================================ */
+
+.account-feature-number {
+    position: absolute;
+
+    right: 18px;
+    bottom: 13px;
+
+    color: rgba(40, 104, 215, 0.07);
+
+    font-size: 32px;
+    font-weight: 900;
+
+    line-height: 1;
+}
+
+
+/* ============================================================
+   POST ADVERTISEMENT CTA
+   ============================================================ */
+
+.account-post-cta {
+    display: flex;
+    align-items: center;
+
+    gap: 18px;
+
+    margin-top: 26px;
+
+    padding: 21px 23px;
+
+    background:
+        linear-gradient(
+            100deg,
+            var(--blue-50) 0%,
+            var(--white) 100%
+        );
+
+    border: 1px solid var(--border);
+    border-radius: 14px;
+
+    box-shadow:
+        0 5px 17px rgba(10, 40, 90, 0.04);
+}
+
+
+.account-post-cta-icon {
+    flex: 0 0 45px;
+
+    width: 45px;
+    height: 45px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: var(--white);
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--blue-800),
+            var(--blue-600)
+        );
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 6px 14px rgba(40, 104, 215, 0.18);
+}
+
+
+.account-post-cta-icon i {
+    font-size: 19px;
+}
+
+
+.account-post-cta-content {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.account-post-cta-eyebrow {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: var(--blue-600);
+
+    font-size: 9px;
+    font-weight: 800;
+
+    letter-spacing: 0.13em;
+}
+
+
+.account-post-cta-content h2 {
+    margin: 0;
+
+    color: var(--text);
+
+    font-size: 17px;
+    font-weight: 800;
+}
+
+
+.account-post-cta-content p {
+    margin: 4px 0 0;
+
+    color: var(--muted);
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+
+.account-post-cta-button {
+    flex: 0 0 auto;
+
+    min-height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    padding: 0 16px;
+
+    color: var(--blue-700);
+
+    background: var(--white);
+
+    border: 1px solid var(--blue-200);
+    border-radius: 9px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.account-post-cta-button:hover {
+    background: var(--blue-50);
+
+    border-color: var(--blue-300);
+
+    color: var(--blue-800);
+
+    transform: translateX(2px);
+}
+
+
+.account-post-cta-button i {
+    font-size: 13px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+.account-post-cta-button:hover i {
+    transform: translateX(3px);
+}
+
+
+/* ============================================================
+   RESPONSIVE — 1200px
+   ============================================================ */
+
+@media (max-width: 1200px) {
+
+    .account-hero {
+        grid-template-columns:
+            minmax(0, 1.2fr)
+            minmax(320px, 0.8fr);
+
+        padding: 40px;
+    }
+
+    .authenticated-account-hero {
+        min-height: 430px;
+    }
+
+    .account-user-summary-item {
+        min-width: 175px;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE — 1100px
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .account-hero {
+        grid-template-columns:
+            minmax(0, 1.15fr)
+            minmax(300px, 0.85fr);
+
+        padding: 38px;
+    }
+
+    .account-feature-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+    .account-user-summary {
+        max-width: 620px;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE — 800px
+   ============================================================ */
+
+@media (max-width: 800px) {
+
+    .account-page-context {
+        width: calc(100% - 32px);
+    }
+
+    .account-main {
+        width: calc(100% - 32px);
+    }
+
+    .account-hero,
+    .authenticated-account-hero {
+        grid-template-columns: 1fr;
+
+        min-height: auto;
+
+        padding: 34px;
+    }
+
+    .account-hero-content {
+        max-width: none;
+    }
+
+    .account-hero-card {
+        width: 100%;
+        max-width: 520px;
+
+        margin: 0 auto;
+    }
+
+    .account-user-summary {
+        max-width: none;
+    }
+
+    .account-user-summary-item {
+        flex: 1 1 220px;
+    }
+
+    .account-feature-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE — 600px
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    .account-page-context {
+        width: calc(100% - 24px);
+
+        align-items: flex-start;
+
+        padding: 11px;
+    }
+
+    .account-context-description {
+        white-space: normal;
+    }
+
+    .account-context-button {
+        width: 38px;
+
+        padding: 0;
+    }
+
+    .account-context-button span {
+        display: none;
+    }
+
+    .account-main {
+        width: calc(100% - 24px);
+
+        padding-top: 18px;
+        padding-bottom: 40px;
+    }
+
+    .account-hero,
+    .authenticated-account-hero {
+        padding: 28px 22px;
+
+        border-radius: 16px;
+    }
+
+    .account-hero-content h1 {
+        font-size: 36px;
+    }
+
+    .account-hero-description {
+        font-size: 14px;
+    }
+
+    .account-user-summary {
+        flex-direction: column;
+
+        gap: 9px;
+    }
+
+    .account-user-summary-item {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .account-user-summary-item strong {
+        max-width: 100%;
+    }
+
+    .account-hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .account-primary-button,
+    .account-secondary-button {
+        width: 100%;
+    }
+
+    .account-feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .account-post-cta {
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+    }
+
+    .account-post-cta-content {
+        min-width: calc(100% - 70px);
+    }
+
+    .account-post-cta-button {
+        width: 100%;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE — 420px
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+    .account-context-left {
+        gap: 9px;
+    }
+
+    .account-context-icon {
+        flex-basis: 34px;
+
+        width: 34px;
+        height: 34px;
+    }
+
+    .account-context-icon i {
+        font-size: 16px;
+    }
+
+    .account-context-eyebrow {
+        font-size: 9px;
+    }
+
+    .account-context-description {
+        font-size: 11px;
+    }
+
+    .account-hero,
+    .authenticated-account-hero {
+        padding: 25px 18px;
+    }
+
+    .account-hero-content h1 {
+        font-size: 31px;
+    }
+
+    .account-hero-card {
+        padding: 21px;
+    }
+
+    .account-hero-card-title {
+        font-size: 20px;
+    }
+
+    .account-section-heading h2 {
+        font-size: 23px;
+    }
+
+    .account-feature-card {
+        min-height: 190px;
+
+        padding: 20px;
+    }
+
+    .account-user-summary-item {
+        padding: 9px 10px;
+    }
+}
+
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+.account-primary-button:focus-visible,
+.account-secondary-button:focus-visible,
+.account-context-button:focus-visible,
+.account-post-cta-button:focus-visible,
+.account-feature-card[onclick]:focus-visible {
+    outline: 3px solid rgba(63, 130, 247, 0.24);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .account-primary-button,
+    .account-secondary-button,
+    .account-context-button,
+    .account-feature-card,
+    .account-post-cta-button,
+    .account-button-arrow,
+    .account-post-cta-button i {
+        transition: none;
+    }
+}

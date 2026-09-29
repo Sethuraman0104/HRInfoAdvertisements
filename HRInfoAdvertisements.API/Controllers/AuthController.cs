@@ -151,6 +151,56 @@ public class AuthController : ControllerBase
         });
     }
 
+
+[HttpPost("change-password")]
+[Authorize]
+public async Task<IActionResult> ChangePassword(
+    [FromBody] ChangePasswordRequest request)
+{
+    if (!ModelState.IsValid)
+    {
+        return ValidationProblem(ModelState);
+    }
+
+    var userIdClaim =
+        User.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value;
+
+    if (!long.TryParse(
+            userIdClaim,
+            out var userId))
+    {
+        return Unauthorized(new
+        {
+            Success = false,
+            Message = "Invalid user identity."
+        });
+    }
+
+    var result =
+        await _authService.ChangePasswordAsync(
+            userId,
+            request);
+
+    if (!result)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message =
+                "The current password is incorrect, " +
+                "the new password is invalid, " +
+                "or the password could not be changed."
+        });
+    }
+
+    return Ok(new
+    {
+        Success = true,
+        Message = "Password changed successfully."
+    });
+}
+
     [HttpGet("me")]
 [Authorize]
 public async Task<IActionResult> GetCurrentUser()

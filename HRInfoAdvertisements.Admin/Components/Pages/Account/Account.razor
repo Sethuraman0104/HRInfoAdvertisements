@@ -1,0 +1,1046 @@
+@page "/account"
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using HRInfoAdvertisements.Admin.Components.Shared
+
+@inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@implements IDisposable
+
+<PageTitle>
+    @(isAuthenticated
+        ? $"Welcome {userName} | HR INFO ADs"
+        : "Find What You Need | HR INFO ADs")
+</PageTitle>
+
+<div class="account-page">
+
+    <PublicTopBar />
+
+    <!-- ============================================================
+         ACCOUNT CONTEXT BAR
+         ============================================================ -->
+
+    <section class="account-page-context">
+
+        <div class="account-context-left">
+
+            <span class="account-context-icon">
+                <i class="bi bi-person-circle"></i>
+            </span>
+
+            <div class="account-context-text">
+
+                <span class="account-context-eyebrow">
+                    @(isAuthenticated
+                        ? "YOUR HR INFO ADs ACCOUNT"
+                        : "HR INFO ADs ACCOUNT")
+                </span>
+
+                <span class="account-context-description">
+                    @(isAuthenticated
+                        ? $"Welcome back, {userName}. Manage your advertisements and marketplace activity."
+                        : "Find what you need, manage your advertisements and stay connected.")
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="account-context-actions">
+
+            <button type="button"
+                    class="account-context-button"
+                    @onclick="GoHome">
+
+                <i class="bi bi-arrow-left"></i>
+
+                <span>Back to Home</span>
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         AUTHENTICATED USER ACCOUNT
+         ============================================================ -->
+
+    @if (isAuthenticated)
+    {
+        <main class="account-main">
+
+            <!-- ====================================================
+                 USER WELCOME HERO
+                 ==================================================== -->
+
+            <section class="account-hero authenticated-account-hero">
+
+                <div class="account-hero-content">
+
+                    <span class="account-hero-eyebrow">
+                        WELCOME BACK
+                    </span>
+
+                    <h1>
+                        Hello,
+                        <span>@userName</span>
+                    </h1>
+
+                    <p class="account-hero-description">
+                        Your HR INFO ADs account is ready.
+                        Manage your advertisements, saved favorites
+                        and marketplace activity from one place.
+                    </p>
+
+
+                    <!-- ============================================
+                         USER INFORMATION
+                         ============================================ -->
+
+                    <div class="account-user-summary">
+
+                        <div class="account-user-summary-item">
+
+                            <span class="account-user-summary-icon">
+                                <i class="bi bi-person"></i>
+                            </span>
+
+                            <div>
+
+                                <small>
+                                    USERNAME
+                                </small>
+
+                                <strong>
+                                    @userName
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="account-user-summary-item">
+
+                            <span class="account-user-summary-icon">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+
+                            <div>
+
+                                <small>
+                                    EMAIL
+                                </small>
+
+                                <strong>
+                                    @userEmail
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ============================================
+                         ACCOUNT ACTIONS
+                         ============================================ -->
+
+                    <div class="account-hero-actions">
+
+                        <button type="button"
+                                class="account-primary-button"
+                                @onclick="GoToMyAds">
+
+                            <span class="account-button-icon">
+                                <i class="bi bi-megaphone"></i>
+                            </span>
+
+                            <span>
+                                My Advertisements
+                            </span>
+
+                            <i class="bi bi-arrow-right account-button-arrow"></i>
+
+                        </button>
+
+
+                        <button type="button"
+                                class="account-secondary-button"
+                                @onclick="GoToFavorites">
+
+                            <i class="bi bi-heart"></i>
+
+                            <span>
+                                My Favorites
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     MEMBER CARD
+                     ================================================= -->
+
+                <div class="account-hero-card">
+
+                    <div class="account-hero-card-top">
+
+                        <div class="account-hero-card-icon">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+
+                        <span class="account-hero-card-status">
+                            SIGNED IN
+                        </span>
+
+                    </div>
+
+
+                    <div class="account-hero-card-title">
+
+                        Your marketplace,
+                        <strong>your way.</strong>
+
+                    </div>
+
+
+                    <p>
+                        You are signed in and can now manage
+                        your HR INFO ADs marketplace activity.
+                    </p>
+
+
+                    <div class="account-hero-card-divider"></div>
+
+
+                    <!-- USER ID -->
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-person-vcard"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Account ID
+                            </strong>
+
+                            <small>
+                                @userId
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-envelope-check"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Email
+                            </strong>
+
+                            <small>
+                                @userEmail
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-shield-check"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Account Status
+                            </strong>
+
+                            <small>
+                                Authenticated
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================================
+                 AUTHENTICATED ACCOUNT FEATURES
+                 ==================================================== -->
+
+            <section class="account-features-section">
+
+                <div class="account-section-heading">
+
+                    <span class="account-section-eyebrow">
+                        YOUR ACCOUNT
+                    </span>
+
+                    <h2>
+                        Everything you need in one place
+                    </h2>
+
+                    <p>
+                        Manage your advertisements, favorites and
+                        marketplace activity from your account.
+                    </p>
+
+                </div>
+
+
+                <div class="account-feature-grid">
+
+
+                    <!-- =================================================
+                         MY ADS
+                         ================================================= -->
+
+                    <article class="account-feature-card"
+                             @onclick="GoToMyAds">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                My Advertisements
+                            </h3>
+
+                            <p>
+                                Create, edit and manage your
+                                advertisements.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            01
+                        </span>
+
+                    </article>
+
+
+                    <!-- =================================================
+                         FAVORITES
+                         ================================================= -->
+
+                    <article class="account-feature-card"
+                             @onclick="GoToFavorites">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-heart"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                My Favorites
+                            </h3>
+
+                            <p>
+                                View advertisements that you have
+                                saved for later.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            02
+                        </span>
+
+                    </article>
+
+
+                    <!-- =================================================
+                         PROFILE
+                         ================================================= -->
+
+                    <article class="account-feature-card"
+                             @onclick="GoToProfile">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-person"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                My Profile
+                            </h3>
+
+                            <p>
+                                View and manage your account information.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            03
+                        </span>
+
+                    </article>
+
+
+                    <!-- =================================================
+                         SECURITY
+                         ================================================= -->
+
+                    <article class="account-feature-card">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                Account Security
+                            </h3>
+
+                            <p>
+                                Your account is protected by authenticated
+                                access.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            04
+                        </span>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================================
+                 ACCOUNT INFORMATION
+                 ==================================================== -->
+
+            <section class="account-post-cta">
+
+                <div class="account-post-cta-icon">
+                    <i class="bi bi-person-check"></i>
+                </div>
+
+                <div class="account-post-cta-content">
+
+                    <span class="account-post-cta-eyebrow">
+                        ACCOUNT CONNECTED
+                    </span>
+
+                    <h2>
+                        You are signed in.
+                    </h2>
+
+                    <p>
+                        You can now browse advertisements, manage your
+                        listings and access your saved favorites.
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="account-post-cta-button"
+                        @onclick="GoToMyAds">
+
+                    <span>
+                        Manage My Ads
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </section>
+
+        </main>
+    }
+    else
+    {
+        <!-- ============================================================
+             ANONYMOUS USER ACCOUNT
+             ============================================================ -->
+
+        <main class="account-main">
+
+            <!-- ========================================================
+                 HERO
+                 ======================================================== -->
+
+            <section class="account-hero">
+
+                <div class="account-hero-content">
+
+                    <span class="account-hero-eyebrow">
+                        YOUR MARKETPLACE ACCOUNT
+                    </span>
+
+                    <h1>
+                        Find What You Need.
+                        <span>Post What You Have.</span>
+                    </h1>
+
+                    <p class="account-hero-description">
+                        Sign in to manage your advertisements, save your
+                        favorite listings, and connect with the HR INFO ADs
+                        marketplace.
+                    </p>
+
+
+                    <div class="account-hero-actions">
+
+                        <!-- SIGN IN -->
+
+                        <button type="button"
+                                class="account-primary-button"
+                                @onclick="OpenLogin">
+
+                            <span class="account-button-icon">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                            </span>
+
+                            <span>
+                                Sign In
+                            </span>
+
+                            <i class="bi bi-arrow-right account-button-arrow"></i>
+
+                        </button>
+
+
+                        <!-- SIGN UP -->
+
+                        <button type="button"
+                                class="account-secondary-button"
+                                @onclick="OpenSignup">
+
+                            <i class="bi bi-person-plus"></i>
+
+                            <span>
+                                Create Account
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ====================================================
+                     HERO ACCOUNT CARD
+                     ==================================================== -->
+
+                <div class="account-hero-card">
+
+                    <div class="account-hero-card-top">
+
+                        <div class="account-hero-card-icon">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+
+                        <span class="account-hero-card-status">
+                            MEMBER ACCESS
+                        </span>
+
+                    </div>
+
+
+                    <div class="account-hero-card-title">
+
+                        Your marketplace,
+                        <strong>your way.</strong>
+
+                    </div>
+
+
+                    <p>
+                        Keep your advertisements and saved items organized
+                        from one convenient account.
+                    </p>
+
+
+                    <div class="account-hero-card-divider"></div>
+
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Manage your ads
+                            </strong>
+
+                            <small>
+                                Create, edit and track your listings.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Save favorites
+                            </strong>
+
+                            <small>
+                                Keep interesting advertisements close.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="account-mini-feature">
+
+                        <span>
+                            <i class="bi bi-check2-circle"></i>
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Stay connected
+                            </strong>
+
+                            <small>
+                                Access your marketplace activity.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================================================
+                 ACCOUNT FEATURES
+                 ======================================================== -->
+
+            <section class="account-features-section">
+
+                <div class="account-section-heading">
+
+                    <span class="account-section-eyebrow">
+                        ACCOUNT BENEFITS
+                    </span>
+
+                    <h2>
+                        Everything you need in one place
+                    </h2>
+
+                    <p>
+                        Create your free HR INFO ADs account and make your
+                        marketplace experience simpler.
+                    </p>
+
+                </div>
+
+
+                <div class="account-feature-grid">
+
+
+                    <article class="account-feature-card">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                Manage Advertisements
+                            </h3>
+
+                            <p>
+                                Create new advertisements, update existing
+                                listings and keep your marketplace posts
+                                organized.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            01
+                        </span>
+
+                    </article>
+
+
+                    <article class="account-feature-card">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-heart"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                Save Favorites
+                            </h3>
+
+                            <p>
+                                Save advertisements you are interested in
+                                so you can easily find them again later.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            02
+                        </span>
+
+                    </article>
+
+
+                    <article class="account-feature-card">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-grid-1x2"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                Your Activity
+                            </h3>
+
+                            <p>
+                                Access your marketplace activity and keep
+                                track of your advertisements from one place.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            03
+                        </span>
+
+                    </article>
+
+
+                    <article class="account-feature-card">
+
+                        <div class="account-feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+
+                        <div class="account-feature-content">
+
+                            <h3>
+                                Secure Access
+                            </h3>
+
+                            <p>
+                                Your account provides a dedicated space for
+                                managing your marketplace information.
+                            </p>
+
+                        </div>
+
+                        <span class="account-feature-number">
+                            04
+                        </span>
+
+                    </article>
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================================================
+                 POST ADVERTISEMENT CTA
+                 ======================================================== -->
+
+            <section class="account-post-cta">
+
+                <div class="account-post-cta-icon">
+                    <i class="bi bi-plus-lg"></i>
+                </div>
+
+                <div class="account-post-cta-content">
+
+                    <span class="account-post-cta-eyebrow">
+                        READY TO GET STARTED?
+                    </span>
+
+                    <h2>
+                        Have something to advertise?
+                    </h2>
+
+                    <p>
+                        Create an account and start posting your advertisement
+                        on HR INFO ADs.
+                    </p>
+
+                </div>
+
+                <button type="button"
+                        class="account-post-cta-button"
+                        @onclick="OpenSignup">
+
+                    <span>
+                        Get Started
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </section>
+
+        </main>
+    }
+
+
+    <!-- ============================================================
+         PUBLIC AUTHENTICATION MODAL
+         ============================================================ -->
+
+    <PublicAuthModal @bind-IsOpen="showAuthModal"
+                     @bind-Mode="authMode" />
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+
+    private bool isAuthenticated;
+
+    private string userId = string.Empty;
+
+    private string userName = string.Empty;
+
+    private string userEmail = string.Empty;
+
+
+    // ============================================================
+    // AUTH MODAL
+    // ============================================================
+
+    private bool showAuthModal;
+
+    private PublicAuthModal.AuthMode authMode =
+        PublicAuthModal.AuthMode.SignIn;
+
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged
+            += OnAuthenticationStateChanged;
+
+        await LoadAuthenticationStateAsync();
+    }
+
+
+    // ============================================================
+    // LOAD AUTHENTICATION STATE
+    // ============================================================
+
+    private async Task LoadAuthenticationStateAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        SetUserFromPrincipal(authenticationState.User);
+    }
+
+
+    // ============================================================
+    // AUTHENTICATION STATE CHANGED
+    // ============================================================
+
+    private async void OnAuthenticationStateChanged(
+        Task<AuthenticationState> authenticationStateTask)
+    {
+        try
+        {
+            var authenticationState =
+                await authenticationStateTask;
+
+            await InvokeAsync(() =>
+            {
+                SetUserFromPrincipal(authenticationState.User);
+
+                StateHasChanged();
+            });
+        }
+        catch
+        {
+            // Authentication state changes should not
+            // break the Blazor circuit.
+        }
+    }
+
+
+    // ============================================================
+    // READ USER FROM CLAIMS
+    // ============================================================
+
+    private void SetUserFromPrincipal(ClaimsPrincipal user)
+    {
+        isAuthenticated =
+            user.Identity?.IsAuthenticated == true;
+
+
+        if (!isAuthenticated)
+        {
+            userId = string.Empty;
+            userName = string.Empty;
+            userEmail = string.Empty;
+
+            return;
+        }
+
+
+        userId =
+            user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? user.FindFirst("sub")?.Value
+            ?? string.Empty;
+
+
+        userName =
+            user.FindFirst(ClaimTypes.Name)?.Value
+            ?? user.Identity?.Name
+            ?? string.Empty;
+
+
+        userEmail =
+            user.FindFirst(ClaimTypes.Email)?.Value
+            ?? user.FindFirst("email")?.Value
+            ?? string.Empty;
+    }
+
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    private void GoToMyAds()
+    {
+        Navigation.NavigateTo("/my-ads");
+    }
+
+
+    private void GoToFavorites()
+    {
+        Navigation.NavigateTo("/my-favorites");
+    }
+
+
+    private void GoToProfile()
+    {
+        Navigation.NavigateTo("/profile");
+    }
+
+
+    // ============================================================
+    // OPEN SIGN IN
+    // ============================================================
+
+    private void OpenLogin()
+    {
+        authMode =
+            PublicAuthModal.AuthMode.SignIn;
+
+        showAuthModal = true;
+    }
+
+
+    // ============================================================
+    // OPEN SIGN UP
+    // ============================================================
+
+    private void OpenSignup()
+    {
+        authMode =
+            PublicAuthModal.AuthMode.SignUp;
+
+        showAuthModal = true;
+    }
+
+
+    // ============================================================
+    // DISPOSE
+    // ============================================================
+
+    public void Dispose()
+    {
+        AuthenticationStateProvider.AuthenticationStateChanged
+            -= OnAuthenticationStateChanged;
+    }
+
+}
