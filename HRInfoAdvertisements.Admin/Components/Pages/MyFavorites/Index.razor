@@ -1,0 +1,776 @@
+@page "/my-favorites"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Favorite
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject PublicFavoritesApiService PublicFavoritesApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>My Favorites | HR INFO ADs</PageTitle>
+
+<div class="my-favorites-page">
+
+ <PublicTopBar />
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+
+    <section class="my-favorites-header">
+
+        <div class="my-favorites-header-inner">
+
+            <div class="my-favorites-header-left">
+
+                <button type="button"
+                        class="favorites-back-button"
+                        @onclick="BackToMarketplace">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    <span>
+                        Back to Marketplace
+                    </span>
+
+                </button>
+
+                <div class="favorites-title-row">
+
+                    <div class="favorites-title-icon">
+                        <i class="bi bi-heart-fill"></i>
+                    </div>
+
+                    <div>
+
+                        <span class="favorites-eyebrow">
+                            MY COLLECTION
+                        </span>
+
+                        <h1>
+                            My Favorites
+                        </h1>
+
+                        <p>
+                            Advertisements you have saved for later.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="favorites-header-summary">
+
+                <div class="favorites-summary-icon">
+                    <i class="bi bi-heart"></i>
+                </div>
+
+                <div>
+
+                    <span>
+                        Saved Advertisements
+                    </span>
+
+                    <strong>
+                        @filteredFavorites.Count
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ============================================================
+         MAIN CONTENT
+         ============================================================ -->
+
+    <main class="my-favorites-content">
+
+        @if (isLoading)
+        {
+            <section class="favorites-loading-state">
+
+                <div class="favorites-loading-spinner"></div>
+
+                <h2>
+                    Loading your favorites
+                </h2>
+
+                <p>
+                    Please wait while we retrieve your saved advertisements.
+                </p>
+
+            </section>
+        }
+        else if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <section class="favorites-error-state">
+
+                <div class="favorites-state-icon error">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <h2>
+                    Unable to load favorites
+                </h2>
+
+                <p>
+                    @errorMessage
+                </p>
+
+                <button type="button"
+                        class="favorites-primary-button"
+                        @onclick="LoadFavoritesAsync">
+
+                    <i class="bi bi-arrow-clockwise"></i>
+
+                    Try Again
+
+                </button>
+
+            </section>
+        }
+        else
+        {
+            <!-- ====================================================
+                 TOOLBAR
+                 ==================================================== -->
+
+            <section class="favorites-toolbar">
+
+                <div class="favorites-toolbar-left">
+
+                    <div class="favorites-result-count">
+
+                        <strong>
+                            @filteredFavorites.Count
+                        </strong>
+
+                        <span>
+                            @(filteredFavorites.Count == 1
+                                ? "favorite"
+                                : "favorites")
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="favorites-toolbar-right">
+
+                    <div class="favorites-search">
+
+                        <i class="bi bi-search"></i>
+
+                        <input type="text"
+                               placeholder="Search your favorites..."
+                               @bind="searchText"
+                               @bind:event="oninput" />
+
+                        @if (!string.IsNullOrWhiteSpace(searchText))
+                        {
+                            <button type="button"
+                                    class="favorites-search-clear"
+                                    title="Clear search"
+                                    aria-label="Clear search"
+                                    @onclick="ClearSearch">
+
+                                <i class="bi bi-x"></i>
+
+                            </button>
+                        }
+
+                    </div>
+
+                    <button type="button"
+                            class="favorites-refresh-button"
+                            title="Refresh favorites"
+                            aria-label="Refresh favorites"
+                            @onclick="LoadFavoritesAsync"
+                            disabled="@isLoading">
+
+                        <i class="bi bi-arrow-clockwise"></i>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- ====================================================
+                 EMPTY STATE
+                 ==================================================== -->
+
+            @if (filteredFavorites.Count == 0)
+            {
+                <section class="favorites-empty-state">
+
+                    <div class="favorites-empty-heart">
+
+                        <i class="bi bi-heart"></i>
+
+                    </div>
+
+                    @if (allFavorites.Count == 0)
+                    {
+                        <h2>
+                            No favorites yet
+                        </h2>
+
+                        <p>
+                            When you find an advertisement you like,
+                            click the heart icon to save it here.
+                        </p>
+                    }
+                    else
+                    {
+                        <h2>
+                            No matching favorites
+                        </h2>
+
+                        <p>
+                            We couldn't find any saved advertisements
+                            matching "@searchText".
+                        </p>
+
+                        <button type="button"
+                                class="favorites-secondary-button"
+                                @onclick="ClearSearch">
+
+                            <i class="bi bi-x-circle"></i>
+
+                            Clear Search
+
+                        </button>
+                    }
+
+                    <button type="button"
+                            class="favorites-primary-button"
+                            @onclick="BackToMarketplace">
+
+                        <i class="bi bi-grid"></i>
+
+                        Browse Advertisements
+
+                    </button>
+
+                </section>
+            }
+            else
+            {
+                <!-- =================================================
+                     FAVORITES GRID
+                     ================================================= -->
+
+                <section class="favorites-grid">
+
+                    @foreach (var favorite in filteredFavorites)
+                    {
+                        <article class="favorite-card">
+
+                            <!-- =====================================
+                                 CARD TOP
+                                 ===================================== -->
+
+                            <div class="favorite-card-top">
+
+                                <div class="favorite-card-badges">
+
+                                    @if (favorite.IsFeatured)
+                                    {
+                                        <span class="favorite-featured-badge">
+                                            <i class="bi bi-star-fill"></i>
+                                            Featured
+                                        </span>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                            favorite.StatusName))
+                                    {
+                                        <span class="favorite-status-badge">
+                                            @favorite.StatusName
+                                        </span>
+                                    }
+
+                                </div>
+
+                                <button type="button"
+                                        class="favorite-remove-button"
+                                        title="Remove from favorites"
+                                        aria-label="Remove from favorites"
+                                        disabled="@removingFavoriteIds.Contains(favorite.AdvertisementID)"
+                                        @onclick="@(() => RemoveFavoriteAsync(favorite.AdvertisementID))">
+
+                                    @if (removingFavoriteIds.Contains(
+                                            favorite.AdvertisementID))
+                                    {
+                                        <span class="favorite-button-spinner"></span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-heart-fill"></i>
+                                    }
+
+                                </button>
+
+                            </div>
+
+
+                            <!-- =====================================
+                                 CARD BODY
+                                 ===================================== -->
+
+                            <div class="favorite-card-body">
+
+                                <div class="favorite-card-category">
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                            favorite.CategoryName))
+                                    {
+                                        <span>
+                                            @favorite.CategoryName
+                                        </span>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                            favorite.AdvertisementTypeName))
+                                    {
+                                        <span class="favorite-category-separator">
+                                            •
+                                        </span>
+
+                                        <span>
+                                            @favorite.AdvertisementTypeName
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <h2 class="favorite-card-title">
+                                    @(string.IsNullOrWhiteSpace(favorite.Title)
+                                        ? "Untitled Advertisement"
+                                        : favorite.Title)
+                                </h2>
+
+
+                                <div class="favorite-ad-number">
+
+                                    <i class="bi bi-hash"></i>
+
+                                    <span>
+                                        @favorite.AdvertisementNumber
+                                    </span>
+
+                                </div>
+
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                        favorite.AddressLine))
+                                {
+                                    <div class="favorite-card-location">
+
+                                        <i class="bi bi-geo-alt"></i>
+
+                                        <span>
+                                            @favorite.AddressLine
+                                        </span>
+
+                                    </div>
+                                }
+
+
+                                <!-- =================================
+                                     PRICE
+                                     ================================= -->
+
+                                <div class="favorite-card-price-row">
+
+                                    <div class="favorite-card-price">
+
+                                        @if (favorite.Price.HasValue)
+                                        {
+                                            <strong>
+                                                @favorite.Price.Value.ToString("N3")
+                                            </strong>
+
+                                            <span>
+                                                @favorite.CurrencyCode
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <strong class="price-on-request">
+                                                Price on request
+                                            </strong>
+                                        }
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- =================================
+                                     META
+                                     ================================= -->
+
+                                <div class="favorite-card-meta">
+
+                                    <div class="favorite-meta-item">
+
+                                        <i class="bi bi-heart-fill"></i>
+
+                                        <div>
+
+                                            <span>
+                                                Favorited
+                                            </span>
+
+                                            <strong>
+                                                @FormatDate(favorite.FavoritedDate)
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    @if (favorite.PublishedDate.HasValue)
+                                    {
+                                        <div class="favorite-meta-item">
+
+                                            <i class="bi bi-calendar-check"></i>
+
+                                            <div>
+
+                                                <span>
+                                                    Published
+                                                </span>
+
+                                                <strong>
+                                                    @FormatDate(
+                                                        favorite.PublishedDate.Value)
+                                                </strong>
+
+                                            </div>
+
+                                        </div>
+                                    }
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- =====================================
+                                 CARD FOOTER
+                                 ===================================== -->
+
+                            <div class="favorite-card-footer">
+
+                                <button type="button"
+                                        class="favorite-view-button"
+                                        @onclick="@(() => ViewAdvertisement(favorite.AdvertisementID))">
+
+                                    <span>
+                                        View Advertisement
+                                    </span>
+
+                                    <i class="bi bi-arrow-right"></i>
+
+                                </button>
+
+                            </div>
+
+                        </article>
+                    }
+
+                </section>
+            }
+
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private List<FavoriteResponse> allFavorites = new();
+
+    private List<FavoriteResponse> filteredFavorites = new();
+
+    private readonly HashSet<long> removingFavoriteIds = new();
+
+    private string searchText = string.Empty;
+
+    private bool isLoading;
+
+    private string? errorMessage;
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        var user =
+            authenticationState.User;
+
+        if (user?.Identity?.IsAuthenticated != true)
+{
+    Navigation.NavigateTo(
+        "/",
+        forceLoad: false);
+
+    return;
+}
+
+        await LoadFavoritesAsync();
+    }
+
+
+    // ============================================================
+    // LOAD FAVORITES
+    // ============================================================
+
+    private async Task LoadFavoritesAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result =
+                await PublicFavoritesApiService
+                    .GetMyFavoritesAsync();
+
+            allFavorites =
+                result?
+                    .OrderByDescending(
+                        x => x.FavoritedDate)
+                    .ToList()
+                ?? new List<FavoriteResponse>();
+
+            ApplySearch();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"MY FAVORITES HTTP ERROR: {ex}");
+
+            allFavorites = new();
+            filteredFavorites = new();
+
+            errorMessage =
+                "Your favorites could not be loaded. " +
+                "Please try again.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"MY FAVORITES ERROR: {ex}");
+
+            allFavorites = new();
+            filteredFavorites = new();
+
+            errorMessage =
+                "Something went wrong while loading your favorites. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+
+    private void ApplySearch()
+    {
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            filteredFavorites =
+                allFavorites
+                    .ToList();
+
+            return;
+        }
+
+        var search =
+            searchText
+                .Trim();
+
+        filteredFavorites =
+            allFavorites
+                .Where(x =>
+                    Contains(
+                        x.Title,
+                        search)
+                    ||
+                    Contains(
+                        x.TitleAr,
+                        search)
+                    ||
+                    Contains(
+                        x.AdvertisementNumber,
+                        search)
+                    ||
+                    Contains(
+                        x.CategoryName,
+                        search)
+                    ||
+                    Contains(
+                        x.AdvertisementTypeName,
+                        search)
+                    ||
+                    Contains(
+                        x.AddressLine,
+                        search)
+                    ||
+                    Contains(
+                        x.StatusName,
+                        search))
+                .ToList();
+    }
+
+
+    private static bool Contains(
+        string? value,
+        string search)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            &&
+            value.Contains(
+                search,
+                StringComparison.OrdinalIgnoreCase);
+    }
+
+
+    private void ClearSearch()
+    {
+        searchText = string.Empty;
+
+        ApplySearch();
+    }
+
+
+    // ============================================================
+    // REMOVE FAVORITE
+    // ============================================================
+
+    private async Task RemoveFavoriteAsync(
+        long advertisementId)
+    {
+        if (removingFavoriteIds.Contains(
+                advertisementId))
+        {
+            return;
+        }
+
+        removingFavoriteIds.Add(
+            advertisementId);
+
+        try
+        {
+            await PublicFavoritesApiService
+                .RemoveFavoriteAsync(
+                    advertisementId);
+
+            allFavorites =
+                allFavorites
+                    .Where(x =>
+                        x.AdvertisementID !=
+                        advertisementId)
+                    .ToList();
+
+            ApplySearch();
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"REMOVE FAVORITE HTTP ERROR: {ex}");
+
+            errorMessage =
+                "The advertisement could not be removed " +
+                "from your favorites. Please try again.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"REMOVE FAVORITE ERROR: {ex}");
+
+            errorMessage =
+                "Something went wrong while removing " +
+                "the favorite.";
+        }
+        finally
+        {
+            removingFavoriteIds.Remove(
+                advertisementId);
+        }
+    }
+
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void BackToMarketplace()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    private void ViewAdvertisement(
+        long advertisementId)
+    {
+        // The public advertisement-detail route will be
+        // connected here once that route is confirmed.
+        //
+        // For now, return to the marketplace.
+
+        Navigation.NavigateTo("/");
+    }
+
+
+    // ============================================================
+    // FORMATTING
+    // ============================================================
+
+    private static string FormatDate(
+        DateTime date)
+    {
+        return date.ToLocalTime()
+            .ToString("dd MMM yyyy");
+    }
+
+}

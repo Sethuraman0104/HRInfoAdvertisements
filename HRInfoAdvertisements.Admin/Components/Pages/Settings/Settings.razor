@@ -1,0 +1,2105 @@
+@page "/admin/settings"
+
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject SystemSettingsApiService SystemSettingsApiService
+@inject NavigationManager Navigation
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+
+<PageTitle>System Settings | HR INFO ADs</PageTitle>
+
+<div class="admin-settings">
+
+    <PageHeader Icon="bi-gear-fill"
+                Eyebrow="SYSTEM SETTINGS"
+                Title="Settings"
+                DescriptionContent="@SettingsHeaderDescription"
+                ActionContent="@SettingsHeaderActions" />
+
+    <!-- =========================================================
+         ERROR
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="settings-error">
+
+            <div class="settings-error-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+
+            <div class="settings-error-content">
+
+                <strong>
+                    Unable to load settings
+                </strong>
+
+                <span>
+                    @errorMessage
+                </span>
+
+            </div>
+
+            <button type="button"
+                    @onclick="RefreshAsync"
+                    disabled="@isLoading">
+
+                Retry
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
+         SETTINGS INTRODUCTION
+         ========================================================= -->
+
+    <section class="settings-overview-panel">
+
+        <div class="settings-overview-icon">
+
+            <i class="bi bi-sliders2"></i>
+
+        </div>
+
+        <div class="settings-overview-content">
+
+            <span class="settings-section-eyebrow">
+                ADMINISTRATION
+            </span>
+
+            <h2>
+                Application Configuration
+            </h2>
+
+            <p>
+                Manage configuration values, marketplace behaviour,
+                account policies, notifications and platform-level
+                preferences for the HR INFO ADs application.
+            </p>
+
+        </div>
+
+        <div class="settings-overview-status">
+
+            <span class="settings-system-status">
+
+                <span class="settings-status-dot"></span>
+
+                System Online
+
+            </span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         SYSTEM SETTINGS REGISTRY
+         ========================================================= -->
+
+    <section class="settings-registry-panel">
+
+        <div class="settings-registry-header">
+
+            <div class="settings-registry-title">
+
+                <div class="settings-registry-icon">
+                    <i class="bi bi-sliders"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-section-eyebrow">
+                        CONFIGURATION REGISTRY
+                    </span>
+
+                    <h2>
+                        System Settings
+                    </h2>
+
+                    <p>
+                        Manage application configuration values stored
+                        in the system settings registry.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="settings-registry-actions">
+
+                <button type="button"
+                        class="settings-secondary-button"
+                        @onclick="ClearFilters"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-arrow-counterclockwise"></i>
+
+                    <span>
+                        Reset
+                    </span>
+
+                </button>
+
+                <button type="button"
+                        class="settings-primary-button"
+                        @onclick="OpenCreateDialog"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-plus-lg"></i>
+
+                    <span>
+                        Add Setting
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             FILTERS
+             ===================================================== -->
+
+        <div class="settings-filter-panel">
+
+            <div class="settings-filter-field settings-filter-search">
+
+                <label>
+                    Search
+                </label>
+
+                <div class="settings-input-with-icon">
+
+                    <i class="bi bi-search"></i>
+
+                    <input type="text"
+                           class="settings-filter-input"
+                           placeholder="Search setting key or description..."
+                           @bind="searchText"
+                           @bind:event="oninput"
+                           @onkeydown="HandleSearchKeyDown" />
+
+                </div>
+
+            </div>
+
+
+            <div class="settings-filter-field">
+
+                <label>
+                    Status
+                </label>
+
+                <select class="settings-filter-input"
+                        @bind="activeFilter">
+
+                    <option value="all">
+                        All Settings
+                    </option>
+
+                    <option value="active">
+                        Active
+                    </option>
+
+                    <option value="inactive">
+                        Inactive
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="settings-filter-action">
+
+                <button type="button"
+                        class="settings-apply-button"
+                        @onclick="ApplyFilters"
+                        disabled="@isLoading">
+
+                    <i class="bi bi-funnel"></i>
+
+                    <span>
+                        Apply Filters
+                    </span>
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             REGISTRY SUMMARY
+             ===================================================== -->
+
+        <div class="settings-registry-summary">
+
+            <div class="settings-summary-item">
+
+                <span class="settings-summary-icon">
+                    <i class="bi bi-database"></i>
+                </span>
+
+                <div>
+                    <strong>
+                        @totalRecords
+                    </strong>
+
+                    <span>
+                        Total Settings
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="settings-summary-item">
+
+                <span class="settings-summary-icon active">
+                    <i class="bi bi-check-circle"></i>
+                </span>
+
+                <div>
+                    <strong>
+                        @ActiveSettingsCount
+                    </strong>
+
+                    <span>
+                        Active
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="settings-summary-item">
+
+                <span class="settings-summary-icon inactive">
+                    <i class="bi bi-pause-circle"></i>
+                </span>
+
+                <div>
+                    <strong>
+                        @InactiveSettingsCount
+                    </strong>
+
+                    <span>
+                        Inactive
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             SETTINGS RESULTS
+             ===================================================== -->
+
+        <div class="settings-results-panel">
+
+            @if (isLoading)
+            {
+                <div class="settings-loading">
+
+                    <div class="settings-loading-spinner">
+                        <i class="bi bi-arrow-repeat hr-spin"></i>
+                    </div>
+
+                    <strong>
+                        Loading system settings
+                    </strong>
+
+                    <span>
+                        Retrieving configuration from the application database...
+                    </span>
+
+                </div>
+            }
+            else if (settings.Count == 0)
+            {
+                <div class="settings-empty">
+
+                    <div class="settings-empty-icon">
+                        <i class="bi bi-sliders2"></i>
+                    </div>
+
+                    <h3>
+                        No settings found
+                    </h3>
+
+                    <p>
+                        No system settings match the current search and
+                        status filters.
+                    </p>
+
+                    <button type="button"
+                            class="settings-secondary-button"
+                            @onclick="ClearFilters">
+
+                        <i class="bi bi-arrow-counterclockwise"></i>
+
+                        Reset Filters
+
+                    </button>
+
+                </div>
+            }
+            else
+            {
+                <div class="settings-table-wrapper">
+
+                    <table class="settings-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Setting
+                                </th>
+
+                                <th>
+                                    Value
+                                </th>
+
+                                <th>
+                                    Description
+                                </th>
+
+                                <th>
+                                    Security
+                                </th>
+
+                                <th>
+                                    Status
+                                </th>
+
+                                <th>
+                                    Modified
+                                </th>
+
+                                <th class="settings-action-column">
+                                    Actions
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            @foreach (var setting in settings)
+                            {
+                                <tr>
+
+                                    <td>
+
+                                        <div class="settings-key-cell">
+
+                                            <span class="settings-key-icon">
+                                                <i class="bi bi-sliders"></i>
+                                            </span>
+
+                                            <div>
+
+                                                <strong>
+                                                    @setting.SettingKey
+                                                </strong>
+
+                                                <span>
+                                                    ID: @setting.SystemSettingID
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="settings-value-cell @(setting.IsEncrypted ? "settings-value-protected" : "")">
+
+                                            @GetDisplayValue(setting)
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="settings-description-cell">
+
+                                            @(string.IsNullOrWhiteSpace(setting.Description)
+                                                ? "No description"
+                                                : setting.Description)
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @if (setting.IsEncrypted)
+                                        {
+                                            <span class="settings-security-badge encrypted">
+
+                                                <i class="bi bi-shield-lock-fill"></i>
+
+                                                Encrypted
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="settings-security-badge standard">
+
+                                                <i class="bi bi-unlock"></i>
+
+                                                Standard
+
+                                            </span>
+                                        }
+
+                                    </td>
+
+
+                                    <td>
+
+                                        @if (setting.IsActive)
+                                        {
+                                            <span class="settings-status-badge active">
+
+                                                <span class="settings-status-badge-dot"></span>
+
+                                                Active
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="settings-status-badge inactive">
+
+                                                <span class="settings-status-badge-dot"></span>
+
+                                                Inactive
+
+                                            </span>
+                                        }
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="settings-date-cell">
+
+                                            @FormatDate(setting.ModifiedDate ?? setting.CreatedDate)
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td class="settings-action-column">
+
+                                        <div class="settings-row-actions">
+
+                                            <button type="button"
+                                                    class="settings-row-button edit"
+                                                    title="Edit setting"
+                                                    @onclick="() => OpenEditDialog(setting)">
+
+                                                <i class="bi bi-pencil-square"></i>
+
+                                            </button>
+
+
+                                            <button type="button"
+                                                    class="settings-row-button @(setting.IsActive ? "deactivate" : "activate")"
+                                                    title="@(setting.IsActive ? "Deactivate setting" : "Activate setting")"
+                                                    @onclick="() => ToggleStatusAsync(setting)"
+                                                    disabled="@statusChanging">
+
+                                                <i class="bi @(setting.IsActive
+                                                    ? "bi-pause-circle"
+                                                    : "bi-play-circle")">
+                                                </i>
+
+                                            </button>
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <!-- =================================================
+                     PAGINATION
+                     ================================================= -->
+
+                @if (totalPages > 1)
+                {
+                    <div class="settings-pagination">
+
+                        <div class="settings-pagination-info">
+
+                            Showing
+                            <strong>
+                                @FirstRecordNumber
+                            </strong>
+                            -
+                            <strong>
+                                @LastRecordNumber
+                            </strong>
+                            of
+                            <strong>
+                                @totalRecords
+                            </strong>
+
+                        </div>
+
+
+                        <div class="settings-pagination-buttons">
+
+                            <button type="button"
+                                    class="settings-page-button"
+                                    @onclick="PreviousPage"
+                                    disabled="@(currentPage <= 1 || isLoading)">
+
+                                <i class="bi bi-chevron-left"></i>
+
+                            </button>
+
+
+                            @foreach (var page in GetPaginationPages())
+{
+    <button type="button"
+            class="settings-page-button @(page == currentPage ? "selected" : "")"
+            @onclick="() => GoToPage(page)"
+            disabled="@isLoading">
+
+        @(page)
+
+    </button>
+}
+
+
+                            <button type="button"
+                                    class="settings-page-button"
+                                    @onclick="NextPage"
+                                    disabled="@(currentPage >= totalPages || isLoading)">
+
+                                <i class="bi bi-chevron-right"></i>
+
+                            </button>
+
+                        </div>
+
+                    </div>
+                }
+
+            }
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================================
+         MANAGEMENT AREAS
+         ========================================================= -->
+
+    <section class="settings-grid">
+
+
+        <!-- =====================================================
+             GENERAL
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon general">
+                    <i class="bi bi-sliders"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        GENERAL
+                    </span>
+
+                    <h2>
+                        General Settings
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Application identity and default configuration values
+                can be maintained through the system settings registry.
+            </p>
+
+            <div class="settings-card-list">
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Configuration Registry
+                        </strong>
+
+                        <span>
+                            Central location for application settings.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        @totalRecords settings
+                    </span>
+
+                </div>
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Active Configuration
+                        </strong>
+
+                        <span>
+                            Currently enabled application settings.
+                        </span>
+                    </div>
+
+                    <span class="settings-badge enabled">
+                        @ActiveSettingsCount Active
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="settings-card-footer">
+
+                <button type="button"
+                        class="settings-manage-button"
+                        @onclick="FocusRegistry">
+
+                    <span>
+                        Manage General Configuration
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             ADVERTISEMENTS
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon advertisements">
+                    <i class="bi bi-megaphone"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        MARKETPLACE
+                    </span>
+
+                    <h2>
+                        Advertisement Settings
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Configure marketplace behaviour such as approval,
+                featured advertisements and advertisement validity.
+            </p>
+
+            <div class="settings-card-list">
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Configuration
+                        </strong>
+
+                        <span>
+                            Advertisement behaviour is controlled by system settings.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        Configurable
+                    </span>
+
+                </div>
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Advertisement Records
+                        </strong>
+
+                        <span>
+                            Marketplace data is managed through advertisement administration.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        Managed
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="settings-card-footer">
+
+                <button type="button"
+                        class="settings-manage-button"
+                        @onclick="FocusRegistry">
+
+                    <span>
+                        Manage Advertisement Configuration
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             USERS
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon users">
+                    <i class="bi bi-person-gear"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        ACCOUNTS
+                    </span>
+
+                    <h2>
+                        User & Account Settings
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Manage users and administrator accounts through the
+                dedicated User Management area.
+            </p>
+
+            <div class="settings-card-list">
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            User Management
+                        </strong>
+
+                        <span>
+                            Manage user accounts, roles and account status.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        Available
+                    </span>
+
+                </div>
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Security Configuration
+                        </strong>
+
+                        <span>
+                            Application security values can be maintained above.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        Configurable
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="settings-card-footer">
+
+                <button type="button"
+                        class="settings-manage-button"
+                        @onclick="OpenUserSettings">
+
+                    <span>
+                        Manage User Accounts
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             NOTIFICATIONS
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon notifications">
+                    <i class="bi bi-bell"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        COMMUNICATION
+                    </span>
+
+                    <h2>
+                        Notification Settings
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Notification behaviour and communication preferences
+                can be represented through configurable system settings.
+            </p>
+
+            <div class="settings-card-list">
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Notification Configuration
+                        </strong>
+
+                        <span>
+                            Maintain notification-related configuration values.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        Configurable
+                    </span>
+
+                </div>
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Notification Service
+                        </strong>
+
+                        <span>
+                            Application notifications are handled by the platform.
+                        </span>
+                    </div>
+
+                    <span class="settings-badge enabled">
+                        Available
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="settings-card-footer">
+
+                <button type="button"
+                        class="settings-manage-button"
+                        @onclick="FocusRegistry">
+
+                    <span>
+                        Manage Notification Configuration
+                    </span>
+
+                    <i class="bi bi-arrow-right"></i>
+
+                </button>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             MASTER DATA
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon master-data">
+                    <i class="bi bi-database-gear"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        REFERENCE DATA
+                    </span>
+
+                    <h2>
+                        Master Data
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Maintain the reference information used throughout
+                the advertisement marketplace.
+            </p>
+
+            <div class="settings-master-grid">
+
+                <button type="button"
+                        @onclick="OpenCategories">
+
+                    <i class="bi bi-grid"></i>
+
+                    <span>
+                        Categories
+                    </span>
+
+                    <i class="bi bi-arrow-up-right"></i>
+
+                </button>
+
+
+                <button type="button"
+                        @onclick="OpenAdvertisementTypes">
+
+                    <i class="bi bi-tags"></i>
+
+                    <span>
+                        Advertisement Types
+                    </span>
+
+                    <i class="bi bi-arrow-up-right"></i>
+
+                </button>
+
+
+                <button type="button"
+                        class="settings-master-disabled"
+                        disabled>
+
+                    <i class="bi bi-geo-alt"></i>
+
+                    <span>
+                        Locations
+                    </span>
+
+                    <small>
+                        Coming soon
+                    </small>
+
+                </button>
+
+
+                <button type="button"
+                        class="settings-master-disabled"
+                        disabled>
+
+                    <i class="bi bi-list-check"></i>
+
+                    <span>
+                        Statuses
+                    </span>
+
+                    <small>
+                        Coming soon
+                    </small>
+
+                </button>
+
+            </div>
+
+        </article>
+
+
+        <!-- =====================================================
+             SYSTEM
+             ===================================================== -->
+
+        <article class="settings-card">
+
+            <div class="settings-card-header">
+
+                <div class="settings-card-icon system">
+                    <i class="bi bi-cpu"></i>
+                </div>
+
+                <div>
+
+                    <span class="settings-card-eyebrow">
+                        PLATFORM
+                    </span>
+
+                    <h2>
+                        System Settings
+                    </h2>
+
+                </div>
+
+            </div>
+
+            <p class="settings-card-description">
+                Review platform-level configuration and application
+                settings through the configuration registry above.
+            </p>
+
+            <div class="settings-card-list">
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            System Configuration
+                        </strong>
+
+                        <span>
+                            Central system settings registry.
+                        </span>
+                    </div>
+
+                    <span class="settings-value">
+                        @totalRecords entries
+                    </span>
+
+                </div>
+
+                <div class="settings-setting-row">
+
+                    <div>
+                        <strong>
+                            Active Settings
+                        </strong>
+
+                        <span>
+                            Settings currently enabled by the platform.
+                        </span>
+                    </div>
+
+                    <span class="settings-badge enabled">
+                        @ActiveSettingsCount
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="settings-card-footer">
+
+                <button type="button"
+                        class="settings-manage-button"
+                        @onclick="FocusRegistry">
+
+                    <span>
+                        Manage System Settings
+                    </span>
+
+                    <i class="bi bi-arrow-up"></i>
+
+                </button>
+
+            </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- =========================================================
+         RESTRICTED ACTIONS
+         ========================================================= -->
+
+    <section class="settings-danger-panel">
+
+        <div class="settings-danger-header">
+
+            <div class="settings-danger-icon">
+                <i class="bi bi-shield-exclamation"></i>
+            </div>
+
+            <div>
+
+                <span class="settings-section-eyebrow">
+                    RESTRICTED ACTIONS
+                </span>
+
+                <h2>
+                    System Maintenance
+                </h2>
+
+                <p>
+                    Administrative operations that affect application
+                    configuration, auditing or platform availability.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="settings-danger-actions">
+
+            <button type="button"
+                    class="settings-danger-button"
+                    disabled>
+
+                <i class="bi bi-journal-text"></i>
+
+                <span>
+                    View Audit Logs
+                </span>
+
+                <small>
+                    Coming soon
+                </small>
+
+            </button>
+
+
+            <button type="button"
+                    class="settings-danger-button"
+                    disabled>
+
+                <i class="bi bi-info-circle"></i>
+
+                <span>
+                    System Information
+                </span>
+
+                <small>
+                    Coming soon
+                </small>
+
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =============================================================
+     CREATE / EDIT MODAL
+     ============================================================= -->
+
+@if (showEditor)
+{
+    <div class="settings-modal-backdrop"
+         @onclick="CloseEditor">
+
+        <div class="settings-modal"
+             @onclick:stopPropagation="true">
+
+            <div class="settings-modal-header">
+
+                <div class="settings-modal-title">
+
+                    <div class="settings-modal-icon">
+                        <i class="bi @(isEditMode
+                            ? "bi-pencil-square"
+                            : "bi-plus-lg")">
+                        </i>
+                    </div>
+
+                    <div>
+
+                        <span class="settings-section-eyebrow">
+                            CONFIGURATION
+                        </span>
+
+                        <h2>
+                            @(isEditMode
+                                ? "Edit System Setting"
+                                : "Add System Setting")
+                        </h2>
+
+                        <p>
+                            @(isEditMode
+                                ? "Update the selected application configuration value."
+                                : "Create a new application configuration value.")
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <button type="button"
+                        class="settings-modal-close"
+                        @onclick="CloseEditor">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </div>
+
+
+            <EditForm Model="@editorModel"
+                      OnValidSubmit="SaveSettingAsync">
+
+                <DataAnnotationsValidator />
+
+                <div class="settings-modal-body">
+
+                    @if (!string.IsNullOrWhiteSpace(editorErrorMessage))
+                    {
+                        <div class="settings-editor-error">
+
+                            <i class="bi bi-exclamation-circle"></i>
+
+                            <span>
+                                @editorErrorMessage
+                            </span>
+
+                        </div>
+                    }
+
+
+                    <!-- SETTING KEY -->
+
+                    <div class="settings-form-group">
+
+                        <label>
+                            Setting Key
+                            <span>*</span>
+                        </label>
+
+                        <input type="text"
+                               class="settings-form-input"
+                               @bind="editorModel.SettingKey"
+                               maxlength="150"
+                               placeholder="Example: Marketplace.DefaultCurrency" />
+
+                        <ValidationMessage For="@(() => editorModel.SettingKey)" />
+
+                        <small>
+                            Use a unique, descriptive key for the configuration value.
+                        </small>
+
+                    </div>
+
+
+                    <!-- VALUE -->
+
+                    <div class="settings-form-group">
+
+                        <label>
+                            Setting Value
+                        </label>
+
+                        @if (isEditMode && editingEncryptedSetting)
+                        {
+                            <div class="settings-protected-editor">
+
+                                <div class="settings-protected-editor-icon">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Protected Setting
+                                    </strong>
+
+                                    <span>
+                                        The existing encrypted value is protected.
+                                        Enter a new value only if you want to replace it.
+                                    </span>
+
+                                </div>
+
+                            </div>
+                        }
+
+                        <textarea class="settings-form-input settings-form-textarea"
+                                  @bind="editorModel.SettingValue"
+                                  maxlength="4000"
+                                  placeholder="Enter setting value..."></textarea>
+
+                        <ValidationMessage For="@(() => editorModel.SettingValue)" />
+
+                        <small>
+                            Maximum 4,000 characters.
+                        </small>
+
+                    </div>
+
+
+                    <!-- DESCRIPTION -->
+
+                    <div class="settings-form-group">
+
+                        <label>
+                            Description
+                        </label>
+
+                        <textarea class="settings-form-input settings-form-textarea description"
+                                  @bind="editorModel.Description"
+                                  maxlength="500"
+                                  placeholder="Describe what this setting controls..."></textarea>
+
+                        <ValidationMessage For="@(() => editorModel.Description)" />
+
+                    </div>
+
+
+                    <!-- OPTIONS -->
+
+                    <div class="settings-form-options">
+
+                        <label class="settings-check-option">
+
+                            <input type="checkbox"
+                                   @bind="editorModel.IsEncrypted" />
+
+                            <span class="settings-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="settings-check-content">
+
+                                <strong>
+                                    Encrypted Setting
+                                </strong>
+
+                                <small>
+                                    Mark the value as protected configuration.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+
+                        <label class="settings-check-option">
+
+                            <input type="checkbox"
+                                   @bind="editorModel.IsActive" />
+
+                            <span class="settings-check-box">
+                                <i class="bi bi-check"></i>
+                            </span>
+
+                            <span class="settings-check-content">
+
+                                <strong>
+                                    Active
+                                </strong>
+
+                                <small>
+                                    Make this setting available to the application.
+                                </small>
+
+                            </span>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <div class="settings-modal-footer">
+
+                    <button type="button"
+                            class="settings-secondary-button"
+                            @onclick="CloseEditor"
+                            disabled="@isSaving">
+
+                        Cancel
+
+                    </button>
+
+                    <button type="submit"
+                            class="settings-primary-button"
+                            disabled="@isSaving">
+
+                        @if (isSaving)
+                        {
+                            <i class="bi bi-arrow-repeat hr-spin"></i>
+
+                            <span>
+                                Saving...
+                            </span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg"></i>
+
+                            <span>
+                                @(isEditMode ? "Save Changes" : "Create Setting")
+                            </span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </EditForm>
+
+        </div>
+
+    </div>
+}
+
+
+@code {
+
+    // ============================================================
+    // PAGE STATE
+    // ============================================================
+
+    private List<SystemSettingListItemResponse> settings = new();
+
+    private bool isLoading;
+    private bool isSaving;
+    private bool statusChanging;
+
+    private string? errorMessage;
+    private string? editorErrorMessage;
+
+    private string searchText = string.Empty;
+    private string appliedSearch = string.Empty;
+
+    private string activeFilter = "all";
+
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalRecords;
+    private int totalPages;
+
+    private bool showEditor;
+    private bool isEditMode;
+    private bool editingEncryptedSetting;
+
+    private int editingSystemSettingId;
+
+    private SystemSettingEditorModel editorModel = new();
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AdminAuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        if (authenticationState.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+
+            return;
+        }
+
+        await RefreshAsync();
+    }
+
+
+    // ============================================================
+    // HEADER
+    // ============================================================
+
+    private RenderFragment SettingsHeaderDescription => @<text>
+        Configure application behaviour, marketplace options,
+        accounts, notifications and system preferences.
+    </text>;
+
+
+    private RenderFragment SettingsHeaderActions => @<text>
+
+        <button type="button"
+                class="hr-page-btn"
+                @onclick="RefreshAsync"
+                disabled="@isLoading">
+
+            <i class="bi @(isLoading
+                ? "bi-arrow-repeat hr-spin"
+                : "bi-arrow-clockwise")">
+            </i>
+
+            <span>
+                Refresh
+            </span>
+
+        </button>
+
+        <button type="button"
+                class="hr-page-btn settings-header-add"
+                @onclick="OpenCreateDialog"
+                disabled="@isLoading">
+
+            <i class="bi bi-plus-lg"></i>
+
+            <span>
+                Add Setting
+            </span>
+
+        </button>
+
+    </text>;
+
+
+    // ============================================================
+    // LOAD SETTINGS
+    // ============================================================
+
+    private async Task RefreshAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var request = new SystemSettingListRequest
+            {
+                Search = string.IsNullOrWhiteSpace(appliedSearch)
+                    ? null
+                    : appliedSearch,
+
+                IsActive = GetActiveFilterValue(),
+
+                PageNumber = currentPage,
+                PageSize = pageSize
+            };
+
+            var result =
+                await SystemSettingsApiService
+                    .GetSystemSettingsAsync(request);
+
+            settings = result.Items ?? new List<SystemSettingListItemResponse>();
+
+            currentPage = result.PageNumber;
+            pageSize = result.PageSize;
+            totalRecords = result.TotalRecords;
+            totalPages = result.TotalPages;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SYSTEM SETTINGS LOAD ERROR: {ex}");
+
+            errorMessage =
+                "The system settings could not be loaded. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // FILTERING
+    // ============================================================
+
+    private bool? GetActiveFilterValue()
+    {
+        return activeFilter switch
+        {
+            "active" => true,
+            "inactive" => false,
+            _ => null
+        };
+    }
+
+
+    private async Task ApplyFilters()
+    {
+        appliedSearch = searchText.Trim();
+        currentPage = 1;
+
+        await RefreshAsync();
+    }
+
+
+    private async Task ClearFilters()
+    {
+        searchText = string.Empty;
+        appliedSearch = string.Empty;
+        activeFilter = "all";
+        currentPage = 1;
+
+        await RefreshAsync();
+    }
+
+
+    private async Task HandleSearchKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ApplyFilters();
+        }
+    }
+
+
+    // ============================================================
+    // SUMMARY
+    // ============================================================
+
+    private int ActiveSettingsCount =>
+        settings.Count(x => x.IsActive);
+
+    private int InactiveSettingsCount =>
+        settings.Count(x => !x.IsActive);
+
+
+    private int FirstRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : ((currentPage - 1) * pageSize) + 1;
+
+
+    private int LastRecordNumber =>
+        Math.Min(
+            currentPage * pageSize,
+            totalRecords);
+
+
+    // ============================================================
+    // VALUE DISPLAY
+    // ============================================================
+
+    private static string GetDisplayValue(
+        SystemSettingListItemResponse setting)
+    {
+        if (setting.IsEncrypted)
+        {
+            return "••••••••••••";
+        }
+
+        if (string.IsNullOrWhiteSpace(setting.SettingValue))
+        {
+            return "—";
+        }
+
+        var value = setting.SettingValue.Trim();
+
+        if (value.Length > 80)
+        {
+            return value[..77] + "...";
+        }
+
+        return value;
+    }
+
+
+    private static string FormatDate(DateTime date)
+    {
+        return date.ToLocalTime().ToString(
+            "dd MMM yyyy, HH:mm");
+    }
+
+
+    // ============================================================
+    // CREATE
+    // ============================================================
+
+    private void OpenCreateDialog()
+    {
+        isEditMode = false;
+        editingSystemSettingId = 0;
+        editingEncryptedSetting = false;
+        editorErrorMessage = null;
+
+        editorModel = new SystemSettingEditorModel
+        {
+            IsActive = true,
+            IsEncrypted = false
+        };
+
+        showEditor = true;
+    }
+
+
+    // ============================================================
+    // EDIT
+    // ============================================================
+
+    private void OpenEditDialog(
+        SystemSettingListItemResponse setting)
+    {
+        isEditMode = true;
+        editingSystemSettingId = setting.SystemSettingID;
+        editingEncryptedSetting = setting.IsEncrypted;
+        editorErrorMessage = null;
+
+        editorModel = new SystemSettingEditorModel
+        {
+            SettingKey = setting.SettingKey,
+            SettingValue = setting.IsEncrypted
+                ? string.Empty
+                : setting.SettingValue,
+            Description = setting.Description,
+            IsEncrypted = setting.IsEncrypted,
+            IsActive = setting.IsActive
+        };
+
+        showEditor = true;
+    }
+
+
+    // ============================================================
+    // SAVE
+    // ============================================================
+
+    private async Task SaveSettingAsync()
+    {
+        isSaving = true;
+        editorErrorMessage = null;
+
+        try
+        {
+            if (isEditMode)
+            {
+                var request = new UpdateSystemSettingRequest
+                {
+                    SettingKey = editorModel.SettingKey.Trim(),
+                    SettingValue = editorModel.SettingValue,
+                    Description = editorModel.Description,
+                    IsEncrypted = editorModel.IsEncrypted,
+                    IsActive = editorModel.IsActive
+                };
+
+                await SystemSettingsApiService
+                    .UpdateSystemSettingAsync(
+                        editingSystemSettingId,
+                        request);
+            }
+            else
+            {
+                var request = new CreateSystemSettingRequest
+                {
+                    SettingKey = editorModel.SettingKey.Trim(),
+                    SettingValue = editorModel.SettingValue,
+                    Description = editorModel.Description,
+                    IsEncrypted = editorModel.IsEncrypted,
+                    IsActive = editorModel.IsActive
+                };
+
+                await SystemSettingsApiService
+                    .CreateSystemSettingAsync(request);
+            }
+
+            CloseEditor();
+
+            await RefreshAsync();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"SYSTEM SETTING SAVE ERROR: {ex}");
+
+            editorErrorMessage =
+                "The setting could not be saved. " +
+                "The setting key may already exist or the server rejected the request.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SYSTEM SETTING SAVE ERROR: {ex}");
+
+            editorErrorMessage =
+                "An unexpected error occurred while saving the setting.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // STATUS
+    // ============================================================
+
+    private async Task ToggleStatusAsync(
+        SystemSettingListItemResponse setting)
+    {
+        statusChanging = true;
+        errorMessage = null;
+
+        try
+        {
+            await SystemSettingsApiService
+                .UpdateSystemSettingStatusAsync(
+                    setting.SystemSettingID,
+                    !setting.IsActive);
+
+            await RefreshAsync();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo(
+                "/admin",
+                replace: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SYSTEM SETTING STATUS ERROR: {ex}");
+
+            errorMessage =
+                "The setting status could not be updated.";
+        }
+        finally
+        {
+            statusChanging = false;
+        }
+    }
+
+
+    // ============================================================
+    // MODAL
+    // ============================================================
+
+    private void CloseEditor()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        showEditor = false;
+        editorErrorMessage = null;
+        editingSystemSettingId = 0;
+        editingEncryptedSetting = false;
+        editorModel = new SystemSettingEditorModel();
+    }
+
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private async Task PreviousPage()
+    {
+        if (currentPage <= 1)
+        {
+            return;
+        }
+
+        currentPage--;
+
+        await RefreshAsync();
+    }
+
+
+    private async Task NextPage()
+    {
+        if (currentPage >= totalPages)
+        {
+            return;
+        }
+
+        currentPage++;
+
+        await RefreshAsync();
+    }
+
+
+    private async Task GoToPage(int page)
+    {
+        if (page < 1 || page > totalPages || page == currentPage)
+        {
+            return;
+        }
+
+        currentPage = page;
+
+        await RefreshAsync();
+    }
+
+
+    private IEnumerable<int> GetPaginationPages()
+    {
+        if (totalPages <= 7)
+        {
+            return Enumerable.Range(
+                1,
+                totalPages);
+        }
+
+        var start = Math.Max(
+            1,
+            currentPage - 2);
+
+        var end = Math.Min(
+            totalPages,
+            currentPage + 2);
+
+        if (start <= 2)
+        {
+            start = 1;
+            end = 5;
+        }
+
+        if (end >= totalPages - 1)
+        {
+            end = totalPages;
+            start = totalPages - 4;
+        }
+
+        return Enumerable.Range(
+            start,
+            end - start + 1);
+    }
+
+
+    // ============================================================
+    // EXISTING MANAGEMENT NAVIGATION
+    // ============================================================
+
+    private void FocusRegistry()
+    {
+        // The system settings registry is already visible on this page.
+        // This method intentionally does not navigate away.
+    }
+
+
+    private void OpenUserSettings()
+    {
+        Navigation.NavigateTo(
+            "/admin/users");
+    }
+
+
+    private void OpenCategories()
+    {
+        Navigation.NavigateTo(
+            "/admin/categories");
+    }
+
+
+    private void OpenAdvertisementTypes()
+    {
+        Navigation.NavigateTo(
+            "/admin/advertisement-types");
+    }
+
+
+    // ============================================================
+    // EDITOR MODEL
+    // ============================================================
+
+    private sealed class SystemSettingEditorModel
+    {
+        [Required]
+        [MaxLength(150)]
+        public string SettingKey { get; set; } = string.Empty;
+
+        [MaxLength(4000)]
+        public string? SettingValue { get; set; }
+
+        [MaxLength(500)]
+        public string? Description { get; set; }
+
+        public bool IsEncrypted { get; set; }
+
+        public bool IsActive { get; set; } = true;
+    }
+}

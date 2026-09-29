@@ -18,77 +18,10 @@
 <div class="my-ads-page">
 
     <!-- =========================================================
-         APPLICATION TOP BAR
+         SHARED PUBLIC TOP BAR
          ========================================================= -->
 
-    <div class="my-ads-topbar">
-
-        <div class="my-ads-topbar-inner">
-
-            <!-- Application Branding -->
-            <div class="my-ads-brand">
-
-                <div class="my-ads-logo-wrapper">
-
-                    <img src="images/hr-info-ads-logo.png"
-                         alt="HR INFO ADs"
-                         class="my-ads-logo" />
-
-                </div>
-
-                <div class="my-ads-brand-text">
-
-                    <div class="my-ads-app-title">
-                        HR INFO ADs
-                    </div>
-
-                    <div class="my-ads-app-subtitle">
-                        Advertisement Marketplace
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- Page Title -->
-            <div class="my-ads-page-title">
-
-                <span class="my-ads-page-icon">
-                    <i class="bi bi-megaphone"></i>
-                </span>
-
-                <div>
-
-                    <div class="my-ads-page-heading">
-                        My Advertisements
-                    </div>
-
-                    <div class="my-ads-page-description">
-                        Manage your advertisements
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- Back Button -->
-            <button type="button"
-                    class="my-ads-back-button"
-                    @onclick="GoHome">
-
-                <i class="bi bi-arrow-left"></i>
-
-                <span>
-                    Back to Home
-                </span>
-
-            </button>
-
-        </div>
-
-    </div>
+    <PublicTopBar />
 
 
     <!-- =========================================================
@@ -102,51 +35,50 @@
              PAGE HEADER
              ===================================================== -->
 
-        <section class="my-ads-header">
+        <!-- =====================================================
+     PAGE CONTEXT
+     ===================================================== -->
 
-            <div class="my-ads-header-content">
+<section class="my-ads-page-context">
 
-                <div class="my-ads-eyebrow">
+    <div class="my-ads-context-left">
 
-                    <span class="my-ads-eyebrow-icon">
-                        <i class="bi bi-grid-1x2"></i>
-                    </span>
+        <span class="my-ads-context-icon">
+            <i class="bi bi-grid-1x2"></i>
+        </span>
 
-                    My Marketplace
+        <div class="my-ads-context-text">
 
-                </div>
+            <span class="my-ads-context-eyebrow">
+                MY MARKETPLACE
+            </span>
 
+            <span class="my-ads-context-description">
+                Manage your advertisements and track their status.
+            </span>
 
-                <h1 class="my-ads-title">
-                    My Advertisements
-                </h1>
+        </div>
 
-
-                <p class="my-ads-description">
-                    Manage your advertisements, track their status,
-                    and take action whenever required.
-                </p>
-
-            </div>
+    </div>
 
 
-            <button type="button"
-                    class="my-ads-create-button"
-                    @onclick="CreateAdvertisement">
+    <button type="button"
+            class="my-ads-create-button"
+            @onclick="CreateAdvertisement">
 
-                <span class="create-button-icon">
-                    <i class="bi bi-plus-lg"></i>
-                </span>
+        <span class="create-button-icon">
+            <i class="bi bi-plus-lg"></i>
+        </span>
 
-                <span>
-                    Post New Advertisement
-                </span>
+        <span>
+            Post New Advertisement
+        </span>
 
-                <i class="bi bi-arrow-right create-button-arrow"></i>
+        <i class="bi bi-arrow-right create-button-arrow"></i>
 
-            </button>
+    </button>
 
-        </section>
+</section>
 
 
         <!-- =====================================================
@@ -713,191 +645,194 @@
 
                                 </div>
 
-<!-- =====================================================
-     DETAILS
-     ===================================================== -->
 
-<div class="my-ad-details">
+                                <!-- =====================================================
+                                     DETAILS
+                                     ===================================================== -->
 
-    @if (advertisement.Price.HasValue)
-    {
-        <div class="my-ad-detail">
+                                <div class="my-ad-details">
 
-            <div class="detail-icon">
-                <i class="bi bi-cash-stack"></i>
-            </div>
+                                    @if (advertisement.Price.HasValue)
+                                    {
+                                        <div class="my-ad-detail">
 
-            <div>
+                                            <div class="detail-icon">
+                                                <i class="bi bi-cash-stack"></i>
+                                            </div>
 
-                <span>
-                    Price
-                </span>
+                                            <div>
 
-                <strong>
-                    @FormatPrice(advertisement)
-                </strong>
+                                                <span>
+                                                    Price
+                                                </span>
 
-                @if (advertisement.IsNegotiable)
-                {
-                    <small>
-                        Negotiable
-                    </small>
-                }
+                                                <strong>
+                                                    @FormatPrice(advertisement)
+                                                </strong>
 
-            </div>
+                                                @if (advertisement.IsNegotiable)
+                                                {
+                                                    <small>
+                                                        Negotiable
+                                                    </small>
+                                                }
 
-        </div>
-    }
+                                            </div>
 
-
-    @if (!string.IsNullOrWhiteSpace(
-        advertisement.AddressLine))
-    {
-        <div class="my-ad-detail">
-
-            <div class="detail-icon">
-                <i class="bi bi-geo-alt"></i>
-            </div>
-
-            <div>
-
-                <span>
-                    Location
-                </span>
-
-                <strong class="location-text">
-                    @advertisement.AddressLine
-                </strong>
-
-            </div>
-
-        </div>
-    }
-
-</div>
+                                        </div>
+                                    }
 
 
-<!-- =====================================================
-     CONTACT INFORMATION
-     ===================================================== -->
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        advertisement.AddressLine))
+                                    {
+                                        <div class="my-ad-detail">
 
-@if (!string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber) ||
-     !string.IsNullOrWhiteSpace(advertisement.ContactEmail))
-{
-    <div class="my-ad-contact">
+                                            <div class="detail-icon">
+                                                <i class="bi bi-geo-alt"></i>
+                                            </div>
 
-        <div class="my-ad-contact-header">
+                                            <div>
 
-            <div class="my-ad-contact-title">
+                                                <span>
+                                                    Location
+                                                </span>
 
-                <span class="my-ad-contact-icon">
-                    <i class="bi bi-person-lines-fill"></i>
-                </span>
+                                                <strong class="location-text">
+                                                    @advertisement.AddressLine
+                                                </strong>
 
-                <div>
+                                            </div>
 
-                    <strong>
-                        Contact Information
-                    </strong>
+                                        </div>
+                                    }
 
-                    <span>
-                        Your contact details
-                    </span>
-
-                </div>
-
-            </div>
-
-        </div>
+                                </div>
 
 
-        <div class="my-ad-contact-methods">
+                                <!-- =====================================================
+                                     CONTACT INFORMATION
+                                     ===================================================== -->
 
-            <!-- WHATSAPP -->
-            @if (!string.IsNullOrWhiteSpace(
-                advertisement.WhatsAppNumber))
-            {
-                <div class="my-ad-contact-method">
+                                @if (!string.IsNullOrWhiteSpace(
+                                    advertisement.WhatsAppNumber) ||
+                                    !string.IsNullOrWhiteSpace(
+                                        advertisement.ContactEmail))
+                                {
+                                    <div class="my-ad-contact">
 
-                    <div class="my-ad-contact-method-icon whatsapp">
-                        <i class="bi bi-whatsapp"></i>
-                    </div>
+                                        <div class="my-ad-contact-header">
 
-                    <div class="my-ad-contact-method-content">
+                                            <div class="my-ad-contact-title">
 
-                        <span>
-                            WhatsApp
-                        </span>
+                                                <span class="my-ad-contact-icon">
+                                                    <i class="bi bi-person-lines-fill"></i>
+                                                </span>
 
-                        <strong>
-                            @advertisement.WhatsAppNumber
-                        </strong>
+                                                <div>
 
-                    </div>
+                                                    <strong>
+                                                        Contact Information
+                                                    </strong>
 
-                    @if (advertisement.ShowWhatsAppToPublic)
-                    {
-                        <span class="my-ad-contact-public">
-                            <i class="bi bi-eye-fill"></i>
-                            Public
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="my-ad-contact-private">
-                            <i class="bi bi-eye-slash-fill"></i>
-                            Private
-                        </span>
-                    }
+                                                    <span>
+                                                        Your contact details
+                                                    </span>
 
-                </div>
-            }
+                                                </div>
+
+                                            </div>
+
+                                        </div>
 
 
-            <!-- EMAIL -->
-            @if (!string.IsNullOrWhiteSpace(
-                advertisement.ContactEmail))
-            {
-                <div class="my-ad-contact-method">
+                                        <div class="my-ad-contact-methods">
 
-                    <div class="my-ad-contact-method-icon email">
-                        <i class="bi bi-envelope-fill"></i>
-                    </div>
+                                            <!-- WHATSAPP -->
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                advertisement.WhatsAppNumber))
+                                            {
+                                                <div class="my-ad-contact-method">
 
-                    <div class="my-ad-contact-method-content">
+                                                    <div class="my-ad-contact-method-icon whatsapp">
+                                                        <i class="bi bi-whatsapp"></i>
+                                                    </div>
 
-                        <span>
-                            Email
-                        </span>
+                                                    <div class="my-ad-contact-method-content">
 
-                        <strong>
-                            @advertisement.ContactEmail
-                        </strong>
+                                                        <span>
+                                                            WhatsApp
+                                                        </span>
 
-                    </div>
+                                                        <strong>
+                                                            @advertisement.WhatsAppNumber
+                                                        </strong>
 
-                    @if (advertisement.ShowEmailToPublic)
-                    {
-                        <span class="my-ad-contact-public">
-                            <i class="bi bi-eye-fill"></i>
-                            Public
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="my-ad-contact-private">
-                            <i class="bi bi-eye-slash-fill"></i>
-                            Private
-                        </span>
-                    }
+                                                    </div>
 
-                </div>
-            }
+                                                    @if (advertisement.ShowWhatsAppToPublic)
+                                                    {
+                                                        <span class="my-ad-contact-public">
+                                                            <i class="bi bi-eye-fill"></i>
+                                                            Public
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="my-ad-contact-private">
+                                                            <i class="bi bi-eye-slash-fill"></i>
+                                                            Private
+                                                        </span>
+                                                    }
 
-        </div>
+                                                </div>
+                                            }
 
-    </div>
-}
+
+                                            <!-- EMAIL -->
+                                            @if (!string.IsNullOrWhiteSpace(
+                                                advertisement.ContactEmail))
+                                            {
+                                                <div class="my-ad-contact-method">
+
+                                                    <div class="my-ad-contact-method-icon email">
+                                                        <i class="bi bi-envelope-fill"></i>
+                                                    </div>
+
+                                                    <div class="my-ad-contact-method-content">
+
+                                                        <span>
+                                                            Email
+                                                        </span>
+
+                                                        <strong>
+                                                            @advertisement.ContactEmail
+                                                        </strong>
+
+                                                    </div>
+
+                                                    @if (advertisement.ShowEmailToPublic)
+                                                    {
+                                                        <span class="my-ad-contact-public">
+                                                            <i class="bi bi-eye-fill"></i>
+                                                            Public
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="my-ad-contact-private">
+                                                            <i class="bi bi-eye-slash-fill"></i>
+                                                            Private
+                                                        </span>
+                                                    }
+
+                                                </div>
+                                            }
+
+                                        </div>
+
+                                    </div>
+                                }
 
 
                                 <!-- DATES -->

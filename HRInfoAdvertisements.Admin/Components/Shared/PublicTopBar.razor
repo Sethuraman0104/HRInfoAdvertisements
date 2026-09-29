@@ -1,0 +1,438 @@
+@using HRInfoAdvertisements.Admin.Services
+
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<header class="public-topbar">
+
+    <div class="public-topbar-shell">
+
+        <!-- ========================================================
+             BRAND
+             ======================================================== -->
+
+        <button type="button"
+                class="public-topbar-brand"
+                @onclick="GoHome"
+                aria-label="HR INFO ADs Home">
+
+            <span class="public-topbar-logo">
+                HR
+            </span>
+
+            <span class="public-topbar-brand-text">
+
+                <span class="public-topbar-brand-name">
+                    HR INFO <strong>ADs</strong>
+                </span>
+
+                <span class="public-topbar-brand-subtitle">
+                    Your marketplace for everything
+                </span>
+
+            </span>
+
+        </button>
+
+
+        <!-- ========================================================
+             MAIN NAVIGATION
+             ======================================================== -->
+
+        <nav class="public-topbar-nav"
+             aria-label="Main navigation">
+
+            <button type="button"
+                    class="@GetNavClass("home")"
+                    @onclick="GoHome">
+
+                Home
+
+            </button>
+
+            <button type="button"
+                    class="@GetNavClass("browse")"
+                    @onclick="GoBrowse">
+
+                Browse Ads
+
+            </button>
+
+            <button type="button"
+                    class="@GetNavClass("categories")"
+                    @onclick="GoCategories">
+
+                Categories
+
+            </button>
+
+            <button type="button"
+                    class="@GetNavClass("how")"
+                    @onclick="GoHowItWorks">
+
+                How It Works
+
+            </button>
+
+        </nav>
+
+
+        <!-- ========================================================
+             ACTIONS
+             ======================================================== -->
+
+        <div class="public-topbar-actions">
+
+            <!-- FAVORITES -->
+
+            <button type="button"
+                    class="public-topbar-icon-button"
+                    title="Favorites"
+                    aria-label="Favorites"
+                    @onclick="OpenFavorites">
+
+                <svg viewBox="0 0 24 24"
+                     aria-hidden="true">
+
+                    <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
+
+                </svg>
+
+            </button>
+
+
+            @if (IsAuthenticated)
+            {
+                <!-- MY ADS -->
+
+                <button type="button"
+                        class="public-topbar-text-button"
+                        @onclick="OpenMyAdvertisements">
+
+                    My Advertisements
+
+                </button>
+
+
+                <!-- ACCOUNT -->
+
+                <button type="button"
+                        class="public-topbar-account-button"
+                        @onclick="OpenAccount">
+
+                    <span class="public-topbar-account-icon">
+
+                        <svg viewBox="0 0 24 24"
+                             aria-hidden="true">
+
+                            <circle cx="12"
+                                    cy="8"
+                                    r="4" />
+
+                            <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+
+                        </svg>
+
+                    </span>
+
+                    <span>
+                        @DisplayUserName
+                    </span>
+
+                </button>
+
+
+                <!-- SIGN OUT -->
+
+                <button type="button"
+                        class="public-topbar-text-button"
+                        @onclick="HandleSignOut">
+
+                    Sign Out
+
+                </button>
+            }
+            else
+            {
+                <!-- SIGN IN -->
+
+                <button type="button"
+                        class="public-topbar-text-button"
+                        @onclick="OpenLogin">
+
+                    Sign In
+
+                </button>
+
+
+                <!-- SIGN UP -->
+
+                <button type="button"
+                        class="public-topbar-signup-button"
+                        @onclick="OpenSignup">
+
+                    Sign Up
+
+                </button>
+            }
+
+
+            <!-- POST ADVERTISEMENT -->
+
+            <button type="button"
+                    class="public-topbar-post-button"
+                    @onclick="HandlePostAdvertisement">
+
+                <svg viewBox="0 0 24 24"
+                     aria-hidden="true">
+
+                    <path d="M12 5v14" />
+
+                    <path d="M5 12h14" />
+
+                </svg>
+
+                <span>
+                    Post Advertisement
+                </span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+</header>
+
+
+@code {
+
+    // ============================================================
+    // PARAMETERS
+    // ============================================================
+
+    [Parameter]
+    public EventCallback OnSignIn { get; set; }
+
+    [Parameter]
+    public EventCallback OnSignUp { get; set; }
+
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+
+    private bool IsAuthenticated =>
+        AuthenticationStateProvider.IsAuthenticated;
+
+
+    private string DisplayUserName
+    {
+        get
+        {
+            var user =
+                AuthenticationStateProvider
+                    .GetAuthenticationStateAsync()
+                    .GetAwaiter()
+                    .GetResult()
+                    .User;
+
+            var name =
+                user.Identity?.Name;
+
+            return string.IsNullOrWhiteSpace(name)
+                ? "Account"
+                : name;
+        }
+    }
+
+
+    // ============================================================
+    // HOME
+    // ============================================================
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    // ============================================================
+    // BROWSE
+    // ============================================================
+
+    private void GoBrowse()
+    {
+        Navigation.NavigateTo("/#browse");
+    }
+
+
+    // ============================================================
+    // CATEGORIES
+    // ============================================================
+
+    private void GoCategories()
+    {
+        Navigation.NavigateTo("/#categories");
+    }
+
+
+    // ============================================================
+    // HOW IT WORKS
+    // ============================================================
+
+    private void GoHowItWorks()
+    {
+        Navigation.NavigateTo("/#how-it-works");
+    }
+
+
+    // ============================================================
+    // SIGN IN
+    // ============================================================
+
+    private async Task OpenLogin()
+    {
+        if (OnSignIn.HasDelegate)
+        {
+            await OnSignIn.InvokeAsync();
+            return;
+        }
+
+        Navigation.NavigateTo("/");
+    }
+
+
+    // ============================================================
+    // SIGN UP
+    // ============================================================
+
+    private async Task OpenSignup()
+    {
+        if (OnSignUp.HasDelegate)
+        {
+            await OnSignUp.InvokeAsync();
+            return;
+        }
+
+        Navigation.NavigateTo("/");
+    }
+
+
+    // ============================================================
+    // FAVORITES
+    // ============================================================
+
+    private async Task OpenFavorites()
+    {
+        if (!IsAuthenticated)
+        {
+            await OpenLogin();
+            return;
+        }
+
+        Navigation.NavigateTo("/my-favorites");
+    }
+
+
+    // ============================================================
+    // MY ADVERTISEMENTS
+    // ============================================================
+
+    private async Task OpenMyAdvertisements()
+    {
+        if (!IsAuthenticated)
+        {
+            await OpenLogin();
+            return;
+        }
+
+        Navigation.NavigateTo("/my-ads");
+    }
+
+
+    // ============================================================
+    // ACCOUNT
+    // ============================================================
+
+    private async Task OpenAccount()
+    {
+        if (!IsAuthenticated)
+        {
+            await OpenLogin();
+            return;
+        }
+
+        Navigation.NavigateTo("/account");
+    }
+
+
+    // ============================================================
+    // POST ADVERTISEMENT
+    // ============================================================
+
+    private async Task HandlePostAdvertisement()
+    {
+        if (IsAuthenticated)
+        {
+            Navigation.NavigateTo("/my-ads/create");
+            return;
+        }
+
+        await OpenLogin();
+    }
+
+
+    // ============================================================
+    // SIGN OUT
+    // ============================================================
+
+    private async Task HandleSignOut()
+    {
+        AuthenticationStateProvider.SignOut();
+
+        Navigation.NavigateTo(
+            "/",
+            forceLoad: true);
+
+        await Task.CompletedTask;
+    }
+
+
+    // ============================================================
+    // ACTIVE NAVIGATION
+    // ============================================================
+
+    private string GetNavClass(string item)
+    {
+        var relative =
+            Navigation.ToBaseRelativePath(
+                Navigation.Uri);
+
+        relative =
+            relative.Split('?')[0]
+                     .Split('#')[0]
+                     .Trim('/')
+                     .ToLowerInvariant();
+
+        return item switch
+        {
+            "home" =>
+                string.IsNullOrEmpty(relative)
+                    ? "public-topbar-nav-link active"
+                    : "public-topbar-nav-link",
+
+            "browse" =>
+                "public-topbar-nav-link",
+
+            "categories" =>
+                "public-topbar-nav-link",
+
+            "how" =>
+                "public-topbar-nav-link",
+
+            _ =>
+                "public-topbar-nav-link"
+        };
+    }
+}

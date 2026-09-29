@@ -12,1556 +12,62 @@
 
 <PageTitle>Edit Advertisement | HR INFO ADs</PageTitle>
 
-<style>
-
-    /* ============================================================
-       PAGE
-       ============================================================ */
-
-    .my-ad-edit-page {
-        min-height: calc(100vh - 70px);
-        background:
-            linear-gradient(
-                180deg,
-                #f6f8fc 0%,
-                #ffffff 45%,
-                #f7f9fc 100%
-            );
-        padding-bottom: 70px;
-        color: #172033;
-    }
-
-
-    /* ============================================================
-       TOP BAR
-       ============================================================ */
-
-    .my-ad-edit-topbar {
-        width: 100%;
-        background: rgba(255,255,255,.96);
-        border-bottom: 1px solid #e5eaf2;
-        box-shadow: 0 4px 20px rgba(20,38,70,.06);
-        position: relative;
-        z-index: 10;
-    }
-
-    .my-ad-edit-topbar-inner {
-        width: 100%;
-        max-width: 1450px;
-        min-height: 82px;
-        margin: 0 auto;
-        padding: 12px 28px;
-        box-sizing: border-box;
-
-        display: grid;
-
-        grid-template-columns:
-            minmax(240px, 1fr)
-            auto
-            minmax(240px, 1fr);
-
-        align-items: center;
-        column-gap: 28px;
-    }
-
-    .my-ad-edit-brand {
-        justify-self: start;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-    }
-
-    .my-ad-edit-brand-logo {
-        width: 48px;
-        height: 48px;
-        object-fit: contain;
-        flex: 0 0 48px;
-    }
-
-    .my-ad-edit-brand-text {
-        min-width: 0;
-    }
-
-    .my-ad-edit-brand-title {
-        margin: 0;
-        font-size: 16px;
-        line-height: 1.2;
-        font-weight: 800;
-        color: #0A2C6A;
-        letter-spacing: -.2px;
-    }
-
-    .my-ad-edit-brand-subtitle {
-        display: block;
-        margin-top: 3px;
-        color: #718096;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .my-ad-edit-page-title {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 11px;
-
-        margin: 0;
-        justify-self: center;
-        min-width: max-content;
-
-        color: #13264A;
-        font-size: 22px;
-        font-weight: 850;
-        letter-spacing: -.4px;
-        white-space: nowrap;
-    }
-
-    .my-ad-edit-page-title-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-
-        color: #ffffff;
-
-        background:
-            linear-gradient(
-                135deg,
-                #0A2C6A,
-                #1B5FC7
-            );
-
-        box-shadow:
-            0 7px 18px rgba(27,95,199,.22);
-    }
-
-    .my-ad-edit-page-title-icon i {
-        font-size: 18px;
-    }
-
-    .my-ad-edit-back-button {
-        justify-self: end;
-
-        min-height: 44px;
-        padding: 0 17px;
-
-        border: 1px solid #dce3ee;
-        border-radius: 12px;
-
-        background: #ffffff;
-        color: #31415c;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        font-size: 13px;
-        font-weight: 750;
-
-        cursor: pointer;
-
-        transition:
-            transform .2s ease,
-            box-shadow .2s ease,
-            border-color .2s ease,
-            color .2s ease;
-    }
-
-    .my-ad-edit-back-button:hover {
-        transform: translateY(-2px);
-        border-color: #b8c7df;
-        color: #0A2C6A;
-        box-shadow: 0 8px 20px rgba(25,50,90,.10);
-    }
-
-
-    /* ============================================================
-       MAIN
-       ============================================================ */
-
-    .my-ad-edit-main {
-        width: 100%;
-        max-width: 1180px;
-        margin: 0 auto;
-        padding: 34px 24px 0;
-        box-sizing: border-box;
-    }
-
-    .my-ad-edit-intro {
-        margin-bottom: 24px;
-    }
-
-    .my-ad-edit-intro h2 {
-        margin: 0;
-        color: #172033;
-        font-size: 26px;
-        font-weight: 850;
-        letter-spacing: -.6px;
-    }
-
-    .my-ad-edit-intro p {
-        margin: 7px 0 0;
-        color: #718096;
-        font-size: 14px;
-        line-height: 1.6;
-    }
-
-
-    /* ============================================================
-       ALERTS
-       ============================================================ */
-
-    .edit-alert {
-        display: flex;
-        align-items: flex-start;
-        gap: 11px;
-
-        padding: 14px 16px;
-        margin-bottom: 18px;
-
-        border-radius: 13px;
-        font-size: 13px;
-        line-height: 1.55;
-    }
-
-    .edit-alert i {
-        margin-top: 2px;
-        font-size: 17px;
-        flex: 0 0 auto;
-    }
-
-    .edit-alert-error {
-        background: #fff4f4;
-        border: 1px solid #f4cccc;
-        color: #a32929;
-    }
-
-    .edit-alert-success {
-        background: #f0fbf5;
-        border: 1px solid #c8ead6;
-        color: #23784a;
-    }
-
-
-    /* ============================================================
-       LOADING
-       ============================================================ */
-
-    .edit-loading-card {
-        background: #ffffff;
-        border: 1px solid #e5eaf2;
-        border-radius: 18px;
-        padding: 55px 25px;
-        text-align: center;
-        box-shadow: 0 10px 30px rgba(30,50,90,.06);
-    }
-
-    .edit-loading-spinner {
-        width: 44px;
-        height: 44px;
-        margin: 0 auto 15px;
-
-        border: 4px solid #e4ebf5;
-        border-top-color: #1B5FC7;
-        border-radius: 50%;
-
-        animation: editSpin .8s linear infinite;
-    }
-
-    @@keyframes editSpin {
-        to {
-            transform: rotate(360deg);
-        }
-    }
-
-    .edit-loading-card strong {
-        display: block;
-        color: #26344d;
-        font-size: 15px;
-    }
-
-    .edit-loading-card span {
-        display: block;
-        margin-top: 5px;
-        color: #8190a6;
-        font-size: 12px;
-    }
-
-
-    /* ============================================================
-       FORM SECTION
-       ============================================================ */
-
-    .edit-form-section {
-        background: #ffffff;
-        border: 1px solid #e4e9f1;
-        border-radius: 19px;
-        margin-bottom: 20px;
-        padding: 25px;
-
-        box-shadow:
-            0 9px 30px rgba(31,52,90,.055);
-    }
-
-    .edit-section-heading {
-        display: flex;
-        align-items: center;
-        gap: 13px;
-
-        padding-bottom: 18px;
-        margin-bottom: 22px;
-
-        border-bottom: 1px solid #edf0f5;
-    }
-
-    .edit-section-icon {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background: #edf4ff;
-        color: #175ab8;
-
-        flex: 0 0 42px;
-    }
-
-    .edit-section-icon i {
-        font-size: 18px;
-    }
-
-    .edit-section-heading h3 {
-        margin: 0;
-        color: #1d2a40;
-        font-size: 17px;
-        font-weight: 800;
-    }
-
-    .edit-section-heading p {
-        margin: 3px 0 0;
-        color: #8490a3;
-        font-size: 12px;
-    }
-
-
-    /* ============================================================
-       FORM GRID
-       ============================================================ */
-
-    .edit-form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 19px;
-    }
-
-    .edit-form-grid.three {
-        grid-template-columns:
-            repeat(3, minmax(0, 1fr));
-    }
-
-    .edit-form-group {
-        min-width: 0;
-    }
-
-    .edit-form-group.full {
-        grid-column: 1 / -1;
-    }
-
-    .edit-form-group label {
-        display: block;
-        margin-bottom: 7px;
-
-        color: #3d4a60;
-        font-size: 12px;
-        font-weight: 750;
-    }
-
-    .edit-required {
-        color: #d44949;
-        margin-left: 2px;
-    }
-
-    .edit-input-wrap {
-        position: relative;
-    }
-
-    .edit-input-icon {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-
-        color: #7e8da5;
-        font-size: 15px;
-
-        pointer-events: none;
-        z-index: 2;
-    }
-
-    .edit-input,
-    .edit-select,
-    .edit-textarea {
-        width: 100%;
-        box-sizing: border-box;
-
-        border: 1px solid #dce3ed !important;
-        border-radius: 11px !important;
-
-        background:
-            linear-gradient(
-                180deg,
-                #ffffff,
-                #fbfcfe
-            ) !important;
-
-        color: #202d42 !important;
-
-        font-size: 13px !important;
-        font-weight: 550 !important;
-
-        outline: none !important;
-
-        transition:
-            border-color .2s ease,
-            box-shadow .2s ease,
-            background .2s ease;
-    }
-
-    .edit-input,
-    .edit-select {
-        min-height: 48px;
-        padding: 0 14px 0 42px !important;
-    }
-
-    .edit-input:focus,
-    .edit-select:focus,
-    .edit-textarea:focus {
-        border-color: #4b86d9 !important;
-
-        box-shadow:
-            0 0 0 4px rgba(27,95,199,.09) !important;
-
-        background: #ffffff !important;
-    }
-
-    .edit-textarea {
-        min-height: 135px;
-        padding: 14px !important;
-        resize: vertical;
-        line-height: 1.65;
-    }
-
-    .edit-select-wrap {
-        position: relative;
-    }
-
-    .edit-select-wrap::after {
-        content: "\F282";
-        font-family: "bootstrap-icons";
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-
-        color: #718096;
-        font-size: 12px;
-        pointer-events: none;
-    }
-
-    .edit-select {
-        appearance: none;
-        padding-right: 38px !important;
-    }
-
-    .edit-input.rtl,
-    .edit-textarea.rtl {
-        direction: rtl;
-        text-align: right;
-    }
-
-    .edit-input-icon-right {
-        position: absolute;
-        right: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-
-        color: #7e8da5;
-        pointer-events: none;
-    }
-
-    .edit-input.rtl {
-        padding-left: 14px !important;
-        padding-right: 42px !important;
-    }
-
-    .edit-help {
-        display: block;
-        margin-top: 6px;
-
-        color: #8a96a8;
-        font-size: 11px;
-        line-height: 1.45;
-    }
-
-    .validation-message {
-        margin-top: 5px;
-        color: #c53636;
-        font-size: 11px;
-    }
-
-
-    /* ============================================================
-       CURRENCY
-       ============================================================ */
-
-    .currency-readonly {
-        background: #f5f7fa !important;
-        color: #536176 !important;
-        cursor: not-allowed;
-    }
-
-
-    /* ============================================================
-       NEGOTIABLE
-       ============================================================ */
-
-    .edit-negotiable-card {
-        grid-column: 1 / -1;
-
-        display: flex;
-        align-items: center;
-        gap: 12px;
-
-        padding: 14px 16px;
-
-        border: 1px solid #e3e9f2;
-        border-radius: 13px;
-
-        background: #fafbfd;
-
-        cursor: pointer;
-
-        transition:
-            background .2s ease,
-            border-color .2s ease,
-            transform .2s ease;
-    }
-
-    .edit-negotiable-card:hover {
-        background: #f5f8fd;
-        border-color: #cbd8eb;
-        transform: translateY(-1px);
-    }
-
-    .edit-negotiable-card input {
-        width: 18px;
-        height: 18px;
-        accent-color: #1B5FC7;
-        flex: 0 0 auto;
-    }
-
-    .edit-negotiable-content strong {
-        display: block;
-        color: #334057;
-        font-size: 13px;
-    }
-
-    .edit-negotiable-content span {
-        display: block;
-        margin-top: 2px;
-        color: #8894a7;
-        font-size: 11px;
-    }
-
-
-    /* ============================================================
-       PHOTOS
-       ============================================================ */
-
-    .edit-photo-summary {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-
-        margin-bottom: 18px;
-        padding: 12px 14px;
-
-        border-radius: 12px;
-        background: #f7f9fc;
-        border: 1px solid #e6ebf2;
-    }
-
-    .edit-photo-summary-left {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-
-        color: #4e5c72;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .edit-photo-summary-left i {
-        color: #1B5FC7;
-        font-size: 16px;
-    }
-
-    .edit-photo-count {
-        color: #0A2C6A;
-        font-weight: 850;
-    }
-
-    .edit-photo-grid {
-        display: grid;
-        grid-template-columns:
-            repeat(4, minmax(0, 1fr));
-        gap: 15px;
-        margin-bottom: 18px;
-    }
-
-    .edit-photo-card {
-        position: relative;
-        overflow: hidden;
-
-        border: 1px solid #e0e6ef;
-        border-radius: 14px;
-
-        background: #ffffff;
-
-        box-shadow:
-            0 5px 16px rgba(28,47,80,.05);
-    }
-
-    .edit-photo-image-wrap {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 4 / 3;
-        background: #f0f3f8;
-        overflow: hidden;
-    }
-
-    .edit-photo-image {
-        width: 100%;
-        height: 100%;
-        display: block;
-        object-fit: cover;
-        transition: transform .3s ease;
-    }
-
-    .edit-photo-card:hover .edit-photo-image {
-        transform: scale(1.035);
-    }
-
-    .edit-primary-badge {
-        position: absolute;
-        left: 9px;
-        top: 9px;
-
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-
-        padding: 5px 8px;
-        border-radius: 999px;
-
-        background: rgba(10,44,106,.93);
-        color: #ffffff;
-
-        font-size: 10px;
-        font-weight: 800;
-
-        box-shadow: 0 4px 10px rgba(0,0,0,.15);
-    }
-
-    .edit-photo-card-body {
-        padding: 11px;
-    }
-
-    .edit-photo-name {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-
-        color: #3b485e;
-        font-size: 11px;
-        font-weight: 700;
-    }
-
-    .edit-photo-actions {
-        display: flex;
-        gap: 7px;
-        margin-top: 9px;
-    }
-
-    .edit-photo-action {
-        min-height: 32px;
-        padding: 0 9px;
-
-        border-radius: 8px;
-        border: 1px solid #dce3ed;
-
-        background: #ffffff;
-        color: #536176;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 5px;
-
-        font-size: 10px;
-        font-weight: 750;
-
-        cursor: pointer;
-
-        transition:
-            .2s ease;
-    }
-
-    .edit-photo-action:hover {
-        border-color: #9fb6d8;
-        color: #0A2C6A;
-        background: #f6f9fd;
-    }
-
-    .edit-photo-action.delete:hover {
-        color: #bd3838;
-        border-color: #edbcbc;
-        background: #fff6f6;
-    }
-
-    .edit-photo-action:disabled {
-        opacity: .5;
-        cursor: not-allowed;
-    }
-
-
-    /* ============================================================
-       NEW PHOTO CARDS
-       ============================================================ */
-
-    .edit-new-photo {
-        position: relative;
-        overflow: hidden;
-
-        border: 1px solid #dbe5f2;
-        border-radius: 14px;
-
-        background: #f9fbfe;
-    }
-
-    .edit-new-photo .edit-photo-image-wrap {
-        background: #eef4fb;
-    }
-
-    .edit-new-photo-badge {
-        position: absolute;
-        left: 9px;
-        top: 9px;
-
-        padding: 5px 8px;
-        border-radius: 999px;
-
-        background: rgba(27,95,199,.93);
-        color: #ffffff;
-
-        font-size: 10px;
-        font-weight: 800;
-    }
-
-
-    /* ============================================================
-       UPLOAD
-       ============================================================ */
-
-    .edit-upload-area {
-        position: relative;
-
-        min-height: 155px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        padding: 22px;
-
-        border: 2px dashed #c9d7ea;
-        border-radius: 15px;
-
-        background:
-            linear-gradient(
-                180deg,
-                #fbfdff,
-                #f6f9fd
-            );
-
-        cursor: pointer;
-
-        transition:
-            border-color .2s ease,
-            background .2s ease,
-            transform .2s ease;
-    }
-
-    .edit-upload-area:hover {
-        border-color: #79a4dc;
-        background: #f3f8ff;
-        transform: translateY(-1px);
-    }
-
-    .edit-upload-file-input {
-        position: absolute;
-        inset: 0;
-
-        width: 100%;
-        height: 100%;
-
-        opacity: 0;
-        cursor: pointer;
-    }
-
-    .edit-upload-content {
-        text-align: center;
-        pointer-events: none;
-    }
-
-    .edit-upload-icon {
-        width: 50px;
-        height: 50px;
-        margin: 0 auto 10px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        border-radius: 14px;
-
-        background: #eaf2ff;
-        color: #1B5FC7;
-    }
-
-    .edit-upload-icon i {
-        font-size: 22px;
-    }
-
-    .edit-upload-content strong {
-        display: block;
-        color: #31415a;
-        font-size: 13px;
-    }
-
-    .edit-upload-content span {
-        display: block;
-        margin-top: 5px;
-        color: #8995a8;
-        font-size: 11px;
-    }
-
-
-    /* ============================================================
-       UPLOAD PROGRESS
-       ============================================================ */
-
-    .edit-upload-progress {
-        margin-top: 16px;
-        padding: 14px 16px;
-
-        border-radius: 13px;
-
-        background: #f3f8ff;
-        border: 1px solid #d6e4f8;
-    }
-
-    .edit-upload-progress-top {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .edit-upload-progress-icon {
-        width: 34px;
-        height: 34px;
-
-        border-radius: 9px;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        background: #dceaff;
-        color: #1B5FC7;
-    }
-
-    .edit-upload-progress-content {
-        flex: 1;
-    }
-
-    .edit-upload-progress-content strong {
-        display: block;
-        color: #30415c;
-        font-size: 12px;
-    }
-
-    .edit-upload-progress-content span {
-        display: block;
-        margin-top: 2px;
-        color: #8090a6;
-        font-size: 10px;
-    }
-
-    .edit-upload-progress-count {
-        color: #175ab8;
-        font-size: 12px;
-        font-weight: 800;
-    }
-
-    .edit-progress-track {
-        width: 100%;
-        height: 6px;
-        margin-top: 12px;
-
-        border-radius: 999px;
-        background: #dfe8f5;
-        overflow: hidden;
-    }
-
-    .edit-progress-value {
-        height: 100%;
-
-        border-radius: inherit;
-
-        background:
-            linear-gradient(
-                90deg,
-                #0A2C6A,
-                #1B5FC7
-            );
-
-        transition: width .25s ease;
-    }
-
-
-    /* ============================================================
-       ACTION BAR
-       ============================================================ */
-
-    .edit-action-bar {
-        position: sticky;
-        bottom: 0;
-        z-index: 20;
-
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-
-        padding: 16px 20px;
-
-        background: rgba(255,255,255,.96);
-        border: 1px solid #e1e7f0;
-        border-radius: 17px;
-
-        box-shadow:
-            0 -8px 30px rgba(25,46,82,.08);
-
-        backdrop-filter: blur(12px);
-    }
-
-    .edit-action-left {
-        color: #8792a5;
-        font-size: 11px;
-    }
-
-    .edit-action-buttons {
-        display: flex;
-        align-items: center;
-        gap: 9px;
-    }
-
-    .edit-button {
-        min-height: 44px;
-        padding: 0 16px;
-
-        border-radius: 10px;
-        border: 1px solid transparent;
-
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        font-size: 12px;
-        font-weight: 800;
-
-        cursor: pointer;
-
-        transition:
-            transform .2s ease,
-            box-shadow .2s ease,
-            background .2s ease;
-    }
-
-    .edit-button:hover:not(:disabled) {
-        transform: translateY(-2px);
-    }
-
-    .edit-button:disabled {
-        opacity: .55;
-        cursor: not-allowed;
-    }
-
-    .edit-button-cancel {
-        border-color: #dce3ed;
-        background: #ffffff;
-        color: #556277;
-    }
-
-    .edit-button-cancel:hover:not(:disabled) {
-        background: #f7f9fc;
-        box-shadow: 0 5px 15px rgba(30,50,90,.07);
-    }
-
-    .edit-button-save {
-        background:
-            linear-gradient(
-                135deg,
-                #0A2C6A,
-                #1B5FC7
-            );
-
-        color: #ffffff;
-
-        box-shadow:
-            0 7px 17px rgba(27,95,199,.22);
-    }
-
-    .edit-button-submit {
-        background:
-            linear-gradient(
-                135deg,
-                #137844,
-                #20a65e
-            );
-
-        color: #ffffff;
-
-        box-shadow:
-            0 7px 17px rgba(32,166,94,.20);
-    }
-
-    .edit-button-save:hover:not(:disabled),
-    .edit-button-submit:hover:not(:disabled) {
-        box-shadow:
-            0 10px 23px rgba(27,95,199,.28);
-    }
-
-    .edit-button-spinner {
-        width: 14px;
-        height: 14px;
-
-        border: 2px solid rgba(255,255,255,.45);
-        border-top-color: #ffffff;
-        border-radius: 50%;
-
-        animation: editSpin .7s linear infinite;
-    }
-
-
-    /* ============================================================
-       RESPONSIVE
-       ============================================================ */
-
-    @@media (max-width: 1050px) {
-
-        .edit-photo-grid {
-            grid-template-columns:
-                repeat(3, minmax(0, 1fr));
-        }
-
-        .edit-form-grid.three {
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-        }
-    }
-
-
-    @@media (max-width: 800px) {
-
-        .my-ad-edit-topbar-inner {
-            min-height: auto;
-            padding: 12px 18px;
-
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .my-ad-edit-brand {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .my-ad-edit-page-title {
-            width: 100%;
-            order: 3;
-
-            justify-content: flex-start;
-
-            min-width: 0;
-
-            padding-top: 4px;
-
-            white-space: normal;
-            text-align: left;
-        }
-
-        .my-ad-edit-back-button {
-            width: 42px;
-            min-width: 42px;
-            padding: 0;
-
-            justify-content: center;
-        }
-
-        .my-ad-edit-back-button span {
-            display: none;
-        }
-
-        .my-ad-edit-main {
-            padding: 24px 15px 0;
-        }
-
-        .edit-form-section {
-            padding: 20px 17px;
-            border-radius: 16px;
-        }
-
-        .edit-form-grid,
-        .edit-form-grid.three {
-            grid-template-columns: 1fr;
-        }
-
-        .edit-form-group.full,
-        .edit-negotiable-card {
-            grid-column: auto;
-        }
-
-        .edit-photo-grid {
-            grid-template-columns:
-                repeat(2, minmax(0, 1fr));
-        }
-
-        .edit-action-bar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-
-        .edit-action-left {
-            text-align: center;
-        }
-
-        .edit-action-buttons {
-            width: 100%;
-            flex-wrap: wrap;
-        }
-
-        .edit-button {
-            flex: 1;
-        }
-    }
-
-
-    @@media (max-width: 500px) {
-
-        .my-ad-edit-brand-subtitle {
-            display: none;
-        }
-
-        .my-ad-edit-brand-logo {
-            width: 42px;
-            height: 42px;
-            flex-basis: 42px;
-        }
-
-        .my-ad-edit-brand-title {
-            font-size: 14px;
-        }
-
-        .my-ad-edit-page-title {
-            font-size: 19px;
-        }
-
-        .my-ad-edit-page-title-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-        }
-
-        .edit-photo-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .edit-action-buttons {
-            flex-direction: column;
-        }
-
-        .edit-button {
-            width: 100%;
-        }
-    }
-
-    /* ============================================================
-CONTACT INFORMATION
-============================================================ */
-
-.edit-contact-intro {
-display: flex;
-align-items: flex-start;
-gap: 12px;
-margin-bottom: 20px;
-padding: 14px 16px;
-border: 1px solid #eadede;
-border-radius: 12px;
-background: linear-gradient(
-135deg,
-#fffafa,
-#faf6f6
-);
-}
-
-.edit-contact-intro-icon {
-width: 36px;
-height: 36px;
-min-width: 36px;
-display: flex;
-align-items: center;
-justify-content: center;
-border-radius: 10px;
-background: #f5eaea;
-color: #790000;
-font-size: 17px;
-}
-
-.edit-contact-intro > div:last-child {
-display: flex;
-flex-direction: column;
-gap: 3px;
-}
-
-.edit-contact-intro strong {
-color: #332727;
-font-size: 13px;
-font-weight: 700;
-}
-
-.edit-contact-intro span {
-color: #766969;
-font-size: 12px;
-line-height: 1.5;
-}
-
-/* ============================================================
-CONTACT CARDS
-============================================================ */
-
-.edit-contact-grid {
-display: grid;
-grid-template-columns: repeat(2, minmax(0, 1fr));
-gap: 18px;
-}
-
-.edit-contact-card {
-padding: 20px;
-border: 1px solid #eadede;
-border-radius: 14px;
-background: #ffffff;
-box-shadow: 0 4px 14px rgba(80, 20, 20, .04);
-transition:
-border-color .2s ease,
-box-shadow .2s ease,
-transform .2s ease;
-}
-
-.edit-contact-card:hover {
-border-color: #dcc5c5;
-box-shadow: 0 8px 22px rgba(80, 20, 20, .07);
-transform: translateY(-1px);
-}
-
-.edit-contact-card-header {
-display: flex;
-align-items: center;
-gap: 12px;
-margin-bottom: 20px;
-}
-
-.edit-contact-method-icon {
-width: 42px;
-height: 42px;
-min-width: 42px;
-display: flex;
-align-items: center;
-justify-content: center;
-border-radius: 11px;
-font-size: 19px;
-}
-
-.edit-contact-method-icon.whatsapp {
-background: #eaf8f0;
-color: #16884a;
-}
-
-.edit-contact-method-icon.email {
-background: #f5eeee;
-color: #790000;
-}
-
-.edit-contact-method-heading {
-min-width: 0;
-display: flex;
-flex-direction: column;
-gap: 3px;
-}
-
-.edit-contact-method-heading strong {
-color: #2f2525;
-font-size: 15px;
-font-weight: 700;
-}
-
-.edit-contact-method-heading span {
-color: #817575;
-font-size: 11px;
-line-height: 1.4;
-}
-
-/* ============================================================
-VISIBILITY
-============================================================ */
-
-.edit-contact-visibility {
-display: flex;
-align-items: flex-start;
-gap: 11px;
-margin: 18px 0 0;
-padding: 12px 13px;
-border: 1px solid #eee5e5;
-border-radius: 11px;
-background: #faf8f8;
-cursor: pointer;
-}
-
-.edit-contact-visibility:hover {
-background: #fdfafa;
-}
-
-.edit-contact-visibility input[type="checkbox"] {
-width: 17px;
-height: 17px;
-margin-top: 2px;
-flex-shrink: 0;
-accent-color: #790000;
-cursor: pointer;
-}
-
-.edit-contact-visibility-content {
-min-width: 0;
-flex: 1;
-display: flex;
-flex-direction: column;
-gap: 4px;
-}
-
-.edit-contact-visibility-title {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 8px;
-flex-wrap: wrap;
-}
-
-.edit-contact-visibility-title > span:first-child {
-color: #403535;
-font-size: 12px;
-font-weight: 700;
-}
-
-.edit-contact-visibility-content small {
-color: #867878;
-font-size: 10px;
-line-height: 1.4;
-}
-
-/* ============================================================
-VISIBILITY BADGES
-============================================================ */
-
-.edit-contact-public-badge,
-.edit-contact-private-badge {
-display: inline-flex;
-align-items: center;
-gap: 4px;
-padding: 4px 7px;
-border-radius: 20px;
-font-size: 9px;
-font-weight: 700;
-white-space: nowrap;
-}
-
-.edit-contact-public-badge {
-color: #167344;
-background: #eaf8f0;
-border: 1px solid #cdebd9;
-}
-
-.edit-contact-private-badge {
-color: #786666;
-background: #f4f0f0;
-border: 1px solid #e2dada;
-}
-
-/* ============================================================
-INFORMATION NOTE
-============================================================ */
-
-.edit-contact-note {
-display: flex;
-align-items: flex-start;
-gap: 9px;
-margin-top: 18px;
-padding: 12px 14px;
-border-radius: 10px;
-background: #faf7f7;
-border: 1px solid #eee5e5;
-color: #746767;
-font-size: 11px;
-line-height: 1.5;
-}
-
-.edit-contact-note i {
-flex-shrink: 0;
-margin-top: 1px;
-color: #790000;
-font-size: 14px;
-}
-
-/* ============================================================
-RESPONSIVE
-============================================================ */
-
-@@media (max-width: 800px) {
-.edit-contact-grid {
-    grid-template-columns: 1fr;
-}
-
-}
-
-@@media (max-width: 575px) {
-
-```
-.edit-contact-card {
-    padding: 16px;
-}
-
-.edit-contact-visibility-title {
-    align-items: flex-start;
-    flex-direction: column;
-}
-}
-
-
-</style>
-
-
 <div class="my-ad-edit-page">
 
     <!-- =========================================================
-         TOP BAR
+         SHARED PUBLIC TOP BAR
          ========================================================= -->
 
-    <header class="my-ad-edit-topbar">
-
-        <div class="my-ad-edit-topbar-inner">
-
-            <div class="my-ad-edit-brand">
-
-                <img src="images/hr-info-ads-logo.png"
-                     class="my-ad-edit-brand-logo"
-                     alt="HR INFO ADs" />
-
-                <div class="my-ad-edit-brand-text">
-
-                    <div class="my-ad-edit-brand-title">
-                        HR INFO ADs
-                    </div>
-
-                    <span class="my-ad-edit-brand-subtitle">
-                        Advertisement Marketplace
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <h1 class="my-ad-edit-page-title">
-
-                <span class="my-ad-edit-page-title-icon">
-                    <i class="bi bi-pencil-square"></i>
-                </span>
-
-                <span>
-                    Edit Advertisement
-                </span>
-
-            </h1>
-
-
-            <button type="button"
-                    class="my-ad-edit-back-button"
-                    @onclick="GoBack"
-                    disabled="@IsBusy">
-
-                <i class="bi bi-arrow-left"></i>
-
-                <span>
-                    Back to Advertisement
-                </span>
-
-            </button>
-
-        </div>
-
-    </header>
+    <PublicTopBar />
 
 
     <!-- =========================================================
-         MAIN
+         PAGE CONTEXT
          ========================================================= -->
 
-    <main class="my-ad-edit-main">
+    <section class="my-ad-edit-page-context">
 
-        <div class="my-ad-edit-intro">
+        <div class="my-ad-edit-context-left">
 
-            <h2>
-                Update your advertisement
-            </h2>
+            <span class="my-ad-edit-context-icon">
+                <i class="bi bi-pencil-square"></i>
+            </span>
 
-            <p>
-                Review your information, update the details or manage
-                your photos before saving the advertisement.
-            </p>
+            <div class="my-ad-edit-context-text">
+
+                <span class="my-ad-edit-context-eyebrow">
+                    EDIT ADVERTISEMENT
+                </span>
+
+                <span class="my-ad-edit-context-description">
+                    Update your advertisement details, photos and contact information.
+                </span>
+
+            </div>
 
         </div>
 
+        <button type="button"
+                class="my-ad-edit-back-button"
+                @onclick="GoBack"
+                disabled="@IsBusy">
+
+            <i class="bi bi-arrow-left"></i>
+
+            <span>
+                Back to Advertisement
+            </span>
+
+        </button>
+
+    </section>
+
+
+    <!-- =========================================================
+         MAIN EDIT CONTENT
+         ========================================================= -->
+
+    <main class="my-ad-edit-main">
 
         <!-- =====================================================
              ALERTS
@@ -1579,7 +85,6 @@ RESPONSIVE
 
             </div>
         }
-
 
         @if (!string.IsNullOrWhiteSpace(successMessage))
         {
@@ -1617,7 +122,6 @@ RESPONSIVE
         }
         else if (advertisementLoaded)
         {
-
             <EditForm Model="model"
                       OnValidSubmit="SaveChanges">
 
@@ -1636,14 +140,18 @@ RESPONSIVE
                             <i class="bi bi-card-text"></i>
                         </div>
 
-                        <div>
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                LISTING INFORMATION
+                            </span>
 
                             <h3>
                                 Basic Information
                             </h3>
 
                             <p>
-                                Update the main information of your advertisement.
+                                Update the main information displayed on your advertisement.
                             </p>
 
                         </div>
@@ -1652,7 +160,6 @@ RESPONSIVE
 
 
                     <div class="edit-form-grid">
-
 
                         <!-- CATEGORY -->
 
@@ -1903,7 +410,11 @@ RESPONSIVE
                             <i class="bi bi-geo-alt"></i>
                         </div>
 
-                        <div>
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                LOCATION
+                            </span>
 
                             <h3>
                                 Location
@@ -1920,7 +431,6 @@ RESPONSIVE
 
                     <div class="edit-form-grid">
 
-
                         <!-- COUNTRY -->
 
                         <div class="edit-form-group">
@@ -1934,10 +444,10 @@ RESPONSIVE
                                 <i class="bi bi-globe2 edit-input-icon"></i>
 
                                 <InputSelect TValue="int"
-             class="edit-select"
-             Value="selectedCountryId"
-             ValueChanged="OnCountryChanged"
-             ValueExpression="@(() => selectedCountryId)">
+                                             class="edit-select"
+                                             Value="selectedCountryId"
+                                             ValueChanged="OnCountryChanged"
+                                             ValueExpression="@(() => selectedCountryId)">
 
                                     <option value="0">
                                         Select country
@@ -1970,11 +480,11 @@ RESPONSIVE
                                 <i class="bi bi-map edit-input-icon"></i>
 
                                 <InputSelect TValue="int"
-             class="edit-select"
-             Value="selectedStateId"
-             ValueChanged="OnStateChanged"
-             ValueExpression="@(() => selectedStateId)"
-             disabled="@(selectedCountryId <= 0)">
+                                             class="edit-select"
+                                             Value="selectedStateId"
+                                             ValueChanged="OnStateChanged"
+                                             ValueExpression="@(() => selectedStateId)"
+                                             disabled="@(selectedCountryId <= 0)">
 
                                     <option value="0">
                                         Select state
@@ -2007,11 +517,11 @@ RESPONSIVE
                                 <i class="bi bi-buildings edit-input-icon"></i>
 
                                 <InputSelect TValue="int"
-             class="edit-select"
-             Value="selectedCityId"
-             ValueChanged="OnCityChanged"
-             ValueExpression="@(() => selectedCityId)"
-             disabled="@(selectedCountryId <= 0)">
+                                             class="edit-select"
+                                             Value="selectedCityId"
+                                             ValueChanged="OnCityChanged"
+                                             ValueExpression="@(() => selectedCityId)"
+                                             disabled="@(selectedCountryId <= 0)">
 
                                     <option value="0">
                                         Select city
@@ -2165,7 +675,11 @@ RESPONSIVE
                             <i class="bi bi-house-door"></i>
                         </div>
 
-                        <div>
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                PROPERTY
+                            </span>
 
                             <h3>
                                 Property Details
@@ -2181,7 +695,6 @@ RESPONSIVE
 
 
                     <div class="edit-form-grid three">
-
 
                         <!-- LAND AREA -->
 
@@ -2319,254 +832,255 @@ RESPONSIVE
 
                 </section>
 
-<!-- =================================================
-     CONTACT INFORMATION
-     ================================================= -->
 
-<section class="edit-form-section">
-<div class="edit-section-heading">
+                <!-- =================================================
+                     CONTACT INFORMATION
+                     ================================================= -->
 
-    <div class="edit-section-icon">
-        <i class="bi bi-person-lines-fill"></i>
-    </div>
+                <section class="edit-form-section">
 
-    <div>
+                    <div class="edit-section-heading">
 
-        <h3>
-            Contact Information
-        </h3>
+                        <div class="edit-section-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
 
-        <p>
-            Add the contact details that visitors can use to reach you.
-        </p>
+                        <div class="edit-section-heading-content">
 
-    </div>
+                            <span class="edit-section-eyebrow">
+                                CONTACT
+                            </span>
 
-</div>
+                            <h3>
+                                Contact Information
+                            </h3>
 
+                            <p>
+                                Manage the contact details visitors can use to reach you.
+                            </p>
 
-<div class="edit-contact-intro">
+                        </div>
 
-    <div class="edit-contact-intro-icon">
-        <i class="bi bi-shield-check"></i>
-    </div>
-
-    <div>
-
-        <strong>
-            Control your contact visibility
-        </strong>
-
-        <span>
-            Your contact details are always visible to you.
-            Choose which contact methods should be visible to
-            visitors.
-        </span>
-
-    </div>
-
-</div>
+                    </div>
 
 
-<div class="edit-contact-grid">
+                    <div class="edit-contact-intro">
 
-    <!-- =================================================
-         WHATSAPP
-         ================================================= -->
+                        <div class="edit-contact-intro-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
 
-    <div class="edit-contact-card">
+                        <div>
 
-        <div class="edit-contact-card-header">
+                            <strong>
+                                Control your contact visibility
+                            </strong>
 
-            <div class="edit-contact-method-icon whatsapp">
-                <i class="bi bi-whatsapp"></i>
-            </div>
+                            <span>
+                                Your contact details are always visible to you.
+                                Choose which contact methods should be visible to
+                                visitors.
+                            </span>
 
-            <div class="edit-contact-method-heading">
+                        </div>
 
-                <strong>
-                    WhatsApp
-                </strong>
-
-                <span>
-                    Allow visitors to contact you on WhatsApp.
-                </span>
-
-            </div>
-
-        </div>
+                    </div>
 
 
-        <div class="edit-form-group">
+                    <div class="edit-contact-grid">
 
-            <label>
-                WhatsApp Number
-            </label>
+                        <!-- WHATSAPP -->
 
-            <div class="edit-input-wrap">
+                        <div class="edit-contact-card">
 
-                <i class="bi bi-whatsapp edit-input-icon"></i>
+                            <div class="edit-contact-card-header">
 
-                <InputText class="edit-input"
-                           @bind-Value="model.WhatsAppNumber"
-                           placeholder="Enter WhatsApp number" />
+                                <div class="edit-contact-method-icon whatsapp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
 
-            </div>
+                                <div class="edit-contact-method-heading">
 
-            <small class="edit-help">
-                Include the country code, for example +973 XXXXXXXX.
-            </small>
+                                    <strong>
+                                        WhatsApp
+                                    </strong>
 
-        </div>
+                                    <span>
+                                        Allow visitors to contact you on WhatsApp.
+                                    </span>
+
+                                </div>
+
+                            </div>
 
 
-        <label class="edit-contact-visibility">
+                            <div class="edit-form-group">
 
-            <InputCheckbox
-                @bind-Value="model.ShowWhatsAppToPublic" />
+                                <label>
+                                    WhatsApp Number
+                                </label>
 
-            <div class="edit-contact-visibility-content">
+                                <div class="edit-input-wrap">
 
-                <div class="edit-contact-visibility-title">
+                                    <i class="bi bi-whatsapp edit-input-icon"></i>
 
-                    <span>
-                        Show WhatsApp to visitors
-                    </span>
+                                    <InputText class="edit-input"
+                                               @bind-Value="model.WhatsAppNumber"
+                                               placeholder="Enter WhatsApp number" />
 
-                    @if (model.ShowWhatsAppToPublic)
-                    {
-                        <span class="edit-contact-public-badge">
-                            <i class="bi bi-eye-fill"></i>
-                            Public
+                                </div>
+
+                                <small class="edit-help">
+                                    Include the country code, for example +973 XXXXXXXX.
+                                </small>
+
+                            </div>
+
+
+                            <label class="edit-contact-visibility">
+
+                                <InputCheckbox @bind-Value="model.ShowWhatsAppToPublic" />
+
+                                <div class="edit-contact-visibility-content">
+
+                                    <div class="edit-contact-visibility-title">
+
+                                        <span>
+                                            Show WhatsApp to visitors
+                                        </span>
+
+                                        @if (model.ShowWhatsAppToPublic)
+                                        {
+                                            <span class="edit-contact-public-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="edit-contact-private-badge">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                                Private
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                    <small>
+                                        Visitors can see this number when enabled.
+                                    </small>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="edit-contact-card">
+
+                            <div class="edit-contact-card-header">
+
+                                <div class="edit-contact-method-icon email">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
+
+                                <div class="edit-contact-method-heading">
+
+                                    <strong>
+                                        Email
+                                    </strong>
+
+                                    <span>
+                                        Allow visitors to contact you by email.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="edit-form-group">
+
+                                <label>
+                                    Email Address
+                                </label>
+
+                                <div class="edit-input-wrap">
+
+                                    <i class="bi bi-envelope edit-input-icon"></i>
+
+                                    <InputText class="edit-input"
+                                               type="email"
+                                               @bind-Value="model.ContactEmail"
+                                               placeholder="Enter contact email address" />
+
+                                </div>
+
+                                <small class="edit-help">
+                                    Use an email address that you regularly monitor.
+                                </small>
+
+                            </div>
+
+
+                            <label class="edit-contact-visibility">
+
+                                <InputCheckbox @bind-Value="model.ShowEmailToPublic" />
+
+                                <div class="edit-contact-visibility-content">
+
+                                    <div class="edit-contact-visibility-title">
+
+                                        <span>
+                                            Show email to visitors
+                                        </span>
+
+                                        @if (model.ShowEmailToPublic)
+                                        {
+                                            <span class="edit-contact-public-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="edit-contact-private-badge">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                                Private
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                    <small>
+                                        Visitors can see this email address when enabled.
+                                    </small>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-contact-note">
+
+                        <i class="bi bi-info-circle-fill"></i>
+
+                        <span>
+                            At least one contact method must be provided and at least
+                            one contact method must be visible to visitors before the
+                            advertisement can be submitted for approval.
                         </span>
-                    }
-                    else
-                    {
-                        <span class="edit-contact-private-badge">
-                            <i class="bi bi-eye-slash-fill"></i>
-                            Private
-                        </span>
-                    }
 
-                </div>
+                    </div>
 
-                <small>
-                    Visitors can see this number when enabled.
-                </small>
-
-            </div>
-
-        </label>
-
-    </div>
-
-
-    <!-- =================================================
-         EMAIL
-         ================================================= -->
-
-    <div class="edit-contact-card">
-
-        <div class="edit-contact-card-header">
-
-            <div class="edit-contact-method-icon email">
-                <i class="bi bi-envelope-fill"></i>
-            </div>
-
-            <div class="edit-contact-method-heading">
-
-                <strong>
-                    Email
-                </strong>
-
-                <span>
-                    Allow visitors to contact you by email.
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="edit-form-group">
-
-            <label>
-                Email Address
-            </label>
-
-            <div class="edit-input-wrap">
-
-                <i class="bi bi-envelope edit-input-icon"></i>
-
-                <InputText class="edit-input"
-                           type="email"
-                           @bind-Value="model.ContactEmail"
-                           placeholder="Enter contact email address" />
-
-            </div>
-
-            <small class="edit-help">
-                Use an email address that you regularly monitor.
-            </small>
-
-        </div>
-
-
-        <label class="edit-contact-visibility">
-
-            <InputCheckbox
-                @bind-Value="model.ShowEmailToPublic" />
-
-            <div class="edit-contact-visibility-content">
-
-                <div class="edit-contact-visibility-title">
-
-                    <span>
-                        Show email to visitors
-                    </span>
-
-                    @if (model.ShowEmailToPublic)
-                    {
-                        <span class="edit-contact-public-badge">
-                            <i class="bi bi-eye-fill"></i>
-                            Public
-                        </span>
-                    }
-                    else
-                    {
-                        <span class="edit-contact-private-badge">
-                            <i class="bi bi-eye-slash-fill"></i>
-                            Private
-                        </span>
-                    }
-
-                </div>
-
-                <small>
-                    Visitors can see this email address when enabled.
-                </small>
-
-            </div>
-
-        </label>
-
-    </div>
-
-</div>
-
-
-<div class="edit-contact-note">
-
-    <i class="bi bi-info-circle-fill"></i>
-
-    <span>
-        At least one contact method must be provided and at least
-        one contact method must be visible to visitors before the
-        advertisement can be submitted for approval.
-    </span>
-
-</div>
-</section>
+                </section>
 
 
                 <!-- =================================================
@@ -2581,7 +1095,11 @@ RESPONSIVE
                             <i class="bi bi-images"></i>
                         </div>
 
-                        <div>
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                MEDIA
+                            </span>
 
                             <h3>
                                 Advertisement Photos
@@ -2708,8 +1226,7 @@ RESPONSIVE
                     }
                     else
                     {
-                        <div class="edit-upload-area"
-                             style="margin-bottom:18px;">
+                        <div class="edit-upload-area edit-upload-empty">
 
                             <span class="edit-upload-content">
 
@@ -2737,7 +1254,7 @@ RESPONSIVE
 
                     @if (selectedImages.Count > 0)
                     {
-                        <div class="edit-photo-grid">
+                        <div class="edit-photo-grid edit-new-photo-grid">
 
                             @foreach (var image in selectedImages)
                             {
@@ -2818,40 +1335,58 @@ RESPONSIVE
                     <!-- UPLOAD AREA -->
 
                     @if (RemainingPhotoSlots > 0)
-                    {
-                        <label class="edit-upload-area">
+{
+    <div class="edit-upload-area">
 
-                            <InputFile class="edit-upload-file-input"
-                                       OnChange="HandleImageSelection"
-                                       multiple
-                                       accept="image/jpeg,image/png,image/webp" />
+        <InputFile id="advertisement-photo-upload"
+                   class="edit-upload-file-input"
+                   OnChange="HandleImageSelection"
+                   multiple
+                   accept="image/jpeg,image/png,image/webp" />
 
-                            <span class="edit-upload-content">
+        <label for="advertisement-photo-upload"
+               class="edit-upload-label">
 
-                                <span class="edit-upload-icon">
+            <span class="edit-upload-icon">
+                <i class="bi bi-cloud-arrow-up"></i>
+            </span>
 
-                                    <i class="bi bi-cloud-arrow-up"></i>
+            <span class="edit-upload-title">
+                Add more photos
+            </span>
 
-                                </span>
+            <span class="edit-upload-description">
+                Select additional photos for your advertisement
+            </span>
 
-                                <strong>
-                                    Add more photos
-                                </strong>
+            <span class="edit-upload-formats">
+                <span>JPG</span>
+                <span class="edit-upload-dot">•</span>
+                <span>PNG</span>
+                <span class="edit-upload-dot">•</span>
+                <span>WEBP</span>
+                <span class="edit-upload-divider"></span>
+                <span>Maximum 10 MB per photo</span>
+            </span>
 
-                                <span>
-                                    JPG, PNG or WEBP · Maximum 10 MB per photo
-                                </span>
+            <span class="edit-upload-button">
+                <i class="bi bi-folder2-open"></i>
+                <span>Browse Photos</span>
+            </span>
 
-                            </span>
+            <span class="edit-upload-remaining">
+                @RemainingPhotoSlots photo@(RemainingPhotoSlots == 1 ? "" : "s") remaining
+            </span>
 
-                        </label>
-                    }
+        </label>
+
+    </div>
+}
 
 
                     @if (RemainingPhotoSlots == 0)
                     {
-                        <div class="edit-alert edit-alert-success"
-                             style="margin-top:16px;margin-bottom:0;">
+                        <div class="edit-alert edit-alert-success edit-photo-limit-alert">
 
                             <i class="bi bi-check-circle-fill"></i>
 
@@ -2901,7 +1436,6 @@ RESPONSIVE
 
                                 <div class="edit-progress-value"
                                      style="width:@GetUploadProgressPercentage()%;">
-
                                 </div>
 
                             </div>
@@ -2920,15 +1454,18 @@ RESPONSIVE
 
                     <div class="edit-action-left">
 
-                        <i class="bi bi-shield-check"></i>
+                        <span class="edit-action-security-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </span>
 
-                        Your changes will be saved securely.
+                        <span>
+                            Your changes will be saved securely.
+                        </span>
 
                     </div>
 
 
                     <div class="edit-action-buttons">
-
 
                         <button type="button"
                                 class="edit-button edit-button-cancel"
@@ -3213,7 +1750,6 @@ RESPONSIVE
                 return;
             }
 
-
             await LoadLookupsAsync();
 
             await LoadAdvertisementAsync();
@@ -3280,10 +1816,6 @@ RESPONSIVE
             }
 
 
-            // ----------------------------------------------------
-            // BASIC INFORMATION
-            // ----------------------------------------------------
-
             model.CategoryID =
                 advertisement.CategoryID;
 
@@ -3313,26 +1845,20 @@ RESPONSIVE
 
             model.IsNegotiable =
                 advertisement.IsNegotiable;
-// ----------------------------------------------------
-// CONTACT INFORMATION
-// ----------------------------------------------------
-
-model.WhatsAppNumber =
-    advertisement.WhatsAppNumber;
-
-model.ContactEmail =
-    advertisement.ContactEmail;
-
-model.ShowWhatsAppToPublic =
-    advertisement.ShowWhatsAppToPublic;
-
-model.ShowEmailToPublic =
-    advertisement.ShowEmailToPublic;
 
 
-            // ----------------------------------------------------
-            // LOCATION
-            // ----------------------------------------------------
+            model.WhatsAppNumber =
+                advertisement.WhatsAppNumber;
+
+            model.ContactEmail =
+                advertisement.ContactEmail;
+
+            model.ShowWhatsAppToPublic =
+                advertisement.ShowWhatsAppToPublic;
+
+            model.ShowEmailToPublic =
+                advertisement.ShowEmailToPublic;
+
 
             selectedCountryId =
                 advertisement.CountryID ?? 0;
@@ -3372,10 +1898,6 @@ model.ShowEmailToPublic =
                 advertisement.Longitude;
 
 
-            // ----------------------------------------------------
-            // PROPERTY DETAILS
-            // ----------------------------------------------------
-
             model.LandArea =
                 advertisement.LandArea;
 
@@ -3394,10 +1916,6 @@ model.ShowEmailToPublic =
             model.ExpiryDate =
                 advertisement.ExpiryDate;
 
-
-            // ----------------------------------------------------
-            // LOAD CASCADING LOCATIONS
-            // ----------------------------------------------------
 
             if (selectedCountryId > 0)
             {
@@ -3433,10 +1951,6 @@ model.ShowEmailToPublic =
             }
 
 
-            // ----------------------------------------------------
-            // LOAD EXISTING PHOTOS
-            // ----------------------------------------------------
-
             LoadSavedImagesFromAdvertisement(
                 advertisement);
 
@@ -3462,7 +1976,7 @@ model.ShowEmailToPublic =
     // ============================================================
 
     private void LoadSavedImagesFromAdvertisement(
-    AdvertisementResponse advertisement)
+        AdvertisementResponse advertisement)
     {
         savedImages.Clear();
 
@@ -3719,7 +2233,6 @@ model.ShowEmailToPublic =
                 continue;
             }
 
-
             if (!IsSupportedImageType(
                     file.ContentType,
                     file.Name))
@@ -3732,7 +2245,6 @@ model.ShowEmailToPublic =
 
                 continue;
             }
-
 
             var duplicate =
                 selectedImages.Any(x =>
@@ -3752,7 +2264,6 @@ model.ShowEmailToPublic =
                 continue;
             }
 
-
             try
             {
                 await using var browserStream =
@@ -3768,17 +2279,14 @@ model.ShowEmailToPublic =
                 var bytes =
                     memoryStream.ToArray();
 
-
                 var mimeType =
                     GetImageMimeType(
                         file.ContentType,
                         file.Name);
 
-
                 var previewUrl =
                     $"data:{mimeType};base64," +
                     Convert.ToBase64String(bytes);
-
 
                 var hasExistingPrimary =
                     savedImages.Any(
@@ -3792,7 +2300,6 @@ model.ShowEmailToPublic =
                     !hasExistingPrimary &&
                     !hasSelectedPrimary &&
                     selectedImages.Count == 0;
-
 
                 selectedImages.Add(
                     new SelectedImage
@@ -3813,7 +2320,6 @@ model.ShowEmailToPublic =
                             makePrimary
                     });
 
-
                 addedCount++;
             }
             catch (Exception ex)
@@ -3831,7 +2337,6 @@ model.ShowEmailToPublic =
             }
         }
 
-
         if (addedCount > 0)
         {
             successMessage =
@@ -3839,7 +2344,6 @@ model.ShowEmailToPublic =
                 $"{(addedCount == 1 ? "" : "s")} added successfully. " +
                 $"{TotalPhotoCount} of {MaxImages} photos are ready.";
         }
-
 
         if (rejectedCount > 0 &&
             addedCount == 0 &&
@@ -3903,7 +2407,6 @@ model.ShowEmailToPublic =
             image.IsPrimary;
 
         selectedImages.Remove(image);
-
 
         if (wasPrimary &&
             !savedImages.Any(x => x.IsPrimary) &&
@@ -3969,7 +2472,6 @@ model.ShowEmailToPublic =
                 return;
             }
 
-
             foreach (var savedImage in savedImages)
             {
                 savedImage.IsPrimary =
@@ -3977,12 +2479,10 @@ model.ShowEmailToPublic =
                     image.AdvertisementImageID;
             }
 
-
             foreach (var selectedImage in selectedImages)
             {
                 selectedImage.IsPrimary = false;
             }
-
 
             successMessage =
                 $"'{image.FileName}' is now the main advertisement photo.";
@@ -4024,7 +2524,6 @@ model.ShowEmailToPublic =
             return;
         }
 
-
         if (savedImages.Count <= 1 &&
             image.IsPrimary)
         {
@@ -4034,7 +2533,6 @@ model.ShowEmailToPublic =
 
             return;
         }
-
 
         errorMessage = null;
         successMessage = null;
@@ -4057,7 +2555,6 @@ model.ShowEmailToPublic =
 
                 return;
             }
-
 
             savedImages.Remove(image);
 
@@ -4122,22 +2619,20 @@ model.ShowEmailToPublic =
                     ? selectedAreaId
                     : null;
 
-
             var updatedAdvertisement =
-    await AdvertisementApiService
-        .UpdateAdvertisementAsync(
-            AdvertisementId,
-            model);
+                await AdvertisementApiService
+                    .UpdateAdvertisementAsync(
+                        AdvertisementId,
+                        model);
 
-if (updatedAdvertisement is null)
-{
-    errorMessage =
-        "The advertisement could not be updated. " +
-        "Please review the information and try again.";
+            if (updatedAdvertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be updated. " +
+                    "Please review the information and try again.";
 
-    return false;
-}
-
+                return false;
+            }
 
             if (selectedImages.Count > 0)
             {
@@ -4154,7 +2649,6 @@ if (updatedAdvertisement is null)
                 successMessage =
                     "Your advertisement has been updated successfully.";
             }
-
 
             return true;
         }
@@ -4253,13 +2747,7 @@ if (updatedAdvertisement is null)
                     StateHasChanged);
             }
 
-
-            // ----------------------------------------------------
-            // RELOAD EXISTING IMAGES
-            // ----------------------------------------------------
-
             await ReloadSavedImagesAsync();
-
 
             if (failedImages.Count == 0)
             {
@@ -4348,7 +2836,6 @@ if (updatedAdvertisement is null)
             return;
         }
 
-
         if (isUploadingImages)
         {
             errorMessage =
@@ -4356,7 +2843,6 @@ if (updatedAdvertisement is null)
 
             return;
         }
-
 
         errorMessage = null;
 
@@ -4380,10 +2866,8 @@ if (updatedAdvertisement is null)
                 return;
             }
 
-
             successMessage =
                 "Your advertisement has been updated and submitted for approval.";
-
 
             await Task.Delay(900);
 
@@ -4431,7 +2915,6 @@ if (updatedAdvertisement is null)
             }
         }
 
-
         var extension =
             Path.GetExtension(fileName)
                 .ToLowerInvariant();
@@ -4470,7 +2953,6 @@ if (updatedAdvertisement is null)
                     : normalized;
             }
         }
-
 
         var extension =
             Path.GetExtension(fileName)

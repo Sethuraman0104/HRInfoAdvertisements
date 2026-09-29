@@ -199,6 +199,12 @@ builder.Services.AddScoped<UserManagementApiService>();
 
 builder.Services.AddScoped<CategoryManagementApiService>();
 
+builder.Services.AddScoped<SystemSettingsApiService>();
+
+builder.Services.AddScoped<FavoritesApiService>();
+
+builder.Services.AddScoped<PublicFavoritesApiService>();
+
 builder.Services.AddScoped<
     AdvertisementTypeManagementApiService>();
 // ============================================================

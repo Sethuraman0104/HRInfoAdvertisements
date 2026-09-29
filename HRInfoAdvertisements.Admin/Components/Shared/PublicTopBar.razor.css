@@ -1,0 +1,793 @@
+/* ============================================================
+   HR INFO ADs
+   PUBLIC TOP BAR
+   PublicTopBar.razor.css
+   ============================================================ */
+
+
+/* ============================================================
+   TOP BAR
+   ============================================================ */
+
+.public-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    width: 100%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff 0%,
+            #fffdfb 48%,
+            #f8f3ef 100%
+        );
+
+    border-bottom: 1px solid rgba(102, 51, 51, 0.12);
+
+    box-shadow:
+        0 4px 18px rgba(54, 30, 30, 0.08);
+
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+
+/* ============================================================
+   MAIN SHELL
+   ============================================================ */
+
+.public-topbar-shell {
+    width: min(100%, 1480px);
+    min-height: 76px;
+
+    margin: 0 auto;
+    padding: 0 28px;
+
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+
+/* ============================================================
+   BRAND
+   ============================================================ */
+
+.public-topbar-brand {
+    flex: 0 0 auto;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+
+    min-width: 250px;
+
+    padding: 0;
+
+    border: 0;
+    outline: 0;
+    background: transparent;
+
+    color: #663333;
+
+    cursor: pointer;
+    text-align: left;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.public-topbar-brand:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+}
+
+
+/* ============================================================
+   LOGO
+   ============================================================ */
+
+.public-topbar-logo {
+    position: relative;
+
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 48px;
+
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #663333 0%,
+            #8a4141 52%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+
+    box-shadow:
+        0 7px 18px rgba(102, 51, 51, 0.25);
+
+    overflow: hidden;
+}
+
+.public-topbar-logo::before {
+    content: "";
+
+    position: absolute;
+
+    width: 22px;
+    height: 22px;
+
+    top: -8px;
+    right: -8px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.public-topbar-logo::after {
+    content: "";
+
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    bottom: 7px;
+    left: 7px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 191, 0, 0.85);
+}
+
+
+/* ============================================================
+   BRAND TEXT
+   ============================================================ */
+
+.public-topbar-brand-text {
+    display: flex;
+    flex-direction: column;
+
+    line-height: 1;
+}
+
+.public-topbar-brand-name {
+    color: #663333;
+
+    font-size: 20px;
+    font-weight: 700;
+
+    letter-spacing: -0.4px;
+}
+
+.public-topbar-brand-name strong {
+    color: #cc3333;
+    font-weight: 800;
+}
+
+.public-topbar-brand-subtitle {
+    margin-top: 6px;
+
+    color: #886666;
+
+    font-size: 10px;
+    font-weight: 600;
+
+    letter-spacing: 0.55px;
+    text-transform: uppercase;
+}
+
+
+/* ============================================================
+   MAIN NAVIGATION
+   ============================================================ */
+
+.public-topbar-nav {
+    flex: 1 1 auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+}
+
+.public-topbar-nav-link {
+    position: relative;
+
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 16px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+
+    color: #5d5151;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        transform 0.2s ease;
+}
+
+.public-topbar-nav-link::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 4px;
+
+    width: 0;
+    height: 2px;
+
+    border-radius: 99px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #663333,
+            #cc3333
+        );
+
+    transform: translateX(-50%);
+
+    transition: width 0.22s ease;
+}
+
+.public-topbar-nav-link:hover {
+    color: #663333;
+
+    background: rgba(102, 51, 51, 0.055);
+
+    transform: translateY(-1px);
+}
+
+.public-topbar-nav-link:hover::after {
+    width: 22px;
+}
+
+.public-topbar-nav-link.active {
+    color: #663333;
+
+    background: rgba(102, 51, 51, 0.075);
+}
+
+.public-topbar-nav-link.active::after {
+    width: 24px;
+}
+
+
+/* ============================================================
+   RIGHT-SIDE ACTIONS
+   ============================================================ */
+
+.public-topbar-actions {
+    flex: 0 0 auto;
+
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+}
+
+
+/* ============================================================
+   GENERIC TEXT BUTTON
+   ============================================================ */
+
+.public-topbar-text-button {
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 12px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: transparent;
+
+    color: #663333;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.public-topbar-text-button:hover {
+    background: rgba(102, 51, 51, 0.07);
+
+    color: #cc3333;
+
+    transform: translateY(-1px);
+}
+
+
+/* ============================================================
+   FAVORITES
+   ============================================================ */
+
+.public-topbar-icon-button {
+    position: relative;
+
+    width: 40px;
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 1px solid rgba(102, 51, 51, 0.10);
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #663333;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 7px rgba(54, 30, 30, 0.05);
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.public-topbar-icon-button svg {
+    width: 19px;
+    height: 19px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    transition:
+        transform 0.2s ease,
+        fill 0.2s ease;
+}
+
+.public-topbar-icon-button:hover {
+    color: #cc3333;
+
+    background: #fff8f6;
+
+    border-color: rgba(204, 51, 51, 0.20);
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 6px 14px rgba(102, 51, 51, 0.10);
+}
+
+.public-topbar-icon-button:hover svg {
+    transform: scale(1.08);
+}
+
+
+/* ============================================================
+   SIGN UP
+   ============================================================ */
+
+.public-topbar-signup-button {
+    height: 40px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 17px;
+
+    border: 1px solid rgba(102, 51, 51, 0.18);
+    border-radius: 10px;
+
+    background: #ffffff;
+
+    color: #663333;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 7px rgba(54, 30, 30, 0.04);
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.public-topbar-signup-button:hover {
+    background: #663333;
+
+    color: #ffffff;
+
+    border-color: #663333;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 7px 16px rgba(102, 51, 51, 0.20);
+}
+
+
+/* ============================================================
+   POST ADVERTISEMENT
+   ============================================================ */
+
+.public-topbar-post-button {
+    position: relative;
+
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    padding: 0 17px;
+
+    border: 0;
+    border-radius: 11px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8f3838 50%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 7px 17px rgba(102, 51, 51, 0.22);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.public-topbar-post-button::before {
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+    left: -120%;
+
+    width: 80%;
+    height: 100%;
+
+    background:
+        linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.18),
+            transparent
+        );
+
+    transform: skewX(-20deg);
+
+    transition: left 0.55s ease;
+}
+
+.public-topbar-post-button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 10px 22px rgba(102, 51, 51, 0.28);
+}
+
+.public-topbar-post-button:hover::before {
+    left: 140%;
+}
+
+.public-topbar-post-button svg {
+    position: relative;
+
+    width: 17px;
+    height: 17px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* ============================================================
+   ACCOUNT BUTTON
+   ============================================================ */
+
+.public-topbar-account-button {
+    height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 0 12px 0 7px;
+
+    border: 1px solid rgba(102, 51, 51, 0.12);
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    color: #663333;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 7px rgba(54, 30, 30, 0.04);
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.public-topbar-account-button:hover {
+    background: #fff8f6;
+
+    border-color: rgba(102, 51, 51, 0.22);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 6px 14px rgba(102, 51, 51, 0.09);
+}
+
+.public-topbar-account-icon {
+    width: 29px;
+    height: 29px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #663333,
+            #cc3333
+        );
+
+    color: #ffffff;
+}
+
+.public-topbar-account-icon svg {
+    width: 16px;
+    height: 16px;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1250px) {
+
+    .public-topbar-shell {
+        gap: 18px;
+        padding: 0 20px;
+    }
+
+    .public-topbar-brand {
+        min-width: 220px;
+    }
+
+    .public-topbar-brand-name {
+        font-size: 18px;
+    }
+
+    .public-topbar-nav-link {
+        padding: 0 11px;
+    }
+
+    .public-topbar-post-button {
+        padding: 0 13px;
+    }
+
+}
+
+
+@media (max-width: 1050px) {
+
+    .public-topbar-shell {
+        min-height: 70px;
+    }
+
+    .public-topbar-brand {
+        min-width: auto;
+    }
+
+    .public-topbar-brand-subtitle {
+        display: none;
+    }
+
+    .public-topbar-nav {
+        justify-content: flex-start;
+    }
+
+    .public-topbar-nav-link {
+        padding: 0 9px;
+        font-size: 13px;
+    }
+
+    .public-topbar-text-button {
+        padding: 0 8px;
+    }
+
+}
+
+
+@media (max-width: 850px) {
+
+    .public-topbar-shell {
+        min-height: 66px;
+        padding: 0 15px;
+        gap: 12px;
+    }
+
+    .public-topbar-brand-text {
+        display: none;
+    }
+
+    .public-topbar-logo {
+        width: 42px;
+        height: 42px;
+        flex-basis: 42px;
+    }
+
+    .public-topbar-nav {
+        gap: 2px;
+    }
+
+    .public-topbar-nav-link {
+        height: 38px;
+        padding: 0 8px;
+        font-size: 12px;
+    }
+
+    .public-topbar-icon-button,
+    .public-topbar-signup-button,
+    .public-topbar-text-button {
+        height: 38px;
+    }
+
+    .public-topbar-signup-button {
+        padding: 0 11px;
+    }
+
+    .public-topbar-post-button {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+    }
+
+    .public-topbar-post-button span {
+        display: none;
+    }
+
+}
+
+
+@media (max-width: 620px) {
+
+    .public-topbar-shell {
+        padding: 0 10px;
+    }
+
+    .public-topbar-nav-link {
+        padding: 0 6px;
+        font-size: 11px;
+    }
+
+    .public-topbar-nav-link:nth-child(n + 3) {
+        display: none;
+    }
+
+    .public-topbar-text-button {
+        display: none;
+    }
+
+    .public-topbar-actions {
+        margin-left: auto;
+    }
+
+    .public-topbar-account-button > span:last-child {
+        display: none;
+    }
+
+}
+
+
+@media (max-width: 450px) {
+
+    .public-topbar-nav {
+        display: none;
+    }
+
+    .public-topbar-actions {
+        gap: 5px;
+    }
+
+    .public-topbar-signup-button {
+        display: none;
+    }
+
+}

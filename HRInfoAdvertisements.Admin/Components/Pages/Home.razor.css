@@ -5348,3 +5348,146 @@ color: #592462;
 .featured-badge {
     z-index: 9;
 }
+
+/* ============================================================
+   FAVORITE BUTTON
+   ============================================================ */
+
+.favorite-button {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    z-index: 10;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.75);
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.92);
+
+    color: #7b8798;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 6px 18px rgba(15, 23, 42, 0.14);
+
+    backdrop-filter: blur(8px);
+
+    transition:
+        transform .2s ease,
+        background .2s ease,
+        color .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+}
+
+
+.favorite-button:hover {
+    transform: scale(1.08);
+
+    color: #c62828;
+
+    background: #ffffff;
+
+    border-color: rgba(198, 40, 40, 0.25);
+
+    box-shadow:
+        0 8px 22px rgba(15, 23, 42, 0.18);
+}
+
+
+.favorite-button:active {
+    transform: scale(0.94);
+}
+
+
+.favorite-button svg {
+    width: 21px;
+    height: 21px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.8;
+
+    stroke-linecap: round;
+    stroke-linejoin: round;
+
+    transition:
+        transform .2s ease,
+        fill .2s ease;
+}
+
+
+/* ============================================================
+   ACTIVE FAVORITE
+   ============================================================ */
+
+.favorite-button.is-favorite {
+    color: #c62828;
+
+    background: #fff5f5;
+
+    border-color: rgba(198, 40, 40, 0.28);
+}
+
+
+.favorite-button.is-favorite svg {
+    fill: currentColor;
+
+    stroke: currentColor;
+
+    transform: scale(1.05);
+}
+
+
+.favorite-button.is-favorite:hover {
+    background: #ffe9e9;
+
+    color: #a91f1f;
+}
+
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+
+.favorite-button.is-loading {
+    cursor: wait;
+
+    pointer-events: none;
+
+    opacity: .8;
+}
+
+
+.favorite-spinner {
+    width: 17px;
+    height: 17px;
+
+    border: 2px solid rgba(123, 135, 152, 0.25);
+
+    border-top-color: currentColor;
+
+    border-radius: 50%;
+
+    animation: favorite-spin .65s linear infinite;
+}
+
+
+@keyframes favorite-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

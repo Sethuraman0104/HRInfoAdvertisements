@@ -1,0 +1,890 @@
+@page "/admin/favorites"
+
+@using HRInfoAdvertisements.Application.DTOs.Favorite
+@using HRInfoAdvertisements.Admin.Services
+
+@inject FavoritesApiService FavoritesApiService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Favorites | HR INFO ADs</PageTitle>
+
+<div class="favorites-page">
+
+    <!-- ============================================================
+         PAGE HEADER
+         ============================================================ -->
+
+    <div class="favorites-header">
+
+        <div class="favorites-header-content">
+
+            <div class="favorites-title-section">
+
+                <div class="favorites-icon">
+                    <i class="bi bi-heart-fill"></i>
+                </div>
+
+                <div>
+                    <h1>Favorites</h1>
+
+                    <p>
+                        Monitor advertisements saved by users
+                    </p>
+                </div>
+
+            </div>
+
+            <button class="btn-refresh"
+                    @onclick="LoadFavoritesAsync"
+                    disabled="@isLoading">
+
+                <i class="bi bi-arrow-clockwise @(isLoading ? "spin" : "")"></i>
+
+                <span>Refresh</span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         ERROR
+         ============================================================ -->
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="favorites-alert">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span>@errorMessage</span>
+
+            <button type="button"
+                    class="alert-close"
+                    @onclick="ClearError">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- ============================================================
+         SUMMARY CARDS
+         ============================================================ -->
+
+    <div class="favorites-summary-grid">
+
+        <div class="summary-card">
+
+            <div class="summary-icon favorites-total">
+                <i class="bi bi-heart-fill"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span class="summary-label">
+                    Total Favorites
+                </span>
+
+                <strong class="summary-value">
+                    @totalFavorites.ToString("N0")
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon unique-users">
+                <i class="bi bi-people-fill"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span class="summary-label">
+                    Unique Users
+                </span>
+
+                <strong class="summary-value">
+                    @uniqueUsers.ToString("N0")
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <div class="summary-icon unique-ads">
+                <i class="bi bi-megaphone-fill"></i>
+            </div>
+
+            <div class="summary-content">
+
+                <span class="summary-label">
+                    Favorited Advertisements
+                </span>
+
+                <strong class="summary-value">
+                    @uniqueAdvertisements.ToString("N0")
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================================================
+         SEARCH / FILTER BAR
+         ============================================================ -->
+
+    <div class="favorites-toolbar">
+
+        <div class="search-wrapper">
+
+            <i class="bi bi-search"></i>
+
+            <input type="text"
+                   class="search-input"
+                   placeholder="Search by user, email, advertisement number or title..."
+                   @bind="searchText"
+                   @bind:event="oninput"
+                   @onkeydown="HandleSearchKeyDown" />
+
+            @if (!string.IsNullOrWhiteSpace(searchText))
+            {
+                <button type="button"
+                        class="search-clear"
+                        title="Clear search"
+                        @onclick="ClearSearch">
+
+                    <i class="bi bi-x-circle-fill"></i>
+
+                </button>
+            }
+
+        </div>
+
+        <button class="btn-search"
+                @onclick="SearchAsync"
+                disabled="@isLoading">
+
+            <i class="bi bi-search"></i>
+
+            Search
+
+        </button>
+
+        <button class="btn-reset"
+                @onclick="ResetAsync"
+                disabled="@isLoading">
+
+            <i class="bi bi-arrow-counterclockwise"></i>
+
+            Reset
+
+        </button>
+
+    </div>
+
+
+    <!-- ============================================================
+         RESULTS HEADER
+         ============================================================ -->
+
+    <div class="results-header">
+
+        <div>
+
+            <h2>Favorite Activity</h2>
+
+            @if (totalRecords > 0)
+            {
+                <span>
+                    Showing @firstRecordNumber.ToString("N0")
+                    -
+                    @lastRecordNumber.ToString("N0")
+                    of
+                    @totalRecords.ToString("N0")
+                </span>
+            }
+            else
+            {
+                <span>No favorite records found</span>
+            }
+
+        </div>
+
+        @if (totalPages > 0)
+        {
+            <div class="page-indicator">
+
+                Page @currentPage of @totalPages
+
+            </div>
+        }
+
+    </div>
+
+
+    <!-- ============================================================
+         TABLE
+         ============================================================ -->
+
+    <div class="favorites-table-card">
+
+        @if (isLoading)
+        {
+            <div class="loading-state">
+
+                <div class="loading-spinner"></div>
+
+                <span>Loading favorites...</span>
+
+            </div>
+        }
+        else if (items.Count == 0)
+        {
+            <div class="empty-state">
+
+                <div class="empty-icon">
+
+                    <i class="bi bi-heart"></i>
+
+                </div>
+
+                <h3>No favorites found</h3>
+
+                <p>
+                    There are no favorite records matching your search.
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(searchText))
+                {
+                    <button class="btn-reset-empty"
+                            @onclick="ResetAsync">
+
+                        Clear Search
+
+                    </button>
+                }
+
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+
+                <table class="favorites-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>USER</th>
+
+                            <th>ADVERTISEMENT</th>
+
+                            <th>CATEGORY</th>
+
+                            <th>STATUS</th>
+
+                            <th>FAVORITED</th>
+
+                            <th class="text-end">ACTION</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in items)
+                        {
+                            <tr>
+
+                                <!-- USER -->
+
+                                <td>
+
+                                    <div class="user-cell">
+
+                                        <div class="user-avatar">
+
+                                            @GetInitials(item.UserName)
+
+                                        </div>
+
+                                        <div class="user-details">
+
+                                            <button class="user-name"
+                                                    @onclick="() => ViewUser(item.UserID)">
+
+                                                @item.UserName
+
+                                            </button>
+
+                                            <span class="user-email">
+                                                @item.Email
+                                            </span>
+
+                                            <span class="user-id">
+                                                User #@item.UserID
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ADVERTISEMENT -->
+
+                                <td>
+
+                                    <div class="advertisement-cell">
+
+                                        <button class="advertisement-number"
+                                                @onclick="() => ViewAdvertisement(item.AdvertisementID)">
+
+                                            @item.AdvertisementNumber
+
+                                        </button>
+
+                                        <span class="advertisement-title"
+                                              title="@item.Title">
+
+                                            @item.Title
+
+                                        </span>
+
+                                        @if (item.Price.HasValue)
+                                        {
+                                            <span class="advertisement-price">
+
+                                                @item.Price.Value.ToString("N3")
+                                                @item.CurrencyCode
+
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- CATEGORY -->
+
+                                <td>
+
+                                    <div class="category-cell">
+
+                                        <span class="category-name">
+                                            @(item.CategoryName ?? "—")
+                                        </span>
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            item.AdvertisementTypeName))
+                                        {
+                                            <span class="type-name">
+                                                @item.AdvertisementTypeName
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span class="@GetStatusClass(item.StatusCode)">
+
+                                        <span class="status-dot"></span>
+
+                                        @(item.StatusName ?? item.StatusCode ?? "Unknown")
+
+                                    </span>
+
+                                    @if (item.IsFeatured)
+                                    {
+                                        <span class="featured-badge">
+
+                                            <i class="bi bi-star-fill"></i>
+
+                                            Featured
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                <!-- FAVORITED -->
+
+                                <td>
+
+                                    <div class="date-cell">
+
+                                        <span class="favorite-date">
+                                            @item.FavoritedDate.ToLocalTime()
+                                                .ToString("dd MMM yyyy")
+                                        </span>
+
+                                        <span class="favorite-time">
+                                            @item.FavoritedDate.ToLocalTime()
+                                                .ToString("hh:mm tt")
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                <!-- ACTION -->
+
+                                <td class="text-end">
+
+                                    <div class="action-buttons">
+
+                                        <button class="action-button"
+                                                title="View Advertisement"
+                                                @onclick="() => ViewAdvertisement(item.AdvertisementID)">
+
+                                            <i class="bi bi-eye"></i>
+
+                                        </button>
+
+                                        <button class="action-button"
+                                                title="View User"
+                                                @onclick="() => ViewUser(item.UserID)">
+
+                                            <i class="bi bi-person"></i>
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            <!-- ====================================================
+                 PAGINATION
+                 ==================================================== -->
+
+            <div class="pagination-container">
+
+                <div class="pagination-info">
+
+                    @if (totalRecords > 0)
+                    {
+                        <span>
+                            @firstRecordNumber
+                            -
+                            @lastRecordNumber
+                            of
+                            @totalRecords
+                        </span>
+                    }
+
+                </div>
+
+                <div class="pagination-controls">
+
+                    <button class="pagination-button"
+                            disabled="@(currentPage <= 1 || isLoading)"
+                            @onclick="PreviousPageAsync">
+
+                        <i class="bi bi-chevron-left"></i>
+
+                    </button>
+
+                    @foreach (var page in GetPaginationPages())
+{
+    if (page == -1)
+    {
+        <span class="pagination-ellipsis">
+            ...
+        </span>
+    }
+    else
+    {
+        <button class="pagination-number @(page == currentPage ? "active" : "")"
+                @onclick="() => GoToPageAsync(page)"
+                disabled="@isLoading">
+
+            @(page)
+
+        </button>
+    }
+}
+
+                    <button class="pagination-button"
+                            disabled="@(currentPage >= totalPages || isLoading)"
+                            @onclick="NextPageAsync">
+
+                        <i class="bi bi-chevron-right"></i>
+
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private List<FavoriteAdminListItemResponse> items = new();
+
+    private string searchText = string.Empty;
+
+    private bool isLoading;
+
+    private string? errorMessage;
+
+    private int currentPage = 1;
+
+    private int pageSize = 20;
+
+    private int totalPages;
+
+    private int totalRecords;
+
+    private int totalFavorites;
+
+    private int uniqueUsers;
+
+    private int uniqueAdvertisements;
+
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFavoritesAsync();
+    }
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadFavoritesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var request =
+                new FavoriteAdminListRequest
+                {
+                    Search =
+                        string.IsNullOrWhiteSpace(searchText)
+                            ? null
+                            : searchText.Trim(),
+
+                    PageNumber =
+                        currentPage,
+
+                    PageSize =
+                        pageSize
+                };
+
+            var result =
+                await FavoritesApiService
+                    .GetFavoritesAsync(request);
+
+            items =
+                result.Items ?? new();
+
+            currentPage =
+                result.PageNumber;
+
+            totalPages =
+                result.TotalPages;
+
+            totalRecords =
+                result.TotalRecords;
+
+            totalFavorites =
+                result.TotalFavorites;
+
+            uniqueUsers =
+                result.UniqueUsers;
+
+            uniqueAdvertisements =
+                result.UniqueAdvertisements;
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                ex.Message;
+
+            items = new();
+
+            totalRecords = 0;
+            totalPages = 0;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    // ============================================================
+    // SEARCH
+    // ============================================================
+
+    private async Task SearchAsync()
+    {
+        currentPage = 1;
+
+        await LoadFavoritesAsync();
+    }
+
+    private async Task HandleSearchKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchAsync();
+        }
+    }
+
+    private async Task ClearSearch()
+    {
+        searchText = string.Empty;
+
+        currentPage = 1;
+
+        await LoadFavoritesAsync();
+    }
+
+    private async Task ResetAsync()
+    {
+        searchText = string.Empty;
+
+        currentPage = 1;
+
+        await LoadFavoritesAsync();
+    }
+
+    private void ClearError()
+    {
+        errorMessage = null;
+    }
+
+    // ============================================================
+    // PAGINATION
+    // ============================================================
+
+    private async Task PreviousPageAsync()
+    {
+        if (currentPage <= 1)
+        {
+            return;
+        }
+
+        currentPage--;
+
+        await LoadFavoritesAsync();
+    }
+
+    private async Task NextPageAsync()
+    {
+        if (currentPage >= totalPages)
+        {
+            return;
+        }
+
+        currentPage++;
+
+        await LoadFavoritesAsync();
+    }
+
+    private async Task GoToPageAsync(
+        int page)
+    {
+        if (page < 1 ||
+            page > totalPages ||
+            page == currentPage)
+        {
+            return;
+        }
+
+        currentPage = page;
+
+        await LoadFavoritesAsync();
+    }
+
+    private IEnumerable<int> GetPaginationPages()
+    {
+        if (totalPages <= 7)
+        {
+            return Enumerable.Range(
+                1,
+                totalPages);
+        }
+
+        var pages =
+            new List<int>();
+
+        pages.Add(1);
+
+        if (currentPage > 4)
+        {
+            pages.Add(-1);
+        }
+
+        var start =
+            Math.Max(
+                2,
+                currentPage - 1);
+
+        var end =
+            Math.Min(
+                totalPages - 1,
+                currentPage + 1);
+
+        for (var page = start;
+             page <= end;
+             page++)
+        {
+            pages.Add(page);
+        }
+
+        if (currentPage < totalPages - 3)
+        {
+            pages.Add(-1);
+        }
+
+        pages.Add(totalPages);
+
+        return pages;
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void ViewUser(
+        long userId)
+    {
+        NavigationManager.NavigateTo(
+            $"/admin/users/{userId}");
+    }
+
+    private void ViewAdvertisement(
+        long advertisementId)
+    {
+        NavigationManager.NavigateTo(
+            $"/admin/advertisements/{advertisementId}");
+    }
+
+    // ============================================================
+    // DISPLAY HELPERS
+    // ============================================================
+
+    private static string GetInitials(
+        string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return "?";
+        }
+
+        var parts =
+            name.Trim()
+                .Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+        {
+            return parts[0][..1]
+                .ToUpperInvariant();
+        }
+
+        return string.Concat(
+                parts[0][0],
+                parts[^1][0])
+            .ToUpperInvariant();
+    }
+
+    private static string GetStatusClass(
+        string? statusCode)
+    {
+        return statusCode?.ToUpperInvariant() switch
+        {
+            "PUBLISHED" =>
+                "status-badge status-published",
+
+            "DRAFT" =>
+                "status-badge status-draft",
+
+            "PENDING" =>
+                "status-badge status-pending",
+
+            "APPROVED" =>
+                "status-badge status-approved",
+
+            "REJECTED" =>
+                "status-badge status-rejected",
+
+            "SUSPENDED" =>
+                "status-badge status-suspended",
+
+            "EXPIRED" =>
+                "status-badge status-expired",
+
+            _ =>
+                "status-badge status-default"
+        };
+    }
+
+    // ============================================================
+    // PAGINATION DISPLAY
+    // ============================================================
+
+    private int firstRecordNumber =>
+        totalRecords == 0
+            ? 0
+            : ((currentPage - 1) * pageSize) + 1;
+
+    private int lastRecordNumber =>
+        Math.Min(
+            currentPage * pageSize,
+            totalRecords);
+}

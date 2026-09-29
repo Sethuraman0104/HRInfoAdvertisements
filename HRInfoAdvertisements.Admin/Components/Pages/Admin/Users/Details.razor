@@ -1104,66 +1104,88 @@
         errorMessage = null;
     }
 
-    private async Task SaveProfileAsync()
+    // ============================================================
+// SAVE USER PROFILE
+// ============================================================
+
+private async Task SaveProfileAsync()
+{
+    if (user is null || isSaving)
+        return;
+
+    errorMessage = null;
+    successMessage = null;
+
+    // ------------------------------------------------------------
+    // BUSINESS ACCOUNT VALIDATION
+    // ------------------------------------------------------------
+
+    if (editIsBusinessAccount &&
+        string.IsNullOrWhiteSpace(editCompanyName))
     {
-        if (user is null || isSaving)
-            return;
+        errorMessage =
+            "Company name is required for a business account.";
 
-        isSaving = true;
-        errorMessage = null;
-        successMessage = null;
-
-        try
-        {
-            var request =
-                new UpdateUserProfileRequest
-                {
-                    FirstName =
-                        editFirstName,
-
-                    LastName =
-                        editLastName,
-
-                    Nationality =
-                        editNationality,
-
-                    PreferredLanguage =
-                        editPreferredLanguage,
-
-                    IsBusinessAccount =
-                        editIsBusinessAccount,
-
-                    CompanyName =
-                        editCompanyName,
-
-                    ProfilePhotoURL =
-                        editProfilePhotoUrl
-                };
-
-            await UserManagementApiService
-                .UpdateUserProfileAsync(
-                    UserId,
-                    request);
-
-            await LoadUserAsync();
-
-            isEditMode = false;
-
-            successMessage =
-                "User profile updated successfully.";
-        }
-        catch (Exception ex)
-        {
-            errorMessage =
-                GetExceptionMessage(
-                    ex,
-                    "Unable to update the user profile.");
-        }
-        finally
-        {
-            isSaving = false;
-        }
+        return;
     }
+
+    isSaving = true;
+
+    try
+    {
+        var request =
+            new UpdateUserProfileRequest
+            {
+                FirstName =
+                    editFirstName,
+
+                LastName =
+                    editLastName,
+
+                Nationality =
+                    editNationality,
+
+                PreferredLanguage =
+                    editPreferredLanguage,
+
+                IsBusinessAccount =
+                    editIsBusinessAccount,
+
+                CompanyName =
+                    string.IsNullOrWhiteSpace(editCompanyName)
+                        ? null
+                        : editCompanyName.Trim(),
+
+                ProfilePhotoURL =
+                    string.IsNullOrWhiteSpace(editProfilePhotoUrl)
+                        ? null
+                        : editProfilePhotoUrl.Trim()
+            };
+
+        await UserManagementApiService
+            .UpdateUserProfileAsync(
+                UserId,
+                request);
+
+        await LoadUserAsync();
+
+        isEditMode = false;
+
+        successMessage =
+            "User profile updated successfully.";
+    }
+    catch (Exception ex)
+    {
+        errorMessage =
+            GetExceptionMessage(
+                ex,
+                "Unable to update the user profile.");
+    }
+    finally
+    {
+        isSaving = false;
+    }
+}
 
     private async Task ToggleStatusAsync()
     {

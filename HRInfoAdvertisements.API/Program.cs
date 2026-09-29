@@ -218,6 +218,9 @@ builder.Services.AddScoped<
     IFileStorageService,
     LocalFileStorageService>();
 
+builder.Services.AddScoped<
+    ISystemSettingService,
+    SystemSettingService>();
 // ------------------------------------------------------------
 // JWT Authentication
 // ------------------------------------------------------------

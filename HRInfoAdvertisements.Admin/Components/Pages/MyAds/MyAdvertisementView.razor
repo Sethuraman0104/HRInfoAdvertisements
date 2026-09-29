@@ -16,78 +16,56 @@
         : $"{advertisement.Title} | HR Info Advertisements")
 </PageTitle>
 
+
 <div class="my-ad-view-page">
 
     <!-- ============================================================
-         TOP BAR
+         SHARED PUBLIC TOP BAR
          ============================================================ -->
 
-    <div class="my-ad-view-topbar">
-
-        <div class="my-ad-view-topbar-inner">
-
-            <!-- BRAND -->
-            <div class="my-ad-view-brand">
-
-                <div class="my-ad-view-logo-wrapper">
-                    <img src="images/hr-info-ads-logo.png"
-                         alt="HR INFO ADs"
-                         class="my-ad-view-logo" />
-                </div>
-
-                <div class="my-ad-view-brand-text">
-
-                    <div class="my-ad-view-app-title">
-                        HR INFO ADs
-                    </div>
-
-                    <div class="my-ad-view-app-subtitle">
-                        Advertisement Marketplace
-                    </div>
-
-                </div>
-
-            </div>
+    <PublicTopBar />
 
 
-            <!-- PAGE TITLE -->
-            <div class="my-ad-view-page-title">
+    <!-- ============================================================
+         PAGE CONTEXT
+         ============================================================ -->
 
-                <span class="my-ad-view-page-icon">
-                    <i class="bi bi-megaphone"></i>
+    <section class="my-ad-view-page-context">
+
+        <div class="my-ad-view-context-left">
+
+            <span class="my-ad-view-context-icon">
+                <i class="bi bi-megaphone"></i>
+            </span>
+
+            <div class="my-ad-view-context-text">
+
+                <span class="my-ad-view-context-eyebrow">
+                    MY ADVERTISEMENTS
                 </span>
 
-                <div>
-
-                    <div class="my-ad-view-page-heading">
-                        Advertisement Details
-                    </div>
-
-                    <div class="my-ad-view-page-description">
-                        View your advertisement
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- BACK -->
-            <button type="button"
-                    class="my-ad-view-back-button"
-                    @onclick="BackToMyAdvertisements">
-
-                <i class="bi bi-arrow-left"></i>
-
-                <span>
-                    My Advertisements
+                <span class="my-ad-view-context-description">
+                    View and manage your advertisement details.
                 </span>
 
-            </button>
+            </div>
 
         </div>
 
-    </div>
+
+        <button type="button"
+                class="my-ad-view-back-button"
+                @onclick="BackToMyAdvertisements">
+
+            <i class="bi bi-arrow-left"></i>
+
+            <span>
+                My Advertisements
+            </span>
+
+        </button>
+
+    </section>
 
 
     <!-- ============================================================
@@ -98,6 +76,10 @@
 
         @if (isLoading)
         {
+            <!-- ====================================================
+                 LOADING
+                 ==================================================== -->
+
             <div class="my-ad-view-loading">
 
                 <div class="my-ad-view-spinner"></div>
@@ -114,6 +96,10 @@
         }
         else if (!string.IsNullOrWhiteSpace(errorMessage))
         {
+            <!-- ====================================================
+                 ERROR
+                 ==================================================== -->
+
             <div class="my-ad-view-error">
 
                 <div class="my-ad-view-error-icon">
@@ -145,24 +131,30 @@
         else if (advertisement is not null)
         {
             <!-- ====================================================
-                 HEADER
+                 ADVERTISEMENT SUMMARY
                  ==================================================== -->
 
-            <section class="my-ad-view-header">
+            <section class="my-ad-view-summary">
 
-                <div class="my-ad-view-header-left">
+                <div class="my-ad-view-summary-main">
 
-                    <div class="my-ad-view-eyebrow">
+                    <div class="my-ad-view-summary-label">
 
-                        <i class="bi bi-megaphone"></i>
+                        <span class="my-ad-view-summary-label-icon">
+                            <i class="bi bi-megaphone"></i>
+                        </span>
 
-                        My Advertisement
+                        <span>
+                            Advertisement Details
+                        </span>
 
                     </div>
 
-                    <h1>
+
+                    <h1 class="my-ad-view-title">
                         @advertisement.Title
                     </h1>
+
 
                     <div class="my-ad-view-reference">
 
@@ -179,11 +171,21 @@
                 </div>
 
 
-                <div class="@GetStatusBadgeClass()">
+                <div class="my-ad-view-summary-status">
 
-                    <span class="status-dot"></span>
+                    <span class="my-ad-view-status-label">
+                        STATUS
+                    </span>
 
-                    @GetDisplayStatusName()
+                    <div class="@GetStatusBadgeClass()">
+
+                        <span class="status-dot"></span>
+
+                        <span>
+                            @GetDisplayStatusName()
+                        </span>
+
+                    </div>
 
                 </div>
 
@@ -219,6 +221,7 @@
                                          alt="@advertisement.Title"
                                          @key="SelectedImageUrl" />
 
+
                                     @if (advertisement.IsFeatured)
                                     {
                                         <div class="my-ad-view-featured">
@@ -230,6 +233,7 @@
                                         </div>
                                     }
 
+
                                     @if (ImageCount > 1)
                                     {
                                         <button type="button"
@@ -240,6 +244,7 @@
                                             <i class="bi bi-chevron-left"></i>
 
                                         </button>
+
 
                                         <button type="button"
                                                 class="gallery-nav gallery-next"
@@ -261,6 +266,7 @@
                                         @for (var i = 0; i < advertisement.Images.Count; i++)
                                         {
                                             var index = i;
+
                                             var image = advertisement.Images
                                                 .OrderBy(x => x.DisplayOrder)
                                                 .ElementAt(index);
@@ -408,7 +414,8 @@
                                         </span>
 
                                         <strong>
-                                            @FormatArea(advertisement.LandArea.Value)
+                                            @FormatArea(
+                                                advertisement.LandArea.Value)
                                         </strong>
 
                                     </div>
@@ -424,7 +431,8 @@
                                         </span>
 
                                         <strong>
-                                            @FormatArea(advertisement.BuiltUpArea.Value)
+                                            @FormatArea(
+                                                advertisement.BuiltUpArea.Value)
                                         </strong>
 
                                     </div>
@@ -520,17 +528,21 @@
                             <div>
 
                                 <strong>
-                                    @(string.IsNullOrWhiteSpace(advertisement.AddressLine)
+                                    @(string.IsNullOrWhiteSpace(
+                                        advertisement.AddressLine)
                                         ? "Location not specified"
                                         : advertisement.AddressLine)
                                 </strong>
+
 
                                 @if (advertisement.Latitude.HasValue &&
                                      advertisement.Longitude.HasValue)
                                 {
                                     <span>
-                                        @advertisement.Latitude.Value.ToString("0.######"),
-                                        @advertisement.Longitude.Value.ToString("0.######")
+                                        @advertisement.Latitude.Value.ToString(
+                                            "0.######"),
+                                        @advertisement.Longitude.Value.ToString(
+                                            "0.######")
                                     </span>
                                 }
 
@@ -563,6 +575,7 @@
                         <strong class="price-value">
                             @FormatPrice()
                         </strong>
+
 
                         @if (advertisement.IsNegotiable)
                         {
@@ -610,7 +623,8 @@
                                 </span>
 
                                 <strong>
-                                    @DisplayValue(advertisement.CategoryName)
+                                    @DisplayValue(
+                                        advertisement.CategoryName)
                                 </strong>
 
                             </div>
@@ -623,7 +637,8 @@
                                 </span>
 
                                 <strong>
-                                    @DisplayValue(advertisement.AdvertisementTypeName)
+                                    @DisplayValue(
+                                        advertisement.AdvertisementTypeName)
                                 </strong>
 
                             </div>
@@ -649,7 +664,8 @@
                                 </span>
 
                                 <strong>
-                                    @FormatDate(advertisement.CreatedDate)
+                                    @FormatDate(
+                                        advertisement.CreatedDate)
                                 </strong>
 
                             </div>
@@ -664,7 +680,8 @@
                                     </span>
 
                                     <strong>
-                                        @FormatDate(advertisement.ModifiedDate.Value)
+                                        @FormatDate(
+                                            advertisement.ModifiedDate.Value)
                                     </strong>
 
                                 </div>
@@ -680,7 +697,8 @@
                                     </span>
 
                                     <strong>
-                                        @FormatDate(advertisement.PublishedDate.Value)
+                                        @FormatDate(
+                                            advertisement.PublishedDate.Value)
                                     </strong>
 
                                 </div>
@@ -696,8 +714,9 @@
                                     </span>
 
                                     <strong>
-                                        @FormatDate(advertisement.ExpiryDate.Value)
-                                    </strong>
+                                        @FormatDate(
+                                            advertisement.ExpiryDate.Value)
+                                </strong>
 
                                 </div>
                             }
@@ -706,133 +725,150 @@
 
                     </section>
 
+
                     <!-- =================================================
-     CONTACT INFORMATION
-     ================================================= -->
+                         CONTACT INFORMATION
+                         ================================================= -->
 
-@if (!string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber) ||
-!string.IsNullOrWhiteSpace(advertisement.ContactEmail))
-{ <section class="my-ad-view-card my-ad-view-contact-card">
+                    @if (!string.IsNullOrWhiteSpace(
+                            advertisement.WhatsAppNumber) ||
+                        !string.IsNullOrWhiteSpace(
+                            advertisement.ContactEmail))
+                    {
+                        <section class="my-ad-view-card my-ad-view-contact-card">
 
-    <div class="my-ad-view-section-heading">
+                            <div class="my-ad-view-section-heading">
 
-        <div class="section-heading-icon contact-heading-icon">
-            <i class="bi bi-person-lines-fill"></i>
-        </div>
+                                <div class="section-heading-icon contact-heading-icon">
+                                    <i class="bi bi-person-lines-fill"></i>
+                                </div>
 
-        <div>
+                                <div>
 
-            <h2>
-                Contact Information
-            </h2>
+                                    <h2>
+                                        Contact Information
+                                    </h2>
 
-            <span>
-                Your contact details
-            </span>
+                                    <span>
+                                        Your contact details
+                                    </span>
 
-        </div>
+                                </div>
 
-    </div>
-
-
-    <div class="my-ad-view-contact-list">
-
-        @if (!string.IsNullOrWhiteSpace(
-            advertisement.WhatsAppNumber))
-        {
-            <div class="my-ad-view-contact-item">
-
-                <div class="my-ad-view-contact-icon whatsapp-contact">
-                    <i class="bi bi-whatsapp"></i>
-                </div>
-
-                <div class="my-ad-view-contact-content">
-
-                    <span>
-                        WhatsApp
-                    </span>
-
-                    <strong>
-                        @advertisement.WhatsAppNumber
-                    </strong>
-
-                </div>
-
-                @if (advertisement.ShowWhatsAppToPublic)
-                {
-                    <span class="my-ad-view-contact-visibility public">
-                        <i class="bi bi-eye-fill"></i>
-                        Public
-                    </span>
-                }
-                else
-                {
-                    <span class="my-ad-view-contact-visibility private">
-                        <i class="bi bi-eye-slash-fill"></i>
-                        Private
-                    </span>
-                }
-
-            </div>
-        }
+                            </div>
 
 
-        @if (!string.IsNullOrWhiteSpace(
-            advertisement.ContactEmail))
-        {
-            <div class="my-ad-view-contact-item">
+                            <div class="my-ad-view-contact-list">
 
-                <div class="my-ad-view-contact-icon email-contact">
-                    <i class="bi bi-envelope-fill"></i>
-                </div>
+                                @if (!string.IsNullOrWhiteSpace(
+                                    advertisement.WhatsAppNumber))
+                                {
+                                    <div class="my-ad-view-contact-item">
 
-                <div class="my-ad-view-contact-content">
+                                        <div class="my-ad-view-contact-icon whatsapp-contact">
+                                            <i class="bi bi-whatsapp"></i>
+                                        </div>
 
-                    <span>
-                        Email
-                    </span>
+                                        <div class="my-ad-view-contact-content">
 
-                    <strong>
-                        @advertisement.ContactEmail
-                    </strong>
+                                            <span>
+                                                WhatsApp
+                                            </span>
 
-                </div>
+                                            <strong>
+                                                @advertisement.WhatsAppNumber
+                                            </strong>
 
-                @if (advertisement.ShowEmailToPublic)
-                {
-                    <span class="my-ad-view-contact-visibility public">
-                        <i class="bi bi-eye-fill"></i>
-                        Public
-                    </span>
-                }
-                else
-                {
-                    <span class="my-ad-view-contact-visibility private">
-                        <i class="bi bi-eye-slash-fill"></i>
-                        Private
-                    </span>
-                }
-
-            </div>
-        }
-
-    </div>
+                                        </div>
 
 
-    <div class="my-ad-view-contact-note">
+                                        @if (advertisement.ShowWhatsAppToPublic)
+                                        {
+                                            <span class="my-ad-view-contact-visibility public">
 
-        <i class="bi bi-shield-check"></i>
+                                                <i class="bi bi-eye-fill"></i>
 
-        <span>
-            Public contact details can be seen by visitors.
-            Private contact details are visible only to you.
-        </span>
+                                                Public
 
-    </div>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="my-ad-view-contact-visibility private">
 
-</section>
-}
+                                                <i class="bi bi-eye-slash-fill"></i>
 
+                                                Private
+
+                                            </span>
+                                        }
+
+                                    </div>
+                                }
+
+
+                                @if (!string.IsNullOrWhiteSpace(
+                                    advertisement.ContactEmail))
+                                {
+                                    <div class="my-ad-view-contact-item">
+
+                                        <div class="my-ad-view-contact-icon email-contact">
+                                            <i class="bi bi-envelope-fill"></i>
+                                        </div>
+
+                                        <div class="my-ad-view-contact-content">
+
+                                            <span>
+                                                Email
+                                            </span>
+
+                                            <strong>
+                                                @advertisement.ContactEmail
+                                            </strong>
+
+                                        </div>
+
+
+                                        @if (advertisement.ShowEmailToPublic)
+                                        {
+                                            <span class="my-ad-view-contact-visibility public">
+
+                                                <i class="bi bi-eye-fill"></i>
+
+                                                Public
+
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="my-ad-view-contact-visibility private">
+
+                                                <i class="bi bi-eye-slash-fill"></i>
+
+                                                Private
+
+                                            </span>
+                                        }
+
+                                    </div>
+                                }
+
+                            </div>
+
+
+                            <div class="my-ad-view-contact-note">
+
+                                <i class="bi bi-shield-check"></i>
+
+                                <span>
+                                    Public contact details can be seen by visitors.
+                                    Private contact details are visible only to you.
+                                </span>
+
+                            </div>
+
+                        </section>
+                    }
 
 
                     <!-- =================================================
@@ -924,19 +960,6 @@
 
                             </button>
                         }
-
-
-                        <button type="button"
-                                class="view-page-action back-action"
-                                @onclick="BackToMyAdvertisements">
-
-                            <i class="bi bi-arrow-left"></i>
-
-                            <span>
-                                Back to My Advertisements
-                            </span>
-
-                        </button>
 
                     </section>
 

@@ -4,6 +4,7 @@ using HRInfoAdvertisements.Application.Interfaces;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HRInfoAdvertisements.Application.DTOs.Favorite;
 
 namespace HRInfoAdvertisements.API.Controllers;
 
@@ -21,6 +22,22 @@ public class AdvertisementFavoriteController
     {
         _favoriteService =
             favoriteService;
+    }
+
+        // ============================================================
+    // ADMIN - FAVORITES
+    // ============================================================
+
+    [HttpGet("admin")]
+    [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+    public async Task<IActionResult> GetAdminFavorites(
+        [FromQuery] FavoriteAdminListRequest request)
+    {
+        var result =
+            await _favoriteService
+                .GetAdminFavoritesAsync(request);
+
+        return Ok(result);
     }
 
     // --------------------------------------------------

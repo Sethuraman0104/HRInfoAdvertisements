@@ -4,6 +4,10 @@ namespace HRInfoAdvertisements.Application.Interfaces;
 
 public interface IAdvertisementFavoriteService
 {
+    // ============================================================
+    // USER FAVORITES
+    // ============================================================
+
     Task<bool> AddFavoriteAsync(
         long userId,
         long advertisementId);
@@ -20,4 +24,12 @@ public interface IAdvertisementFavoriteService
     Task<List<FavoriteResponse>>
         GetMyFavoritesAsync(
             long userId);
+
+    // ============================================================
+    // ADMIN FAVORITES
+    // ============================================================
+
+    Task<FavoriteAdminListResponse>
+        GetAdminFavoritesAsync(
+            FavoriteAdminListRequest request);
 }

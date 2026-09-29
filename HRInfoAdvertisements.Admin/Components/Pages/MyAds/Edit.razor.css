@@ -1,0 +1,3739 @@
+/* ============================================================
+   HR INFO ADs
+   EDIT ADVERTISEMENT PAGE
+   Edit.razor.css
+   ============================================================ */
+
+
+/* ============================================================
+   PAGE
+   ============================================================ */
+
+.my-ad-edit-page {
+    width: 100%;
+    min-height: 100%;
+    background: #f8f6f5;
+    color: #342e2e;
+}
+
+
+/* ============================================================
+   PAGE CONTEXT BAR
+   ============================================================ */
+
+.my-ad-edit-page-context {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    width: 100%;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(102, 51, 51, 0.10);
+    border-radius: 12px;
+
+    box-shadow: 0 3px 12px rgba(54, 30, 30, 0.045);
+}
+
+
+/* ============================================================
+   CONTEXT LEFT
+   ============================================================ */
+
+.my-ad-edit-context-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    min-width: 0;
+}
+
+
+.my-ad-edit-context-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 38px;
+    height: 38px;
+
+    border-radius: 10px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 17px;
+
+    box-shadow:
+        0 4px 10px rgba(102, 51, 51, 0.14);
+}
+
+
+.my-ad-edit-context-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    min-width: 0;
+}
+
+
+.my-ad-edit-context-eyebrow {
+    color: #663333;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+
+.my-ad-edit-context-description {
+    color: #886666;
+
+    font-size: 13px;
+    font-weight: 500;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   CONTEXT BACK BUTTON
+   ============================================================ */
+
+.my-ad-edit-back-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    flex: 0 0 auto;
+
+    min-height: 38px;
+    padding: 8px 15px;
+
+    border: 1px solid rgba(102, 51, 51, 0.15);
+    border-radius: 9px;
+
+    background: #ffffff;
+    color: #663333;
+
+    font-size: 13px;
+    font-weight: 650;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+.my-ad-edit-back-button i {
+    font-size: 15px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+.my-ad-edit-back-button:hover:not(:disabled) {
+    background: #fff8f6;
+    border-color: rgba(102, 51, 51, 0.28);
+    color: #cc3333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 14px rgba(102, 51, 51, 0.10);
+}
+
+
+.my-ad-edit-back-button:hover:not(:disabled) i {
+    transform: translateX(-3px);
+}
+
+
+.my-ad-edit-back-button:active:not(:disabled) {
+    transform: translateY(0);
+
+    box-shadow: none;
+}
+
+
+.my-ad-edit-back-button:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.18);
+    outline-offset: 2px;
+}
+
+
+.my-ad-edit-back-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
+
+.my-ad-edit-main {
+    width: 100%;
+    max-width: 1180px;
+
+    margin: 0 auto;
+    padding: 0 0 32px;
+}
+
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
+.edit-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    width: 100%;
+
+    margin-bottom: 18px;
+    padding: 12px 14px;
+
+    border-radius: 9px;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+.edit-alert i {
+    flex: 0 0 auto;
+
+    margin-top: 1px;
+
+    font-size: 15px;
+}
+
+
+.edit-alert-error {
+    background: #fff5f5;
+    border: 1px solid #edcaca;
+
+    color: #9d3535;
+}
+
+
+.edit-alert-success {
+    background: #f3fbf6;
+    border: 1px solid #cce8d7;
+
+    color: #267447;
+}
+
+
+/* ============================================================
+   LOADING STATE
+   ============================================================ */
+
+.edit-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 220px;
+
+    color: #886666;
+
+    font-size: 13px;
+}
+
+
+.edit-loading-spinner {
+    width: 22px;
+    height: 22px;
+
+    margin-right: 10px;
+
+    border: 2px solid #eadede;
+    border-top-color: #663333;
+
+    border-radius: 50%;
+
+    animation: edit-spinner 0.75s linear infinite;
+}
+
+
+@keyframes edit-spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ============================================================
+   FORM SECTION
+   ============================================================ */
+
+.edit-form-section {
+    width: 100%;
+
+    margin-bottom: 18px;
+    padding: 22px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(102, 51, 51, 0.10);
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 12px rgba(54, 30, 30, 0.035);
+}
+
+
+/* ============================================================
+   SECTION HEADING
+   ============================================================ */
+
+.edit-section-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    margin-bottom: 20px;
+}
+
+
+.edit-section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 36px;
+    height: 36px;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 15px;
+
+    box-shadow:
+        0 4px 10px rgba(102, 51, 51, 0.12);
+}
+
+
+.edit-section-heading-content {
+    min-width: 0;
+}
+
+
+.edit-section-eyebrow {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #996666;
+
+    font-size: 10px;
+    font-weight: 800;
+
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+
+.edit-section-heading h3 {
+    margin: 0;
+
+    color: #493b3b;
+
+    font-size: 16px;
+    font-weight: 750;
+
+    line-height: 1.35;
+}
+
+
+.edit-section-heading p {
+    margin: 3px 0 0;
+
+    color: #927f7f;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   FORM GRID
+   ============================================================ */
+
+.edit-form-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 18px;
+}
+
+
+.edit-form-group {
+    min-width: 0;
+}
+
+
+.edit-form-group.full {
+    grid-column: 1 / -1;
+}
+
+
+/* ============================================================
+   FORM LABELS
+   ============================================================ */
+
+.edit-form-group > label {
+    display: block;
+
+    margin: 0 0 7px;
+
+    color: #594949;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    line-height: 1.4;
+}
+
+
+.edit-required {
+    color: #cc3333;
+    font-weight: 800;
+}
+
+
+/* ============================================================
+   INPUT WRAPPERS
+   ============================================================ */
+
+.edit-input-wrap,
+.edit-select-wrap {
+    position: relative;
+
+    width: 100%;
+}
+
+
+/* ============================================================
+   DEEP FORM CONTROLS
+   IMPORTANT:
+   Blazor-rendered input/select/textarea elements require
+   ::deep when this file uses CSS isolation.
+   ============================================================ */
+
+.edit-form-section ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.edit-form-section ::deep select,
+.edit-form-section ::deep textarea {
+    width: 100%;
+
+    margin: 0;
+
+    border: 1px solid #d8d0d0;
+    border-radius: 8px;
+
+    background: #ffffff;
+    color: #342e2e;
+
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+
+    outline: none;
+
+    box-shadow: none;
+
+    transition:
+        border-color 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease,
+        color 0.18s ease;
+}
+
+
+/* ============================================================
+   TEXT INPUTS
+   ============================================================ */
+
+.edit-form-section ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+    width: 100%;
+    height: 40px;
+    min-height: 40px;
+
+    padding: 0 12px;
+
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+
+.edit-form-section ::deep .edit-input-wrap input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+    padding-left: 38px;
+}
+
+
+/* ============================================================
+   SELECTS
+   ============================================================ */
+
+.edit-form-section ::deep select {
+    width: 100%;
+
+    height: 40px;
+    min-height: 40px;
+
+    padding: 0 34px 0 38px;
+
+    cursor: pointer;
+
+    appearance: auto;
+    -webkit-appearance: auto;
+}
+
+
+/* ============================================================
+   TEXTAREAS
+   ============================================================ */
+
+.edit-form-section ::deep textarea {
+    width: 100%;
+
+    min-height: 125px;
+
+    padding: 11px 12px;
+
+    resize: vertical;
+
+    line-height: 1.55;
+}
+
+
+/* ============================================================
+   PLACEHOLDERS
+   ============================================================ */
+
+.edit-form-section ::deep input::placeholder,
+.edit-form-section ::deep textarea::placeholder {
+    color: #aaa0a0;
+
+    opacity: 1;
+}
+
+
+/* ============================================================
+   FOCUS
+   ============================================================ */
+
+.edit-form-section ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus,
+.edit-form-section ::deep select:focus,
+.edit-form-section ::deep textarea:focus {
+    border-color: #996666;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(153, 102, 102, 0.10);
+}
+
+
+/* ============================================================
+   DISABLED
+   ============================================================ */
+
+.edit-form-section ::deep input:disabled,
+.edit-form-section ::deep select:disabled,
+.edit-form-section ::deep textarea:disabled {
+    background: #f4f2f2;
+
+    border-color: #ddd7d7;
+
+    color: #958b8b;
+
+    cursor: not-allowed;
+}
+
+
+/* ============================================================
+   READONLY
+   ============================================================ */
+
+.edit-form-section ::deep input[readonly],
+.edit-form-section ::deep textarea[readonly] {
+    background: #f7f5f5;
+
+    border-color: #ded7d7;
+
+    color: #6f6363;
+
+    cursor: default;
+}
+
+
+.edit-form-section ::deep input.currency-readonly {
+    background: #f7f5f5;
+
+    border-color: #ded7d7;
+
+    color: #6f6363;
+
+    cursor: default;
+}
+
+
+/* ============================================================
+   RTL
+   ============================================================ */
+
+.edit-form-section ::deep input.rtl,
+.edit-form-section ::deep textarea.rtl {
+    direction: rtl;
+
+    text-align: right;
+}
+
+
+.edit-form-section ::deep input.rtl {
+    padding-left: 38px;
+    padding-right: 12px;
+}
+
+
+/* ============================================================
+   VALIDATION
+   ============================================================ */
+
+.edit-form-section ::deep input.invalid,
+.edit-form-section ::deep select.invalid,
+.edit-form-section ::deep textarea.invalid,
+.edit-form-section ::deep input.modified.invalid,
+.edit-form-section ::deep select.modified.invalid,
+.edit-form-section ::deep textarea.modified.invalid {
+    border-color: #cc5555;
+
+    background: #fffafa;
+
+    box-shadow:
+        0 0 0 3px rgba(204, 51, 51, 0.07);
+}
+
+
+/* ============================================================
+   INPUT ICONS
+   ============================================================ */
+
+.edit-input-icon {
+    position: absolute;
+
+    left: 12px;
+    top: 50%;
+
+    z-index: 3;
+
+    color: #9b8585;
+
+    font-size: 14px;
+    line-height: 1;
+
+    transform: translateY(-50%);
+
+    pointer-events: none;
+
+    transition:
+        color 0.18s ease;
+}
+
+
+.edit-input-wrap:focus-within .edit-input-icon,
+.edit-select-wrap:focus-within .edit-input-icon {
+    color: #663333;
+}
+
+
+.edit-input-icon-right {
+    position: absolute;
+
+    right: 12px;
+    top: 50%;
+
+    z-index: 3;
+
+    color: #9b8585;
+
+    font-size: 14px;
+    line-height: 1;
+
+    transform: translateY(-50%);
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   HELP TEXT
+   ============================================================ */
+
+.edit-help {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #9a8989;
+
+    font-size: 10.5px;
+    font-weight: 500;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   NEGOTIABLE CARD
+   ============================================================ */
+
+.edit-negotiable-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    grid-column: 1 / -1;
+
+    width: 100%;
+
+    padding: 13px 15px;
+
+    border: 1px solid #e1d7d7;
+    border-radius: 9px;
+
+    background: #fbf9f8;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.edit-negotiable-card:hover {
+    background: #fffafa;
+
+    border-color: rgba(102, 51, 51, 0.22);
+
+    box-shadow:
+        0 3px 10px rgba(54, 30, 30, 0.04);
+}
+
+
+.edit-negotiable-card ::deep input[type="checkbox"] {
+    flex: 0 0 auto;
+
+    width: 17px;
+    height: 17px;
+
+    margin: 0;
+
+    accent-color: #663333;
+
+    cursor: pointer;
+}
+
+
+.edit-negotiable-content {
+    display: flex;
+    flex-direction: column;
+
+    gap: 2px;
+
+    min-width: 0;
+}
+
+
+.edit-negotiable-content strong {
+    color: #594949;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.edit-negotiable-content span {
+    color: #978686;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   VALIDATION MESSAGE
+   ============================================================ */
+
+.edit-validation-message {
+    display: block;
+
+    margin-top: 5px;
+
+    color: #bd4a4a;
+
+    font-size: 10.5px;
+    font-weight: 600;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   CONTACT INFORMATION
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   CONTACT INTRO
+   ------------------------------------------------------------ */
+
+.edit-contact-intro {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    width: 100%;
+
+    margin-bottom: 18px;
+    padding: 13px 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffaf8 0%,
+            #fffdfc 100%
+        );
+
+    border: 1px solid rgba(102, 51, 51, 0.10);
+    border-radius: 10px;
+
+    color: #6f6060;
+}
+
+
+.edit-contact-intro-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 34px;
+    height: 34px;
+
+    border-radius: 9px;
+
+    background: rgba(102, 51, 51, 0.08);
+
+    color: #663333;
+
+    font-size: 15px;
+}
+
+
+.edit-contact-intro strong {
+    display: block;
+
+    margin-bottom: 2px;
+
+    color: #594949;
+
+    font-size: 12px;
+    font-weight: 750;
+}
+
+
+.edit-contact-intro span {
+    display: block;
+
+    color: #8f7e7e;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    line-height: 1.5;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT GRID
+   ------------------------------------------------------------ */
+
+.edit-contact-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 16px;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT CARD
+   ------------------------------------------------------------ */
+
+.edit-contact-card {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: 18px;
+
+    background: #ffffff;
+
+    border: 1px solid #e4dddd;
+    border-radius: 12px;
+
+    box-shadow:
+        0 2px 8px rgba(54, 30, 30, 0.025);
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.edit-contact-card:hover {
+    border-color: rgba(102, 51, 51, 0.18);
+
+    box-shadow:
+        0 7px 20px rgba(54, 30, 30, 0.06);
+
+    transform: translateY(-1px);
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT METHOD HEADER
+   ------------------------------------------------------------ */
+
+.edit-contact-card-header {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    margin-bottom: 17px;
+    padding-bottom: 14px;
+
+    border-bottom: 1px solid #f0ebeb;
+}
+
+
+.edit-contact-method-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 11px;
+
+    font-size: 18px;
+
+    transition:
+        transform 0.2s ease;
+}
+
+
+.edit-contact-card:hover .edit-contact-method-icon {
+    transform: scale(1.04);
+}
+
+
+/* ------------------------------------------------------------
+   WHATSAPP
+   ------------------------------------------------------------ */
+
+.edit-contact-method-icon.whatsapp {
+    background:
+        linear-gradient(
+            135deg,
+            #e8f9ef 0%,
+            #d9f4e5 100%
+        );
+
+    color: #238b52;
+}
+
+
+/* ------------------------------------------------------------
+   EMAIL
+   ------------------------------------------------------------ */
+
+.edit-contact-method-icon.email {
+    background:
+        linear-gradient(
+            135deg,
+            #f5eeee 0%,
+            #f0e4e4 100%
+        );
+
+    color: #663333;
+}
+
+
+/* ------------------------------------------------------------
+   METHOD HEADING
+   ------------------------------------------------------------ */
+
+.edit-contact-method-heading {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    gap: 2px;
+}
+
+
+.edit-contact-method-heading strong {
+    color: #4e4141;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    line-height: 1.35;
+}
+
+
+.edit-contact-method-heading span {
+    color: #978787;
+
+    font-size: 10.5px;
+    font-weight: 500;
+
+    line-height: 1.4;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT FORM GROUP
+   ------------------------------------------------------------ */
+
+.edit-contact-card .edit-form-group {
+    margin-bottom: 15px;
+}
+
+
+.edit-contact-card .edit-form-group > label {
+    margin-bottom: 6px;
+
+    color: #625353;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT INPUT
+   ------------------------------------------------------------ */
+
+.edit-contact-card .edit-input-wrap {
+    position: relative;
+}
+
+
+.edit-contact-card ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]) {
+    height: 41px;
+    min-height: 41px;
+
+    border-color: #ddd5d5;
+
+    background: #fdfcfc;
+
+    font-size: 12px;
+}
+
+
+.edit-contact-card ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):hover {
+    border-color: #cfc3c3;
+
+    background: #ffffff;
+}
+
+
+.edit-contact-card ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):focus {
+    border-color: #996666;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 0 0 3px rgba(153, 102, 102, 0.09);
+}
+
+
+.edit-contact-card .edit-input-icon {
+    color: #a08e8e;
+
+    font-size: 13px;
+}
+
+
+.edit-contact-card .edit-input-wrap:focus-within .edit-input-icon {
+    color: #663333;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT HELP
+   ------------------------------------------------------------ */
+
+.edit-contact-card .edit-help {
+    margin-top: 5px;
+
+    color: #a08f8f;
+
+    font-size: 10px;
+}
+
+
+/* ------------------------------------------------------------
+   VISIBILITY CONTROL
+   ------------------------------------------------------------ */
+
+.edit-contact-visibility {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    width: 100%;
+
+    margin-top: auto;
+    padding: 11px 12px;
+
+    background: #faf8f8;
+
+    border: 1px solid #eee8e8;
+    border-radius: 9px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.edit-contact-visibility:hover {
+    background: #fffafa;
+
+    border-color: rgba(102, 51, 51, 0.17);
+
+    box-shadow:
+        0 2px 8px rgba(54, 30, 30, 0.035);
+}
+
+
+/* ------------------------------------------------------------
+   CUSTOM CONTACT CHECKBOX
+   ------------------------------------------------------------ */
+
+.edit-contact-visibility ::deep input[type="checkbox"] {
+    position: relative;
+
+    flex: 0 0 auto;
+
+    width: 18px;
+    height: 18px;
+
+    margin: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 1.5px solid #cdbfbf;
+    border-radius: 5px;
+
+    background: #ffffff;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.edit-contact-visibility ::deep input[type="checkbox"]:hover {
+    border-color: #996666;
+}
+
+
+.edit-contact-visibility ::deep input[type="checkbox"]:checked {
+    border-color: #663333;
+
+    background: #663333;
+
+    box-shadow:
+        0 2px 5px rgba(102, 51, 51, 0.15);
+}
+
+
+.edit-contact-visibility ::deep input[type="checkbox"]:checked::after {
+    content: "";
+
+    position: absolute;
+
+    left: 5px;
+    top: 2px;
+
+    width: 5px;
+    height: 9px;
+
+    border-right: 2px solid #ffffff;
+    border-bottom: 2px solid #ffffff;
+
+    transform: rotate(45deg);
+}
+
+
+/* ------------------------------------------------------------
+   VISIBILITY CONTENT
+   ------------------------------------------------------------ */
+
+.edit-contact-visibility-content {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    gap: 2px;
+}
+
+
+.edit-contact-visibility-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 7px;
+}
+
+
+.edit-contact-visibility-title > span:first-child {
+    color: #5d4e4e;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.edit-contact-visibility-content small {
+    color: #9b8b8b;
+
+    font-size: 9.5px;
+    font-weight: 500;
+
+    line-height: 1.35;
+}
+
+
+/* ------------------------------------------------------------
+   PUBLIC BADGE
+   ------------------------------------------------------------ */
+
+.edit-contact-public-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    padding: 2px 6px;
+
+    border-radius: 99px;
+
+    background: #edf8f2;
+
+    color: #36815a;
+
+    font-size: 8.5px;
+    font-weight: 750;
+
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+}
+
+
+.edit-contact-public-badge i {
+    font-size: 8px;
+}
+
+
+/* ------------------------------------------------------------
+   CONTACT NOTE
+   ------------------------------------------------------------ */
+
+.edit-contact-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    width: 100%;
+
+    margin-top: 16px;
+    padding: 11px 13px;
+
+    background: #fffaf3;
+
+    border: 1px solid #eee0c9;
+    border-radius: 9px;
+
+    color: #806d52;
+
+    font-size: 10.5px;
+    font-weight: 500;
+
+    line-height: 1.5;
+}
+
+
+.edit-contact-note > i {
+    flex: 0 0 auto;
+
+    margin-top: 1px;
+
+    color: #a17b3d;
+
+    font-size: 13px;
+}
+
+
+/* ============================================================
+   ADVERTISEMENT PHOTOS
+   ============================================================ */
+
+
+/* ------------------------------------------------------------
+   PHOTO SUMMARY
+   ------------------------------------------------------------ */
+
+.edit-photo-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+
+    width: 100%;
+
+    margin-bottom: 12px;
+    padding: 10px 13px;
+
+    background: #faf8f8;
+
+    border: 1px solid #ebe5e5;
+    border-radius: 9px;
+
+    color: #8b7b7b;
+
+    font-size: 10px;
+    font-weight: 600;
+}
+
+
+.edit-photo-summary-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    min-width: 0;
+
+    color: #665555;
+}
+
+
+.edit-photo-summary-left > i {
+    color: #663333;
+
+    font-size: 13px;
+}
+
+
+.edit-photo-summary-left > span:first-of-type {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.edit-photo-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 39px;
+
+    padding: 3px 7px;
+
+    border-radius: 99px;
+
+    background: #eee5e5;
+
+    color: #663333;
+
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* ============================================================
+   UPLOAD AREA
+   ============================================================ */
+
+.edit-upload-area {
+    position: relative;
+
+    width: 100%;
+    min-height: 218px;
+
+    margin-top: 14px;
+
+    border: 1.5px dashed #cdbebe;
+    border-radius: 14px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fffaf9 0%,
+            #ffffff 100%
+        );
+
+    overflow: hidden;
+
+    transition:
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* ------------------------------------------------------------
+   HOVER
+   ------------------------------------------------------------ */
+
+.edit-upload-area:hover {
+    border-color: #996666;
+
+    background:
+        linear-gradient(
+            135deg,
+            #fff7f5 0%,
+            #ffffff 100%
+        );
+
+    box-shadow:
+        0 7px 20px rgba(102, 51, 51, 0.07);
+}
+
+
+/* ============================================================
+   HIDDEN NATIVE FILE INPUT
+   IMPORTANT:
+   InputFile is a Blazor component. Because this is a CSS
+   isolation file, ::deep is required to target the actual
+   rendered <input type="file"> element.
+   ============================================================ */
+
+.edit-upload-area ::deep .edit-upload-file-input {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    padding: 0 !important;
+    margin: -1px !important;
+
+    overflow: hidden !important;
+
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+
+    white-space: nowrap !important;
+
+    border: 0 !important;
+
+    opacity: 0 !important;
+
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+
+/* ------------------------------------------------------------
+   EXTRA FILE INPUT FALLBACK
+   ------------------------------------------------------------ */
+
+.edit-upload-area ::deep input[type="file"] {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    padding: 0 !important;
+    margin: -1px !important;
+
+    overflow: hidden !important;
+
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+
+    white-space: nowrap !important;
+
+    border: 0 !important;
+
+    opacity: 0 !important;
+
+    appearance: none !important;
+    -webkit-appearance: none !important;
+}
+
+
+/* ============================================================
+   UPLOAD LABEL
+   ============================================================ */
+
+.edit-upload-label {
+    display: flex;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 218px;
+
+    padding: 24px 20px;
+
+    text-align: center;
+
+    cursor: pointer;
+    user-select: none;
+}
+
+
+/* ------------------------------------------------------------
+   KEYBOARD FOCUS
+   ------------------------------------------------------------ */
+
+.edit-upload-label:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.18);
+    outline-offset: -4px;
+
+    border-radius: 13px;
+}
+
+
+/* ============================================================
+   UPLOAD ICON
+   ============================================================ */
+
+.edit-upload-icon {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 52px;
+
+    margin-bottom: 11px;
+
+    border-radius: 15px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f3e7e7 0%,
+            #eadada 100%
+        );
+
+    color: #663333;
+
+    font-size: 21px;
+
+    box-shadow:
+        0 4px 11px rgba(102, 51, 51, 0.08);
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.edit-upload-label:hover .edit-upload-icon {
+    transform: translateY(-3px);
+
+    background:
+        linear-gradient(
+            135deg,
+            #eadada 0%,
+            #e3d0d0 100%
+        );
+
+    color: #cc3333;
+}
+
+
+/* ============================================================
+   UPLOAD TITLE
+   ============================================================ */
+
+.edit-upload-title {
+    display: block;
+
+    color: #4f4141;
+
+    font-size: 14px;
+    font-weight: 750;
+
+    line-height: 1.4;
+}
+
+
+/* ============================================================
+   UPLOAD DESCRIPTION
+   ============================================================ */
+
+.edit-upload-description {
+    display: block;
+
+    margin-top: 3px;
+
+    color: #8e7d7d;
+
+    font-size: 11px;
+    font-weight: 500;
+
+    line-height: 1.45;
+}
+
+
+/* ============================================================
+   FILE FORMAT INFORMATION
+   ============================================================ */
+
+.edit-upload-formats {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-wrap: wrap;
+
+    gap: 5px;
+
+    margin-top: 9px;
+
+    color: #9a8a8a;
+
+    font-size: 9.5px;
+    font-weight: 600;
+
+    line-height: 1.4;
+}
+
+
+.edit-upload-formats > span {
+    display: inline-flex;
+
+    align-items: center;
+}
+
+
+.edit-upload-dot {
+    color: #c6b6b6;
+
+    font-size: 8px;
+}
+
+
+.edit-upload-divider {
+    width: 1px;
+    height: 11px;
+
+    margin: 0 3px;
+
+    background: #ddd2d2;
+}
+
+
+/* ============================================================
+   BROWSE PHOTOS BUTTON
+   ============================================================ */
+
+.edit-upload-button {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    min-height: 35px;
+
+    margin-top: 14px;
+    padding: 7px 14px;
+
+    border: 1px solid rgba(102, 51, 51, 0.18);
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    color: #663333;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    box-shadow:
+        0 2px 7px rgba(102, 51, 51, 0.05);
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+
+.edit-upload-button i {
+    font-size: 13px;
+}
+
+
+.edit-upload-label:hover .edit-upload-button {
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    border-color: transparent;
+
+    color: #ffffff;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 5px 13px rgba(102, 51, 51, 0.16);
+}
+
+
+/* ============================================================
+   REMAINING PHOTO SLOTS
+   ============================================================ */
+
+.edit-upload-remaining {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-top: 9px;
+
+    color: #a08f8f;
+
+    font-size: 9px;
+    font-weight: 600;
+}
+
+
+/* ============================================================
+   EMPTY / NO MORE PHOTO STATE
+   ============================================================ */
+
+.edit-upload-area.edit-upload-empty {
+    min-height: 135px;
+
+    border-style: solid;
+
+    background: #fbf9f9;
+
+    cursor: default;
+
+    opacity: 0.9;
+}
+
+
+.edit-upload-area.edit-upload-empty:hover {
+    border-color: #ebe4e4;
+
+    background: #fbf9f9;
+
+    box-shadow: none;
+}
+
+
+.edit-upload-area.edit-upload-empty .edit-upload-label {
+    min-height: 135px;
+
+    cursor: default;
+}
+
+
+/* ============================================================
+   UPLOAD PROGRESS
+   IMPORTANT:
+   These selectors match your CURRENT Edit.razor markup:
+   
+   .edit-upload-progress
+   .edit-upload-progress-top
+   .edit-progress-track
+   .edit-progress-value
+   ============================================================ */
+
+.edit-upload-progress {
+    width: 100%;
+
+    margin-top: 14px;
+    padding: 12px 14px;
+
+    border: 1px solid rgba(102, 51, 51, 0.09);
+    border-radius: 9px;
+
+    background: #fcfafa;
+}
+
+
+.edit-upload-progress-top {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    margin-bottom: 8px;
+}
+
+
+.edit-upload-progress-top span {
+    color: #776868;
+
+    font-size: 9.5px;
+    font-weight: 650;
+}
+
+
+.edit-upload-progress-top span:last-child {
+    color: #663333;
+
+    font-weight: 750;
+}
+
+
+/* ============================================================
+   PROGRESS TRACK
+   ============================================================ */
+
+.edit-progress-track {
+    width: 100%;
+    height: 6px;
+
+    overflow: hidden;
+
+    border-radius: 99px;
+
+    background: #eee5e5;
+}
+
+
+/* ============================================================
+   PROGRESS VALUE
+   ============================================================ */
+
+.edit-progress-value {
+    height: 100%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    transition:
+        width 0.25s ease;
+}
+
+
+/* ============================================================
+   RESPONSIVE - 600px
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    .edit-upload-area {
+        min-height: 205px;
+    }
+
+
+    .edit-upload-label {
+        min-height: 205px;
+
+        padding: 21px 15px;
+    }
+
+
+    .edit-upload-icon {
+        width: 48px;
+        height: 48px;
+
+        font-size: 19px;
+    }
+
+
+    .edit-upload-title {
+        font-size: 13px;
+    }
+
+
+    .edit-upload-description {
+        font-size: 10.5px;
+    }
+
+
+    .edit-upload-formats {
+        font-size: 9px;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - 420px
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+    .edit-upload-area {
+        min-height: 195px;
+    }
+
+
+    .edit-upload-label {
+        min-height: 195px;
+
+        padding: 18px 12px;
+    }
+
+
+    .edit-upload-description {
+        max-width: 240px;
+    }
+
+
+    .edit-upload-formats {
+        max-width: 260px;
+    }
+
+
+    .edit-upload-button {
+        min-height: 34px;
+
+        padding: 7px 12px;
+    }
+}
+
+
+/* ============================================================
+   ACTION BAR
+   ============================================================ */
+
+.edit-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    width: 100%;
+
+    margin-top: 20px;
+    padding: 12px 14px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(102, 51, 51, 0.10);
+    border-radius: 11px;
+
+    box-shadow:
+        0 3px 12px rgba(54, 30, 30, 0.045);
+}
+
+
+/* ------------------------------------------------------------
+   ACTION SECURITY MESSAGE
+   ------------------------------------------------------------ */
+
+.edit-action-left {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+
+    min-width: 0;
+
+    color: #8b7a7a;
+
+    font-size: 10.5px;
+    font-weight: 550;
+}
+
+
+.edit-action-security-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    flex: 0 0 auto;
+
+    width: 30px;
+    height: 30px;
+
+    border-radius: 8px;
+
+    background: #f2f8f4;
+
+    color: #36815a;
+
+    font-size: 13px;
+}
+
+
+.edit-action-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 8px;
+
+    flex: 0 0 auto;
+}
+
+
+/* ============================================================
+   ACTION BUTTON BASE
+   ============================================================ */
+
+.edit-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+
+    min-height: 38px;
+
+    padding: 8px 14px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        filter 0.18s ease;
+}
+
+
+.edit-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+
+.edit-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+
+.edit-button:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.15);
+    outline-offset: 2px;
+}
+
+
+.edit-button:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+}
+
+
+/* ------------------------------------------------------------
+   CANCEL
+   ------------------------------------------------------------ */
+
+.edit-button-cancel {
+    border: 1px solid #ded5d5;
+
+    background: #ffffff;
+
+    color: #746565;
+}
+
+
+.edit-button-cancel:hover:not(:disabled) {
+    border-color: #cbbbbb;
+
+    background: #fffafa;
+
+    color: #663333;
+
+    box-shadow:
+        0 3px 8px rgba(54, 30, 30, 0.05);
+}
+
+
+/* ------------------------------------------------------------
+   SAVE CHANGES
+   ------------------------------------------------------------ */
+
+.edit-button-save {
+    border: 1px solid rgba(102, 51, 51, 0.18);
+
+    background: #ffffff;
+
+    color: #663333;
+
+    box-shadow:
+        0 2px 6px rgba(102, 51, 51, 0.04);
+}
+
+
+.edit-button-save:hover:not(:disabled) {
+    border-color: rgba(102, 51, 51, 0.30);
+
+    background: #fff8f6;
+
+    box-shadow:
+        0 5px 12px rgba(102, 51, 51, 0.08);
+}
+
+
+/* ------------------------------------------------------------
+   SAVE & SUBMIT
+   ------------------------------------------------------------ */
+
+.edit-button-submit {
+    border: 1px solid transparent;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 4px 11px rgba(102, 51, 51, 0.15);
+}
+
+
+.edit-button-submit:hover:not(:disabled) {
+    filter: brightness(1.04);
+
+    box-shadow:
+        0 7px 16px rgba(102, 51, 51, 0.21);
+}
+
+
+/* ============================================================
+   BUTTON SPINNER
+   ============================================================ */
+
+.edit-button-spinner {
+    width: 13px;
+    height: 13px;
+
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+
+    border-radius: 50%;
+
+    animation: edit-button-spin 0.65s linear infinite;
+}
+
+
+@keyframes edit-button-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - 1000px
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .my-ad-edit-main {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+
+    .edit-photo-grid {
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - 800px
+   ============================================================ */
+
+@media (max-width: 800px) {
+
+    .my-ad-edit-page-context {
+        padding: 14px 16px;
+    }
+
+
+    .my-ad-edit-context-description {
+        font-size: 12px;
+    }
+
+
+    .my-ad-edit-back-button {
+        padding: 8px 13px;
+    }
+
+
+    .edit-form-section {
+        padding: 18px;
+    }
+
+
+    .edit-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .edit-form-group.full {
+        grid-column: auto;
+    }
+
+
+    .edit-contact-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .edit-contact-card {
+        padding: 16px;
+    }
+
+
+    .edit-photo-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+
+    .edit-photo-summary {
+        align-items: flex-start;
+
+        flex-direction: column;
+
+        gap: 7px;
+    }
+
+
+    .edit-action-bar {
+        align-items: stretch;
+
+        flex-direction: column;
+
+        gap: 12px;
+    }
+
+
+    .edit-action-left {
+        width: 100%;
+    }
+
+
+    .edit-action-buttons {
+        width: 100%;
+
+        justify-content: flex-end;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - 600px
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    .my-ad-edit-main {
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-bottom: 24px;
+    }
+
+
+    .my-ad-edit-page-context {
+        align-items: stretch;
+
+        flex-direction: column;
+
+        gap: 14px;
+
+        padding: 14px;
+    }
+
+
+    .my-ad-edit-context-left {
+        align-items: flex-start;
+    }
+
+
+    .my-ad-edit-context-icon {
+        width: 36px;
+        height: 36px;
+
+        font-size: 16px;
+    }
+
+
+    .my-ad-edit-back-button {
+        width: 100%;
+    }
+
+
+    .edit-form-section {
+        padding: 16px;
+
+        border-radius: 10px;
+    }
+
+
+    .edit-section-heading {
+        gap: 10px;
+
+        margin-bottom: 17px;
+    }
+
+
+    .edit-section-icon {
+        width: 34px;
+        height: 34px;
+
+        font-size: 14px;
+    }
+
+
+    .edit-section-heading h3 {
+        font-size: 15px;
+    }
+
+
+    .edit-section-heading p {
+        font-size: 11px;
+    }
+
+
+    .edit-form-grid {
+        grid-template-columns: 1fr;
+
+        gap: 15px;
+    }
+
+
+    .edit-negotiable-card {
+        grid-column: auto;
+    }
+
+
+    .edit-contact-intro {
+        padding: 12px;
+    }
+
+
+    .edit-contact-card-header {
+        margin-bottom: 15px;
+    }
+
+
+    .edit-contact-method-icon {
+        width: 38px;
+        height: 38px;
+
+        font-size: 17px;
+    }
+
+
+    .edit-contact-visibility {
+        padding: 10px;
+    }
+
+
+    .edit-contact-note {
+        font-size: 10px;
+    }
+
+
+    .edit-upload-area {
+        min-height: 140px;
+
+        padding: 18px;
+    }
+
+
+    .edit-upload-area.edit-upload-empty {
+        min-height: 115px;
+    }
+
+
+    .edit-photo-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        gap: 9px;
+    }
+
+
+    .edit-action-bar {
+        padding: 12px;
+    }
+
+
+    .edit-action-buttons {
+        display: grid;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+
+        width: 100%;
+    }
+
+
+    .edit-button {
+        width: 100%;
+    }
+
+
+    .edit-button-submit {
+        grid-column: 1 / -1;
+    }
+}
+
+
+/* ============================================================
+   RESPONSIVE - 420px
+   ============================================================ */
+
+@media (max-width: 420px) {
+
+    .my-ad-edit-context-eyebrow {
+        font-size: 10px;
+    }
+
+
+    .my-ad-edit-context-description {
+        font-size: 11px;
+    }
+
+
+    .edit-form-section {
+        padding: 14px;
+    }
+
+
+    .edit-section-heading p {
+        font-size: 10.5px;
+    }
+
+
+    .edit-form-section ::deep input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    .edit-form-section ::deep select {
+        height: 42px;
+        min-height: 42px;
+    }
+
+
+    .edit-photo-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .edit-contact-method-heading span {
+        font-size: 10px;
+    }
+
+
+    .edit-action-buttons {
+        grid-template-columns: 1fr;
+    }
+
+
+    .edit-button-submit {
+        grid-column: auto;
+    }
+}
+
+
+/* ============================================================
+   ACCESSIBILITY / REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .my-ad-edit-back-button,
+    .edit-form-section ::deep input,
+    .edit-form-section ::deep select,
+    .edit-form-section ::deep textarea,
+    .edit-negotiable-card,
+    .edit-contact-card,
+    .edit-contact-method-icon,
+    .edit-contact-visibility,
+    .edit-upload-area,
+    .edit-upload-icon,
+    .edit-photo-card-button,
+    .edit-action-button,
+    .edit-button,
+    .edit-upload-progress-bar,
+    .edit-input-icon {
+        transition: none;
+    }
+
+
+    .edit-loading-spinner,
+    .edit-button-spinner {
+        animation: none;
+    }
+}
+
+/* ============================================================
+   ADVERTISEMENT PHOTOS
+   NEW PHOTO GRID / CARD DESIGN
+   ============================================================ */
+
+.edit-photo-grid.edit-new-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+}
+
+
+/* ============================================================
+   PHOTO CARD
+   ============================================================ */
+
+.edit-new-photo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+
+    background: #ffffff;
+    border: 1px solid rgba(102, 51, 51, 0.11);
+    border-radius: 13px;
+
+    box-shadow:
+        0 3px 12px rgba(54, 30, 30, 0.055);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.edit-new-photo:hover {
+    transform: translateY(-3px);
+
+    border-color: rgba(102, 51, 51, 0.20);
+
+    box-shadow:
+        0 9px 24px rgba(54, 30, 30, 0.10);
+}
+
+
+/* ============================================================
+   IMAGE AREA
+   ============================================================ */
+
+.edit-new-photo .edit-photo-image-wrap {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5eeee 0%,
+            #faf7f7 50%,
+            #f1e8e8 100%
+        );
+}
+
+
+/* IMAGE */
+
+.edit-new-photo .edit-photo-image-wrap img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.35s ease,
+        filter 0.35s ease;
+}
+
+.edit-new-photo:hover .edit-photo-image-wrap img {
+    transform: scale(1.035);
+}
+
+
+/* Subtle image overlay */
+
+.edit-new-photo .edit-photo-image-wrap::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.00) 55%,
+            rgba(0, 0, 0, 0.16) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   MAIN PHOTO BADGE
+   ============================================================ */
+
+.edit-new-photo .edit-primary-badge {
+    position: absolute;
+
+    left: 10px;
+    top: 10px;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    min-height: 27px;
+    padding: 5px 9px;
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 750;
+    line-height: 1;
+
+    letter-spacing: 0.01em;
+
+    box-shadow:
+        0 4px 10px rgba(54, 30, 30, 0.20);
+}
+
+.edit-new-photo .edit-primary-badge i {
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   PHOTO CARD BODY
+   ============================================================ */
+
+.edit-new-photo .edit-photo-card-body {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: 11px 11px 10px;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   FILE NAME
+   ============================================================ */
+
+.edit-new-photo .edit-photo-name {
+    min-width: 0;
+
+    color: #4f4141;
+
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.edit-new-photo .edit-photo-name::before {
+    content: "\f4a5";
+
+    display: inline-block;
+
+    margin-right: 6px;
+
+    color: #996666;
+
+    font-family: "bootstrap-icons";
+    font-size: 10px;
+    font-weight: normal;
+}
+
+
+/* ============================================================
+   PHOTO ACTIONS
+   ============================================================ */
+
+.edit-new-photo .edit-photo-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 7px;
+
+    width: 100%;
+
+    margin-top: 10px;
+    padding-top: 9px;
+
+    border-top: 1px solid rgba(102, 51, 51, 0.08);
+}
+
+
+/* ============================================================
+   PHOTO ACTION BUTTON
+   ============================================================ */
+
+.edit-new-photo .edit-photo-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-width: 0;
+    min-height: 31px;
+
+    padding: 5px 7px;
+
+    border: 1px solid rgba(102, 51, 51, 0.13);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #735f5f;
+
+    font-size: 9.5px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.edit-new-photo .edit-photo-action i {
+    font-size: 10px;
+}
+
+
+/* Main button */
+
+.edit-new-photo .edit-photo-action:not(.delete):hover {
+    border-color: rgba(102, 51, 51, 0.28);
+
+    background:
+        linear-gradient(
+            135deg,
+            #faf1f1 0%,
+            #fff8f7 100%
+        );
+
+    color: #663333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(102, 51, 51, 0.08);
+}
+
+
+/* Delete button */
+
+.edit-new-photo .edit-photo-action.delete {
+    border-color: rgba(180, 70, 70, 0.13);
+
+    color: #a45d5d;
+
+    background: #fffafa;
+}
+
+.edit-new-photo .edit-photo-action.delete:hover {
+    border-color: rgba(204, 51, 51, 0.25);
+
+    background: #fff2f1;
+
+    color: #cc3333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(204, 51, 51, 0.08);
+}
+
+
+/* Active */
+
+.edit-new-photo .edit-photo-action:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+/* Keyboard focus */
+
+.edit-new-photo .edit-photo-action:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.16);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .edit-new-photo .edit-photo-card-body {
+        padding: 10px;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .edit-new-photo .edit-photo-image-wrap {
+        aspect-ratio: 16 / 10;
+    }
+
+    .edit-new-photo .edit-photo-card-body {
+        padding: 11px;
+    }
+
+    .edit-new-photo .edit-photo-name {
+        font-size: 11.5px;
+    }
+
+    .edit-new-photo .edit-photo-action {
+        min-height: 34px;
+        font-size: 10px;
+    }
+}
+
+/* ============================================================
+   ADVERTISEMENT PHOTOS
+   NEW PHOTO GRID / CARD DESIGN
+   ============================================================ */
+
+.edit-photo-grid.edit-new-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+}
+
+
+/* ============================================================
+   PHOTO CARD
+   ============================================================ */
+
+.edit-new-photo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+
+    background: #ffffff;
+    border: 1px solid rgba(102, 51, 51, 0.11);
+    border-radius: 13px;
+
+    box-shadow:
+        0 3px 12px rgba(54, 30, 30, 0.055);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.edit-new-photo:hover {
+    transform: translateY(-3px);
+
+    border-color: rgba(102, 51, 51, 0.20);
+
+    box-shadow:
+        0 9px 24px rgba(54, 30, 30, 0.10);
+}
+
+
+/* ============================================================
+   IMAGE AREA
+   ============================================================ */
+
+.edit-new-photo .edit-photo-image-wrap {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5eeee 0%,
+            #faf7f7 50%,
+            #f1e8e8 100%
+        );
+}
+
+
+/* IMAGE */
+
+.edit-new-photo .edit-photo-image-wrap img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.35s ease,
+        filter 0.35s ease;
+}
+
+.edit-new-photo:hover .edit-photo-image-wrap img {
+    transform: scale(1.035);
+}
+
+
+/* Subtle image overlay */
+
+.edit-new-photo .edit-photo-image-wrap::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.00) 55%,
+            rgba(0, 0, 0, 0.16) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   MAIN PHOTO BADGE
+   ============================================================ */
+
+.edit-new-photo .edit-primary-badge {
+    position: absolute;
+
+    left: 10px;
+    top: 10px;
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    min-height: 27px;
+    padding: 5px 9px;
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 750;
+    line-height: 1;
+
+    letter-spacing: 0.01em;
+
+    box-shadow:
+        0 4px 10px rgba(54, 30, 30, 0.20);
+}
+
+.edit-new-photo .edit-primary-badge i {
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   PHOTO CARD BODY
+   ============================================================ */
+
+.edit-new-photo .edit-photo-card-body {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: 11px 11px 10px;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   FILE NAME
+   ============================================================ */
+
+.edit-new-photo .edit-photo-name {
+    min-width: 0;
+
+    color: #4f4141;
+
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.edit-new-photo .edit-photo-name::before {
+    content: "\f4a5";
+
+    display: inline-block;
+
+    margin-right: 6px;
+
+    color: #996666;
+
+    font-family: "bootstrap-icons";
+    font-size: 10px;
+    font-weight: normal;
+}
+
+
+/* ============================================================
+   PHOTO ACTIONS
+   ============================================================ */
+
+.edit-new-photo .edit-photo-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 7px;
+
+    width: 100%;
+
+    margin-top: 10px;
+    padding-top: 9px;
+
+    border-top: 1px solid rgba(102, 51, 51, 0.08);
+}
+
+
+/* ============================================================
+   PHOTO ACTION BUTTON
+   ============================================================ */
+
+.edit-new-photo .edit-photo-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+
+    min-width: 0;
+    min-height: 31px;
+
+    padding: 5px 7px;
+
+    border: 1px solid rgba(102, 51, 51, 0.13);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #735f5f;
+
+    font-size: 9.5px;
+    font-weight: 700;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.edit-new-photo .edit-photo-action i {
+    font-size: 10px;
+}
+
+
+/* Main button */
+
+.edit-new-photo .edit-photo-action:not(.delete):hover {
+    border-color: rgba(102, 51, 51, 0.28);
+
+    background:
+        linear-gradient(
+            135deg,
+            #faf1f1 0%,
+            #fff8f7 100%
+        );
+
+    color: #663333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(102, 51, 51, 0.08);
+}
+
+
+/* Delete button */
+
+.edit-new-photo .edit-photo-action.delete {
+    border-color: rgba(180, 70, 70, 0.13);
+
+    color: #a45d5d;
+
+    background: #fffafa;
+}
+
+.edit-new-photo .edit-photo-action.delete:hover {
+    border-color: rgba(204, 51, 51, 0.25);
+
+    background: #fff2f1;
+
+    color: #cc3333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(204, 51, 51, 0.08);
+}
+
+
+/* Active */
+
+.edit-new-photo .edit-photo-action:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+
+/* Keyboard focus */
+
+.edit-new-photo .edit-photo-action:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.16);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .edit-new-photo .edit-photo-card-body {
+        padding: 10px;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .edit-photo-grid.edit-new-photo-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .edit-new-photo .edit-photo-image-wrap {
+        aspect-ratio: 16 / 10;
+    }
+
+    .edit-new-photo .edit-photo-card-body {
+        padding: 11px;
+    }
+
+    .edit-new-photo .edit-photo-name {
+        font-size: 11.5px;
+    }
+
+    .edit-new-photo .edit-photo-action {
+        min-height: 34px;
+        font-size: 10px;
+    }
+}
+
+/* ============================================================
+   SAVED ADVERTISEMENT PHOTOS
+   ============================================================ */
+
+.edit-photo-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+    margin-top: 16px;
+}
+
+
+/* ============================================================
+   SAVED PHOTO CARD
+   ============================================================ */
+
+.edit-photo-card {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    overflow: hidden;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(102, 51, 51, 0.11);
+    border-radius: 13px;
+
+    box-shadow:
+        0 3px 12px rgba(54, 30, 30, 0.055);
+
+    transition:
+        transform 0.22s ease,
+        border-color 0.22s ease,
+        box-shadow 0.22s ease;
+}
+
+.edit-photo-card:hover {
+    transform: translateY(-3px);
+
+    border-color: rgba(102, 51, 51, 0.20);
+
+    box-shadow:
+        0 9px 24px rgba(54, 30, 30, 0.10);
+}
+
+
+/* ============================================================
+   IMAGE AREA
+   ============================================================ */
+
+.edit-photo-card .edit-photo-image-wrap {
+    position: relative;
+
+    width: 100%;
+    aspect-ratio: 4 / 3;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5eeee 0%,
+            #faf7f7 50%,
+            #f1e8e8 100%
+        );
+}
+
+
+/* IMAGE */
+
+.edit-photo-card .edit-photo-image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    transition:
+        transform 0.35s ease,
+        filter 0.35s ease;
+}
+
+.edit-photo-card:hover .edit-photo-image {
+    transform: scale(1.035);
+}
+
+
+/* IMAGE OVERLAY */
+
+.edit-photo-card .edit-photo-image-wrap::after {
+    content: "";
+
+    position: absolute;
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.00) 52%,
+            rgba(0, 0, 0, 0.15) 100%
+        );
+
+    pointer-events: none;
+}
+
+
+/* ============================================================
+   MAIN PHOTO BADGE
+   ============================================================ */
+
+.edit-photo-card .edit-primary-badge {
+    position: absolute;
+
+    top: 10px;
+    left: 10px;
+
+    z-index: 2;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    min-height: 27px;
+
+    padding: 5px 9px;
+
+    border: 1px solid rgba(255, 255, 255, 0.30);
+    border-radius: 7px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333 0%,
+            #8e3b3b 55%,
+            #cc3333 100%
+        );
+
+    color: #ffffff;
+
+    font-size: 9px;
+    font-weight: 750;
+    line-height: 1;
+
+    box-shadow:
+        0 4px 10px rgba(54, 30, 30, 0.20);
+}
+
+.edit-photo-card .edit-primary-badge i {
+    font-size: 9px;
+}
+
+
+/* ============================================================
+   PHOTO CARD BODY
+   ============================================================ */
+
+.edit-photo-card .edit-photo-card-body {
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+
+    padding: 11px 11px 10px;
+
+    background: #ffffff;
+}
+
+
+/* ============================================================
+   FILE NAME
+   ============================================================ */
+
+.edit-photo-card .edit-photo-name {
+    min-width: 0;
+
+    color: #4f4141;
+
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.edit-photo-card .edit-photo-name::before {
+    content: "\f4a5";
+
+    display: inline-block;
+
+    margin-right: 6px;
+
+    color: #996666;
+
+    font-family: "bootstrap-icons";
+    font-size: 10px;
+    font-weight: normal;
+}
+
+
+/* ============================================================
+   PHOTO ACTION BAR
+   ============================================================ */
+
+.edit-photo-card .edit-photo-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 7px;
+
+    width: 100%;
+
+    margin-top: 10px;
+    padding-top: 9px;
+
+    border-top: 1px solid rgba(102, 51, 51, 0.08);
+}
+
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
+
+.edit-photo-card .edit-photo-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 5px;
+
+    min-width: 0;
+    min-height: 31px;
+
+    padding: 5px 7px;
+
+    border: 1px solid rgba(102, 51, 51, 0.13);
+    border-radius: 7px;
+
+    background: #ffffff;
+
+    color: #735f5f;
+
+    font-size: 9.5px;
+    font-weight: 700;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.edit-photo-card .edit-photo-action i {
+    font-size: 10px;
+}
+
+
+/* ============================================================
+   SET MAIN PHOTO
+   ============================================================ */
+
+.edit-photo-card .edit-photo-action:not(.delete):not(:disabled):hover {
+    border-color: rgba(102, 51, 51, 0.28);
+
+    background:
+        linear-gradient(
+            135deg,
+            #faf1f1 0%,
+            #fff8f7 100%
+        );
+
+    color: #663333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(102, 51, 51, 0.08);
+}
+
+
+/* ============================================================
+   CURRENT MAIN PHOTO BUTTON
+   ============================================================ */
+
+.edit-photo-card .edit-photo-action:not(.delete):disabled {
+    border-color: rgba(102, 51, 51, 0.08);
+
+    background:
+        linear-gradient(
+            135deg,
+            #f8eeee 0%,
+            #fcf7f7 100%
+        );
+
+    color: #996666;
+
+    opacity: 1;
+
+    cursor: default;
+}
+
+.edit-photo-card .edit-photo-action:not(.delete):disabled i {
+    color: #cc3333;
+}
+
+
+/* ============================================================
+   DELETE BUTTON
+   ============================================================ */
+
+.edit-photo-card .edit-photo-action.delete {
+    border-color: rgba(180, 70, 70, 0.13);
+
+    background: #fffafa;
+
+    color: #a45d5d;
+}
+
+.edit-photo-card .edit-photo-action.delete:hover {
+    border-color: rgba(204, 51, 51, 0.25);
+
+    background: #fff2f1;
+
+    color: #cc3333;
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 3px 8px rgba(204, 51, 51, 0.08);
+}
+
+
+/* ============================================================
+   BUTTON ACTIVE / FOCUS
+   ============================================================ */
+
+.edit-photo-card .edit-photo-action:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.edit-photo-card .edit-photo-action:focus-visible {
+    outline: 3px solid rgba(204, 51, 51, 0.16);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1100px) {
+
+    .edit-photo-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+
+@media (max-width: 800px) {
+
+    .edit-photo-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .edit-photo-card .edit-photo-card-body {
+        padding: 10px;
+    }
+}
+
+
+@media (max-width: 520px) {
+
+    .edit-photo-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .edit-photo-card .edit-photo-image-wrap {
+        aspect-ratio: 16 / 10;
+    }
+
+    .edit-photo-card .edit-photo-card-body {
+        padding: 11px;
+    }
+
+    .edit-photo-card .edit-photo-name {
+        font-size: 11.5px;
+    }
+
+    .edit-photo-card .edit-photo-action {
+        min-height: 34px;
+        font-size: 10px;
+    }
+}

@@ -199,30 +199,93 @@ public class UserManagementApiService
                };
     }
 
-public async Task<HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse> UpdateUserProfileAsync(
-    long userId,
-    UpdateUserProfileRequest request)
+// ============================================================
+// UPDATE USER PROFILE
+// ============================================================
+
+public async Task<
+    HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse>
+    UpdateUserProfileAsync(
+        long userId,
+        UpdateUserProfileRequest request)
 {
+    if (userId <= 0)
+    {
+        throw new ArgumentException(
+            "Invalid user ID.",
+            nameof(userId));
+    }
+
     var client = CreateClient();
 
-    Console.WriteLine("================================================");
-    Console.WriteLine("USER MANAGEMENT - UPDATE USER PROFILE");
-    Console.WriteLine(
-        $"PUT: api/v1/users/{userId}/profile");
-    Console.WriteLine("================================================");
-
-    var response = await client.PutAsJsonAsync(
-        $"api/v1/users/{userId}/profile",
-        request);
+    var url =
+        $"api/v1/users/{userId}/profile";
 
     Console.WriteLine(
-        $"STATUS: {(int)response.StatusCode} {response.StatusCode}");
+        "================================================");
 
-    response.EnsureSuccessStatusCode();
+    Console.WriteLine(
+        "USER MANAGEMENT - UPDATE USER PROFILE");
+
+    Console.WriteLine(
+        $"PUT: {url}");
+
+    Console.WriteLine(
+        $"FIRST NAME: {request.FirstName}");
+
+    Console.WriteLine(
+        $"LAST NAME: {request.LastName}");
+
+    Console.WriteLine(
+        $"NATIONALITY: {request.Nationality}");
+
+    Console.WriteLine(
+        $"PREFERRED LANGUAGE: {request.PreferredLanguage}");
+
+    Console.WriteLine(
+        $"IS BUSINESS ACCOUNT: {request.IsBusinessAccount}");
+
+    Console.WriteLine(
+        $"COMPANY NAME: {request.CompanyName}");
+
+    Console.WriteLine(
+        $"PROFILE PHOTO URL: {request.ProfilePhotoURL}");
+
+    Console.WriteLine(
+        "================================================");
+
+    var response =
+        await client.PutAsJsonAsync(
+            url,
+            request);
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(
+        $"STATUS: {(int)response.StatusCode} " +
+        $"{response.StatusCode}");
+
+    Console.WriteLine(
+        $"RESPONSE: {responseBody}");
+
+    Console.WriteLine(
+        "================================================");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new HttpRequestException(
+            $"Unable to update user profile. " +
+            $"HTTP {(int)response.StatusCode} " +
+            $"({response.StatusCode}). " +
+            $"Response: {responseBody}");
+    }
 
     var result =
-        await response.Content.ReadFromJsonAsync<
-            HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse>();
+        JsonSerializer.Deserialize<
+            HRInfoAdvertisements.Application.DTOs.UserManagement.UserProfileResponse>(
+                responseBody,
+                JsonOptions);
 
     if (result == null)
     {
