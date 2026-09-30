@@ -5,12 +5,14 @@
 @using System.Linq
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using Microsoft.JSInterop
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
 @inject AdvertisementApiService AdvertisementApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>My Advertisements | HR Info Advertisements</PageTitle>
 
@@ -80,75 +82,134 @@
 
 </section>
 
+<!-- =====================================================
+     FEEDBACK
+     ===================================================== -->
 
-        <!-- =====================================================
-             FEEDBACK
-             ===================================================== -->
+@if (!string.IsNullOrWhiteSpace(infoMessage))
+{
+    <div id="my-ads-feedback"
+         class="my-ads-feedback my-ads-info">
 
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="my-ads-feedback my-ads-error">
+        <div class="feedback-icon">
+            <i class="bi bi-info-circle"></i>
+        </div>
 
-                <div class="feedback-icon">
-                    <i class="bi bi-exclamation-circle"></i>
-                </div>
+        <div class="feedback-content">
 
-                <div class="feedback-content">
+            <div class="feedback-title-row">
 
-                    <strong>
-                        Something went wrong
-                    </strong>
+                <strong>
+                    Changes Required Before Resubmission
+                </strong>
 
-                    <span>
-                        @errorMessage
-                    </span>
-
-                </div>
-
-                <button type="button"
-                        class="feedback-close"
-                        @onclick="ClearMessages"
-                        aria-label="Close">
-
-                    <i class="bi bi-x-lg"></i>
-
-                </button>
+                <span class="feedback-attention">
+                    Action Required
+                </span>
 
             </div>
-        }
+
+            <span>
+                @infoMessage
+            </span>
+
+        </div>
+
+        <button type="button"
+                class="feedback-close"
+                @onclick="ClearMessages"
+                aria-label="Close message">
+
+            <i class="bi bi-x-lg"></i>
+
+        </button>
+
+    </div>
+}
 
 
-        @if (!string.IsNullOrWhiteSpace(successMessage))
-        {
-            <div class="my-ads-feedback my-ads-success">
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div id="my-ads-feedback"
+         class="my-ads-feedback my-ads-error">
 
-                <div class="feedback-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
+        <div class="feedback-icon">
+            <i class="bi bi-exclamation-circle"></i>
+        </div>
 
-                <div class="feedback-content">
+        <div class="feedback-content">
 
-                    <strong>
-                        Success
-                    </strong>
+            <div class="feedback-title-row">
 
-                    <span>
-                        @successMessage
-                    </span>
+                <strong>
+                    Something Went Wrong
+                </strong>
 
-                </div>
-
-                <button type="button"
-                        class="feedback-close"
-                        @onclick="ClearMessages"
-                        aria-label="Close">
-
-                    <i class="bi bi-x-lg"></i>
-
-                </button>
+                <span class="feedback-attention">
+                    Please Review
+                </span>
 
             </div>
-        }
+
+            <span>
+                @errorMessage
+            </span>
+
+        </div>
+
+        <button type="button"
+                class="feedback-close"
+                @onclick="ClearMessages"
+                aria-label="Close message">
+
+            <i class="bi bi-x-lg"></i>
+
+        </button>
+
+    </div>
+}
+
+
+@if (!string.IsNullOrWhiteSpace(successMessage))
+{
+    <div id="my-ads-feedback"
+         class="my-ads-feedback my-ads-success">
+
+        <div class="feedback-icon">
+            <i class="bi bi-check-circle"></i>
+        </div>
+
+        <div class="feedback-content">
+
+            <div class="feedback-title-row">
+
+                <strong>
+                    Success
+                </strong>
+
+                <span class="feedback-attention">
+                    Completed
+                </span>
+
+            </div>
+
+            <span>
+                @successMessage
+            </span>
+
+        </div>
+
+        <button type="button"
+                class="feedback-close"
+                @onclick="ClearMessages"
+                aria-label="Close message">
+
+            <i class="bi bi-x-lg"></i>
+
+        </button>
+
+    </div>
+}
 
 
         <!-- =====================================================
@@ -968,11 +1029,22 @@
                                         }
                                         else
                                         {
-                                            <i class="bi bi-send"></i>
+                                            @if (NormalizeStatus(advertisement.StatusCode) == "REJECTED")
+    {
+        <i class="bi bi-pencil-square"></i>
 
-                                            <span>
-                                                Submit
-                                            </span>
+        <span>
+            Review & Resubmit
+        </span>
+    }
+    else
+    {
+        <i class="bi bi-send"></i>
+
+        <span>
+            Submit
+        </span>
+    }
                                         }
 
                                     </button>
@@ -1027,6 +1099,7 @@
         "ALL";
 
     private string? errorMessage;
+    private string? infoMessage;
 
     private string? successMessage;
 
@@ -1069,6 +1142,8 @@
         isLoading = true;
 
         errorMessage = null;
+infoMessage = null;
+successMessage = null;
 
         try
         {
@@ -1103,8 +1178,8 @@
                 new List<AdvertisementResponse>();
 
             errorMessage =
-                "We couldn’t load your advertisements right now. " +
-                "Please refresh the page and try again.";
+    "We couldn't load your advertisements right now. " +
+    "Please refresh the page and try again.";
         }
         finally
         {
@@ -1233,6 +1308,7 @@
     private void ClearMessages()
     {
         errorMessage = null;
+        infoMessage = null;
         successMessage = null;
     }
 
@@ -1511,71 +1587,195 @@
     // ============================================================
 
     private async Task SubmitAdvertisementAsync(
-        AdvertisementResponse advertisement)
+    AdvertisementResponse advertisement)
+{
+    if (isSubmitting)
     {
-        if (isSubmitting)
-        {
-            return;
-        }
-
-        if (!CanSubmit(advertisement))
-        {
-            return;
-        }
-
-        errorMessage = null;
-        successMessage = null;
-
-        isSubmitting = true;
-
-        submittingAdvertisementId =
-            advertisement.AdvertisementID;
-
-        try
-        {
-            var result =
-                await AdvertisementApiService
-                    .SubmitAdvertisementAsync(
-                        advertisement.AdvertisementID);
-
-            if (!result)
-            {
-                errorMessage =
-                    "The advertisement could not be submitted " +
-                    "for approval. Please try again.";
-
-                return;
-            }
-
-            successMessage =
-                "Your advertisement has been submitted for approval.";
-
-            await LoadAdvertisementsAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine(
-                "================================================");
-
-            Console.WriteLine(
-                "SUBMIT ADVERTISEMENT ERROR");
-
-            Console.WriteLine(
-                ex.ToString());
-
-            Console.WriteLine(
-                "================================================");
-
-            errorMessage =
-                "We couldn’t submit the advertisement right now. " +
-                "Please try again.";
-        }
-        finally
-        {
-            isSubmitting = false;
-            submittingAdvertisementId = null;
-        }
+        return;
     }
+
+    var status =
+        NormalizeStatus(
+            advertisement.StatusCode);
+
+    // ============================================================
+    // REJECTED ADVERTISEMENT
+    // ============================================================
+    // A rejected advertisement must first be edited and saved.
+    // Saving the advertisement moves it back to DRAFT, after which
+    // it can be submitted for review again.
+    // ============================================================
+
+    if (status == "REJECTED")
+{
+    infoMessage =
+        "This advertisement was previously rejected during review. " +
+        "Please review the rejection feedback, make the necessary " +
+        "changes, and save the advertisement before submitting it again.";
+
+    errorMessage = null;
+    successMessage = null;
+
+    await InvokeAsync(StateHasChanged);
+
+    await Task.Delay(100);
+
+    try
+    {
+        await JS.InvokeVoidAsync(
+            "hrInfoAds.scrollToFeedback");
+    }
+    catch (JSException jsEx)
+    {
+        Console.WriteLine(
+            "Unable to scroll to feedback message: " +
+            jsEx.Message);
+    }
+
+    return;
+}
+
+    // ============================================================
+    // NORMAL SUBMISSION
+    // ============================================================
+
+    if (!CanSubmit(advertisement))
+    {
+        return;
+    }
+
+    // Clear previous messages before starting a new submission.
+    errorMessage = null;
+    infoMessage = null;
+    successMessage = null;
+
+    isSubmitting = true;
+
+    submittingAdvertisementId =
+        advertisement.AdvertisementID;
+
+    try
+    {
+        var result =
+            await AdvertisementApiService
+                .SubmitAdvertisementAsync(
+                    advertisement.AdvertisementID);
+
+        // ========================================================
+        // SUBMISSION FAILED WITHOUT AN EXCEPTION
+        // ========================================================
+
+        if (!result)
+        {
+            errorMessage =
+                "The advertisement could not be submitted " +
+                "for approval. Please try again.";
+
+            return;
+        }
+
+        // ========================================================
+        // SUBMISSION SUCCESSFUL
+        // ========================================================
+
+        successMessage =
+            "Your advertisement has been submitted for approval.";
+
+        await LoadAdvertisementsAsync();
+    }
+    catch (InvalidOperationException ex)
+{
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "SUBMIT ADVERTISEMENT VALIDATION ERROR");
+
+    Console.WriteLine(
+        ex.ToString());
+
+    Console.WriteLine(
+        "================================================");
+
+    infoMessage =
+        string.IsNullOrWhiteSpace(ex.Message)
+            ? "The advertisement cannot be submitted yet. " +
+              "Please review the advertisement information " +
+              "and try again."
+            : ex.Message;
+
+    errorMessage = null;
+    successMessage = null;
+
+    await InvokeAsync(StateHasChanged);
+
+    await Task.Delay(100);
+
+    try
+    {
+        await JS.InvokeVoidAsync(
+            "hrInfoAds.scrollToFeedback");
+    }
+    catch (JSException jsEx)
+    {
+        Console.WriteLine(
+            "Unable to scroll to feedback message: " +
+            jsEx.Message);
+    }
+}
+    catch (Exception ex)
+{
+    // ========================================================
+    // UNEXPECTED SYSTEM ERROR
+    // ========================================================
+
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "SUBMIT ADVERTISEMENT ERROR");
+
+    Console.WriteLine(
+        ex.ToString());
+
+    Console.WriteLine(
+        "================================================");
+
+    errorMessage = null;
+    infoMessage = null;
+    successMessage = null;
+
+    errorMessage =
+        "We couldn't submit the advertisement right now. " +
+        "Please try again.";
+
+    await InvokeAsync(StateHasChanged);
+
+    await Task.Delay(100);
+
+    try
+    {
+        await JS.InvokeVoidAsync(
+            "hrInfoAds.scrollToFeedback");
+    }
+    catch (JSException jsEx)
+    {
+        Console.WriteLine(
+            "Unable to scroll to feedback message: " +
+            jsEx.Message);
+    }
+}
+    finally
+    {
+        // ========================================================
+        // RESET SUBMISSION STATE
+        // ========================================================
+
+        isSubmitting = false;
+
+        submittingAdvertisementId = null;
+    }
+}
 
 
     // ============================================================

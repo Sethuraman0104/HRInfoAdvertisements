@@ -660,6 +660,19 @@
     color: #9f3030;
 }
 
+.my-ads-info {
+    background: #fff9e6;
+
+    border: 1px solid #ead58a;
+
+    color: #705b00;
+}
+
+.my-ads-info .feedback-icon {
+    background: rgba(255, 255, 255, 0.75);
+
+    color: #a67c00;
+}
 
 .my-ads-success {
     background: #f0faf5;
@@ -3186,5 +3199,101 @@
         width: 100%;
 
         min-height: 42px;
+    }
+}
+
+/* ============================================================
+   FEEDBACK TITLE
+   ============================================================ */
+
+.feedback-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.feedback-title-row strong {
+    display: inline-flex;
+    align-items: center;
+}
+
+
+/* ============================================================
+   FEEDBACK ATTENTION BADGE
+   ============================================================ */
+
+.feedback-attention {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 999px;
+
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+
+    background: rgba(255, 255, 255, 0.75);
+    border: 1px solid currentColor;
+}
+
+
+/* ============================================================
+   INFO FEEDBACK
+   ============================================================ */
+
+.my-ads-info {
+    background: #fff9e6;
+    border: 1px solid #ead58a;
+    color: #705b00;
+}
+
+.my-ads-info .feedback-icon {
+    background: rgba(255, 255, 255, 0.75);
+    color: #a67c00;
+}
+
+
+/* ============================================================
+   FEEDBACK HIGHLIGHT
+   ============================================================ */
+
+.feedback-highlight {
+    animation:
+        myAdsFeedbackHighlight 1.6s ease-out;
+}
+
+@keyframes myAdsFeedbackHighlight {
+
+    0% {
+        transform: translateY(-4px);
+        box-shadow:
+            0 0 0 0 rgba(166, 124, 0, 0.35);
+    }
+
+    35% {
+        transform: translateY(0);
+        box-shadow:
+            0 0 0 7px rgba(166, 124, 0, 0.12);
+    }
+
+    100% {
+        transform: translateY(0);
+        box-shadow:
+            0 0 0 0 rgba(166, 124, 0, 0);
+    }
+}
+
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .feedback-highlight {
+        animation: none;
     }
 }

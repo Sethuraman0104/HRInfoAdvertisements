@@ -907,15 +907,10 @@
     }
 
 
-    private void ViewAdvertisement(
-        long advertisementId)
-    {
-        // Keep the existing behavior until
-        // the public advertisement-detail route
-        // is confirmed.
-
-        Navigation.NavigateTo("/");
-    }
+   private void ViewAdvertisement(long advertisementId)
+{
+    Navigation.NavigateTo($"/my-ads/{advertisementId}");
+}
 
 
     // ============================================================

@@ -14,6 +14,7 @@ using HRInfoAdvertisements.Infrastructure.Notifications;
 using HRInfoAdvertisements.Application.Profile;
 using HRInfoAdvertisements.Infrastructure.Profile;
 using HRInfoAdvertisements.Application.Services;
+using HRInfoAdvertisements.Infrastructure.Email;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -221,6 +222,9 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ISystemSettingService,
     SystemSettingService>();
+
+builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 // ------------------------------------------------------------
 // JWT Authentication
 // ------------------------------------------------------------
