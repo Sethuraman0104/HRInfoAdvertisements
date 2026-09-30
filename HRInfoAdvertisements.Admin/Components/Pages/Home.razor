@@ -34,7 +34,9 @@
         <div class="hero-tools">
 
             <div class="search-card">
+
                 <div class="search-input">
+
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <circle cx="11" cy="11" r="7" />
                         <path d="m20 20-4-4" />
@@ -55,12 +57,14 @@
                             &times;
                         </button>
                     }
+
                 </div>
 
                 <button type="button"
                         class="btn-primary search-btn"
                         @onclick="SearchAdvertisements"
                         disabled="@isLoading">
+
                     @if (isLoading)
                     {
                         <span class="spinner"></span>
@@ -69,22 +73,27 @@
                     else
                     {
                         <span>Search</span>
+
                         <svg viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M5 12h14" />
                             <path d="m13 6 6 6-6 6" />
                         </svg>
                     }
+
                 </button>
+
             </div>
 
             <!-- ===================== 3. POPULAR FILTERS ===================== -->
             <div class="popular">
+
                 <span class="popular-label">
                     <span class="popular-star">✦</span>
                     Popular:
                 </span>
 
                 <div class="popular-chips">
+
                     @foreach (var term in PopularTerms)
                     {
                         var t = term.Value;
@@ -96,7 +105,9 @@
                             @term.Label
                         </button>
                     }
+
                 </div>
+
             </div>
 
         </div>
@@ -104,6 +115,7 @@
 
     <!-- ===================== 4, 5, 6. CENTERED BRAND & TEXT ===================== -->
     <section class="hero-intro">
+
         <div class="hero-intro-inner">
 
             <div class="hero-eyebrow">
@@ -122,38 +134,56 @@
             </p>
 
         </div>
+
     </section>
 
     <main class="content" id="browse">
+
         <div class="container">
 
             <!-- ====================== CATEGORY PANEL ====================== -->
             @if (Categories.Count > 0)
             {
                 <section class="cat-panel" aria-label="Quick categories">
+
                     <div class="cat-panel-head">
+
                         <div>
-                            <span class="section-label">CATEGORIES</span>
-                            <h3>What are you looking for?</h3>
+
+                            <span class="section-label">
+                                CATEGORIES
+                            </span>
+
+                            <h3>
+                                What are you looking for?
+                            </h3>
+
                         </div>
 
                         @if (categoryId is not null)
-{
-    <button type="button"
-            class="category-reset-btn"
-            @onclick="@(() => SelectCategory(null))"
-            title="Reset category">
+                        {
+                            <button type="button"
+                                    class="category-reset-btn"
+                                    @onclick="@(() => SelectCategory(null))"
+                                    title="Reset category">
 
-        <span class="category-reset-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 12a8 8 0 1 0 2.35-5.65" />
-                <path d="M4 5v5h5" />
-            </svg>
-        </span>
+                                <span class="category-reset-icon">
 
-        <span>Reset</span>
-    </button>
-}
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M4 12a8 8 0 1 0 2.35-5.65" />
+                                        <path d="M4 5v5h5" />
+
+                                    </svg>
+
+                                </span>
+
+                                <span>Reset</span>
+
+                            </button>
+                        }
+
                     </div>
 
                     <div class="cat-tiles">
@@ -162,12 +192,22 @@
                                 class="cat-tile @(categoryId is null ? "active" : "")"
                                 aria-pressed="@(categoryId is null)"
                                 @onclick="@(() => SelectCategory(null))">
+
                             <span class="cat-tile-icon">
-                                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+
                                     @((MarkupString)GetCategoryIcon("all"))
+
                                 </svg>
+
                             </span>
-                            <span class="cat-tile-name">All</span>
+
+                            <span class="cat-tile-name">
+                                All
+                            </span>
+
                         </button>
 
                         @foreach (var category in Categories)
@@ -180,27 +220,41 @@
                                     @onclick="@(() => SelectCategory(cid))">
 
                                 <span class="cat-tile-icon">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
                                         @((MarkupString)GetCategoryIcon(category.CategoryName))
+
                                     </svg>
+
                                 </span>
 
                                 <span class="cat-tile-name">
                                     @category.CategoryName
                                 </span>
+
                             </button>
                         }
 
                     </div>
+
                 </section>
             }
 
             <!-- =========================== TOOLBAR =========================== -->
-            <section class="toolbar" aria-label="Results toolbar">
+            <section class="toolbar"
+                     aria-label="Results toolbar">
 
                 <div class="toolbar-title">
-                    <span class="section-label">MARKETPLACE</span>
-                    <h2>Latest Advertisements</h2>
+
+                    <span class="section-label">
+                        MARKETPLACE
+                    </span>
+
+                    <h2>
+                        Latest Advertisements
+                    </h2>
 
                     @if (Advertisements is not null)
                     {
@@ -209,6 +263,7 @@
                             advertisements available
                         </p>
                     }
+
                 </div>
 
                 <div class="toolbar-actions">
@@ -218,40 +273,78 @@
                             @onclick="ToggleFilters"
                             aria-expanded="@showFilters">
 
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"
+                             aria-hidden="true">
+
                             <path d="M4 6h16" />
                             <path d="M7 12h10" />
                             <path d="M10 18h4" />
+
                         </svg>
 
-                        <span>Filters</span>
+                        <span>
+                            Filters
+                        </span>
 
                         @if (ActiveFilterCount > 0)
                         {
-                            <em class="badge-count">@ActiveFilterCount</em>
+                            <em class="badge-count">
+                                @ActiveFilterCount
+                            </em>
                         }
+
                     </button>
 
                     <div class="sort-control">
-                        <label for="sort-by">Sort</label>
+
+                        <label for="sort-by">
+                            Sort
+                        </label>
 
                         <select id="sort-by"
                                 @bind="sortBy"
                                 @bind:after="ApplyFilters">
-                            <option value="createddate">Newest</option>
-                            <option value="price">Price</option>
-                            <option value="title">Title</option>
-                            <option value="bedrooms">Bedrooms</option>
-                            <option value="landarea">Land Area</option>
-                            <option value="builtuparea">Built-up Area</option>
+
+                            <option value="createddate">
+                                Newest
+                            </option>
+
+                            <option value="price">
+                                Price
+                            </option>
+
+                            <option value="title">
+                                Title
+                            </option>
+
+                            <option value="bedrooms">
+                                Bedrooms
+                            </option>
+
+                            <option value="landarea">
+                                Land Area
+                            </option>
+
+                            <option value="builtuparea">
+                                Built-up Area
+                            </option>
+
                         </select>
 
                         <select @bind="sortDirection"
                                 @bind:after="ApplyFilters"
                                 aria-label="Sort direction">
-                            <option value="desc">Desc</option>
-                            <option value="asc">Asc</option>
+
+                            <option value="desc">
+                                Desc
+                            </option>
+
+                            <option value="asc">
+                                Asc
+                            </option>
+
                         </select>
+
                     </div>
 
                     <div class="view-toggle"
@@ -264,12 +357,16 @@
                                 aria-label="Grid view"
                                 @onclick="() => listView = false">
 
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
+
                                 <path d="M4 4h7v7H4z" />
                                 <path d="M13 4h7v7h-7z" />
                                 <path d="M4 13h7v7H4z" />
                                 <path d="M13 13h7v7h-7z" />
+
                             </svg>
+
                         </button>
 
                         <button type="button"
@@ -278,70 +375,96 @@
                                 aria-label="List view"
                                 @onclick="() => listView = true">
 
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
+
                                 <path d="M4 6h16" />
                                 <path d="M4 12h16" />
                                 <path d="M4 18h16" />
+
                             </svg>
+
                         </button>
 
                     </div>
+
                 </div>
+
             </section>
 
             <!-- ========================== FILTER PANEL ========================== -->
             @if (showFilters)
             {
-                <section class="filter-panel" aria-label="Filters">
+                <section class="filter-panel"
+                         aria-label="Filters">
 
                     <div class="filter-head">
 
-    <div class="filter-title">
+                        <div class="filter-title">
 
-        <div class="filter-title-icon">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M4 5h16" />
-                <path d="M7 12h10" />
-                <path d="M10 19h4" />
-            </svg>
-        </div>
+                            <div class="filter-title-icon">
 
-        <div>
-            <h3>Refine your search</h3>
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
 
-            <p>
-                Narrow down advertisements using your preferred criteria.
-            </p>
-        </div>
+                                    <path d="M4 5h16" />
+                                    <path d="M7 12h10" />
+                                    <path d="M10 19h4" />
 
-    </div>
+                                </svg>
 
-    @if (ActiveFilterCount > 0)
-    {
-        <div class="active-filter-indicator">
-            <span class="active-filter-dot"></span>
+                            </div>
 
-            <strong>@ActiveFilterCount</strong>
+                            <div>
 
-            <span>
-                @(ActiveFilterCount == 1
-                    ? "filter active"
-                    : "filters active")
-            </span>
-        </div>
-    }
+                                <h3>
+                                    Refine your search
+                                </h3>
 
-</div>
+                                <p>
+                                    Narrow down advertisements using your preferred criteria.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                        @if (ActiveFilterCount > 0)
+                        {
+                            <div class="active-filter-indicator">
+
+                                <span class="active-filter-dot"></span>
+
+                                <strong>
+                                    @ActiveFilterCount
+                                </strong>
+
+                                <span>
+                                    @(ActiveFilterCount == 1
+                                        ? "filter active"
+                                        : "filters active")
+                                </span>
+
+                            </div>
+                        }
+
+                    </div>
 
                     <div class="filter-grid">
 
                         <!-- CATEGORY -->
                         <div class="field">
-                            <label for="category-filter">Category</label>
+
+                            <label for="category-filter">
+                                Category
+                            </label>
 
                             <select id="category-filter"
                                     @bind="categoryId">
-                                <option value="">All Categories</option>
+
+                                <option value="">
+                                    All Categories
+                                </option>
 
                                 @foreach (var category in Categories)
                                 {
@@ -349,16 +472,24 @@
                                         @category.CategoryName
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
                         <!-- ADVERTISEMENT TYPE -->
                         <div class="field">
-                            <label for="type-filter">Advertisement Type</label>
+
+                            <label for="type-filter">
+                                Advertisement Type
+                            </label>
 
                             <select id="type-filter"
                                     @bind="typeId">
-                                <option value="">All Types</option>
+
+                                <option value="">
+                                    All Types
+                                </option>
 
                                 @foreach (var type in AdvertisementTypes)
                                 {
@@ -366,19 +497,26 @@
                                         @type.TypeName
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
-                        <!-- ================= COUNTRY ================= -->
+                        <!-- COUNTRY -->
                         <div class="field">
-                            <label for="country-filter">Country</label>
+
+                            <label for="country-filter">
+                                Country
+                            </label>
 
                             <select id="country-filter"
                                     value="@countryId"
                                     @onchange="OnCountryChanged"
                                     disabled="@isLocationLoading">
 
-                                <option value="">All Countries</option>
+                                <option value="">
+                                    All Countries
+                                </option>
 
                                 @foreach (var country in Countries)
                                 {
@@ -386,12 +524,17 @@
                                         @country.Name
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
-                        <!-- ================= STATE ================= -->
+                        <!-- STATE -->
                         <div class="field">
-                            <label for="state-filter">State / Region</label>
+
+                            <label for="state-filter">
+                                State / Region
+                            </label>
 
                             <select id="state-filter"
                                     value="@stateId"
@@ -410,12 +553,17 @@
                                         @state.Name
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
-                        <!-- ================= CITY ================= -->
+                        <!-- CITY -->
                         <div class="field">
-                            <label for="city-filter">City</label>
+
+                            <label for="city-filter">
+                                City
+                            </label>
 
                             <select id="city-filter"
                                     value="@cityId"
@@ -434,12 +582,17 @@
                                         @city.Name
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
-                        <!-- ================= AREA ================= -->
+                        <!-- AREA -->
                         <div class="field">
-                            <label for="area-filter">Area</label>
+
+                            <label for="area-filter">
+                                Area
+                            </label>
 
                             <select id="area-filter"
                                     value="@areaId"
@@ -458,168 +611,246 @@
                                         @area.Name
                                     </option>
                                 }
+
                             </select>
+
                         </div>
 
                         <!-- MINIMUM PRICE -->
                         <div class="field">
-                            <label for="minimum-price">Minimum Price</label>
+
+                            <label for="minimum-price">
+                                Minimum Price
+                            </label>
 
                             <input id="minimum-price"
                                    type="number"
                                    step="0.001"
                                    @bind="minPrice"
                                    placeholder="Min price" />
+
                         </div>
 
                         <!-- MAXIMUM PRICE -->
                         <div class="field">
-                            <label for="maximum-price">Maximum Price</label>
+
+                            <label for="maximum-price">
+                                Maximum Price
+                            </label>
 
                             <input id="maximum-price"
                                    type="number"
                                    step="0.001"
                                    @bind="maxPrice"
                                    placeholder="Max price" />
+
                         </div>
 
                         <!-- BEDROOMS -->
                         <div class="field">
-                            <label for="bedrooms-filter">Bedrooms</label>
+
+                            <label for="bedrooms-filter">
+                                Bedrooms
+                            </label>
 
                             <select id="bedrooms-filter"
                                     @bind="minBedrooms">
-                                <option value="">Any bedrooms</option>
-                                <option value="1">1+</option>
-                                <option value="2">2+</option>
-                                <option value="3">3+</option>
-                                <option value="4">4+</option>
-                                <option value="5">5+</option>
+
+                                <option value="">
+                                    Any bedrooms
+                                </option>
+
+                                <option value="1">
+                                    1+
+                                </option>
+
+                                <option value="2">
+                                    2+
+                                </option>
+
+                                <option value="3">
+                                    3+
+                                </option>
+
+                                <option value="4">
+                                    4+
+                                </option>
+
+                                <option value="5">
+                                    5+
+                                </option>
+
                             </select>
+
                         </div>
 
                         <!-- BATHROOMS -->
                         <div class="field">
-                            <label for="bathrooms-filter">Bathrooms</label>
+
+                            <label for="bathrooms-filter">
+                                Bathrooms
+                            </label>
 
                             <select id="bathrooms-filter"
                                     @bind="minBathrooms">
-                                <option value="">Any bathrooms</option>
-                                <option value="1">1+</option>
-                                <option value="2">2+</option>
-                                <option value="3">3+</option>
-                                <option value="4">4+</option>
+
+                                <option value="">
+                                    Any bathrooms
+                                </option>
+
+                                <option value="1">
+                                    1+
+                                </option>
+
+                                <option value="2">
+                                    2+
+                                </option>
+
+                                <option value="3">
+                                    3+
+                                </option>
+
+                                <option value="4">
+                                    4+
+                                </option>
+
                             </select>
+
                         </div>
 
                     </div>
 
                     <div class="filter-foot">
 
-    <div class="filter-options">
+                        <div class="filter-options">
 
-        <label class="check">
-            <input type="checkbox"
-                   @bind="negotiableFilterEnabled" />
+                            <label class="check">
 
-            <span class="check-box"></span>
+                                <input type="checkbox"
+                                       @bind="negotiableFilterEnabled" />
 
-            <span>Negotiable price</span>
-        </label>
+                                <span class="check-box"></span>
 
-        <label class="check">
-            <input type="checkbox"
-                   @bind="featuredFilterEnabled" />
+                                <span>
+                                    Negotiable price
+                                </span>
 
-            <span class="check-box"></span>
+                            </label>
 
-            <span>Featured only</span>
-        </label>
+                            <label class="check">
 
-    </div>
+                                <input type="checkbox"
+                                       @bind="featuredFilterEnabled" />
 
+                                <span class="check-box"></span>
 
-    <div class="filter-actions">
+                                <span>
+                                    Featured only
+                                </span>
 
-        <!-- CLEAR ALL -->
-        <button type="button"
-                class="filter-action-btn clear-btn"
-                @onclick="ClearFilters"
-                disabled="@isLoading">
+                            </label>
 
-            <span class="filter-btn-icon">
-                <svg viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M4 7h16" />
-                    <path d="M9 7V4h6v3" />
-                    <path d="m7 7 1 13h8l1-13" />
-                    <path d="M10 11v5" />
-                    <path d="M14 11v5" />
-                </svg>
-            </span>
+                        </div>
 
-            <span>Clear All</span>
+                        <div class="filter-actions">
 
-        </button>
+                            <button type="button"
+                                    class="filter-action-btn clear-btn"
+                                    @onclick="ClearFilters"
+                                    disabled="@isLoading">
 
+                                <span class="filter-btn-icon">
 
-        <!-- RESET -->
-        <button type="button"
-                class="filter-action-btn reset-btn"
-                @onclick="ResetFilters"
-                disabled="@isLoading">
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
 
-            <span class="filter-btn-icon reset-icon">
-                <svg viewBox="0 0 24 24"
-                     aria-hidden="true">
-                    <path d="M4 12a8 8 0 1 0 2.3-5.7" />
-                    <path d="M4 5v5h5" />
-                </svg>
-            </span>
+                                        <path d="M4 7h16" />
+                                        <path d="M9 7V4h6v3" />
+                                        <path d="m7 7 1 13h8l1-13" />
+                                        <path d="M10 11v5" />
+                                        <path d="M14 11v5" />
 
-            <span>Reset</span>
+                                    </svg>
 
-        </button>
+                                </span>
 
+                                <span>
+                                    Clear All
+                                </span>
 
-        <!-- APPLY -->
-        <button type="button"
-                class="filter-action-btn apply-filter-btn"
-                @onclick="ApplyFilters"
-                disabled="@isLoading">
+                            </button>
 
-            @if (isLoading)
-            {
-                <span class="spinner"></span>
-                <span>Applying...</span>
-            }
-            else
-            {
-                <span class="filter-btn-icon">
-                    <svg viewBox="0 0 24 24"
-                         aria-hidden="true">
-                        <path d="M4 5h16" />
-                        <path d="M7 12h10" />
-                        <path d="M10 19h4" />
-                    </svg>
-                </span>
+                            <button type="button"
+                                    class="filter-action-btn reset-btn"
+                                    @onclick="ResetFilters"
+                                    disabled="@isLoading">
 
-                <span>Apply Filters</span>
+                                <span class="filter-btn-icon reset-icon">
 
-                <span class="apply-arrow">
-                    <svg viewBox="0 0 24 24"
-                         aria-hidden="true">
-                        <path d="M5 12h13" />
-                        <path d="m13 6 6 6-6 6" />
-                    </svg>
-                </span>
-            }
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
 
-        </button>
+                                        <path d="M4 12a8 8 0 1 0 2.3-5.7" />
+                                        <path d="M4 5v5h5" />
 
-    </div>
+                                    </svg>
 
-</div>
+                                </span>
+
+                                <span>
+                                    Reset
+                                </span>
+
+                            </button>
+
+                            <button type="button"
+                                    class="filter-action-btn apply-filter-btn"
+                                    @onclick="ApplyFilters"
+                                    disabled="@isLoading">
+
+                                @if (isLoading)
+                                {
+                                    <span class="spinner"></span>
+                                    <span>
+                                        Applying...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="filter-btn-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <path d="M4 5h16" />
+                                            <path d="M7 12h10" />
+                                            <path d="M10 19h4" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <span>
+                                        Apply Filters
+                                    </span>
+
+                                    <span class="apply-arrow">
+
+                                        <svg viewBox="0 0 24 24">
+
+                                            <path d="M5 12h13" />
+                                            <path d="m13 6 6 6-6 6" />
+
+                                        </svg>
+
+                                    </span>
+                                }
+
+                            </button>
+
+                        </div>
+
+                    </div>
 
                     @if (negotiableFilterEnabled ||
                          featuredFilterEnabled ||
@@ -636,7 +867,8 @@
             }
 
             <!-- ============================ RESULTS ============================ -->
-            <section class="results" aria-live="polite">
+            <section class="results"
+                     aria-live="polite">
 
                 @if (isLoading)
                 {
@@ -644,15 +876,20 @@
 
                         @for (var s = 0; s < 6; s++)
                         {
-                            <div class="ad-card skeleton" aria-hidden="true">
+                            <div class="ad-card skeleton"
+                                 aria-hidden="true">
+
                                 <div class="ad-media"></div>
 
                                 <div class="ad-body">
+
                                     <span class="sk-line w40"></span>
                                     <span class="sk-line w80 tall"></span>
                                     <span class="sk-line w60"></span>
                                     <span class="sk-line w30 tall"></span>
+
                                 </div>
+
                             </div>
                         }
 
@@ -663,14 +900,21 @@
                     <div class="state-card error">
 
                         <div class="state-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
+
                                 <path d="M12 3 2.5 20h19L12 3Z" />
                                 <path d="M12 9v5" />
                                 <path d="M12 17h.01" />
+
                             </svg>
+
                         </div>
 
-                        <h3>Unable to load advertisements</h3>
+                        <h3>
+                            Unable to load advertisements
+                        </h3>
 
                         <p>
                             We could not retrieve the advertisements at the moment.
@@ -691,13 +935,20 @@
                     <div class="state-card">
 
                         <div class="state-icon">
-                            <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                            <svg viewBox="0 0 24 24"
+                                 aria-hidden="true">
+
                                 <circle cx="11" cy="11" r="7" />
                                 <path d="m20 20-4-4" />
+
                             </svg>
+
                         </div>
 
-                        <h3>No advertisements found</h3>
+                        <h3>
+                            No advertisements found
+                        </h3>
 
                         <p>
                             Try changing your search criteria or filters.
@@ -720,12 +971,18 @@
                         <div class="group">
 
                             <div class="group-head">
-                                <h3>@group.Key</h3>
+
+                                <h3>
+                                    @group.Key
+                                </h3>
 
                                 <span class="group-count">
                                     @group.Count()
-                                    @(group.Count() == 1 ? "listing" : "listings")
+                                    @(group.Count() == 1
+                                        ? "listing"
+                                        : "listings")
                                 </span>
+
                             </div>
 
                             <div class="ad-grid @(listView ? "list" : "")">
@@ -739,7 +996,8 @@
                                             .Where(x => !string.IsNullOrWhiteSpace(x.FileURL))
                                             .ToList();
 
-                                    var adKey = (long)advertisement.AdvertisementID;
+                                    var adKey =
+                                        (long)advertisement.AdvertisementID;
 
                                     var activeIndex =
                                         Math.Min(
@@ -772,10 +1030,13 @@
 
                                                     <svg viewBox="0 0 24 24"
                                                          aria-hidden="true">
+
                                                         <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z" />
+
                                                     </svg>
 
                                                     Featured
+
                                                 </span>
                                             }
 
@@ -814,8 +1075,11 @@
                                                             @onclick="@(() => PreviousImage(adKey, images.Count))"
                                                             @onclick:stopPropagation="true">
 
-                                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
                                                             <path d="m15 6-6 6 6 6" />
+
                                                         </svg>
 
                                                     </button>
@@ -826,8 +1090,11 @@
                                                             @onclick="@(() => NextImage(adKey, images.Count))"
                                                             @onclick:stopPropagation="true">
 
-                                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                                        <svg viewBox="0 0 24 24"
+                                                             aria-hidden="true">
+
                                                             <path d="m9 6 6 6-6 6" />
+
                                                         </svg>
 
                                                     </button>
@@ -878,7 +1145,9 @@
                                                 {
                                                     <svg viewBox="0 0 24 24"
                                                          aria-hidden="true">
+
                                                         <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
+
                                                     </svg>
                                                 }
 
@@ -890,6 +1159,7 @@
                                         <div class="ad-body">
 
                                             <div class="ad-meta">
+
                                                 <span>
                                                     @(string.IsNullOrWhiteSpace(advertisement.CategoryName)
                                                         ? "Advertisement"
@@ -898,15 +1168,23 @@
 
                                                 @if (!string.IsNullOrWhiteSpace(advertisement.AdvertisementTypeName))
                                                 {
-                                                    <span class="sep">•</span>
-                                                    <span>@advertisement.AdvertisementTypeName</span>
+                                                    <span class="sep">
+                                                        •
+                                                    </span>
+
+                                                    <span>
+                                                        @advertisement.AdvertisementTypeName
+                                                    </span>
                                                 }
+
                                             </div>
 
                                             <h3 class="ad-title">
+
                                                 @(string.IsNullOrWhiteSpace(advertisement.Title)
                                                     ? "Untitled Advertisement"
                                                     : advertisement.Title)
+
                                             </h3>
 
                                             @if (!string.IsNullOrWhiteSpace(advertisement.AddressLine))
@@ -915,11 +1193,16 @@
 
                                                     <svg viewBox="0 0 24 24"
                                                          aria-hidden="true">
+
                                                         <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
                                                         <circle cx="12" cy="10" r="2.5" />
+
                                                     </svg>
 
-                                                    <span>@advertisement.AddressLine</span>
+                                                    <span>
+                                                        @advertisement.AddressLine
+                                                    </span>
+
                                                 </div>
                                             }
 
@@ -935,14 +1218,17 @@
 
                                                             <svg viewBox="0 0 24 24"
                                                                  aria-hidden="true">
+
                                                                 <path d="M3 11v8" />
                                                                 <path d="M21 11v8" />
                                                                 <path d="M3 15h18" />
                                                                 <path d="M5 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
                                                                 <path d="M12 11V8a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3" />
+
                                                             </svg>
 
                                                             @advertisement.Bedrooms Beds
+
                                                         </span>
                                                     }
 
@@ -952,12 +1238,15 @@
 
                                                             <svg viewBox="0 0 24 24"
                                                                  aria-hidden="true">
+
                                                                 <path d="M4 12h16" />
                                                                 <path d="M6 12v4a4 4 0 0 0 4 4h4a4 4 0 0 0 4-4v-4" />
                                                                 <path d="M6 12V7a3 3 0 0 1 6 0v1" />
+
                                                             </svg>
 
                                                             @advertisement.Bathrooms Baths
+
                                                         </span>
                                                     }
 
@@ -967,11 +1256,14 @@
 
                                                             <svg viewBox="0 0 24 24"
                                                                  aria-hidden="true">
+
                                                                 <path d="M4 4h16v16H4z" />
                                                                 <path d="M8 8h8v8H8z" />
+
                                                             </svg>
 
                                                             @advertisement.BuiltUpArea
+
                                                         </span>
                                                     }
 
@@ -1034,11 +1326,16 @@
 
                                                             <svg viewBox="0 0 24 24"
                                                                  aria-hidden="true">
+
                                                                 <path d="M20.5 11.5a8.5 8.5 0 0 1-12.9 7.3L3 20l1.3-4.4a8.5 8.5 0 1 1 16.2-4.1Z" />
                                                                 <path d="M8.3 7.8c.3-.4.7-.4 1-.1l1.1 1c.3.3.3.7.1 1l-.5.7c.6 1.1 1.5 2 2.6 2.6l.7-.5c.3-.2.7-.2 1 .1l1 1.1c.3.3.3.7-.1 1-.4.4-.9.6-1.4.5-1.8-.4-3.5-1.4-4.7-2.8-1.2-1.4-2-3.1-2.2-5-.1-.5.1-1.1.4-1.5Z" />
+
                                                             </svg>
 
-                                                            <span>WhatsApp</span>
+                                                            <span>
+                                                                WhatsApp
+                                                            </span>
+
                                                         </a>
                                                     }
 
@@ -1053,29 +1350,40 @@
 
                                                             <svg viewBox="0 0 24 24"
                                                                  aria-hidden="true">
+
                                                                 <rect x="3"
                                                                       y="5"
                                                                       width="18"
                                                                       height="14"
                                                                       rx="2" />
+
                                                                 <path d="m3 7 9 6 9-6" />
+
                                                             </svg>
 
-                                                            <span>Email</span>
+                                                            <span>
+                                                                Email
+                                                            </span>
+
                                                         </a>
                                                     }
 
                                                 </div>
+
                                             </div>
 
                                             <span class="view-more"
                                                   aria-hidden="true">
+
                                                 View details
 
                                                 <svg viewBox="0 0 24 24">
+
                                                     <path d="M5 12h13" />
                                                     <path d="m13 6 6 6-6 6" />
+
                                                 </svg>
+
                                             </span>
 
                                         </div>
@@ -1084,6 +1392,7 @@
                                 }
 
                             </div>
+
                         </div>
                     }
 
@@ -1126,16 +1435,23 @@
             </section>
 
             <!-- ========================== CATEGORIES ========================== -->
-            <section class="categories" id="categories">
+            <section class="categories"
+                     id="categories">
 
                 <div class="section-heading">
-                    <span class="section-label">EXPLORE</span>
 
-                    <h2>Browse by category</h2>
+                    <span class="section-label">
+                        EXPLORE
+                    </span>
+
+                    <h2>
+                        Browse by category
+                    </h2>
 
                     <p>
                         Explore advertisements based on what you are looking for.
                     </p>
+
                 </div>
 
                 <div class="category-cards">
@@ -1150,9 +1466,13 @@
 
                             <span class="category-card-icon"
                                   aria-hidden="true">
+
                                 <svg viewBox="0 0 24 24">
+
                                     @((MarkupString)GetCategoryIcon(category.CategoryName))
+
                                 </svg>
+
                             </span>
 
                             <span class="category-card-name">
@@ -1170,46 +1490,78 @@
                     }
 
                 </div>
+
             </section>
 
             <!-- ========================== HOW IT WORKS ========================== -->
-            <section class="how" id="how-it-works">
+            <section class="how"
+                     id="how-it-works">
 
                 <div class="section-heading">
-                    <span class="section-label">SIMPLE &amp; CONVENIENT</span>
 
-                    <h2>How HR INFO ADs works</h2>
+                    <span class="section-label">
+                        SIMPLE &amp; CONVENIENT
+                    </span>
+
+                    <h2>
+                        How HR INFO ADs works
+                    </h2>
 
                     <p>
                         Everything you need to discover or publish advertisements in one place.
                     </p>
+
                 </div>
 
                 <div class="steps">
 
                     <div class="step">
-                        <div class="step-number">01</div>
-                        <h3>Search</h3>
+
+                        <div class="step-number">
+                            01
+                        </div>
+
+                        <h3>
+                            Search
+                        </h3>
+
                         <p>
                             Find advertisements using keywords, categories,
                             prices and locations.
                         </p>
+
                     </div>
 
                     <div class="step">
-                        <div class="step-number">02</div>
-                        <h3>Connect</h3>
+
+                        <div class="step-number">
+                            02
+                        </div>
+
+                        <h3>
+                            Connect
+                        </h3>
+
                         <p>
                             Review advertisement details and contact the advertiser.
                         </p>
+
                     </div>
 
                     <div class="step">
-                        <div class="step-number">03</div>
-                        <h3>Advertise</h3>
+
+                        <div class="step-number">
+                            03
+                        </div>
+
+                        <h3>
+                            Advertise
+                        </h3>
+
                         <p>
                             Create your own advertisement and reach interested buyers.
                         </p>
+
                     </div>
 
                 </div>
@@ -1217,10 +1569,15 @@
                 <div class="cta">
 
                     <div>
-                        <h3>Have something to sell?</h3>
+
+                        <h3>
+                            Have something to sell?
+                        </h3>
+
                         <p>
                             Post your advertisement and reach buyers today.
                         </p>
+
                     </div>
 
                     <button type="button"
@@ -1234,6 +1591,7 @@
             </section>
 
         </div>
+
     </main>
 
     <!-- ============================== FOOTER ============================== -->
@@ -1243,14 +1601,20 @@
 
             <div class="footer-brand">
 
-                <div class="brand-logo">HR</div>
+                <div class="brand-logo">
+                    HR
+                </div>
 
                 <div>
-                    <strong>HR INFO ADs</strong>
+
+                    <strong>
+                        HR INFO ADs
+                    </strong>
 
                     <p>
                         A simple marketplace for buyers, sellers and service providers.
                     </p>
+
                 </div>
 
             </div>
@@ -1258,16 +1622,30 @@
             <div class="footer-links">
 
                 <div>
-                    <h4>Marketplace</h4>
 
-                    <a href="#browse">Browse Advertisements</a>
-                    <a href="#categories">Categories</a>
-                    <a href="#how-it-works">How It Works</a>
+                    <h4>
+                        Marketplace
+                    </h4>
+
+                    <a href="#browse">
+                        Browse Advertisements
+                    </a>
+
+                    <a href="#categories">
+                        Categories
+                    </a>
+
+                    <a href="#how-it-works">
+                        How It Works
+                    </a>
+
                 </div>
 
                 <div>
 
-                    <h4>Account</h4>
+                    <h4>
+                        Account
+                    </h4>
 
                     @if (isAuthenticated)
                     {
@@ -1316,6 +1694,7 @@
         </div>
 
         <div class="footer-bottom">
+
             <span>
                 © @DateTime.Now.Year HR INFO ADs. All rights reserved.
             </span>
@@ -1323,11 +1702,15 @@
             <span>
                 Terms · Privacy · Contact
             </span>
+
         </div>
 
     </footer>
 
-    <!-- ========================== AUTHENTICATION MODAL ========================== -->
+
+    <!-- ============================================================
+         AUTHENTICATION MODAL
+         ============================================================ -->
     @if (showAuthModal)
     {
         <div class="auth-overlay"
@@ -1349,19 +1732,25 @@
 
                     <svg viewBox="0 0 24 24"
                          aria-hidden="true">
+
                         <path d="M6 6l12 12" />
                         <path d="M18 6 6 18" />
+
                     </svg>
 
                 </button>
 
+                <!-- ================= AUTH HEADER ================= -->
                 <div class="auth-header">
 
                     <div class="auth-brand">
 
-                        <div class="auth-brand-logo">HR</div>
+                        <div class="auth-brand-logo">
+                            HR
+                        </div>
 
                         <div>
+
                             <div class="auth-brand-name">
                                 HR INFO <strong>ADs</strong>
                             </div>
@@ -1369,6 +1758,7 @@
                             <div class="auth-brand-sub">
                                 Advertisement Marketplace
                             </div>
+
                         </div>
 
                     </div>
@@ -1377,23 +1767,44 @@
 
                         <div class="auth-welcome-icon">
 
-                            @if (authMode == AuthMode.SignIn)
+                            @if (authStep == AuthStep.VerifyEmail)
                             {
                                 <svg viewBox="0 0 24 24"
                                      aria-hidden="true">
+
+                                    <rect x="3"
+                                          y="5"
+                                          width="18"
+                                          height="14"
+                                          rx="2" />
+
+                                    <path d="m3 7 9 6 9-6" />
+
+                                    <path d="M16 16h.01" />
+
+                                </svg>
+                            }
+                            else if (authMode == AuthMode.SignIn)
+                            {
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+
                                     <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
                                     <path d="M10 12h10" />
                                     <path d="m17 8 4 4-4 4" />
+
                                 </svg>
                             }
                             else
                             {
                                 <svg viewBox="0 0 24 24"
                                      aria-hidden="true">
+
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                                     <circle cx="9" cy="7" r="4" />
                                     <path d="M19 8v6" />
                                     <path d="M22 11h-6" />
+
                                 </svg>
                             }
 
@@ -1403,7 +1814,11 @@
 
                             <h2 id="auth-modal-title">
 
-                                @if (authMode == AuthMode.SignIn)
+                                @if (authStep == AuthStep.VerifyEmail)
+                                {
+                                    @:Verify your email
+                                }
+                                else if (authMode == AuthMode.SignIn)
                                 {
                                     @:Welcome back
                                 }
@@ -1416,7 +1831,11 @@
 
                             <p>
 
-                                @if (authMode == AuthMode.SignIn)
+                                @if (authStep == AuthStep.VerifyEmail)
+                                {
+                                    @:Enter the verification code sent to your email address.
+                                }
+                                else if (authMode == AuthMode.SignIn)
                                 {
                                     @:Sign in to manage your advertisements and account.
                                 }
@@ -1433,23 +1852,33 @@
 
                 </div>
 
-                <div class="auth-tabs">
 
-                    <button type="button"
-                            class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")"
-                            @onclick="ShowSignIn">
-                        Sign In
-                    </button>
+                <!-- ================= AUTH TABS ================= -->
+                @if (authStep != AuthStep.VerifyEmail)
+                {
+                    <div class="auth-tabs">
 
-                    <button type="button"
-                            class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")"
-                            @onclick="ShowSignUp">
-                        Sign Up
-                    </button>
+                        <button type="button"
+                                class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")"
+                                @onclick="ShowSignIn">
+                            Sign In
+                        </button>
 
-                </div>
+                        <button type="button"
+                                class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")"
+                                @onclick="ShowSignUp">
+                            Sign Up
+                        </button>
 
-                @if (authMode == AuthMode.SignIn)
+                    </div>
+                }
+
+
+                <!-- ========================================================
+                     SIGN IN
+                     ======================================================== -->
+                @if (authStep == AuthStep.SignIn &&
+                     authMode == AuthMode.SignIn)
                 {
                     <EditForm Model="@loginModel"
                               OnValidSubmit="@HandleLogin"
@@ -1468,15 +1897,20 @@
                                 <div class="auth-input-box">
 
                                     <span class="auth-input-icon">
+
                                         <svg viewBox="0 0 24 24"
                                              aria-hidden="true">
+
                                             <rect x="3"
                                                   y="5"
                                                   width="18"
                                                   height="14"
                                                   rx="2" />
+
                                             <path d="m3 7 9 6 9-6" />
+
                                         </svg>
+
                                     </span>
 
                                     <InputText id="auth-email"
@@ -1490,6 +1924,7 @@
                                 <ValidationMessage For="@(() => loginModel.Email)" />
 
                             </div>
+
 
                             <div class="auth-field">
 
@@ -1513,12 +1948,15 @@
 
                                         <svg viewBox="0 0 24 24"
                                              aria-hidden="true">
+
                                             <rect x="4"
                                                   y="10"
                                                   width="16"
                                                   height="11"
                                                   rx="2" />
+
                                             <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
                                         </svg>
 
                                     </span>
@@ -1540,20 +1978,24 @@
                                         {
                                             <svg viewBox="0 0 24 24"
                                                  aria-hidden="true">
+
                                                 <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
                                                 <circle cx="12"
                                                         cy="12"
                                                         r="3" />
+
                                             </svg>
                                         }
                                         else
                                         {
                                             <svg viewBox="0 0 24 24"
                                                  aria-hidden="true">
+
                                                 <path d="m3 3 18 18" />
                                                 <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
                                                 <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
                                                 <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
                                             </svg>
                                         }
 
@@ -1565,16 +2007,26 @@
 
                             </div>
 
+
                             @if (!string.IsNullOrWhiteSpace(errorMessage))
                             {
                                 <div class="auth-error"
                                      role="alert">
 
-                                    <div class="auth-error-icon">!</div>
+                                    <div class="auth-error-icon">
+                                        !
+                                    </div>
 
                                     <div class="auth-error-content">
-                                        <strong>Sign in failed</strong>
-                                        <span>@errorMessage</span>
+
+                                        <strong>
+                                            Sign in failed
+                                        </strong>
+
+                                        <span>
+                                            @errorMessage
+                                        </span>
+
                                     </div>
 
                                     <button type="button"
@@ -1587,6 +2039,7 @@
                                 </div>
                             }
 
+
                             <button type="submit"
                                     class="btn-primary auth-submit"
                                     disabled="@isLoginLoading">
@@ -1594,20 +2047,28 @@
                                 @if (isLoginLoading)
                                 {
                                     <span class="spinner"></span>
-                                    <span>Signing in...</span>
+
+                                    <span>
+                                        Signing in...
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span>Sign In</span>
+                                    <span>
+                                        Sign In
+                                    </span>
 
                                     <svg viewBox="0 0 24 24"
                                          aria-hidden="true">
+
                                         <path d="M5 12h13" />
                                         <path d="m13 6 6 6-6 6" />
+
                                     </svg>
                                 }
 
                             </button>
+
 
                             <div class="auth-security">
 
@@ -1615,17 +2076,24 @@
 
                                     <svg viewBox="0 0 24 24"
                                          aria-hidden="true">
+
                                         <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
                                         <path d="m9 12 2 2 4-4" />
+
                                     </svg>
 
                                 </div>
 
                                 <div>
-                                    <strong>Secure account access</strong>
+
+                                    <strong>
+                                        Secure account access
+                                    </strong>
+
                                     <span>
                                         Your credentials are transmitted securely.
                                     </span>
+
                                 </div>
 
                             </div>
@@ -1634,7 +2102,429 @@
 
                     </EditForm>
                 }
-                else
+
+
+                <!-- ========================================================
+                     SIGN UP
+                     ======================================================== -->
+                @if (authStep == AuthStep.SignIn &&
+                     authMode == AuthMode.SignUp)
+                {
+                    <EditForm Model="@signupModel"
+                              OnValidSubmit="@HandleRegistration"
+                              FormName="PublicSignupForm">
+
+                        <DataAnnotationsValidator />
+
+                        <div class="auth-form">
+
+                            <div class="signup-info">
+
+                                <div class="auth-security-icon">
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" />
+                                        <path d="M12 8v5" />
+                                        <circle cx="12"
+                                                cy="16.5"
+                                                r=".8" />
+
+                                    </svg>
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Advertiser registration
+                                    </strong>
+
+                                    <p>
+                                        Create an account to publish and manage your advertisements.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- FULL NAME -->
+                            <div class="auth-field">
+
+                                <label for="signup-full-name">
+                                    Full Name
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <circle cx="12"
+                                                    cy="8"
+                                                    r="4" />
+
+                                            <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <InputText id="signup-full-name"
+                                               class="auth-input"
+                                               @bind-Value="signupModel.FullName"
+                                               autocomplete="name"
+                                               placeholder="Enter your full name" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => signupModel.FullName)" />
+
+                            </div>
+
+
+                            <!-- EMAIL -->
+                            <div class="auth-field">
+
+                                <label for="signup-email">
+                                    Email Address
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <rect x="3"
+                                                  y="5"
+                                                  width="18"
+                                                  height="14"
+                                                  rx="2" />
+
+                                            <path d="m3 7 9 6 9-6" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <InputText id="signup-email"
+                                               class="auth-input"
+                                               @bind-Value="signupModel.Email"
+                                               autocomplete="email"
+                                               placeholder="Enter your email address" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => signupModel.Email)" />
+
+                            </div>
+
+
+                            <!-- MOBILE -->
+                            <div class="auth-field">
+
+                                <label for="signup-mobile">
+                                    Mobile Number
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <rect x="6"
+                                                  y="2"
+                                                  width="12"
+                                                  height="20"
+                                                  rx="2" />
+
+                                            <path d="M10 18h4" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <InputText id="signup-mobile"
+                                               class="auth-input"
+                                               @bind-Value="signupModel.MobileNo"
+                                               autocomplete="tel"
+                                               placeholder="Enter your mobile number" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => signupModel.MobileNo)" />
+
+                            </div>
+
+
+                            <!-- PASSWORD -->
+                            <div class="auth-field">
+
+                                <label for="signup-password">
+                                    Password
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <rect x="4"
+                                                  y="10"
+                                                  width="16"
+                                                  height="11"
+                                                  rx="2" />
+
+                                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <InputText id="signup-password"
+                                               class="auth-input"
+                                               type="@(showSignupPassword ? "text" : "password")"
+                                               @bind-Value="signupModel.Password"
+                                               autocomplete="new-password"
+                                               placeholder="Create a password" />
+
+                                    <button type="button"
+                                            class="auth-password-toggle"
+                                            title="Show / hide password"
+                                            aria-label="Show / hide password"
+                                            @onclick="ToggleSignupPassword">
+
+                                        @if (showSignupPassword)
+                                        {
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="3" />
+
+                                            </svg>
+                                        }
+                                        else
+                                        {
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <path d="m3 3 18 18" />
+                                                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                                                <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
+                                                <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
+                                            </svg>
+                                        }
+
+                                    </button>
+
+                                </div>
+
+                                <ValidationMessage For="@(() => signupModel.Password)" />
+
+                            </div>
+
+
+                            <!-- CONFIRM PASSWORD -->
+                            <div class="auth-field">
+
+                                <label for="signup-confirm-password">
+                                    Confirm Password
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <rect x="4"
+                                                  y="10"
+                                                  width="16"
+                                                  height="11"
+                                                  rx="2" />
+
+                                            <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <InputText id="signup-confirm-password"
+                                               class="auth-input"
+                                               type="@(showConfirmPassword ? "text" : "password")"
+                                               @bind-Value="signupModel.ConfirmPassword"
+                                               autocomplete="new-password"
+                                               placeholder="Confirm your password" />
+
+                                    <button type="button"
+                                            class="auth-password-toggle"
+                                            title="Show / hide password"
+                                            aria-label="Show / hide password"
+                                            @onclick="ToggleConfirmPassword">
+
+                                        @if (showConfirmPassword)
+                                        {
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+
+                                                <circle cx="12"
+                                                        cy="12"
+                                                        r="3" />
+
+                                            </svg>
+                                        }
+                                        else
+                                        {
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <path d="m3 3 18 18" />
+                                                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                                                <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
+                                                <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
+                                            </svg>
+                                        }
+
+                                    </button>
+
+                                </div>
+
+                                <ValidationMessage For="@(() => signupModel.ConfirmPassword)" />
+
+                            </div>
+
+
+                            @if (!string.IsNullOrWhiteSpace(signupErrorMessage))
+                            {
+                                <div class="auth-error"
+                                     role="alert">
+
+                                    <div class="auth-error-icon">
+                                        !
+                                    </div>
+
+                                    <div class="auth-error-content">
+
+                                        <strong>
+                                            Registration failed
+                                        </strong>
+
+                                        <span>
+                                            @signupErrorMessage
+                                        </span>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="auth-error-close"
+                                            aria-label="Close error"
+                                            @onclick="ClearSignupError">
+                                        ×
+                                    </button>
+
+                                </div>
+                            }
+
+
+                            <button type="submit"
+                                    class="btn-primary auth-submit"
+                                    disabled="@isSignupLoading">
+
+                                @if (isSignupLoading)
+                                {
+                                    <span class="spinner"></span>
+
+                                    <span>
+                                        Creating account...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        Create Account
+                                    </span>
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M5 12h13" />
+                                        <path d="m13 6 6 6-6 6" />
+
+                                    </svg>
+                                }
+
+                            </button>
+
+
+                            <div class="auth-security">
+
+                                <div class="auth-security-icon">
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
+                                        <path d="m9 12 2 2 4-4" />
+
+                                    </svg>
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Email verification required
+                                    </strong>
+
+                                    <span>
+                                        We will send a verification code to your email.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="auth-signup-note">
+
+                                Already have an account?
+
+                                <button type="button"
+                                        @onclick="ShowSignIn">
+                                    Sign In
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </EditForm>
+                }
+
+
+                <!-- ========================================================
+                     EMAIL OTP VERIFICATION
+                     ======================================================== -->
+                @if (authStep == AuthStep.VerifyEmail)
                 {
                     <div class="auth-form">
 
@@ -1644,29 +2534,43 @@
 
                                 <svg viewBox="0 0 24 24"
                                      aria-hidden="true">
-                                    <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" />
-                                    <path d="M12 8v5" />
-                                    <circle cx="12"
-                                            cy="16.5"
-                                            r=".8" />
+
+                                    <rect x="3"
+                                          y="5"
+                                          width="18"
+                                          height="14"
+                                          rx="2" />
+
+                                    <path d="m3 7 9 6 9-6" />
+
+                                    <path d="M8 12h.01" />
+                                    <path d="M12 12h.01" />
+                                    <path d="M16 12h.01" />
+
                                 </svg>
 
                             </div>
 
                             <div>
-                                <strong>Advertiser registration</strong>
+
+                                <strong>
+                                    Check your email
+                                </strong>
 
                                 <p>
-                                    Create an account to publish and manage your advertisements.
+                                    We sent a 6-digit verification code to
+                                    <strong>@verificationEmail</strong>.
                                 </p>
+
                             </div>
 
                         </div>
 
+
                         <div class="auth-field">
 
-                            <label for="signup-name">
-                                Full Name
+                            <label for="email-otp">
+                                Verification Code
                             </label>
 
                             <div class="auth-input-box">
@@ -1675,96 +2579,175 @@
 
                                     <svg viewBox="0 0 24 24"
                                          aria-hidden="true">
-                                        <circle cx="12"
-                                                cy="8"
-                                                r="4" />
-                                        <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
-                                    </svg>
 
-                                </span>
-
-                                <input id="signup-name"
-                                       class="auth-input"
-                                       type="text"
-                                       @bind="signupModel.FullName"
-                                       placeholder="Enter your full name" />
-
-                            </div>
-
-                        </div>
-
-                        <div class="auth-field">
-
-                            <label for="signup-email">
-                                Email Address
-                            </label>
-
-                            <div class="auth-input-box">
-
-                                <span class="auth-input-icon">
-
-                                    <svg viewBox="0 0 24 24"
-                                         aria-hidden="true">
                                         <rect x="3"
                                               y="5"
                                               width="18"
                                               height="14"
                                               rx="2" />
-                                        <path d="m3 7 9 6 9-6" />
+
+                                        <path d="M7 10h10" />
+                                        <path d="M7 14h6" />
+
                                     </svg>
 
                                 </span>
 
-                                <input id="signup-email"
+                                <input id="email-otp"
                                        class="auth-input"
-                                       type="email"
-                                       @bind="signupModel.Email"
-                                       placeholder="Enter your email address" />
+                                       type="text"
+                                       inputmode="numeric"
+                                       maxlength="6"
+                                       autocomplete="one-time-code"
+                                       @bind="otpCode"
+                                       placeholder="Enter 6-digit code" />
+
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(otpErrorMessage))
+                            {
+                                <div class="auth-error"
+                                     role="alert">
+
+                                    <div class="auth-error-icon">
+                                        !
+                                    </div>
+
+                                    <div class="auth-error-content">
+
+                                        <strong>
+                                            Verification failed
+                                        </strong>
+
+                                        <span>
+                                            @otpErrorMessage
+                                        </span>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="auth-error-close"
+                                            aria-label="Close error"
+                                            @onclick="ClearOtpError">
+                                        ×
+                                    </button>
+
+                                </div>
+                            }
+
+                        </div>
+
+
+                        <button type="button"
+                                class="btn-primary auth-submit"
+                                @onclick="HandleVerifyEmailOtp"
+                                disabled="@isOtpLoading">
+
+                            @if (isOtpLoading)
+                            {
+                                <span class="spinner"></span>
+
+                                <span>
+                                    Verifying...
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    Verify Email
+                                </span>
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+
+                                    <path d="M5 12h13" />
+                                    <path d="m13 6 6 6-6 6" />
+
+                                </svg>
+                            }
+
+                        </button>
+
+
+                        <div class="auth-otp-actions">
+
+                            <button type="button"
+                                    class="auth-forgot"
+                                    @onclick="HandleResendEmailOtp"
+                                    disabled="@isResendOtpLoading">
+
+                                @if (isResendOtpLoading)
+                                {
+                                    <span>
+                                        Sending...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        Resend verification code
+                                    </span>
+                                }
+
+                            </button>
+
+                        </div>
+
+
+                        <div class="auth-security">
+
+                            <div class="auth-security-icon">
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+
+                                    <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
+
+                                    <path d="M12 8v4" />
+                                    <path d="M12 16h.01" />
+
+                                </svg>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Verification code expires soon
+                                </strong>
+
+                                <span>
+                                    If you do not receive the email, check your spam or junk folder.
+                                </span>
 
                             </div>
 
                         </div>
 
-                        <button type="button"
-                                class="btn-primary auth-submit"
-                                @onclick="RequestRegistration">
-
-                            <span>Request an Accounts</span>
-
-                            <svg viewBox="0 0 24 24"
-                                 aria-hidden="true">
-                                <path d="M5 12h13" />
-                                <path d="m13 6 6 6-6 6" />
-                            </svg>
-
-                        </button>
-
-                        @if (!string.IsNullOrWhiteSpace(signupMessage))
-                        {
-                            <div class="signup-message">
-                                <span>@signupMessage</span>
-                            </div>
-                        }
 
                         <div class="auth-signup-note">
-                            Already have an account?
 
                             <button type="button"
-                                    @onclick="ShowSignIn">
-                                Sign In
+                                    @onclick="BackFromVerification">
+                                ← Back
                             </button>
+
                         </div>
 
                     </div>
                 }
 
+
+                <!-- ================= AUTH FOOTER ================= -->
                 <div class="auth-footer">
 
                     <span>
                         © @DateTime.Now.Year HR INFO ADs
                     </span>
 
-                    <span class="dot-sep">•</span>
+                    <span class="dot-sep">
+                        •
+                    </span>
 
                     <button type="button"
                             @onclick="CloseAuthModal">
@@ -1774,6 +2757,7 @@
                 </div>
 
             </section>
+
         </div>
     }
 
@@ -1786,10 +2770,12 @@
     // CONFIG
     // ============================================================
 
-    // Change this if your details page uses a different route.
-    private static string DetailsUrl(long id) => $"/advertisements/{id}";
+    private static string DetailsUrl(long id)
+        => $"/advertisements/{id}";
 
-    private sealed record PopularTerm(string Label, string Value);
+    private sealed record PopularTerm(
+        string Label,
+        string Value);
 
     private static readonly PopularTerm[] PopularTerms =
     {
@@ -1806,7 +2792,9 @@
 
     private static string GetCategoryIcon(string? name)
     {
-        var n = (name ?? string.Empty).ToLowerInvariant();
+        var n =
+            (name ?? string.Empty)
+                .ToLowerInvariant();
 
         if (n == "all")
         {
@@ -1916,11 +2904,9 @@
     private int? minBedrooms;
     private int? minBathrooms;
 
-    // Client-side only
     private bool negotiableFilterEnabled;
     private bool featuredFilterEnabled;
 
-    // Client-side sort
     private string sortBy = "createddate";
     private string sortDirection = "desc";
 
@@ -1932,13 +2918,9 @@
 
     private List<AdvertisementTypeOption> AdvertisementTypes { get; set; } = new();
 
+
     // ============================================================
-    // CASCADING LOCATIONS
-    //
-    // LookupItemResponse:
-    //     ID
-    //     Name
-    //     NameAr
+    // LOCATIONS
     // ============================================================
 
     private List<LookupItemResponse> Countries { get; set; } = new();
@@ -1962,13 +2944,31 @@
 
     private AuthMode authMode = AuthMode.SignIn;
 
+    private AuthStep authStep = AuthStep.SignIn;
+
     private bool isLoginLoading;
+
+    private bool isSignupLoading;
+
+    private bool isOtpLoading;
+
+    private bool isResendOtpLoading;
 
     private bool showPassword;
 
+    private bool showSignupPassword;
+
+    private bool showConfirmPassword;
+
     private string? errorMessage;
 
-    private string? signupMessage;
+    private string? signupErrorMessage;
+
+    private string? otpErrorMessage;
+
+    private string verificationEmail = string.Empty;
+
+    private string otpCode = string.Empty;
 
     private readonly LoginModel loginModel = new();
 
@@ -2071,16 +3071,6 @@
 
     // ============================================================
     // LOCATIONS
-    //
-    // Country
-    //    ↓
-    // State
-    //    ↓
-    // City
-    //    ↓
-    // Area
-    //
-    // Uses AdvertisementApiService directly.
     // ============================================================
 
     private static int? ParseId(object? value)
@@ -2747,37 +3737,37 @@
     }
 
     private async Task ResetFilters()
-{
-    searchText = string.Empty;
+    {
+        searchText = string.Empty;
 
-    categoryId = null;
-    typeId = null;
+        categoryId = null;
+        typeId = null;
 
-    countryId = null;
-    stateId = null;
-    cityId = null;
-    areaId = null;
+        countryId = null;
+        stateId = null;
+        cityId = null;
+        areaId = null;
 
-    States.Clear();
-    Cities.Clear();
-    Areas.Clear();
+        States.Clear();
+        Cities.Clear();
+        Areas.Clear();
 
-    minPrice = null;
-    maxPrice = null;
+        minPrice = null;
+        maxPrice = null;
 
-    minBedrooms = null;
-    minBathrooms = null;
+        minBedrooms = null;
+        minBathrooms = null;
 
-    negotiableFilterEnabled = false;
-    featuredFilterEnabled = false;
+        negotiableFilterEnabled = false;
+        featuredFilterEnabled = false;
 
-    sortBy = "createddate";
-    sortDirection = "desc";
+        sortBy = "createddate";
+        sortDirection = "desc";
 
-    currentPage = 1;
+        currentPage = 1;
 
-    await LoadAdvertisementsAsync();
-}
+        await LoadAdvertisementsAsync();
+    }
 
     private async Task ClearFilters()
     {
@@ -2899,10 +3889,15 @@
     private void OpenLogin()
     {
         errorMessage = null;
-        signupMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
         showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
 
         authMode = AuthMode.SignIn;
+        authStep = AuthStep.SignIn;
 
         showAuthModal = true;
     }
@@ -2910,44 +3905,71 @@
     private void OpenSignup()
     {
         errorMessage = null;
-        signupMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
         showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
 
         authMode = AuthMode.SignUp;
+        authStep = AuthStep.SignIn;
 
         showAuthModal = true;
     }
 
     private void CloseAuthModal()
     {
-        if (isLoginLoading)
+        if (isLoginLoading ||
+            isSignupLoading ||
+            isOtpLoading ||
+            isResendOtpLoading)
         {
             return;
         }
 
         showAuthModal = false;
 
+        authStep = AuthStep.SignIn;
+
         errorMessage = null;
-        signupMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
         showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        otpCode = string.Empty;
+        verificationEmail = string.Empty;
     }
 
     private void ShowSignIn()
     {
         authMode = AuthMode.SignIn;
+        authStep = AuthStep.SignIn;
 
         errorMessage = null;
-        signupMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
         showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
     }
 
     private void ShowSignUp()
     {
         authMode = AuthMode.SignUp;
+        authStep = AuthStep.SignIn;
 
         errorMessage = null;
-        signupMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
         showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
     }
 
     private void TogglePassword()
@@ -2955,9 +3977,25 @@
         showPassword = !showPassword;
     }
 
+    private void ToggleSignupPassword()
+    {
+        showSignupPassword = !showSignupPassword;
+    }
+
+    private void ToggleConfirmPassword()
+    {
+        showConfirmPassword = !showConfirmPassword;
+    }
+
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
     private async Task HandleLogin()
     {
         errorMessage = null;
+        otpErrorMessage = null;
 
         isLoginLoading = true;
 
@@ -2972,6 +4010,26 @@
             {
                 errorMessage =
                     "Invalid email address or password.";
+
+                return;
+            }
+
+            /*
+             * Existing account but email has not yet been verified.
+             *
+             * AuthService generates/sends the OTP during LoginAsync.
+             */
+            if (result.RequiresEmailVerification)
+            {
+                verificationEmail =
+                    string.IsNullOrWhiteSpace(result.Email)
+                        ? loginModel.Email
+                        : result.Email;
+
+                otpCode = string.Empty;
+                otpErrorMessage = null;
+
+                authStep = AuthStep.VerifyEmail;
 
                 return;
             }
@@ -3006,6 +4064,7 @@
             showAuthModal = false;
 
             errorMessage = null;
+
             showPassword = false;
 
             StateHasChanged();
@@ -3026,9 +4085,337 @@
         }
     }
 
+
+    // ============================================================
+    // REGISTRATION
+    // ============================================================
+
+    private async Task HandleRegistration()
+    {
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
+        isSignupLoading = true;
+
+        try
+        {
+            var fullName =
+                (signupModel.FullName ?? string.Empty)
+                    .Trim();
+
+            var nameParts =
+                fullName
+                    .Split(
+                        ' ',
+                        StringSplitOptions.RemoveEmptyEntries);
+
+            var firstName =
+                nameParts.Length > 0
+                    ? nameParts[0]
+                    : string.Empty;
+
+            var lastName =
+                nameParts.Length > 1
+                    ? string.Join(
+                        " ",
+                        nameParts.Skip(1))
+                    : string.Empty;
+
+            /*
+             * RegisterAsync uses the existing Application DTO:
+             *
+             * UserName
+             * Email
+             * MobileNo
+             * Password
+             * FirstName
+             * LastName
+             */
+            var result =
+                await AuthApiService.RegisterAsync(
+                    new HRInfoAdvertisements.Application.DTOs.Authentication.RegisterRequest
+                    {
+                        UserName = fullName,
+                        Email = signupModel.Email.Trim(),
+                        MobileNo = signupModel.MobileNo?.Trim(),
+                        Password = signupModel.Password,
+                        FirstName = firstName,
+                        LastName = lastName
+                    });
+
+            if (result is null)
+            {
+                signupErrorMessage =
+                    "Unable to create your account. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                signupErrorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Registration failed. Please check your information and try again."
+                        : result.Message;
+
+                return;
+            }
+
+            /*
+             * Registration intentionally does not authenticate the user.
+             * The account must first be verified through email OTP.
+             */
+            verificationEmail =
+                string.IsNullOrWhiteSpace(result.Email)
+                    ? signupModel.Email.Trim()
+                    : result.Email;
+
+            otpCode = string.Empty;
+
+            otpErrorMessage = null;
+            signupErrorMessage = null;
+
+            authStep = AuthStep.VerifyEmail;
+        }
+        catch (HttpRequestException)
+        {
+            signupErrorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            signupErrorMessage =
+                "An unexpected error occurred while creating your account.";
+        }
+        finally
+        {
+            isSignupLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // VERIFY EMAIL OTP
+    // ============================================================
+
+    private async Task HandleVerifyEmailOtp()
+    {
+        otpErrorMessage = null;
+
+        var email =
+            (verificationEmail ?? string.Empty)
+                .Trim();
+
+        var otp =
+            (otpCode ?? string.Empty)
+                .Trim();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            otpErrorMessage =
+                "Email address is missing. Please return to Sign Up and try again.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(otp))
+        {
+            otpErrorMessage =
+                "Please enter the 6-digit verification code.";
+
+            return;
+        }
+
+        if (otp.Length != 6 ||
+            !otp.All(char.IsDigit))
+        {
+            otpErrorMessage =
+                "Please enter a valid 6-digit verification code.";
+
+            return;
+        }
+
+        isOtpLoading = true;
+
+        try
+        {
+            var result =
+                await AuthApiService.VerifyEmailOtpAsync(
+                    email,
+                    otp);
+
+            if (result is null)
+            {
+                otpErrorMessage =
+                    "Unable to verify the email address. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                otpErrorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "The verification code is invalid or has expired."
+                        : result.Message;
+
+                return;
+            }
+
+            /*
+             * VerifyEmailOtpAsync returns authentication tokens after
+             * successful email verification.
+             */
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+            isAuthenticated = true;
+
+            currentUserName =
+                result.UserName;
+
+            await LoadMyFavoritesAsync();
+
+            showAuthModal = false;
+
+            authStep = AuthStep.SignIn;
+
+            otpCode = string.Empty;
+            verificationEmail = string.Empty;
+
+            otpErrorMessage = null;
+
+            showPassword = false;
+            showSignupPassword = false;
+            showConfirmPassword = false;
+
+            StateHasChanged();
+        }
+        catch (HttpRequestException)
+        {
+            otpErrorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            otpErrorMessage =
+                "An unexpected error occurred while verifying your email.";
+        }
+        finally
+        {
+            isOtpLoading = false;
+        }
+    }
+
+
+    private async Task HandleResendEmailOtp()
+{
+    otpErrorMessage = null;
+
+    var email =
+        (verificationEmail ?? string.Empty)
+            .Trim();
+
+    if (string.IsNullOrWhiteSpace(email))
+    {
+        otpErrorMessage =
+            "Email address is missing. Please return to Sign Up and try again.";
+
+        return;
+    }
+
+    isResendOtpLoading = true;
+
+    try
+    {
+        var sent =
+            await AuthApiService
+                .ResendEmailVerificationAsync(email);
+
+        if (!sent)
+        {
+            otpErrorMessage =
+                "Unable to resend the verification code. Please try again.";
+
+            return;
+        }
+
+        /*
+         * Keep the user on the same verification screen.
+         * The API has generated and sent the new OTP.
+         */
+        otpCode = string.Empty;
+
+        otpErrorMessage =
+            "A new verification code has been sent to your email.";
+    }
+    catch (HttpRequestException)
+    {
+        otpErrorMessage =
+            "Unable to connect to the authentication service. Please try again.";
+    }
+    catch
+    {
+        otpErrorMessage =
+            "An unexpected error occurred while resending the verification code.";
+    }
+    finally
+    {
+        isResendOtpLoading = false;
+    }
+}
+
+
+    // ============================================================
+    // AUTH ERROR / NAVIGATION
+    // ============================================================
+
     private void ClearError()
     {
         errorMessage = null;
+    }
+
+    private void ClearSignupError()
+    {
+        signupErrorMessage = null;
+    }
+
+    private void ClearOtpError()
+    {
+        otpErrorMessage = null;
+    }
+
+    private void BackFromVerification()
+    {
+        otpCode = string.Empty;
+        otpErrorMessage = null;
+
+        authStep = AuthStep.SignIn;
+
+        /*
+         * Return to the appropriate authentication tab.
+         * Registration verification returns to Sign Up.
+         * Existing unverified login returns to Sign In.
+         */
+        if (!string.IsNullOrWhiteSpace(signupModel.Email) &&
+            string.Equals(
+                verificationEmail,
+                signupModel.Email,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            authMode = AuthMode.SignUp;
+        }
+        else
+        {
+            authMode = AuthMode.SignIn;
+        }
     }
 
     private void ForgotPassword()
@@ -3050,15 +4437,18 @@
 
         showAuthModal = false;
 
-        errorMessage = null;
-        signupMessage = null;
-        showPassword = false;
-    }
+        authStep = AuthStep.SignIn;
 
-    private void RequestRegistration()
-    {
-        signupMessage =
-            "Account registration is currently handled by the HR INFO ADs administration team.";
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        otpCode = string.Empty;
+        verificationEmail = string.Empty;
     }
 
 
@@ -3072,6 +4462,13 @@
         SignUp
     }
 
+    private enum AuthStep
+    {
+        SignIn,
+        VerifyEmail
+    }
+
+
     private sealed class LoginModel
     {
         [Required(
@@ -3080,20 +4477,69 @@
         [EmailAddress(
             ErrorMessage =
                 "Please enter a valid email address.")]
-        public string Email { get; set; } = string.Empty;
+        public string Email { get; set; } =
+            string.Empty;
 
         [Required(
             ErrorMessage =
                 "Password is required.")]
-        public string Password { get; set; } = string.Empty;
+        public string Password { get; set; } =
+            string.Empty;
     }
+
 
     private sealed class SignupModel
     {
-        public string FullName { get; set; } = string.Empty;
+        [Required(
+            ErrorMessage =
+                "Full name is required.")]
+        [MinLength(
+            2,
+            ErrorMessage =
+                "Please enter your full name.")]
+        public string FullName { get; set; } =
+            string.Empty;
 
-        public string Email { get; set; } = string.Empty;
+
+        [Required(
+            ErrorMessage =
+                "Email address is required.")]
+        [EmailAddress(
+            ErrorMessage =
+                "Please enter a valid email address.")]
+        public string Email { get; set; } =
+            string.Empty;
+
+
+        [Required(
+            ErrorMessage =
+                "Mobile number is required.")]
+        public string MobileNo { get; set; } =
+            string.Empty;
+
+
+        [Required(
+            ErrorMessage =
+                "Password is required.")]
+        [MinLength(
+            6,
+            ErrorMessage =
+                "Password must be at least 6 characters.")]
+        public string Password { get; set; } =
+            string.Empty;
+
+
+        [Required(
+            ErrorMessage =
+                "Please confirm your password.")]
+        [Compare(
+            nameof(Password),
+            ErrorMessage =
+                "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } =
+            string.Empty;
     }
+
 
     private sealed class CategoryOption
     {
@@ -3103,6 +4549,7 @@
             string.Empty;
     }
 
+
     private sealed class AdvertisementTypeOption
     {
         public int AdvertisementTypeID { get; set; }
@@ -3110,4 +4557,5 @@
         public string TypeName { get; set; } =
             string.Empty;
     }
+
 }

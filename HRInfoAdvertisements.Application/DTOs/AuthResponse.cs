@@ -21,4 +21,14 @@ public class AuthResponse
     public List<string> Roles { get; set; } = new();
 
     public List<string> Permissions { get; set; } = new();
+
+    // ============================================================
+    // EMAIL VERIFICATION
+    // ============================================================
+
+    /// <summary>
+    /// Indicates that the user must verify their email address
+    /// before authentication can be completed.
+    /// </summary>
+    public bool RequiresEmailVerification { get; set; }
 }

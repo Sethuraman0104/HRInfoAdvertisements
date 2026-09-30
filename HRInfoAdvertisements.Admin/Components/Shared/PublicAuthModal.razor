@@ -1,5 +1,6 @@
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Authentication
 @using Microsoft.AspNetCore.Components.Forms
 
 @inject AuthApiService AuthApiService
@@ -59,256 +60,64 @@
 
 
             <!-- ============================================================
-                 INTRODUCTION
+                 OTP VERIFICATION
                  ============================================================ -->
 
-            <div class="public-auth-intro">
-
-                @if (Mode == AuthMode.SignIn)
-                {
-                    <h2>Welcome back</h2>
-
-                    <p>
-                        Sign in to manage your advertisements,
-                        favorites and account.
-                    </p>
-                }
-                else
-                {
-                    <h2>Create your account</h2>
-
-                    <p>
-                        Registration is currently handled by the
-                        HR INFO ADs administration team.
-                    </p>
-                }
-
-            </div>
-
-
-            <!-- ============================================================
-                 AUTHENTICATION TABS
-                 ============================================================ -->
-
-            <div class="public-auth-tabs">
-
-                <button type="button"
-                        class="public-auth-tab @(Mode == AuthMode.SignIn ? "active" : "")"
-                        @onclick="() => ChangeMode(AuthMode.SignIn)">
-
-                    <i class="bi bi-box-arrow-in-right"></i>
-
-                    <span>Sign In</span>
-
-                </button>
-
-                <button type="button"
-                        class="public-auth-tab @(Mode == AuthMode.SignUp ? "active" : "")"
-                        @onclick="() => ChangeMode(AuthMode.SignUp)">
-
-                    <i class="bi bi-person-plus"></i>
-
-                    <span>Sign Up</span>
-
-                </button>
-
-            </div>
-
-
-            <!-- ============================================================
-                 SIGN IN
-                 ============================================================ -->
-
-            @if (Mode == AuthMode.SignIn)
+            @if (currentStep == AuthStep.VerifyEmail)
             {
-                <EditForm Model="@loginModel"
-                          OnValidSubmit="@HandleLogin">
+                <div class="public-auth-intro">
 
-                    <DataAnnotationsValidator />
+                    <h2>Verify your email</h2>
 
-                    <div class="public-auth-form">
+                    <p>
+                        We've sent a 6-digit verification code to
+                        <strong>@MaskedEmail</strong>.
+                    </p>
 
-                        <!-- ====================================================
-                             EMAIL
-                             ==================================================== -->
+                </div>
 
-                        <div class="public-auth-field">
 
-                            <label for="auth-email">
-                                Email Address
-                            </label>
+                <div class="public-auth-form">
 
-                            <div class="public-auth-input-wrapper">
+                    <div class="public-auth-field">
 
-                                <i class="bi bi-envelope"></i>
+                        <label for="auth-otp">
+                            Verification Code
+                        </label>
 
-                                <InputText id="auth-email"
-                                           class="public-auth-input"
-                                           @bind-Value="loginModel.Email"
-                                           autocomplete="email"
-                                           placeholder="Enter your email address" />
+                        <div class="public-auth-input-wrapper">
+                            <i class="bi bi-shield-lock"></i>
 
-                            </div>
-
-                            <ValidationMessage
-                                For="@(() => loginModel.Email)" />
-
+                            <InputText id="auth-otp"
+                                       class="public-auth-input"
+                                       @bind-Value="otpCode"
+                                       maxlength="6"
+                                       inputmode="numeric"
+                                       autocomplete="one-time-code"
+                                       placeholder="Enter 6-digit code" />
                         </div>
 
-
-                        <!-- ====================================================
-                             PASSWORD
-                             ==================================================== -->
-
-                        <div class="public-auth-field">
-
-                            <div class="public-auth-label-row">
-
-                                <label for="auth-password">
-                                    Password
-                                </label>
-
-                                <button type="button"
-                                        class="public-auth-forgot"
-                                        @onclick="ForgotPassword">
-
-                                    Forgot password?
-
-                                </button>
-
-                            </div>
-
-                            <div class="public-auth-input-wrapper">
-
-                                <i class="bi bi-lock"></i>
-
-                                <InputText id="auth-password"
-                                           class="public-auth-input password-input"
-                                           type="@PasswordInputType"
-                                           @bind-Value="loginModel.Password"
-                                           autocomplete="current-password"
-                                           placeholder="Enter your password" />
-
-                                <button type="button"
-                                        class="public-auth-password-toggle"
-                                        @onclick="TogglePassword"
-                                        aria-label="Toggle password visibility">
-
-                                    <i class="bi @(showPassword
-                                        ? "bi-eye-slash"
-                                        : "bi-eye")"></i>
-
-                                </button>
-
-                            </div>
-
-                            <ValidationMessage
-                                For="@(() => loginModel.Password)" />
-
-                        </div>
-
-
-                        <!-- ====================================================
-                             ERROR MESSAGE
-                             ==================================================== -->
-
-                        @if (!string.IsNullOrWhiteSpace(errorMessage))
+                        @if (!string.IsNullOrWhiteSpace(otpValidationMessage))
                         {
                             <div class="public-auth-error">
 
                                 <i class="bi bi-exclamation-circle-fill"></i>
 
                                 <span>
-                                    @errorMessage
+                                    @otpValidationMessage
                                 </span>
 
                             </div>
                         }
 
-
-                        <!-- ====================================================
-                             SIGN IN BUTTON
-                             ==================================================== -->
-
-                        <button type="submit"
-                                class="public-auth-submit"
-                                disabled="@isSubmitting">
-
-                            @if (isSubmitting)
-                            {
-                                <span class="spinner-border spinner-border-sm"
-                                      aria-hidden="true"></span>
-
-                                <span>Signing in...</span>
-                            }
-                            else
-                            {
-                                <i class="bi bi-box-arrow-in-right"></i>
-
-                                <span>Sign In</span>
-                            }
-
-                        </button>
-
-
-                        <!-- ====================================================
-                             SECURITY MESSAGE
-                             ==================================================== -->
-
-                        <div class="public-auth-security">
-
-                            <i class="bi bi-shield-check"></i>
-
-                            <span>
-                                Your account information is securely protected.
-                            </span>
-
-                        </div>
-
                     </div>
 
-                </EditForm>
-            }
-            else
-            {
-                <!-- ============================================================
-                     SIGN UP INFORMATION
-                     ============================================================ -->
-
-                <div class="public-auth-signup-info">
-
-                    <div class="public-auth-signup-icon">
-
-                        <i class="bi bi-person-plus-fill"></i>
-
-                    </div>
-
-                    <h3>
-                        Registration Request
-                    </h3>
-
-                    <p>
-                        New account registration is currently handled
-                        by the HR INFO ADs administration team.
-                    </p>
-
-                    <button type="button"
-                            class="public-auth-submit"
-                            @onclick="RequestRegistration">
-
-                        <i class="bi bi-envelope"></i>
-
-                        <span>
-                            Request Registration
-                        </span>
-
-                    </button>
 
                     @if (!string.IsNullOrWhiteSpace(errorMessage))
                     {
                         <div class="public-auth-error">
 
-                            <i class="bi bi-info-circle-fill"></i>
+                            <i class="bi bi-exclamation-circle-fill"></i>
 
                             <span>
                                 @errorMessage
@@ -317,7 +126,538 @@
                         </div>
                     }
 
+
+                    <button type="button"
+                            class="public-auth-submit"
+                            disabled="@isSubmitting"
+                            @onclick="HandleVerifyOtp">
+
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm"
+                                  aria-hidden="true"></span>
+
+                            <span>Verifying...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-shield-check"></i>
+
+                            <span>Verify Email</span>
+                        }
+
+                    </button>
+
+
+                    <div class="public-auth-security">
+
+                        <i class="bi bi-clock-history"></i>
+
+                        <span>
+                            Your verification code is valid for 10 minutes.
+                        </span>
+
+                    </div>
+
+
+                    <button type="button"
+                            class="public-auth-forgot"
+                            disabled="@isResending"
+                            @onclick="HandleResendOtp">
+
+                        @if (isResending)
+                        {
+                            <span class="spinner-border spinner-border-sm"
+                                  aria-hidden="true"></span>
+
+                            <span>Sending...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-arrow-repeat"></i>
+
+                            <span>Resend verification code</span>
+                        }
+
+                    </button>
+
+
+                    <button type="button"
+                            class="public-auth-back"
+                            @onclick="BackFromOtp">
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        <span>Back</span>
+
+                    </button>
+
                 </div>
+            }
+            else
+            {
+                <!-- ========================================================
+                     INTRODUCTION
+                     ======================================================== -->
+
+                <div class="public-auth-intro">
+
+                    @if (Mode == AuthMode.SignIn)
+                    {
+                        <h2>Welcome back</h2>
+
+                        <p>
+                            Sign in to manage your advertisements,
+                            favorites and account.
+                        </p>
+                    }
+                    else
+                    {
+                        <h2>Create your account</h2>
+
+                        <p>
+                            Join HR INFO ADs and start managing
+                            your advertisements.
+                        </p>
+                    }
+
+                </div>
+
+
+                <!-- ========================================================
+                     AUTHENTICATION TABS
+                     ======================================================== -->
+
+                <div class="public-auth-tabs">
+
+                    <button type="button"
+                            class="public-auth-tab @(Mode == AuthMode.SignIn ? "active" : "")"
+                            @onclick="() => ChangeMode(AuthMode.SignIn)">
+
+                        <i class="bi bi-box-arrow-in-right"></i>
+
+                        <span>Sign In</span>
+
+                    </button>
+
+                    <button type="button"
+                            class="public-auth-tab @(Mode == AuthMode.SignUp ? "active" : "")"
+                            @onclick="() => ChangeMode(AuthMode.SignUp)">
+
+                        <i class="bi bi-person-plus"></i>
+
+                        <span>Sign Up</span>
+
+                    </button>
+
+                </div>
+
+
+                <!-- ========================================================
+                     SIGN IN
+                     ======================================================== -->
+
+                @if (Mode == AuthMode.SignIn)
+                {
+                    <EditForm Model="@loginModel"
+                              OnValidSubmit="@HandleLogin">
+
+                        <DataAnnotationsValidator />
+
+                        <div class="public-auth-form">
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-email">
+                                    Email Address
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-envelope"></i>
+
+                                    <InputText id="auth-email"
+                                               class="public-auth-input"
+                                               @bind-Value="loginModel.Email"
+                                               autocomplete="email"
+                                               placeholder="Enter your email address" />
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => loginModel.Email)" />
+
+                            </div>
+
+
+                            <div class="public-auth-field">
+
+                                <div class="public-auth-label-row">
+
+                                    <label for="auth-password">
+                                        Password
+                                    </label>
+
+                                    <button type="button"
+                                            class="public-auth-forgot"
+                                            @onclick="ForgotPassword">
+
+                                        Forgot password?
+
+                                    </button>
+
+                                </div>
+
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-lock"></i>
+
+                                    <InputText id="auth-password"
+                                               class="public-auth-input password-input"
+                                               type="@PasswordInputType"
+                                               @bind-Value="loginModel.Password"
+                                               autocomplete="current-password"
+                                               placeholder="Enter your password" />
+
+                                    <button type="button"
+                                            class="public-auth-password-toggle"
+                                            @onclick="TogglePassword"
+                                            aria-label="Toggle password visibility">
+
+                                        <i class="bi @(showPassword
+                                            ? "bi-eye-slash"
+                                            : "bi-eye")"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => loginModel.Password)" />
+
+                            </div>
+
+
+                            @if (!string.IsNullOrWhiteSpace(errorMessage))
+                            {
+                                <div class="public-auth-error">
+
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                                    <span>
+                                        @errorMessage
+                                    </span>
+
+                                </div>
+                            }
+
+
+                            <button type="submit"
+                                    class="public-auth-submit"
+                                    disabled="@isSubmitting">
+
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm"
+                                          aria-hidden="true"></span>
+
+                                    <span>Signing in...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-box-arrow-in-right"></i>
+
+                                    <span>Sign In</span>
+                                }
+
+                            </button>
+
+
+                            <div class="public-auth-security">
+
+                                <i class="bi bi-shield-check"></i>
+
+                                <span>
+                                    Your account information is securely protected.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </EditForm>
+                }
+                else
+                {
+                    <!-- ====================================================
+                         SIGN UP
+                         ==================================================== -->
+
+                    <EditForm Model="@registerModel"
+                              OnValidSubmit="@HandleRegistration">
+
+                        <DataAnnotationsValidator />
+
+                        <div class="public-auth-form">
+
+                            <!-- USERNAME -->
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-register-username">
+                                    Username
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-person"></i>
+
+                                    <InputText id="auth-register-username"
+                                               class="public-auth-input"
+                                               @bind-Value="registerModel.UserName"
+                                               autocomplete="username"
+                                               placeholder="Choose a username" />
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => registerModel.UserName)" />
+
+                            </div>
+
+
+                            <!-- EMAIL -->
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-register-email">
+                                    Email Address
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-envelope"></i>
+
+                                    <InputText id="auth-register-email"
+                                               class="public-auth-input"
+                                               @bind-Value="registerModel.Email"
+                                               autocomplete="email"
+                                               placeholder="Enter your email address" />
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => registerModel.Email)" />
+
+                            </div>
+
+
+                            <!-- MOBILE -->
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-register-mobile">
+                                    Mobile Number
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-phone"></i>
+
+                                    <InputText id="auth-register-mobile"
+                                               class="public-auth-input"
+                                               @bind-Value="registerModel.MobileNo"
+                                               autocomplete="tel"
+                                               placeholder="Enter your mobile number" />
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => registerModel.MobileNo)" />
+
+                            </div>
+
+
+                            <!-- FIRST / LAST NAME -->
+
+                            <div class="public-auth-field-row">
+
+                                <div class="public-auth-field">
+
+                                    <label for="auth-first-name">
+                                        First Name
+                                    </label>
+
+                                    <div class="public-auth-input-wrapper">
+
+                                        <i class="bi bi-person"></i>
+
+                                        <InputText id="auth-first-name"
+                                                   class="public-auth-input"
+                                                   @bind-Value="registerModel.FirstName"
+                                                   autocomplete="given-name"
+                                                   placeholder="First name" />
+
+                                    </div>
+
+                                    <ValidationMessage
+                                        For="@(() => registerModel.FirstName)" />
+
+                                </div>
+
+
+                                <div class="public-auth-field">
+
+                                    <label for="auth-last-name">
+                                        Last Name
+                                    </label>
+
+                                    <div class="public-auth-input-wrapper">
+
+                                        <i class="bi bi-person"></i>
+
+                                        <InputText id="auth-last-name"
+                                                   class="public-auth-input"
+                                                   @bind-Value="registerModel.LastName"
+                                                   autocomplete="family-name"
+                                                   placeholder="Last name" />
+
+                                    </div>
+
+                                    <ValidationMessage
+                                        For="@(() => registerModel.LastName)" />
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- PASSWORD -->
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-register-password">
+                                    Password
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-lock"></i>
+
+                                    <InputText id="auth-register-password"
+                                               class="public-auth-input password-input"
+                                               type="@RegistrationPasswordInputType"
+                                               @bind-Value="registerModel.Password"
+                                               autocomplete="new-password"
+                                               placeholder="Create a password" />
+
+                                    <button type="button"
+                                            class="public-auth-password-toggle"
+                                            @onclick="ToggleRegistrationPassword"
+                                            aria-label="Toggle password visibility">
+
+                                        <i class="bi @(showRegistrationPassword
+                                            ? "bi-eye-slash"
+                                            : "bi-eye")"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => registerModel.Password)" />
+
+                            </div>
+
+
+                            <!-- CONFIRM PASSWORD -->
+
+                            <div class="public-auth-field">
+
+                                <label for="auth-register-confirm-password">
+                                    Confirm Password
+                                </label>
+
+                                <div class="public-auth-input-wrapper">
+
+                                    <i class="bi bi-lock-fill"></i>
+
+                                    <InputText id="auth-register-confirm-password"
+                                               class="public-auth-input password-input"
+                                               type="@RegistrationConfirmPasswordInputType"
+                                               @bind-Value="registerModel.ConfirmPassword"
+                                               autocomplete="new-password"
+                                               placeholder="Confirm your password" />
+
+                                    <button type="button"
+                                            class="public-auth-password-toggle"
+                                            @onclick="ToggleRegistrationConfirmPassword"
+                                            aria-label="Toggle password visibility">
+
+                                        <i class="bi @(showRegistrationConfirmPassword
+                                            ? "bi-eye-slash"
+                                            : "bi-eye")"></i>
+
+                                    </button>
+
+                                </div>
+
+                                <ValidationMessage
+                                    For="@(() => registerModel.ConfirmPassword)" />
+
+                            </div>
+
+
+                            @if (!string.IsNullOrWhiteSpace(errorMessage))
+                            {
+                                <div class="public-auth-error">
+
+                                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                                    <span>
+                                        @errorMessage
+                                    </span>
+
+                                </div>
+                            }
+
+
+                            <button type="submit"
+                                    class="public-auth-submit"
+                                    disabled="@isSubmitting">
+
+                                @if (isSubmitting)
+                                {
+                                    <span class="spinner-border spinner-border-sm"
+                                          aria-hidden="true"></span>
+
+                                    <span>Creating account...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person-plus-fill"></i>
+
+                                    <span>Create Account</span>
+                                }
+
+                            </button>
+
+
+                            <div class="public-auth-security">
+
+                                <i class="bi bi-shield-check"></i>
+
+                                <span>
+                                    A verification code will be sent to your email.
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                    </EditForm>
+                }
             }
 
         </div>
@@ -328,9 +668,9 @@
 
 @code {
 
-    // ============================================================
+    // ================================================================
     // PARAMETERS
-    // ============================================================
+    // ================================================================
 
     [Parameter]
     public bool IsOpen { get; set; }
@@ -348,30 +688,84 @@
     public EventCallback OnAuthenticated { get; set; }
 
 
-    // ============================================================
-    // STATE
-    // ============================================================
+    // ================================================================
+    // AUTHENTICATION STATE
+    // ================================================================
 
-    private LoginModel loginModel = new();
+    private AuthStep currentStep = AuthStep.Authentication;
 
-    private bool isSubmitting;
+    private string verificationEmail = string.Empty;
 
-    private bool showPassword;
+    private string otpCode = string.Empty;
 
     private string? errorMessage;
 
+    private string? otpValidationMessage;
 
-    // ============================================================
-    // PASSWORD INPUT TYPE
-    // ============================================================
+    private bool isSubmitting;
+
+    private bool isResending;
+
+    private bool showPassword;
+
+    private bool showRegistrationPassword;
+
+    private bool showRegistrationConfirmPassword;
+
+
+    // ================================================================
+    // FORM MODELS
+    // ================================================================
+
+    private LoginModel loginModel = new();
+
+    private RegisterModel registerModel = new();
+
+
+    // ================================================================
+    // COMPUTED PROPERTIES
+    // ================================================================
 
     private string PasswordInputType =>
         showPassword ? "text" : "password";
 
+    private string RegistrationPasswordInputType =>
+        showRegistrationPassword ? "text" : "password";
 
-    // ============================================================
+    private string RegistrationConfirmPasswordInputType =>
+        showRegistrationConfirmPassword ? "text" : "password";
+
+    private string MaskedEmail
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(verificationEmail))
+                return string.Empty;
+
+            var email = verificationEmail.Trim();
+
+            var atIndex = email.IndexOf('@');
+
+            if (atIndex <= 0)
+                return email;
+
+            var localPart = email[..atIndex];
+
+            var domain = email[atIndex..];
+
+            if (localPart.Length <= 2)
+            {
+                return $"{localPart[0]}***{domain}";
+            }
+
+            return $"{localPart[0]}***{localPart[^1]}{domain}";
+        }
+    }
+
+
+    // ================================================================
     // LOGIN
-    // ============================================================
+    // ================================================================
 
     private async Task HandleLogin()
     {
@@ -380,17 +774,67 @@
 
         isSubmitting = true;
         errorMessage = null;
+        otpValidationMessage = null;
 
         try
         {
-            var result = await AuthApiService.LoginAsync(
-                loginModel.Email,
-                loginModel.Password);
+            var result =
+                await AuthApiService.LoginAsync(
+                    loginModel.Email,
+                    loginModel.Password);
 
             if (result == null)
             {
                 errorMessage =
                     "Invalid email address or password.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Unable to sign in. Please check your email address and password."
+                        : result.Message;
+
+                return;
+            }
+
+
+            // ========================================================
+            // EMAIL VERIFICATION REQUIRED
+            // ========================================================
+
+            if (result.RequiresEmailVerification)
+            {
+                verificationEmail =
+                    string.IsNullOrWhiteSpace(result.Email)
+                        ? loginModel.Email.Trim()
+                        : result.Email.Trim();
+
+                otpCode = string.Empty;
+
+                currentStep = AuthStep.VerifyEmail;
+
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Please enter the verification code sent to your email."
+                        : result.Message;
+
+                return;
+            }
+
+
+            // ========================================================
+            // NORMAL AUTHENTICATED LOGIN
+            // ========================================================
+
+            if (string.IsNullOrWhiteSpace(result.AccessToken) ||
+                string.IsNullOrWhiteSpace(result.RefreshToken))
+            {
+                errorMessage =
+                    "The sign-in response did not contain valid authentication tokens.";
 
                 return;
             }
@@ -428,36 +872,378 @@
     }
 
 
-    // ============================================================
-    // CHANGE AUTHENTICATION MODE
-    // ============================================================
+    // ================================================================
+    // REGISTRATION
+    // ================================================================
+
+    private async Task HandleRegistration()
+    {
+        if (isSubmitting)
+            return;
+
+        isSubmitting = true;
+        errorMessage = null;
+        otpValidationMessage = null;
+
+        try
+        {
+            if (!string.Equals(
+                    registerModel.Password,
+                    registerModel.ConfirmPassword,
+                    StringComparison.Ordinal))
+            {
+                errorMessage =
+                    "Password and confirm password do not match.";
+
+                return;
+            }
+
+            var request = new RegisterRequest
+            {
+                UserName = registerModel.UserName.Trim(),
+                Email = registerModel.Email.Trim(),
+                MobileNo = registerModel.MobileNo.Trim(),
+                Password = registerModel.Password,
+                FirstName = registerModel.FirstName.Trim(),
+                LastName = registerModel.LastName.Trim()
+            };
+
+            var result =
+                await AuthApiService.RegisterAsync(request);
+
+            if (result == null)
+            {
+                errorMessage =
+                    "Unable to complete registration. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Unable to create your account."
+                        : result.Message;
+
+                return;
+            }
+
+
+            // ========================================================
+            // REGISTRATION REQUIRES EMAIL VERIFICATION
+            // ========================================================
+
+            if (result.RequiresEmailVerification)
+            {
+                verificationEmail =
+                    string.IsNullOrWhiteSpace(result.Email)
+                        ? request.Email
+                        : result.Email.Trim();
+
+                otpCode = string.Empty;
+
+                currentStep = AuthStep.VerifyEmail;
+
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Your account has been created. Please enter the verification code sent to your email."
+                        : result.Message;
+
+                return;
+            }
+
+
+            // ========================================================
+            // DEFENSIVE FALLBACK
+            // ========================================================
+
+            if (!string.IsNullOrWhiteSpace(result.AccessToken) &&
+                !string.IsNullOrWhiteSpace(result.RefreshToken))
+            {
+                AuthenticationStateProvider.SignIn(
+                    result.UserID,
+                    result.UserName,
+                    result.Email,
+                    result.Roles,
+                    result.Permissions,
+                    result.AccessToken,
+                    result.RefreshToken,
+                    result.ExpiresAt);
+
+                await CloseModal();
+
+                await OnAuthenticated.InvokeAsync();
+
+                return;
+            }
+
+            errorMessage =
+                "Your account was created, but email verification is still required.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to complete registration. Please try again."
+                    : ex.Message;
+        }
+        catch (Exception)
+        {
+            errorMessage =
+                "An unexpected error occurred while creating your account. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ================================================================
+    // VERIFY EMAIL OTP
+    // ================================================================
+
+    private async Task HandleVerifyOtp()
+    {
+        if (isSubmitting)
+            return;
+
+        otpValidationMessage = null;
+        errorMessage = null;
+
+        var normalizedOtp =
+            new string(
+                (otpCode ?? string.Empty)
+                    .Where(char.IsDigit)
+                    .ToArray());
+
+        otpCode = normalizedOtp;
+
+        if (normalizedOtp.Length != 6)
+        {
+            otpValidationMessage =
+                "Please enter the 6-digit verification code.";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(verificationEmail))
+        {
+            errorMessage =
+                "The verification email address is missing. Please start again.";
+
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            var result =
+                await AuthApiService.VerifyEmailOtpAsync(
+                    verificationEmail,
+                    normalizedOtp);
+
+            if (result == null)
+            {
+                errorMessage =
+                    "Unable to verify the code. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "The verification code is invalid or has expired."
+                        : result.Message;
+
+                return;
+            }
+
+            if (result.RequiresEmailVerification)
+            {
+                errorMessage =
+                    "Email verification is still required.";
+
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(result.AccessToken) ||
+                string.IsNullOrWhiteSpace(result.RefreshToken))
+            {
+                errorMessage =
+                    "Email verification succeeded, but authentication tokens were not returned.";
+
+                return;
+            }
+
+
+            // ========================================================
+            // OTP VERIFIED → AUTHENTICATE USER
+            // ========================================================
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+            await CloseModal();
+
+            await OnAuthenticated.InvokeAsync();
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to verify the code. Please try again."
+                    : ex.Message;
+        }
+        catch (Exception)
+        {
+            errorMessage =
+                "An unexpected error occurred while verifying your email.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ================================================================
+    // RESEND OTP
+    // ================================================================
+
+    private async Task HandleResendOtp()
+    {
+        if (isResending)
+            return;
+
+        if (string.IsNullOrWhiteSpace(verificationEmail))
+        {
+            errorMessage =
+                "The verification email address is missing. Please start again.";
+
+            return;
+        }
+
+        isResending = true;
+        errorMessage = null;
+        otpValidationMessage = null;
+
+        try
+        {
+            var success =
+                await AuthApiService.ResendEmailVerificationAsync(
+                    verificationEmail);
+
+            if (!success)
+            {
+                errorMessage =
+                    "Unable to resend the verification code. Please try again.";
+                return;
+            }
+
+            otpCode = string.Empty;
+
+            errorMessage =
+                "A new verification code has been sent to your email.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(ex.Message)
+                    ? "Unable to resend the verification code."
+                    : ex.Message;
+        }
+        catch (Exception)
+        {
+            errorMessage =
+                "An unexpected error occurred while resending the verification code.";
+        }
+        finally
+        {
+            isResending = false;
+        }
+    }
+
+
+    // ================================================================
+    // CHANGE AUTH MODE
+    // ================================================================
 
     private async Task ChangeMode(AuthMode mode)
     {
         errorMessage = null;
+        otpValidationMessage = null;
+
+        currentStep = AuthStep.Authentication;
 
         Mode = mode;
+
+        if (mode == AuthMode.SignIn)
+        {
+            loginModel = new LoginModel();
+        }
+        else
+        {
+            registerModel = new RegisterModel();
+        }
 
         await ModeChanged.InvokeAsync(mode);
     }
 
 
-    // ============================================================
-    // CLOSE MODAL
-    // ============================================================
+    // ================================================================
+    // BACK FROM OTP
+    // ================================================================
+
+    private void BackFromOtp()
+    {
+        currentStep = AuthStep.Authentication;
+
+        otpCode = string.Empty;
+
+        errorMessage = null;
+
+        otpValidationMessage = null;
+    }
+
+
+    // ================================================================
+    // CLOSE
+    // ================================================================
 
     private async Task CloseModal()
     {
         errorMessage = null;
+        otpValidationMessage = null;
+
+        otpCode = string.Empty;
+
+        verificationEmail = string.Empty;
+
         showPassword = false;
+        showRegistrationPassword = false;
+        showRegistrationConfirmPassword = false;
+
+        currentStep = AuthStep.Authentication;
 
         await IsOpenChanged.InvokeAsync(false);
     }
 
 
-    // ============================================================
-    // OVERLAY CLICK
-    // ============================================================
+    // ================================================================
+    // OVERLAY
+    // ================================================================
 
     private async Task HandleOverlayClick()
     {
@@ -465,19 +1251,31 @@
     }
 
 
-    // ============================================================
+    // ================================================================
     // PASSWORD VISIBILITY
-    // ============================================================
+    // ================================================================
 
     private void TogglePassword()
     {
         showPassword = !showPassword;
     }
 
+    private void ToggleRegistrationPassword()
+    {
+        showRegistrationPassword =
+            !showRegistrationPassword;
+    }
 
-    // ============================================================
+    private void ToggleRegistrationConfirmPassword()
+    {
+        showRegistrationConfirmPassword =
+            !showRegistrationConfirmPassword;
+    }
+
+
+    // ================================================================
     // FORGOT PASSWORD
-    // ============================================================
+    // ================================================================
 
     private void ForgotPassword()
     {
@@ -486,20 +1284,9 @@
     }
 
 
-    // ============================================================
-    // REGISTRATION REQUEST
-    // ============================================================
-
-    private void RequestRegistration()
-    {
-        errorMessage =
-            "Account registration is currently handled by the HR INFO ADs administration team.";
-    }
-
-
-    // ============================================================
-    // LOGIN MODEL
-    // ============================================================
+    // ================================================================
+    // FORM MODELS
+    // ================================================================
 
     public class LoginModel
     {
@@ -509,20 +1296,85 @@
             ErrorMessage = "Please enter a valid email address.")]
         public string Email { get; set; } = string.Empty;
 
-
         [Required(
             ErrorMessage = "Password is required.")]
         public string Password { get; set; } = string.Empty;
     }
 
 
-    // ============================================================
-    // AUTHENTICATION MODE
-    // ============================================================
+    public class RegisterModel
+    {
+        [Required(
+            ErrorMessage = "Username is required.")]
+        [StringLength(
+            100,
+            MinimumLength = 3,
+            ErrorMessage = "Username must be between 3 and 100 characters.")]
+        public string UserName { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Email address is required.")]
+        [EmailAddress(
+            ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Mobile number is required.")]
+        [StringLength(
+            30,
+            ErrorMessage = "Mobile number cannot exceed 30 characters.")]
+        public string MobileNo { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "First name is required.")]
+        [StringLength(
+            100,
+            ErrorMessage = "First name cannot exceed 100 characters.")]
+        public string FirstName { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Last name is required.")]
+        [StringLength(
+            100,
+            ErrorMessage = "Last name cannot exceed 100 characters.")]
+        public string LastName { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Password is required.")]
+        [MinLength(
+            8,
+            ErrorMessage = "Password must be at least 8 characters.")]
+        public string Password { get; set; } = string.Empty;
+
+
+        [Required(
+            ErrorMessage = "Please confirm your password.")]
+        [Compare(
+            nameof(Password),
+            ErrorMessage = "Password and confirm password do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+
+
+    // ================================================================
+    // ENUMS
+    // ================================================================
 
     public enum AuthMode
     {
         SignIn,
         SignUp
+    }
+
+
+    private enum AuthStep
+    {
+        Authentication,
+        VerifyEmail
     }
 }

@@ -15,6 +15,8 @@ using HRInfoAdvertisements.Application.Profile;
 using HRInfoAdvertisements.Infrastructure.Profile;
 using HRInfoAdvertisements.Application.Services;
 using HRInfoAdvertisements.Infrastructure.Email;
+using HRInfoAdvertisements.Application.Security;
+using HRInfoAdvertisements.Infrastructure.Security;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +30,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddDataProtection();
 
 // ------------------------------------------------------------
 // Swagger
@@ -222,6 +226,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     ISystemSettingService,
     SystemSettingService>();
+
+builder.Services.AddScoped<
+    IConfigurationEncryptionService,
+    DataProtectionConfigurationEncryptionService>();
 
 // ------------------------------------------------------------
 // Email (provider chosen by "Email:Provider": Brevo | Gmail | Smtp)

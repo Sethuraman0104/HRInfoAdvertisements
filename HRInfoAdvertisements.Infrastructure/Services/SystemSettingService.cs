@@ -1,5 +1,6 @@
 using HRInfoAdvertisements.Application.DTOs.SystemSettings;
 using HRInfoAdvertisements.Application.Interfaces;
+using HRInfoAdvertisements.Application.Security;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +10,14 @@ namespace HRInfoAdvertisements.Infrastructure.Services;
 public class SystemSettingService : ISystemSettingService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IConfigurationEncryptionService _encryptionService;
 
     public SystemSettingService(
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IConfigurationEncryptionService encryptionService)
     {
         _context = context;
+        _encryptionService = encryptionService;
     }
 
     // ============================================================
@@ -75,11 +79,15 @@ public class SystemSettingService : ISystemSettingService
             pageNumber = totalPages;
         }
 
-        var items =
+        var settings =
             await query
                 .OrderBy(x => x.SettingKey)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+                .ToListAsync();
+
+        var items =
+            settings
                 .Select(x =>
                     new SystemSettingListItemResponse
                     {
@@ -89,8 +97,11 @@ public class SystemSettingService : ISystemSettingService
                         SettingKey =
                             x.SettingKey,
 
+                        // Never expose encrypted values.
                         SettingValue =
-                            x.SettingValue,
+                            x.IsEncrypted
+                                ? null
+                                : x.SettingValue,
 
                         Description =
                             x.Description,
@@ -107,7 +118,7 @@ public class SystemSettingService : ISystemSettingService
                         ModifiedDate =
                             x.ModifiedDate
                     })
-                .ToListAsync();
+                .ToList();
 
         return new SystemSettingListResponse
         {
@@ -127,39 +138,47 @@ public class SystemSettingService : ISystemSettingService
         GetSystemSettingByIdAsync(
             int systemSettingId)
     {
-        return await _context.SystemSettings
-            .AsNoTracking()
-            .Where(x =>
-                x.SystemSettingID ==
-                systemSettingId)
-            .Select(x =>
-                new SystemSettingDetailResponse
-                {
-                    SystemSettingID =
-                        x.SystemSettingID,
+        var setting =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.SystemSettingID ==
+                    systemSettingId);
 
-                    SettingKey =
-                        x.SettingKey,
+        if (setting == null)
+        {
+            return null;
+        }
 
-                    SettingValue =
-                        x.SettingValue,
+        return new SystemSettingDetailResponse
+        {
+            SystemSettingID =
+                setting.SystemSettingID,
 
-                    Description =
-                        x.Description,
+            SettingKey =
+                setting.SettingKey,
 
-                    IsEncrypted =
-                        x.IsEncrypted,
+            // Never expose encrypted values.
+            SettingValue =
+                setting.IsEncrypted
+                    ? null
+                    : setting.SettingValue,
 
-                    IsActive =
-                        x.IsActive,
+            Description =
+                setting.Description,
 
-                    CreatedDate =
-                        x.CreatedDate,
+            IsEncrypted =
+                setting.IsEncrypted,
 
-                    ModifiedDate =
-                        x.ModifiedDate
-                })
-            .FirstOrDefaultAsync();
+            IsActive =
+                setting.IsActive,
+
+            CreatedDate =
+                setting.CreatedDate,
+
+            ModifiedDate =
+                setting.ModifiedDate
+        };
     }
 
     // ============================================================
@@ -190,6 +209,21 @@ public class SystemSettingService : ISystemSettingService
             return null;
         }
 
+        var settingValue =
+            string.IsNullOrWhiteSpace(
+                request.SettingValue)
+                ? null
+                : request.SettingValue.Trim();
+
+        // Encrypt sensitive settings before they are persisted.
+        if (request.IsEncrypted &&
+            !string.IsNullOrWhiteSpace(settingValue))
+        {
+            settingValue =
+                _encryptionService.Protect(
+                    settingValue);
+        }
+
         var setting =
             new SystemSetting
             {
@@ -197,10 +231,7 @@ public class SystemSettingService : ISystemSettingService
                     settingKey,
 
                 SettingValue =
-                    string.IsNullOrWhiteSpace(
-                        request.SettingValue)
-                        ? null
-                        : request.SettingValue.Trim(),
+                    settingValue,
 
                 Description =
                     string.IsNullOrWhiteSpace(
@@ -270,11 +301,48 @@ public class SystemSettingService : ISystemSettingService
         setting.SettingKey =
             settingKey;
 
-        setting.SettingValue =
+        // ========================================================
+        // VALUE HANDLING
+        // ========================================================
+
+        var newValue =
             string.IsNullOrWhiteSpace(
                 request.SettingValue)
                 ? null
                 : request.SettingValue.Trim();
+
+        if (request.IsEncrypted)
+        {
+            // When editing an existing encrypted setting, the UI
+            // intentionally sends an empty value when the user
+            // does not want to replace the secret.
+            //
+            // Preserve the existing encrypted value in that case.
+            if (!string.IsNullOrWhiteSpace(newValue))
+            {
+                setting.SettingValue =
+                    _encryptionService.Protect(
+                        newValue);
+            }
+            else if (!setting.IsEncrypted)
+            {
+                // The setting is being changed from plaintext
+                // to encrypted but no new secret was supplied.
+                // Do not retain the old plaintext value.
+                setting.SettingValue = null;
+            }
+
+            // If it was already encrypted and the new value is
+            // empty, leave the existing encrypted value untouched.
+        }
+        else
+        {
+            // Setting is being stored as plaintext.
+            // The caller explicitly changed IsEncrypted to false,
+            // so store the supplied plaintext value.
+            setting.SettingValue =
+                newValue;
+        }
 
         setting.Description =
             string.IsNullOrWhiteSpace(
@@ -326,5 +394,62 @@ public class SystemSettingService : ISystemSettingService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    // ============================================================
+    // GET DECRYPTED VALUE
+    // ============================================================
+    //
+    // Internal application use only.
+    //
+    // This method is intentionally NOT part of the Admin API
+    // response. It is for trusted server-side consumers such as
+    // the future email configuration resolver.
+    //
+    // ============================================================
+
+    public async Task<string?>
+        GetDecryptedSettingValueAsync(
+            string settingKey)
+    {
+        if (string.IsNullOrWhiteSpace(settingKey))
+        {
+            return null;
+        }
+
+        var setting =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.SettingKey == settingKey &&
+                    x.IsActive);
+
+        if (setting == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                setting.SettingValue))
+        {
+            return null;
+        }
+
+        if (!setting.IsEncrypted)
+        {
+            return setting.SettingValue;
+        }
+
+        try
+        {
+            return _encryptionService.Unprotect(
+                setting.SettingValue);
+        }
+        catch
+        {
+            // Do not expose encrypted/ciphertext details to callers.
+            // A future logging layer can record the failure safely.
+            return null;
+        }
     }
 }

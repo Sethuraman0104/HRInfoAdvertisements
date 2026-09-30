@@ -29,4 +29,10 @@ public interface IAuthService
 
     Task<AuthResponse> GetCurrentUserAsync(
         long userId);
+
+    Task<AuthResponse> VerifyEmailOtpAsync(
+        VerifyEmailOtpRequest request);
+
+    Task<bool> ResendEmailVerificationAsync(
+        ResendEmailVerificationRequest request);
 }
