@@ -223,8 +223,32 @@ builder.Services.AddScoped<
     ISystemSettingService,
     SystemSettingService>();
 
-builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));
-builder.Services.AddScoped<IEmailService, EmailService>();
+// ------------------------------------------------------------
+// Email (provider chosen by "Email:Provider": Brevo | Gmail | Smtp)
+// ------------------------------------------------------------
+
+builder.Services.Configure<EmailOptions>(
+    builder.Configuration.GetSection("Email"));
+
+var emailProvider =
+    builder.Configuration["Email:Provider"] ?? "Brevo";
+
+switch (emailProvider.ToLowerInvariant())
+{
+    case "gmail":
+    case "smtp":
+        builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+        break;
+
+    case "brevo":
+        builder.Services.AddHttpClient<IEmailService, BrevoEmailService>();
+        break;
+
+    default:
+        throw new InvalidOperationException(
+            $"Unknown email provider '{emailProvider}'.");
+}
+
 // ------------------------------------------------------------
 // JWT Authentication
 // ------------------------------------------------------------
@@ -537,6 +561,13 @@ using (var scope = app.Services.CreateScope())
 
     Console.WriteLine(
         $"DI CHECK: {lookupService.GetType().FullName}");
+
+    var emailService =
+        scope.ServiceProvider
+            .GetRequiredService<IEmailService>();
+
+    Console.WriteLine(
+        $"EMAIL PROVIDER: {emailService.GetType().Name}");
 }
 
 // ------------------------------------------------------------
