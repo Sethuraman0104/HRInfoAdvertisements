@@ -241,6 +241,43 @@ public class AdvertisementService : IAdvertisementService
                 "Advertisement could not be retrieved after creation.");
     }
 
+
+public async Task<AdvertisementResponse?>
+    GetPublicAdvertisementByIdAsync(
+        long advertisementId)
+{
+    var advertisement =
+        await _context.Advertisements
+            .AsNoTracking()
+
+            .Include(x => x.Category)
+            .Include(x => x.AdvertisementType)
+            .Include(x => x.Status)
+
+            .Include(x => x.Country)
+            .Include(x => x.State)
+            .Include(x => x.City)
+            .Include(x => x.Area)
+
+            .Include(x => x.Images)
+            .Include(x => x.FeatureValues)
+
+            .FirstOrDefaultAsync(x =>
+                x.AdvertisementID == advertisementId
+                &&
+                x.Status.StatusCode == "PUBLISHED"
+                &&
+                x.Status.IsActive);
+
+    if (advertisement is null)
+    {
+        return null;
+    }
+
+    return MapToResponse(
+        advertisement,
+        includePrivateContact: false);
+}
     // ============================================================
     // GET BY ID
     // ============================================================
@@ -392,15 +429,19 @@ public class AdvertisementService : IAdvertisementService
                 : Math.Min(pageSize, 100);
 
         var query =
-            _context.Advertisements
-                .AsNoTracking()
-                .Include(x => x.Category)
-                .Include(x => x.AdvertisementType)
-                .Include(x => x.Status)
-                .Include(x => x.Images)
-                .Where(x =>
-                    x.Status.StatusCode == "PUBLISHED" &&
-                    x.Status.IsActive);
+    _context.Advertisements
+        .AsNoTracking()
+        .Include(x => x.Category)
+        .Include(x => x.AdvertisementType)
+        .Include(x => x.Status)
+        .Include(x => x.Images)
+        .Include(x => x.Country)
+        .Include(x => x.State)
+        .Include(x => x.City)
+        .Include(x => x.Area)
+        .Where(x =>
+            x.Status.StatusCode == "PUBLISHED" &&
+            x.Status.IsActive);
 
         // --------------------------------------------------------
         // Search
@@ -1074,16 +1115,28 @@ public class AdvertisementService : IAdvertisementService
                 advertisement.IsNegotiable,
 
             CountryID =
-                advertisement.CountryID,
+    advertisement.CountryID,
 
-            StateID =
-                advertisement.StateID,
+CountryName =
+    advertisement.Country?.CountryName,
 
-            CityID =
-                advertisement.CityID,
+StateID =
+    advertisement.StateID,
 
-            AreaID =
-                advertisement.AreaID,
+StateName =
+    advertisement.State?.StateName,
+
+CityID =
+    advertisement.CityID,
+
+CityName =
+    advertisement.City?.CityName,
+
+AreaID =
+    advertisement.AreaID,
+
+AreaName =
+    advertisement.Area?.AreaName,
 
             AddressLine =
                 advertisement.AddressLine,

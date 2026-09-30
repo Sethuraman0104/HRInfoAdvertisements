@@ -431,6 +431,28 @@ public class AdvertisementApiService
 
 
     // ============================================================
+// GET PUBLIC ADVERTISEMENT BY ID
+// ============================================================
+
+public async Task<AdvertisementResponse?>
+    GetPublicAdvertisementAsync(
+        long advertisementId)
+{
+    if (advertisementId <= 0)
+    {
+        return null;
+    }
+
+    var client =
+        CreateClient();
+
+    return await client
+        .GetFromJsonAsync<AdvertisementResponse>(
+            $"api/v1/advertisements/public/{advertisementId}");
+}
+
+
+    // ============================================================
     // GET ADVERTISEMENT CATEGORIES
     // ============================================================
 
@@ -616,7 +638,6 @@ public class AdvertisementApiService
                 url)
             ?? new List<LookupItemResponse>();
     }
-
 
     // ============================================================
     // CREATE ADVERTISEMENT

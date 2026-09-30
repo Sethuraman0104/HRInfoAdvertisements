@@ -12,13 +12,29 @@ public class AdvertisementSearchRequest
 
     public string? StatusCode { get; set; }
 
-    public long? CountryID { get; set; }
+    // ============================================================
+    // LOCATION
+    // ============================================================
 
-    public long? StateID { get; set; }
+    public int? CountryID { get; set; }
+
+    public int? StateID { get; set; }
+
+    public int? CityID { get; set; }
+
+    public int? AreaID { get; set; }
+
+    // ============================================================
+    // PRICE
+    // ============================================================
 
     public decimal? MinPrice { get; set; }
 
     public decimal? MaxPrice { get; set; }
+
+    // ============================================================
+    // PROPERTY
+    // ============================================================
 
     public int? MinBedrooms { get; set; }
 
@@ -33,12 +49,15 @@ public class AdvertisementSearchRequest
     public decimal? MaxLandArea { get; set; }
 
     public decimal? MinBuiltUpArea { get; set; }
-
     public decimal? MaxBuiltUpArea { get; set; }
 
     public bool? IsNegotiable { get; set; }
 
     public bool? IsFeatured { get; set; }
+
+    // ============================================================
+    // DATES
+    // ============================================================
 
     public DateTime? CreatedFrom { get; set; }
 
@@ -48,9 +67,17 @@ public class AdvertisementSearchRequest
 
     public DateTime? PublishedTo { get; set; }
 
+    // ============================================================
+    // SORTING
+    // ============================================================
+
     public string? SortBy { get; set; }
 
     public string? SortDirection { get; set; }
+
+    // ============================================================
+    // PAGING
+    // ============================================================
 
     public int PageNumber { get; set; } = 1;
 

@@ -295,26 +295,32 @@ public class AdvertisementMediaService
                 contentType);
 
         var video =
-            new AdvertisementVideo
-            {
-                AdvertisementID =
-                    advertisementId,
+    new AdvertisementVideo
+    {
+        AdvertisementID =
+            advertisementId,
 
-                FileName =
-                    storedFile.FileName,
+        FileName =
+            storedFile.FileName,
 
-                S3Key =
-                    storedFile.FileName,
+        FileURL =
+            storedFile.FileUrl,
 
-                VideoURL =
-                    storedFile.FileUrl,
+        StorageKey =
+            storedFile.FileName,
 
-                DisplayOrder =
-                    existingCount + 1,
+        ContentType =
+            contentType,
 
-                CreatedDate =
-                    DateTime.UtcNow
-            };
+        FileSize =
+            fileStream.Length,
+
+        DisplayOrder =
+            existingCount + 1,
+
+        CreatedDate =
+            DateTime.UtcNow
+    };
 
         _context.AdvertisementVideos.Add(
             video);
@@ -371,12 +377,12 @@ public class AdvertisementMediaService
         }
 
         if (!string.IsNullOrWhiteSpace(
-                video.VideoURL))
-        {
-            await _fileStorageService
-                .DeleteFileAsync(
-                    video.VideoURL);
-        }
+        video.StorageKey))
+{
+    await _fileStorageService
+        .DeleteFileAsync(
+            video.StorageKey);
+}
 
         _context.AdvertisementVideos.Remove(
             video);
@@ -420,39 +426,29 @@ public class AdvertisementMediaService
                 contentType);
 
         var document =
-            new AdvertisementDocument
-            {
-                AdvertisementID =
-                    advertisementId,
+    new AdvertisementDocument
+    {
+        AdvertisementID =
+            advertisementId,
 
-                DocumentType =
-                    GetDocumentType(
-                        originalFileName),
+        DocumentName =
+            storedFile.FileName,
 
-                FileName =
-                    storedFile.FileName,
+        FileURL =
+            storedFile.FileUrl,
 
-                S3Key =
-                    storedFile.FileName,
+        StorageKey =
+            storedFile.FileName,
 
-                FileURL =
-                    storedFile.FileUrl,
+        ContentType =
+            contentType,
 
-                VerificationStatus =
-                    "PENDING",
+        FileSize =
+            fileStream.Length,
 
-                VerifiedBy =
-                    null,
-
-                VerifiedDate =
-                    null,
-
-                RejectionReason =
-                    null,
-
-                CreatedDate =
-                    DateTime.UtcNow
-            };
+        CreatedDate =
+            DateTime.UtcNow
+    };
 
         _context.AdvertisementDocuments.Add(
             document);
@@ -778,14 +774,15 @@ public class AdvertisementMediaService
                 video.FileName,
 
             FileURL =
-                video.VideoURL,
+    video.FileURL,
 
-            ContentType =
-                GetContentType(
-                    video.FileName),
+ContentType =
+    video.ContentType
+        ?? GetContentType(
+            video.FileName),
 
-            FileSize =
-                null,
+FileSize =
+    video.FileSize,
 
             DisplayOrder =
                 video.DisplayOrder,
@@ -796,32 +793,33 @@ public class AdvertisementMediaService
     }
 
     private static AdvertisementDocumentResponse
-        MapDocument(
-            AdvertisementDocument document)
+    MapDocument(
+        AdvertisementDocument document)
+{
+    return new AdvertisementDocumentResponse
     {
-        return new AdvertisementDocumentResponse
-        {
-            AdvertisementDocumentID =
-                document.AdvertisementDocumentID,
+        AdvertisementDocumentID =
+            document.AdvertisementDocumentID,
 
-            AdvertisementID =
-                document.AdvertisementID,
+        AdvertisementID =
+            document.AdvertisementID,
 
-            DocumentName =
-                document.FileName,
+        DocumentName =
+            document.DocumentName,
 
-            FileURL =
-                document.FileURL,
+        FileURL =
+            document.FileURL,
 
-            ContentType =
-                GetContentType(
-                    document.FileName),
+        ContentType =
+            document.ContentType
+                ?? GetContentType(
+                    document.DocumentName),
 
-            FileSize =
-                null,
+        FileSize =
+            document.FileSize,
 
-            CreatedDate =
-                document.CreatedDate
-        };
-    }
+        CreatedDate =
+            document.CreatedDate
+    };
+}
 }

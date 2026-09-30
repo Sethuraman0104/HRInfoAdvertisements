@@ -399,14 +399,15 @@ public class AdvertisementModerationService
                                 x.FileName,
 
                             FileURL =
-                                x.VideoURL,
+    x.FileURL,
 
-                            ContentType =
-                                GetContentType(
-                                    x.FileName),
+ContentType =
+    x.ContentType
+        ?? GetContentType(
+            x.FileName),
 
-                            FileSize =
-                                null,
+FileSize =
+    x.FileSize,
 
                             DisplayOrder =
                                 x.DisplayOrder,
@@ -434,17 +435,18 @@ public class AdvertisementModerationService
                                 x.AdvertisementID,
 
                             DocumentName =
-                                x.FileName,
+    x.DocumentName,
 
-                            FileURL =
-                                x.FileURL,
+FileURL =
+    x.FileURL,
 
-                            ContentType =
-                                GetContentType(
-                                    x.FileName),
+ContentType =
+    x.ContentType
+        ?? GetContentType(
+            x.DocumentName),
 
-                            FileSize =
-                                null,
+FileSize =
+    x.FileSize,
 
                             CreatedDate =
                                 x.CreatedDate
@@ -1063,61 +1065,37 @@ public class AdvertisementModerationService
     // ============================================================
 
     private async Task<ApprovalRequest>
-        GetOrCreateApprovalRequestAsync(
-            Advertisement advertisement,
-            long actionedByUserId)
+    GetOrCreateApprovalRequestAsync(
+        Advertisement advertisement,
+        long actionedByUserId)
+{
+    var approvalRequest =
+        await _context.ApprovalRequests
+            .Include(x => x.ApprovalHistory)
+            .Where(x =>
+                x.AdvertisementID == advertisement.AdvertisementID)
+            .OrderByDescending(x => x.SubmittedDate)
+            .FirstOrDefaultAsync();
+
+    if (approvalRequest != null)
     {
-        var approvalRequest =
-            await _context.ApprovalRequests
-                .Include(x =>
-                    x.ApprovalHistory)
-                .Where(x =>
-                    EF.Property<long>(
-                        x,
-                        "AdvertisementID") ==
-                    advertisement.AdvertisementID)
-                .OrderByDescending(x =>
-                    x.SubmittedDate)
-                .FirstOrDefaultAsync();
-
-        if (approvalRequest != null)
-        {
-            return approvalRequest;
-        }
-
-        approvalRequest =
-            new ApprovalRequest
-            {
-                SubmittedByUserID =
-                    advertisement.UserID,
-
-                AssignedToUserID =
-                    actionedByUserId,
-
-                Status =
-                    "Pending",
-
-                SubmittedDate =
-                    advertisement.ModifiedDate
-                    ?? advertisement.CreatedDate
-            };
-
-        /*
-         * AdvertisementID is currently a shadow property
-         * because it exists in ApprovalRequestConfiguration
-         * but not in ApprovalRequest.cs.
-         */
-        _context.Entry(approvalRequest)
-            .Property<long>(
-                "AdvertisementID")
-            .CurrentValue =
-                advertisement.AdvertisementID;
-
-        _context.ApprovalRequests.Add(
-            approvalRequest);
-
         return approvalRequest;
     }
+
+    approvalRequest =
+        new ApprovalRequest
+        {
+            AdvertisementID = advertisement.AdvertisementID,
+            SubmittedByUserID = advertisement.UserID,
+            AssignedToUserID = actionedByUserId,
+            Status = "Pending",
+            SubmittedDate = DateTime.UtcNow
+        };
+
+    _context.ApprovalRequests.Add(approvalRequest);
+
+    return approvalRequest;
+}
 
     // ============================================================
     // GET STATUS

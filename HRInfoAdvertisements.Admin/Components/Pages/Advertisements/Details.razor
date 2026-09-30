@@ -1,0 +1,1765 @@
+@page "/advertisements/{AdvertisementId:long}"
+
+@using System.Globalization
+@using System.Linq
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject NavigationManager Navigation
+
+<PageTitle>
+    @(Advertisement is null
+        ? "Advertisement | HR INFO ADs"
+        : $"{Advertisement.Title} | HR INFO ADs")
+</PageTitle>
+
+<div class="public-ad-details-page">
+
+    <!-- =========================================================
+         SHARED PUBLIC TOP BAR
+         ========================================================= -->
+
+    <PublicTopBar />
+
+
+    <!-- =========================================================
+         MAIN
+         ========================================================= -->
+
+    <main class="public-ad-details-container">
+
+        @if (isLoading)
+        {
+            <section class="public-ad-loading">
+
+                <div class="public-ad-loading-spinner"></div>
+
+                <strong>
+                    Loading advertisement...
+                </strong>
+
+                <span>
+                    Please wait while we retrieve the advertisement details.
+                </span>
+
+            </section>
+        }
+        else if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <section class="public-ad-error">
+
+                <div class="public-ad-error-icon">
+                    <i class="bi bi-exclamation-circle"></i>
+                </div>
+
+                <div class="public-ad-error-content">
+
+                    <span class="public-ad-error-eyebrow">
+                        ADVERTISEMENT
+                    </span>
+
+                    <h1>
+                        Advertisement not available
+                    </h1>
+
+                    <p>
+                        @errorMessage
+                    </p>
+
+                    <button type="button"
+                            class="public-ad-back-button"
+                            @onclick="GoBack">
+
+                        <i class="bi bi-arrow-left"></i>
+
+                        Back to Advertisements
+
+                    </button>
+
+                </div>
+
+            </section>
+        }
+        else if (Advertisement is not null)
+        {
+            <!-- =================================================
+                 BREADCRUMB
+                 ================================================= -->
+
+            <nav class="public-ad-breadcrumb">
+
+                <button type="button"
+                        @onclick="GoBack">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    Advertisements
+
+                </button>
+
+                <i class="bi bi-chevron-right breadcrumb-separator"></i>
+
+                <span>
+                    @GetCategoryDisplay()
+                </span>
+
+                <i class="bi bi-chevron-right breadcrumb-separator"></i>
+
+                <strong>
+                    @Advertisement.Title
+                </strong>
+
+            </nav>
+
+
+            <!-- =================================================
+                 TOP IDENTITY
+                 ================================================= -->
+
+            <section class="public-ad-heading">
+
+                <div class="public-ad-heading-main">
+
+                    <div class="public-ad-heading-badges">
+
+                        @if (Advertisement.IsFeatured)
+                        {
+                            <span class="public-ad-featured-badge">
+
+                                <i class="bi bi-star-fill"></i>
+
+                                Featured
+
+                            </span>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Advertisement.AdvertisementTypeName))
+                        {
+                            <span class="public-ad-type-badge">
+
+                                <i class="bi bi-tag"></i>
+
+                                @Advertisement.AdvertisementTypeName
+
+                            </span>
+                        }
+
+                    </div>
+
+
+                    <h1 class="public-ad-title">
+                        @Advertisement.Title
+                    </h1>
+
+
+                    <div class="public-ad-subheading">
+
+                        <span>
+                            <i class="bi bi-hash"></i>
+
+                            @GetAdvertisementNumber()
+                        </span>
+
+                        @if (!string.IsNullOrWhiteSpace(
+                            Advertisement.CategoryName))
+                        {
+                            <span>
+                                <i class="bi bi-grid"></i>
+
+                                @Advertisement.CategoryName
+                            </span>
+                        }
+
+                        @if (Advertisement.PublishedDate.HasValue)
+                        {
+                            <span>
+                                <i class="bi bi-calendar3"></i>
+
+                                Published
+                                @FormatDate(
+                                    Advertisement.PublishedDate.Value)
+                            </span>
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="public-ad-heading-actions">
+
+                    <button type="button"
+                            class="public-ad-icon-button"
+                            title="Share advertisement"
+                            @onclick="ShareAdvertisement">
+
+                        <i class="bi bi-share"></i>
+
+                    </button>
+
+
+                    <button type="button"
+                            class="public-ad-favorite-button
+                                   @(isFavorite ? "active" : "")"
+                            title="Save advertisement"
+                            @onclick="ToggleFavorite">
+
+                        <i class="bi @(isFavorite
+                            ? "bi-heart-fill"
+                            : "bi-heart")"></i>
+
+                        <span>
+                            @(isFavorite ? "Saved" : "Save")
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 MAIN DETAIL GRID
+                 ================================================= -->
+
+            <section class="public-ad-main-grid">
+
+                <!-- =============================================
+                     LEFT
+                     ============================================= -->
+
+                <div class="public-ad-main-column">
+
+                    <!-- =========================================
+                         IMAGE GALLERY
+                         ========================================= -->
+
+                    <section class="public-ad-gallery">
+
+                        <div class="public-ad-gallery-main">
+
+                            @if (GalleryImages.Count > 0)
+                            {
+                                <img src="@GetSelectedImageUrl()"
+                                     alt="@Advertisement.Title"
+                                     class="public-ad-main-image" />
+
+                                @if (GalleryImages.Count > 1)
+                                {
+                                    <button type="button"
+                                            class="gallery-arrow gallery-arrow-left"
+                                            @onclick="PreviousImage">
+
+                                        <i class="bi bi-chevron-left"></i>
+
+                                    </button>
+
+                                    <button type="button"
+                                            class="gallery-arrow gallery-arrow-right"
+                                            @onclick="NextImage">
+
+                                        <i class="bi bi-chevron-right"></i>
+
+                                    </button>
+                                }
+
+                                <div class="public-ad-gallery-counter">
+
+                                    <i class="bi bi-images"></i>
+
+                                    @(selectedImageIndex + 1)
+                                    /
+                                    @GalleryImages.Count
+
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="public-ad-gallery-placeholder">
+
+                                    <div class="gallery-placeholder-icon">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+
+                                    <strong>
+                                        No photos available
+                                    </strong>
+
+                                    <span>
+                                        This advertisement does not have
+                                        any images.
+                                    </span>
+
+                                </div>
+                            }
+
+                            @if (Advertisement.IsFeatured)
+                            {
+                                <div class="gallery-featured-badge">
+
+                                    <i class="bi bi-star-fill"></i>
+
+                                    Featured Advertisement
+
+                                </div>
+                            }
+
+                        </div>
+
+
+                        @if (GalleryImages.Count > 1)
+                        {
+                            <div class="public-ad-gallery-thumbnails">
+
+                                @for (var i = 0;
+                                      i < GalleryImages.Count;
+                                      i++)
+                                {
+                                    var index = i;
+
+                                    <button type="button"
+                                            class="gallery-thumbnail
+                                                   @(selectedImageIndex == index
+                                                       ? "selected"
+                                                       : "")"
+                                            @onclick="@(() =>
+                                                SelectImage(index))">
+
+                                        <img src="@GalleryImages[index]"
+                                             alt="Advertisement image @(index + 1)" />
+
+                                    </button>
+                                }
+
+                            </div>
+                        }
+
+                    </section>
+
+
+                    <!-- =========================================
+                         PRICE / LOCATION
+                         ========================================= -->
+
+                    <section class="public-ad-summary-panel">
+
+                        <div class="public-ad-price-block">
+
+                            <span class="public-ad-section-label">
+                                Asking Price
+                            </span>
+
+                            <div class="public-ad-price">
+
+                                @FormatPrice(Advertisement)
+
+                            </div>
+
+                            @if (Advertisement.IsNegotiable)
+                            {
+                                <span class="public-ad-negotiable">
+
+                                    <i class="bi bi-check-circle-fill"></i>
+
+                                    Negotiable price
+
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <div class="public-ad-location-block">
+
+                            <span class="public-ad-section-label">
+                                Location
+                            </span>
+
+                            <div class="public-ad-location">
+
+                                <i class="bi bi-geo-alt-fill"></i>
+
+                                <div>
+
+                                    <strong>
+                                        @GetLocationTitle()
+                                    </strong>
+
+                                    <span>
+                                        @GetLocationDetails()
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =========================================
+                         PROPERTY / ADVERTISEMENT DETAILS
+                         ========================================= -->
+
+                    <section class="public-ad-card">
+
+                        <div class="public-ad-card-header">
+
+                            <div class="public-ad-card-heading">
+
+                                <span class="public-ad-card-icon">
+                                    <i class="bi bi-info-circle"></i>
+                                </span>
+
+                                <div>
+
+                                    <span class="public-ad-card-eyebrow">
+                                        INFORMATION
+                                    </span>
+
+                                    <h2>
+                                        Advertisement Details
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="public-ad-details-grid">
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Advertisement.CategoryName))
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-grid"></i>
+                                        Category
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.CategoryName
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Advertisement.AdvertisementTypeName))
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-tag"></i>
+                                        Type
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.AdvertisementTypeName
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (Advertisement.Bedrooms.HasValue)
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-door-open"></i>
+                                        Bedrooms
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.Bedrooms
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (Advertisement.Bathrooms.HasValue)
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-droplet"></i>
+                                        Bathrooms
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.Bathrooms
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (Advertisement.LandArea.HasValue)
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-bounding-box"></i>
+                                        Land Area
+                                    </span>
+
+                                    <strong>
+                                        @FormatNumber(
+                                            Advertisement.LandArea.Value)
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (Advertisement.BuiltUpArea.HasValue)
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-house"></i>
+                                        Built-up Area
+                                    </span>
+
+                                    <strong>
+                                        @FormatNumber(
+                                            Advertisement.BuiltUpArea.Value)
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (Advertisement.PropertyAge.HasValue)
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-calendar3"></i>
+                                        Property Age
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.PropertyAge years
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Advertisement.PlotNumber))
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-pin-map"></i>
+                                        Plot Number
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.PlotNumber
+                                    </strong>
+
+                                </div>
+                            }
+
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Advertisement.AdvertisementNumber))
+                            {
+                                <div class="public-detail-item">
+
+                                    <span>
+                                        <i class="bi bi-hash"></i>
+                                        Advertisement No.
+                                    </span>
+
+                                    <strong>
+                                        @Advertisement.AdvertisementNumber
+                                    </strong>
+
+                                </div>
+                            }
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =========================================
+                         LOCATION
+                         ========================================= -->
+
+                    @if (HasLocation)
+                    {
+                        <section class="public-ad-card">
+
+                            <div class="public-ad-card-header">
+
+                                <div class="public-ad-card-heading">
+
+                                    <span class="public-ad-card-icon">
+                                        <i class="bi bi-geo-alt"></i>
+                                    </span>
+
+                                    <div>
+
+                                        <span class="public-ad-card-eyebrow">
+                                            LOCATION
+                                        </span>
+
+                                        <h2>
+                                            Where is it?
+                                        </h2>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="public-location-panel">
+
+                                <div class="public-location-icon">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </div>
+
+                                <div class="public-location-content">
+
+                                    <div class="public-location-path">
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            Advertisement.CountryName))
+                                        {
+                                            <span>
+                                                @Advertisement.CountryName
+                                            </span>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            Advertisement.StateName))
+                                        {
+                                            <i class="bi bi-chevron-right"></i>
+
+                                            <span>
+                                                @Advertisement.StateName
+                                            </span>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            Advertisement.CityName))
+                                        {
+                                            <i class="bi bi-chevron-right"></i>
+
+                                            <span>
+                                                @Advertisement.CityName
+                                            </span>
+                                        }
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            Advertisement.AreaName))
+                                        {
+                                            <i class="bi bi-chevron-right"></i>
+
+                                            <strong>
+                                                @Advertisement.AreaName
+                                            </strong>
+                                        }
+
+                                    </div>
+
+
+                                    @if (!string.IsNullOrWhiteSpace(
+                                        Advertisement.AddressLine))
+                                    {
+                                        <p>
+                                            @Advertisement.AddressLine
+                                        </p>
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </section>
+                    }
+
+
+                    <!-- =========================================
+                         DESCRIPTION
+                         ========================================= -->
+
+                    <section class="public-ad-card">
+
+                        <div class="public-ad-card-header">
+
+                            <div class="public-ad-card-heading">
+
+                                <span class="public-ad-card-icon">
+                                    <i class="bi bi-file-text"></i>
+                                </span>
+
+                                <div>
+
+                                    <span class="public-ad-card-eyebrow">
+                                        DESCRIPTION
+                                    </span>
+
+                                    <h2>
+                                        About this advertisement
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="public-ad-description">
+
+                            @if (!string.IsNullOrWhiteSpace(
+                                Advertisement.Description))
+                            {
+                                @foreach (var paragraph in
+                                    GetDescriptionParagraphs())
+                                {
+                                    <p>
+                                        @paragraph
+                                    </p>
+                                }
+                            }
+                            else
+                            {
+                                <p class="description-empty">
+                                    No additional description was provided.
+                                </p>
+                            }
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =========================================
+                         DATES / AD INFO
+                         ========================================= -->
+
+                    <section class="public-ad-card">
+
+                        <div class="public-ad-card-header">
+
+                            <div class="public-ad-card-heading">
+
+                                <span class="public-ad-card-icon">
+                                    <i class="bi bi-clock-history"></i>
+                                </span>
+
+                                <div>
+
+                                    <span class="public-ad-card-eyebrow">
+                                        ADVERTISEMENT HISTORY
+                                    </span>
+
+                                    <h2>
+                                        Advertisement Information
+                                    </h2>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="public-ad-history-grid">
+
+                            <div>
+
+                                <span>
+                                    Advertisement No.
+                                </span>
+
+                                <strong>
+                                    @GetAdvertisementNumber()
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Published
+                                </span>
+
+                                <strong>
+                                    @(Advertisement.PublishedDate.HasValue
+                                        ? FormatDate(
+                                            Advertisement.PublishedDate.Value)
+                                        : "—")
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Expires
+                                </span>
+
+                                <strong>
+                                    @(Advertisement.ExpiryDate.HasValue
+                                        ? FormatDate(
+                                            Advertisement.ExpiryDate.Value)
+                                        : "—")
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Last Updated
+                                </span>
+
+                                <strong>
+                                    @(Advertisement.ModifiedDate.HasValue
+                                        ? FormatDate(
+                                            Advertisement.ModifiedDate.Value)
+                                        : "—")
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+                </div>
+
+
+                <!-- =============================================
+                     RIGHT SIDEBAR
+                     ============================================= -->
+
+                <aside class="public-ad-sidebar">
+
+                    <!-- =========================================
+                         CONTACT
+                         ========================================= -->
+
+                    <section class="public-ad-contact-card">
+
+                        <div class="public-ad-contact-header">
+
+                            <span class="contact-card-icon">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </span>
+
+                            <div>
+
+                                <span>
+                                    CONTACT
+                                </span>
+
+                                <h2>
+                                    Interested?
+                                </h2>
+
+                            </div>
+
+                        </div>
+
+
+                        <p class="contact-card-intro">
+                            Contact the advertiser directly for more
+                            information about this advertisement.
+                        </p>
+
+
+                        @if (HasPublicWhatsApp)
+                        {
+                            <a class="public-contact-button whatsapp"
+                               href="@GetWhatsAppUrl()"
+                               target="_blank"
+                               rel="noopener noreferrer">
+
+                                <span class="contact-button-icon">
+                                    <i class="bi bi-whatsapp"></i>
+                                </span>
+
+                                <span class="contact-button-content">
+
+                                    <strong>
+                                        WhatsApp
+                                    </strong>
+
+                                    <small>
+                                        @Advertisement.WhatsAppNumber
+                                    </small>
+
+                                </span>
+
+                                <i class="bi bi-arrow-up-right"></i>
+
+                            </a>
+                        }
+
+
+                        @if (HasPublicEmail)
+                        {
+                            <a class="public-contact-button email"
+                               href="@GetEmailUrl()">
+
+                                <span class="contact-button-icon">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </span>
+
+                                <span class="contact-button-content">
+
+                                    <strong>
+                                        Email
+                                    </strong>
+
+                                    <small>
+                                        @Advertisement.ContactEmail
+                                    </small>
+
+                                </span>
+
+                                <i class="bi bi-arrow-up-right"></i>
+
+                            </a>
+                        }
+
+
+                        @if (!HasPublicWhatsApp &&
+                             !HasPublicEmail)
+                        {
+                            <div class="no-public-contact">
+
+                                <i class="bi bi-shield-lock"></i>
+
+                                <strong>
+                                    Contact information unavailable
+                                </strong>
+
+                                <span>
+                                    The advertiser has not enabled
+                                    public contact details.
+                                </span>
+
+                            </div>
+                        }
+
+                    </section>
+
+
+                    <!-- =========================================
+                         QUICK FACTS
+                         ========================================= -->
+
+                    <section class="public-ad-sidebar-card">
+
+                        <div class="sidebar-card-heading">
+
+                            <span>
+                                <i class="bi bi-lightning-charge"></i>
+                            </span>
+
+                            <div>
+
+                                <span>
+                                    QUICK FACTS
+                                </span>
+
+                                <strong>
+                                    At a glance
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="quick-facts">
+
+                            <div class="quick-fact">
+
+                                <i class="bi bi-tag"></i>
+
+                                <span>
+                                    Category
+                                </span>
+
+                                <strong>
+                                    @(Advertisement.CategoryName ?? "—")
+                                </strong>
+
+                            </div>
+
+
+                            <div class="quick-fact">
+
+                                <i class="bi bi-building"></i>
+
+                                <span>
+                                    Type
+                                </span>
+
+                                <strong>
+                                    @(Advertisement.AdvertisementTypeName ?? "—")
+                                </strong>
+
+                            </div>
+
+
+                            <div class="quick-fact">
+
+                                <i class="bi bi-cash-stack"></i>
+
+                                <span>
+                                    Price
+                                </span>
+
+                                <strong>
+                                    @FormatPrice(Advertisement)
+                                </strong>
+
+                            </div>
+
+
+                            @if (Advertisement.IsNegotiable)
+                            {
+                                <div class="quick-fact">
+
+                                    <i class="bi bi-arrow-left-right"></i>
+
+                                    <span>
+                                        Pricing
+                                    </span>
+
+                                    <strong>
+                                        Negotiable
+                                    </strong>
+
+                                </div>
+                            }
+
+                        </div>
+
+                    </section>
+
+
+                    <!-- =========================================
+                         SAFETY
+                         ========================================= -->
+
+                    <section class="public-ad-safety-card">
+
+                        <div class="safety-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Stay safe
+                            </strong>
+
+                            <p>
+                                Meet in a safe public location and
+                                verify the advertisement details
+                                before making any payment.
+                            </p>
+
+                        </div>
+
+                    </section>
+
+                </aside>
+
+            </section>
+
+
+            <!-- =================================================
+                 RELATED ADVERTISEMENTS
+                 ================================================= -->
+
+            @if (RelatedAdvertisements.Count > 0)
+            {
+                <section class="public-related-section">
+
+                    <div class="public-related-header">
+
+                        <div>
+
+                            <span>
+                                MORE TO EXPLORE
+                            </span>
+
+                            <h2>
+                                Similar Advertisements
+                            </h2>
+
+                        </div>
+
+
+                        <button type="button"
+                                class="related-view-all"
+                                @onclick="GoBack">
+
+                            View all
+
+                            <i class="bi bi-arrow-right"></i>
+
+                        </button>
+
+                    </div>
+
+
+                    <div class="public-related-grid">
+
+                        @foreach (var related in RelatedAdvertisements)
+                        {
+                            <article class="public-related-card"
+                                     @key="related.AdvertisementID"
+                                     @onclick="@(() =>
+                                         OpenAdvertisement(
+                                             related.AdvertisementID))">
+
+                                <div class="related-image">
+
+                                    @if (GetPrimaryImageUrl(related)
+                                        is string relatedImage
+                                        && !string.IsNullOrWhiteSpace(
+                                            relatedImage))
+                                    {
+                                        <img src="@relatedImage"
+                                             alt="@related.Title" />
+                                    }
+                                    else
+                                    {
+                                        <div class="related-image-placeholder">
+                                            <i class="bi bi-image"></i>
+                                        </div>
+                                    }
+
+
+                                    @if (related.IsFeatured)
+                                    {
+                                        <span class="related-featured">
+                                            <i class="bi bi-star-fill"></i>
+                                            Featured
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <div class="related-content">
+
+                                    <span class="related-category">
+                                        @(related.CategoryName ?? "Advertisement")
+                                    </span>
+
+                                    <h3>
+                                        @related.Title
+                                    </h3>
+
+
+                                    <div class="related-location">
+
+                                        <i class="bi bi-geo-alt"></i>
+
+                                        @GetShortLocation(related)
+
+                                    </div>
+
+
+                                    <div class="related-bottom">
+
+                                        <strong>
+                                            @FormatPrice(related)
+                                        </strong>
+
+                                        <i class="bi bi-arrow-up-right"></i>
+
+                                    </div>
+
+                                </div>
+
+                            </article>
+                        }
+
+                    </div>
+
+                </section>
+            }
+
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // DATA
+    // ============================================================
+
+    private AdvertisementResponse? Advertisement;
+
+    private List<AdvertisementResponse>
+        RelatedAdvertisements { get; set; }
+        = new();
+
+    private List<string>
+        GalleryImages { get; set; }
+        = new();
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    [Parameter]
+    public long AdvertisementId { get; set; }
+
+    private bool isLoading;
+
+    private bool isFavorite;
+
+    private string? errorMessage;
+
+    private int selectedImageIndex;
+
+
+    // ============================================================
+    // INITIALIZATION
+    // ============================================================
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAdvertisementAsync();
+    }
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    private async Task LoadAdvertisementAsync()
+    {
+        isLoading = true;
+
+        errorMessage = null;
+
+        Advertisement = null;
+
+        RelatedAdvertisements = new();
+
+        GalleryImages = new();
+
+        selectedImageIndex = 0;
+
+        try
+        {
+            Advertisement =
+                await AdvertisementApiService
+                    .GetPublicAdvertisementAsync(
+                        AdvertisementId);
+
+            if (Advertisement is null)
+            {
+                errorMessage =
+                    "This advertisement may have been removed, " +
+                    "expired, or is no longer publicly available.";
+
+                return;
+            }
+
+            BuildGallery();
+
+            await LoadRelatedAdvertisementsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "PUBLIC ADVERTISEMENT DETAILS LOAD ERROR");
+
+            Console.WriteLine(
+                ex.ToString());
+
+            Console.WriteLine(
+                "================================================");
+
+            Advertisement = null;
+
+            errorMessage =
+                "We couldn't load this advertisement right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void BuildGallery()
+    {
+        if (Advertisement?.Images is null)
+        {
+            return;
+        }
+
+        GalleryImages =
+            Advertisement.Images
+                .Where(x =>
+                    !string.IsNullOrWhiteSpace(x.FileURL))
+                .OrderByDescending(x => x.IsPrimary)
+                .ThenBy(x => x.DisplayOrder)
+                .Select(x => x.FileURL!)
+                .Distinct()
+                .ToList();
+    }
+
+
+    private async Task LoadRelatedAdvertisementsAsync()
+    {
+        if (Advertisement is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result =
+                await AdvertisementApiService
+                    .GetPublishedAdvertisementsAsync(
+                        pageNumber: 1,
+                        pageSize: 8,
+                        categoryId:
+                            Advertisement.CategoryID);
+
+            RelatedAdvertisements =
+                result?.Items?
+                    .Where(x =>
+                        x.AdvertisementID !=
+                        Advertisement.AdvertisementID)
+                    .Take(4)
+                    .ToList()
+                ?? new List<AdvertisementResponse>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "RELATED ADVERTISEMENTS ERROR");
+
+            Console.WriteLine(ex);
+
+            RelatedAdvertisements =
+                new List<AdvertisementResponse>();
+        }
+    }
+
+
+    // ============================================================
+    // GALLERY
+    // ============================================================
+
+    private void SelectImage(int index)
+    {
+        if (index < 0 ||
+            index >= GalleryImages.Count)
+        {
+            return;
+        }
+
+        selectedImageIndex = index;
+    }
+
+
+    private void PreviousImage()
+    {
+        if (GalleryImages.Count == 0)
+        {
+            return;
+        }
+
+        selectedImageIndex =
+            selectedImageIndex <= 0
+                ? GalleryImages.Count - 1
+                : selectedImageIndex - 1;
+    }
+
+
+    private void NextImage()
+    {
+        if (GalleryImages.Count == 0)
+        {
+            return;
+        }
+
+        selectedImageIndex =
+            selectedImageIndex >= GalleryImages.Count - 1
+                ? 0
+                : selectedImageIndex + 1;
+    }
+
+
+    private string? GetSelectedImageUrl()
+    {
+        if (GalleryImages.Count == 0)
+        {
+            return null;
+        }
+
+        return GalleryImages[selectedImageIndex];
+    }
+
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
+    private void OpenAdvertisement(
+        long advertisementId)
+    {
+        Navigation.NavigateTo(
+            $"/advertisements/{advertisementId}");
+    }
+
+
+    // ============================================================
+    // FAVORITE / SHARE
+    // ============================================================
+
+    private async Task ToggleFavorite()
+    {
+        /*
+         * We will connect this to the existing
+         * PublicFavoritesApiService once its exact
+         * method contract is confirmed.
+         *
+         * For now the visual state is maintained locally.
+         */
+
+        isFavorite = !isFavorite;
+
+        await Task.CompletedTask;
+    }
+
+
+    private async Task ShareAdvertisement()
+    {
+        await Task.CompletedTask;
+
+        /*
+         * The browser Web Share API can be connected
+         * here if required.
+         */
+    }
+
+
+    // ============================================================
+    // CONTACT
+    // ============================================================
+
+    private bool HasPublicWhatsApp =>
+        Advertisement is not null &&
+        !string.IsNullOrWhiteSpace(
+            Advertisement.WhatsAppNumber);
+
+
+    private bool HasPublicEmail =>
+        Advertisement is not null &&
+        !string.IsNullOrWhiteSpace(
+            Advertisement.ContactEmail);
+
+
+    private string GetWhatsAppUrl()
+    {
+        if (Advertisement is null ||
+            string.IsNullOrWhiteSpace(
+                Advertisement.WhatsAppNumber))
+        {
+            return "#";
+        }
+
+        var number =
+            new string(
+                Advertisement.WhatsAppNumber
+                    .Where(char.IsDigit)
+                    .ToArray());
+
+        return $"https://wa.me/{number}";
+    }
+
+
+    private string GetEmailUrl()
+    {
+        if (Advertisement is null ||
+            string.IsNullOrWhiteSpace(
+                Advertisement.ContactEmail))
+        {
+            return "#";
+        }
+
+        return $"mailto:{Advertisement.ContactEmail}";
+    }
+
+
+    // ============================================================
+    // LOCATION
+    // ============================================================
+
+    private bool HasLocation =>
+        Advertisement is not null &&
+        (
+            !string.IsNullOrWhiteSpace(
+                Advertisement.CountryName)
+            ||
+            !string.IsNullOrWhiteSpace(
+                Advertisement.StateName)
+            ||
+            !string.IsNullOrWhiteSpace(
+                Advertisement.CityName)
+            ||
+            !string.IsNullOrWhiteSpace(
+                Advertisement.AreaName)
+            ||
+            !string.IsNullOrWhiteSpace(
+                Advertisement.AddressLine)
+        );
+
+
+    private string GetLocationTitle()
+    {
+        if (Advertisement is null)
+        {
+            return "Location not specified";
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            Advertisement.AreaName))
+        {
+            return Advertisement.AreaName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            Advertisement.CityName))
+        {
+            return Advertisement.CityName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            Advertisement.StateName))
+        {
+            return Advertisement.StateName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(
+            Advertisement.CountryName))
+        {
+            return Advertisement.CountryName;
+        }
+
+        return "Location not specified";
+    }
+
+
+    private string GetLocationDetails()
+    {
+        if (Advertisement is null)
+        {
+            return string.Empty;
+        }
+
+        var parts =
+            new[]
+            {
+                Advertisement.AreaName,
+                Advertisement.CityName,
+                Advertisement.StateName,
+                Advertisement.CountryName
+            }
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        return string.Join(
+            ", ",
+            parts);
+    }
+
+
+    private string GetShortLocation(
+        AdvertisementResponse advertisement)
+    {
+        var location =
+            new[]
+            {
+                advertisement.AreaName,
+                advertisement.CityName,
+                advertisement.StateName
+            }
+            .Where(x =>
+                !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        if (location.Count == 0)
+        {
+            return "Location not specified";
+        }
+
+        return string.Join(
+            ", ",
+            location.Take(2));
+    }
+
+
+    // ============================================================
+    // FORMATTING
+    // ============================================================
+
+    private string GetAdvertisementNumber()
+    {
+        if (Advertisement is null)
+        {
+            return string.Empty;
+        }
+
+        return !string.IsNullOrWhiteSpace(
+            Advertisement.AdvertisementNumber)
+            ? Advertisement.AdvertisementNumber
+            : Advertisement.AdvertisementID.ToString();
+    }
+
+
+    private string GetCategoryDisplay()
+    {
+        return !string.IsNullOrWhiteSpace(
+            Advertisement?.CategoryName)
+            ? Advertisement.CategoryName
+            : "Advertisements";
+    }
+
+
+    private string FormatPrice(
+        AdvertisementResponse advertisement)
+    {
+        if (!advertisement.Price.HasValue)
+        {
+            return "Price on request";
+        }
+
+        var currency =
+            string.IsNullOrWhiteSpace(
+                advertisement.CurrencyCode)
+                ? "BHD"
+                : advertisement.CurrencyCode;
+
+        return $"{currency} " +
+               $"{advertisement.Price.Value:N0}";
+    }
+
+
+    private string FormatNumber(
+        decimal value)
+    {
+        return value.ToString(
+            "N2",
+            CultureInfo.CurrentCulture);
+    }
+
+
+    private string FormatDate(
+        DateTime date)
+    {
+        return date.ToString(
+            "dd MMM yyyy");
+    }
+
+
+    private IEnumerable<string>
+        GetDescriptionParagraphs()
+    {
+        if (Advertisement is null ||
+            string.IsNullOrWhiteSpace(
+                Advertisement.Description))
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        return Advertisement.Description
+            .Split(
+                new[]
+                {
+                    "\r\n\r\n",
+                    "\n\n"
+                },
+                StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim());
+    }
+
+
+    private string? GetPrimaryImageUrl(
+        AdvertisementResponse advertisement)
+    {
+        if (advertisement.Images is null ||
+            advertisement.Images.Count == 0)
+        {
+            return null;
+        }
+
+        var primary =
+            advertisement.Images
+                .FirstOrDefault(x =>
+                    x.IsPrimary);
+
+        if (primary is not null &&
+            !string.IsNullOrWhiteSpace(
+                primary.FileURL))
+        {
+            return primary.FileURL;
+        }
+
+        return advertisement.Images
+            .OrderBy(x => x.DisplayOrder)
+            .Select(x => x.FileURL)
+            .FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x));
+    }
+}

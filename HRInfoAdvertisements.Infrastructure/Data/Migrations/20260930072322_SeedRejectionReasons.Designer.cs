@@ -4,6 +4,7 @@ using HRInfoAdvertisements.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930072322_SeedRejectionReasons")]
+    partial class SeedRejectionReasons
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -240,35 +243,51 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("AdvertisementID");
 
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("ContentType");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreatedDate");
 
-                    b.Property<string>("DocumentName")
+                    b.Property<string>("DocumentType")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("DocumentName");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("DocumentType");
 
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint")
-                        .HasColumnName("FileSize");
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("FileName");
 
                     b.Property<string>("FileURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("FileURL");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)")
+                        .HasColumnName("RejectionReason");
+
+                    b.Property<string>("S3Key")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("FileURL");
+                        .HasColumnName("S3Key");
 
-                    b.Property<string>("StorageKey")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("StorageKey");
+                    b.Property<string>("VerificationStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("VerificationStatus");
+
+                    b.Property<long?>("VerifiedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("VerifiedBy");
+
+                    b.Property<DateTime?>("VerifiedDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("VerifiedDate");
 
                     b.HasKey("AdvertisementDocumentID");
 
@@ -619,11 +638,6 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("AdvertisementID");
 
-                    b.Property<string>("ContentType")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("ContentType");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2")
                         .HasColumnName("CreatedDate");
@@ -632,26 +646,29 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("int")
                         .HasColumnName("DisplayOrder");
 
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int")
+                        .HasColumnName("DurationSeconds");
+
                     b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
                         .HasColumnName("FileName");
 
-                    b.Property<long?>("FileSize")
-                        .HasColumnType("bigint")
-                        .HasColumnName("FileSize");
-
-                    b.Property<string>("FileURL")
-                        .IsRequired()
+                    b.Property<string>("S3Key")
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("FileURL");
+                        .HasColumnName("S3Key");
 
-                    b.Property<string>("StorageKey")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("StorageKey");
+                    b.Property<string>("ThumbnailURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("ThumbnailURL");
+
+                    b.Property<string>("VideoURL")
+                        .HasMaxLength(1500)
+                        .HasColumnType("nvarchar(1500)")
+                        .HasColumnName("VideoURL");
 
                     b.HasKey("AdvertisementVideoID");
 

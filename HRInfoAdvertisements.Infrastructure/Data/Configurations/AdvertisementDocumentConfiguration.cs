@@ -26,49 +26,32 @@ public class AdvertisementDocumentConfiguration
             .IsRequired();
 
         builder.Property(x =>
-                x.DocumentType)
-            .HasColumnName("DocumentType")
-            .HasMaxLength(50)
-            .IsRequired();
-
-        builder.Property(x =>
-                x.FileName)
-            .HasColumnName("FileName")
-            .HasMaxLength(250)
-            .IsRequired();
-
-        builder.Property(x =>
-                x.S3Key)
-            .HasColumnName("S3Key")
-            .HasMaxLength(1000)
+                x.DocumentName)
+            .HasColumnName("DocumentName")
+            .HasMaxLength(255)
             .IsRequired();
 
         builder.Property(x =>
                 x.FileURL)
             .HasColumnName("FileURL")
-            .HasMaxLength(1500)
-            .IsRequired(false);
-
-        builder.Property(x =>
-                x.VerificationStatus)
-            .HasColumnName("VerificationStatus")
-            .HasMaxLength(30)
+            .HasMaxLength(1000)
             .IsRequired();
 
         builder.Property(x =>
-                x.VerifiedBy)
-            .HasColumnName("VerifiedBy")
-            .IsRequired(false);
-
-        builder.Property(x =>
-                x.VerifiedDate)
-            .HasColumnName("VerifiedDate")
-            .IsRequired(false);
-
-        builder.Property(x =>
-                x.RejectionReason)
-            .HasColumnName("RejectionReason")
+                x.StorageKey)
+            .HasColumnName("StorageKey")
             .HasMaxLength(1000)
+            .IsRequired(false);
+
+        builder.Property(x =>
+                x.ContentType)
+            .HasColumnName("ContentType")
+            .HasMaxLength(100)
+            .IsRequired(false);
+
+        builder.Property(x =>
+                x.FileSize)
+            .HasColumnName("FileSize")
             .IsRequired(false);
 
         builder.Property(x =>

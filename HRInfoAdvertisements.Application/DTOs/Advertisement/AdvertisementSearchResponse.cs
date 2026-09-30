@@ -38,15 +38,22 @@ public class AdvertisementSearchResponse
 
     public string? StatusName { get; set; }
 
-    public long? CountryID { get; set; }
+    public int? CountryID { get; set; }
+public string? CountryName { get; set; }
 
-    public long? StateID { get; set; }
+public int? StateID { get; set; }
+public string? StateName { get; set; }
 
-    public string? AddressLine { get; set; }
+public int? CityID { get; set; }
+public string? CityName { get; set; }
 
-    public decimal? Latitude { get; set; }
+public int? AreaID { get; set; }
+public string? AreaName { get; set; }
 
-    public decimal? Longitude { get; set; }
+public string? AddressLine { get; set; }
+
+public decimal? Latitude { get; set; }
+public decimal? Longitude { get; set; }
 
     public decimal? LandArea { get; set; }
 

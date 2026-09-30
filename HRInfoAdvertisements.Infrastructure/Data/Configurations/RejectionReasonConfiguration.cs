@@ -18,17 +18,14 @@ public class RejectionReasonConfiguration
 
         builder.Property(x => x.ReasonCode)
             .HasColumnName("ReasonCode")
-            .HasMaxLength(50)
             .IsRequired();
 
         builder.Property(x => x.ReasonText)
-            .HasColumnName("ReasonName")
-            .HasMaxLength(250)
+            .HasColumnName("ReasonText")
             .IsRequired();
 
         builder.Property(x => x.ReasonTextAr)
-            .HasColumnName("ReasonNameAr")
-            .HasMaxLength(250);
+            .HasColumnName("ReasonTextAr");
 
         builder.Property(x => x.IsActive)
             .HasColumnName("IsActive")

@@ -28,30 +28,30 @@ public class AdvertisementVideoConfiguration
         builder.Property(x =>
                 x.FileName)
             .HasColumnName("FileName")
-            .HasMaxLength(250)
-            .IsRequired(false);
+            .HasMaxLength(255)
+            .IsRequired();
 
         builder.Property(x =>
-                x.S3Key)
-            .HasColumnName("S3Key")
+                x.FileURL)
+            .HasColumnName("FileURL")
+            .HasMaxLength(1000)
+            .IsRequired();
+
+        builder.Property(x =>
+                x.StorageKey)
+            .HasColumnName("StorageKey")
             .HasMaxLength(1000)
             .IsRequired(false);
 
         builder.Property(x =>
-                x.VideoURL)
-            .HasColumnName("VideoURL")
-            .HasMaxLength(1500)
+                x.ContentType)
+            .HasColumnName("ContentType")
+            .HasMaxLength(100)
             .IsRequired(false);
 
         builder.Property(x =>
-                x.ThumbnailURL)
-            .HasColumnName("ThumbnailURL")
-            .HasMaxLength(1500)
-            .IsRequired(false);
-
-        builder.Property(x =>
-                x.DurationSeconds)
-            .HasColumnName("DurationSeconds")
+                x.FileSize)
+            .HasColumnName("FileSize")
             .IsRequired(false);
 
         builder.Property(x =>

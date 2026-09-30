@@ -30,6 +30,9 @@ public interface IAdvertisementService
         decimal? minPrice = null,
         decimal? maxPrice = null);
 
+    Task<AdvertisementResponse?> GetPublicAdvertisementByIdAsync(
+    long advertisementId);
+
     Task<AdvertisementResponse?> UpdateAsync(
         long userId,
         long advertisementId,

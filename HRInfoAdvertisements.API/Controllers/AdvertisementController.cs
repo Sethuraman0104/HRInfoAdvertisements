@@ -57,6 +57,23 @@ public class AdvertisementController : ControllerBase
         return Ok(result);
     }
 
+[HttpGet("public/{advertisementId:long}")]
+[AllowAnonymous]
+public async Task<IActionResult> GetPublicAdvertisement(
+    long advertisementId)
+{
+    var advertisement =
+        await _advertisementService
+            .GetPublicAdvertisementByIdAsync(
+                advertisementId);
+
+    if (advertisement is null)
+    {
+        return NotFound();
+    }
+
+    return Ok(advertisement);
+}
     // ============================================================
     // GET MY ADVERTISEMENTS
     // ============================================================
