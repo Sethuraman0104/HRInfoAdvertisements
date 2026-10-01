@@ -20,10 +20,34 @@ public partial class AlignSystemSettingsSchema : Migration
                 DROP TABLE dbo.SystemSettings_Legacy;
             END;
 
+            /*
+             * Rename the existing primary key constraint first.
+             * sp_rename on the table does not rename the constraint.
+             */
+            IF EXISTS
+            (
+                SELECT 1
+                FROM sys.key_constraints
+                WHERE name = N'PK_SystemSettings'
+                  AND parent_object_id = OBJECT_ID(N'dbo.SystemSettings')
+            )
+            BEGIN
+                EXEC sp_rename
+                    N'dbo.PK_SystemSettings',
+                    N'PK_SystemSettings_Legacy',
+                    N'OBJECT';
+            END;
+
+            /*
+             * Preserve the existing table/data temporarily.
+             */
             EXEC sp_rename
                 N'dbo.SystemSettings',
                 N'SystemSettings_Legacy';
 
+            /*
+             * Create the final SystemSettings schema.
+             */
             CREATE TABLE dbo.SystemSettings
             (
                 SystemSettingID int IDENTITY(1,1) NOT NULL,
@@ -42,6 +66,10 @@ public partial class AlignSystemSettingsSchema : Migration
 
             SET IDENTITY_INSERT dbo.SystemSettings ON;
 
+            /*
+             * Existing office database does not have DataType.
+             * Preserve all existing values and initialize DataType as NULL.
+             */
             INSERT INTO dbo.SystemSettings
             (
                 SystemSettingID,
@@ -55,23 +83,23 @@ public partial class AlignSystemSettingsSchema : Migration
                 ModifiedDate
             )
             SELECT
-                SettingID,
+                SystemSettingID,
                 CONVERT(nvarchar(150), SettingKey),
                 CONVERT(nvarchar(4000), SettingValue),
                 CONVERT(nvarchar(500), Description),
-                DataType,
+                NULL,
                 IsEncrypted,
                 IsActive,
-                COALESCE(
-                    ModifiedDate,
-                    SYSUTCDATETIME()
-                ),
+                CreatedDate,
                 ModifiedDate
             FROM dbo.SystemSettings_Legacy
-            ORDER BY SettingID;
+            ORDER BY SystemSettingID;
 
             SET IDENTITY_INSERT dbo.SystemSettings OFF;
 
+            /*
+             * Make the identity value continue after the existing data.
+             */
             IF EXISTS
             (
                 SELECT 1
@@ -81,8 +109,7 @@ public partial class AlignSystemSettingsSchema : Migration
                 DECLARE @MaxSystemSettingID int;
 
                 SELECT
-                    @MaxSystemSettingID =
-                        MAX(SystemSettingID)
+                    @MaxSystemSettingID = MAX(SystemSettingID)
                 FROM dbo.SystemSettings;
 
                 DBCC CHECKIDENT
@@ -93,9 +120,15 @@ public partial class AlignSystemSettingsSchema : Migration
                 ) WITH NO_INFOMSGS;
             END;
 
+            /*
+             * Prevent duplicate setting keys.
+             */
             CREATE UNIQUE INDEX UX_SystemSettings_Key
                 ON dbo.SystemSettings (SettingKey);
 
+            /*
+             * Remove the temporary legacy table.
+             */
             DROP TABLE dbo.SystemSettings_Legacy;
             """);
     }
@@ -109,9 +142,9 @@ public partial class AlignSystemSettingsSchema : Migration
                 RETURN;
             END;
 
-            IF OBJECT_ID(N'dbo.SystemSettings_Legacy', N'U') IS NOT NULL
+            IF OBJECT_ID(N'dbo.SystemSettings_Aligned', N'U') IS NOT NULL
             BEGIN
-                DROP TABLE dbo.SystemSettings_Legacy;
+                DROP TABLE dbo.SystemSettings_Aligned;
             END;
 
             EXEC sp_rename
@@ -120,44 +153,41 @@ public partial class AlignSystemSettingsSchema : Migration
 
             CREATE TABLE dbo.SystemSettings
             (
-                SettingID int IDENTITY(1,1) NOT NULL,
-                SettingKey varchar(100) NOT NULL,
-                SettingValue nvarchar(max) NULL,
+                SystemSettingID int IDENTITY(1,1) NOT NULL,
+                SettingKey nvarchar(150) NOT NULL,
+                SettingValue nvarchar(4000) NULL,
                 Description nvarchar(500) NULL,
-                DataType varchar(30) NULL,
                 IsEncrypted bit NOT NULL,
                 IsActive bit NOT NULL,
+                CreatedDate datetime2 NOT NULL,
                 ModifiedDate datetime2 NULL,
-                SystemSettingID int NOT NULL,
 
-                CONSTRAINT PK_SystemSettings_Legacy
-                    PRIMARY KEY (SettingID)
+                CONSTRAINT PK_SystemSettings
+                    PRIMARY KEY (SystemSettingID)
             );
 
             SET IDENTITY_INSERT dbo.SystemSettings ON;
 
             INSERT INTO dbo.SystemSettings
             (
-                SettingID,
+                SystemSettingID,
                 SettingKey,
                 SettingValue,
                 Description,
-                DataType,
                 IsEncrypted,
                 IsActive,
-                ModifiedDate,
-                SystemSettingID
+                CreatedDate,
+                ModifiedDate
             )
             SELECT
                 SystemSettingID,
-                CONVERT(varchar(100), SettingKey),
+                SettingKey,
                 SettingValue,
                 Description,
-                DataType,
                 IsEncrypted,
                 IsActive,
-                ModifiedDate,
-                SystemSettingID
+                CreatedDate,
+                ModifiedDate
             FROM dbo.SystemSettings_Aligned
             ORDER BY SystemSettingID;
 
@@ -169,18 +199,17 @@ public partial class AlignSystemSettingsSchema : Migration
                 FROM dbo.SystemSettings
             )
             BEGIN
-                DECLARE @MaxSettingID int;
+                DECLARE @MaxSystemSettingID int;
 
                 SELECT
-                    @MaxSettingID =
-                        MAX(SettingID)
+                    @MaxSystemSettingID = MAX(SystemSettingID)
                 FROM dbo.SystemSettings;
 
                 DBCC CHECKIDENT
                 (
                     'dbo.SystemSettings',
                     RESEED,
-                    @MaxSettingID
+                    @MaxSystemSettingID
                 ) WITH NO_INFOMSGS;
             END;
 
