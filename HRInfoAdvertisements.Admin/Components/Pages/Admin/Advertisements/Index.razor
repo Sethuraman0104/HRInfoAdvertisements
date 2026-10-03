@@ -7,7 +7,6 @@
 @using HRInfoAdvertisements.Application.DTOs.Admin
 @using HRInfoAdvertisements.Application.DTOs.Settings
 @using HRInfoAdvertisements.Application.Interfaces
-@using HRInfoAdvertisements.Application.Services
 
 @inject IAdvertisementModerationService AdvertisementModerationService
 @inject SystemSettingsApiService SystemSettingsApiService
@@ -1321,13 +1320,12 @@ private async Task LoadApplicationSettingsAsync()
     }
 
     var currencyCode =
-        string.IsNullOrWhiteSpace(currency)
-            ? _applicationSettings?.DefaultCurrency ?? "BHD"
-            : currency.Trim();
+        !string.IsNullOrWhiteSpace(currency)
+            ? currency.Trim()
+            : _applicationSettings?.DefaultCurrency ?? "BHD";
 
     return $"{price.Value:N3} {currencyCode}";
 }
-
 
     private static string GetInitials(
         string? name)
@@ -1938,4 +1936,3 @@ private async Task LoadApplicationSettingsAsync()
         Reactivate
     }
 }
-
