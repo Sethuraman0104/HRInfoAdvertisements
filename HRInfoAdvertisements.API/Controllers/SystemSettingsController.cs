@@ -37,6 +37,23 @@ public class SystemSettingsController : ControllerBase
         return Ok(result);
     }
 
+// ============================================================
+// GET APPLICATION SETTINGS
+// ============================================================
+
+[HttpGet("application")]
+[Authorize(Policy = "ADVERTISEMENT_VIEW")]
+public async Task<IActionResult> GetApplicationSettings(
+    CancellationToken cancellationToken)
+{
+    var result =
+        await _systemSettingService
+            .GetApplicationSettingsAsync(
+                cancellationToken);
+
+    return Ok(result);
+}
+
     // ============================================================
     // GET SYSTEM SETTING
     // ============================================================

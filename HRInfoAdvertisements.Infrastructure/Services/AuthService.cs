@@ -1,5 +1,7 @@
-using HRInfoAdvertisements.Application.DTOs.Authentication;
+﻿using HRInfoAdvertisements.Application.DTOs.Authentication;
+using HRInfoAdvertisements.Application.DTOs.Email;
 using HRInfoAdvertisements.Application.Interfaces;
+using HRInfoAdvertisements.Application.Services;
 using HRInfoAdvertisements.Application.Settings;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
@@ -25,19 +27,23 @@ public class AuthService : IAuthService
     private readonly IEmailService _emailService;
     private readonly JwtSettings _jwtSettings;
 
+    private readonly IApplicationSettingsService _applicationSettingsService;
+
     public AuthService(
-        ApplicationDbContext context,
-        IPasswordService passwordService,
-        IJwtService jwtService,
-        IEmailService emailService,
-        IOptions<JwtSettings> jwtOptions)
-    {
-        _context = context;
-        _passwordService = passwordService;
-        _jwtService = jwtService;
-        _emailService = emailService;
-        _jwtSettings = jwtOptions.Value;
-    }
+    ApplicationDbContext context,
+    IPasswordService passwordService,
+    IJwtService jwtService,
+    IEmailService emailService,
+    IApplicationSettingsService applicationSettingsService,
+    IOptions<JwtSettings> jwtOptions)
+{
+    _context = context;
+    _passwordService = passwordService;
+    _jwtService = jwtService;
+    _emailService = emailService;
+    _applicationSettingsService = applicationSettingsService;
+    _jwtSettings = jwtOptions.Value;
+}
 
     // ============================================================
     // REGISTER
@@ -1744,62 +1750,77 @@ public class AuthService : IAuthService
     }
 
     // ============================================================
-    // PRIVATE: SEND EMAIL VERIFICATION OTP
-    // ============================================================
+// PRIVATE: SEND EMAIL VERIFICATION OTP
+// ============================================================
 
-    private async Task SendEmailVerificationOtpAsync(
-        User user,
-        string otp)
+private async Task SendEmailVerificationOtpAsync(
+    User user,
+    string otp,
+    CancellationToken cancellationToken = default)
+{
+    var branding =
+        await _applicationSettingsService.GetEmailBrandingAsync(
+            cancellationToken);
+
+    if (!branding.EmailEnabled)
     {
-        var firstName =
-            user.UserProfile?.FirstName;
-
-        var displayName =
-            string.IsNullOrWhiteSpace(firstName)
-                ? user.UserName
-                : firstName;
-
-        var subject =
-            "Verify your HR INFO ADs email address";
-
-        var htmlBody = BuildVerificationEmail(
-            displayName,
-            otp);
-
-        await _emailService.SendAsync(
-            user.Email,
-            subject,
-            htmlBody);
+        return;
     }
 
-    // ============================================================
-    // PRIVATE: SEND PASSWORD RESET OTP
-    // ============================================================
+    var firstName =
+        user.UserProfile?.FirstName;
 
-    private async Task SendPasswordResetOtpAsync(
-        User user,
-        string otp)
+    var displayName =
+        string.IsNullOrWhiteSpace(firstName)
+            ? user.UserName
+            : firstName;
+
+    var htmlBody = BuildVerificationEmail(
+        displayName,
+        otp,
+        branding);
+
+    await _emailService.SendAsync(
+        user.Email,
+        branding.VerificationSubject,
+        htmlBody);
+}
+// ============================================================
+// PRIVATE: SEND PASSWORD RESET OTP
+// ============================================================
+
+private async Task SendPasswordResetOtpAsync(
+    User user,
+    string otp,
+    CancellationToken cancellationToken = default)
+{
+    var branding =
+        await _applicationSettingsService.GetEmailBrandingAsync(
+            cancellationToken);
+
+    if (!branding.EmailEnabled)
     {
-        var firstName =
-            user.UserProfile?.FirstName;
-
-        var displayName =
-            string.IsNullOrWhiteSpace(firstName)
-                ? user.UserName
-                : firstName;
-
-        var subject =
-            "Your HR INFO ADs password reset code";
-
-        var htmlBody = BuildPasswordResetEmail(
-            displayName,
-            otp);
-
-        await _emailService.SendAsync(
-            user.Email,
-            subject,
-            htmlBody);
+        return;
     }
+
+    var firstName =
+        user.UserProfile?.FirstName;
+
+    var displayName =
+        string.IsNullOrWhiteSpace(firstName)
+            ? user.UserName
+            : firstName;
+
+    var htmlBody = BuildPasswordResetEmail(
+        displayName,
+        otp,
+        branding);
+
+    await _emailService.SendAsync(
+        user.Email,
+        branding.PasswordResetSubject,
+        htmlBody);
+}
 
     // ============================================================
     // PRIVATE: CREATE AUTHENTICATED RESPONSE
@@ -1916,170 +1937,700 @@ public class AuthService : IAuthService
         };
     }
 
-    // ============================================================
-    // PRIVATE: VERIFICATION EMAIL HTML
-    // ============================================================
+   // ============================================================
+// PRIVATE: VERIFICATION EMAIL HTML
+// ============================================================
 
-    private static string BuildVerificationEmail(
-        string displayName,
-        string otp)
-    {
-        var safeName =
-            System.Net.WebUtility.HtmlEncode(displayName);
+private static string BuildVerificationEmail(
+    string displayName,
+    string otp,
+    AdMindEmailBranding branding)
+{
+    var safeName =
+        System.Net.WebUtility.HtmlEncode(displayName);
 
-        return $"""
+    var safeSiteName =
+        System.Net.WebUtility.HtmlEncode(branding.SiteName);
+
+    var safeTagline =
+        System.Net.WebUtility.HtmlEncode(branding.SiteTagline);
+
+    var safeLogoUrl =
+        System.Net.WebUtility.HtmlEncode(branding.LogoUrl);
+
+    var safeSiteUrl =
+        System.Net.WebUtility.HtmlEncode(branding.SiteUrl);
+
+    var safeSupportEmail =
+        System.Net.WebUtility.HtmlEncode(branding.SupportEmail);
+
+    var siteName = string.IsNullOrWhiteSpace(safeSiteName)
+        ? "AdMind"
+        : safeSiteName;
+
+    var tagline = string.IsNullOrWhiteSpace(safeTagline)
+        ? "Your marketplace for everything"
+        : safeTagline;
+
+    var otpExpiryMinutes = branding.OtpExpiryMinutes > 0
+        ? branding.OtpExpiryMinutes
+        : 10;
+
+    var logoHtml = string.IsNullOrWhiteSpace(branding.LogoUrl)
+        ? $"""
+            <div style="
+                font-size:30px;
+                line-height:36px;
+                font-weight:700;
+                color:#ffffff;
+                letter-spacing:-0.5px;">
+                {siteName}
+            </div>
+            """
+        : $"""
+            <img
+                src="{safeLogoUrl}"
+                alt="{siteName}"
+                width="240"
+                style="
+                    display:block;
+                    width:240px;
+                    max-width:100%;
+                    height:auto;
+                    margin:0 auto;
+                    border:0;
+                    outline:none;
+                    text-decoration:none;" />
+            """;
+
+    var websiteHtml = string.IsNullOrWhiteSpace(branding.SiteUrl)
+        ? string.Empty
+        : $"""
+            <a
+                href="{safeSiteUrl}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Visit {siteName}
+            </a>
+            """;
+
+    var supportHtml = string.IsNullOrWhiteSpace(branding.SupportEmail)
+        ? string.Empty
+        : $"""
+            <span style="color:#999999;">&nbsp;&bull;&nbsp;</span>
+            <a
+                href="mailto:{safeSupportEmail}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Contact Support
+            </a>
+            """;
+
+    return $"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verify your HR INFO ADs account</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0" />
+
+    <title>Verify your {siteName} account</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f3f0;font-family:Arial,Helvetica,sans-serif;color:#333333;">
 
-    <div style="width:100%;padding:40px 15px;box-sizing:border-box;">
+<body style="
+    margin:0;
+    padding:0;
+    background:#f3f6fb;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#263238;">
 
-        <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.08);">
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="
+        width:100%;
+        margin:0;
+        padding:0;
+        background:#f3f6fb;">
 
-            <div style="background:#663333;padding:28px 30px;text-align:center;">
-                <div style="font-size:28px;font-weight:700;color:#ffffff;">
-                    HR INFO ADs
-                </div>
-                <div style="font-size:14px;color:#ffbf00;margin-top:6px;">
-                    Your marketplace for everything
-                </div>
-            </div>
+    <tr>
+        <td
+            align="center"
+            style="padding:40px 15px;">
 
-            <div style="padding:35px 30px;">
+            <table
+                role="presentation"
+                width="600"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    width:100%;
+                    max-width:600px;
+                    background:#ffffff;
+                    border-radius:16px;
+                    overflow:hidden;">
 
-                <h1 style="margin:0 0 18px;font-size:24px;color:#663333;">
-                    Verify your email address
-                </h1>
+                <!-- BRAND HEADER -->
 
-                <p style="margin:0 0 15px;font-size:15px;line-height:1.7;">
-                    Hello {safeName},
-                </p>
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:32px 30px 28px;
+                            background:#153a7c;">
 
-                <p style="margin:0 0 25px;font-size:15px;line-height:1.7;">
-                    Thank you for creating your HR INFO ADs account.
-                    Please use the verification code below to verify
-                    your email address.
-                </p>
+                        {logoHtml}
 
-                <div style="text-align:center;margin:30px 0;">
-                    <div style="display:inline-block;padding:18px 35px;background:#f8f5ef;border:2px solid #ffbf00;border-radius:10px;">
-                        <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#663333;">
-                            {otp}
-                        </span>
-                    </div>
-                </div>
+                        <div style="
+                            margin-top:12px;
+                            font-size:14px;
+                            line-height:20px;
+                            color:#dbe7ff;">
+                            {tagline}
+                        </div>
 
-                <p style="margin:0 0 10px;text-align:center;font-size:14px;color:#666666;">
-                    This verification code is valid for <strong>10 minutes</strong>.
-                </p>
+                    </td>
+                </tr>
 
-                <p style="margin:25px 0 0;font-size:13px;line-height:1.6;color:#777777;">
-                    If you did not create this account, you can safely ignore
-                    this email.
-                </p>
+                <!-- CONTENT -->
 
-            </div>
+                <tr>
+                    <td
+                        style="
+                            padding:38px 35px 30px;">
 
-            <div style="background:#f8f8f8;padding:20px 30px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#888888;">
-                    © HR INFO ADs. All rights reserved.
-                </p>
-            </div>
+                        <h1 style="
+                            margin:0 0 18px;
+                            font-size:26px;
+                            line-height:34px;
+                            font-weight:700;
+                            color:#153a7c;">
+                            Verify your email address
+                        </h1>
 
-        </div>
+                        <p style="
+                            margin:0 0 16px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#374151;">
+                            Hello {safeName},
+                        </p>
 
-    </div>
+                        <p style="
+                            margin:0 0 26px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#4b5563;">
+                            Thank you for creating your
+                            <strong style="color:#153a7c;">
+                                {siteName}
+                            </strong>
+                            account.
+                            Please use the verification code below
+                            to verify your email address.
+                        </p>
+
+                        <!-- OTP -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0">
+
+                            <tr>
+                                <td align="center">
+
+                                    <div style="
+                                        display:inline-block;
+                                        padding:18px 32px;
+                                        background:#eef4ff;
+                                        border:2px solid #2868d7;
+                                        border-radius:12px;">
+
+                                        <span style="
+                                            font-size:32px;
+                                            line-height:38px;
+                                            font-weight:700;
+                                            letter-spacing:8px;
+                                            color:#153a7c;">
+                                            {otp}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:18px 0 0;
+                            text-align:center;
+                            font-size:13px;
+                            line-height:20px;
+                            color:#6b7280;">
+
+                            This verification code is valid for
+
+                            <strong style="color:#153a7c;">
+                                {otpExpiryMinutes} minutes
+                            </strong>.
+
+                        </p>
+
+                        <!-- SECURITY NOTICE -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0"
+                            style="margin-top:30px;">
+
+                            <tr>
+                                <td style="
+                                    padding:16px 18px;
+                                    background:#f8fafc;
+                                    border-left:4px solid #2868d7;
+                                    border-radius:6px;">
+
+                                    <p style="
+                                        margin:0;
+                                        font-size:13px;
+                                        line-height:21px;
+                                        color:#64748b;">
+
+                                        For your security, never share this
+                                        verification code with anyone.
+                                        {siteName} will never ask you to
+                                        provide your OTP by phone or email.
+
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:28px 0 0;
+                            font-size:13px;
+                            line-height:21px;
+                            color:#7b8491;">
+
+                            If you did not create this account, you can
+                            safely ignore this email.
+
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:24px 30px;
+                            background:#f8fafc;
+                            border-top:1px solid #e5e7eb;">
+
+                        <p style="
+                            margin:0 0 10px;
+                            font-size:12px;
+                            line-height:18px;
+                            color:#8a94a3;">
+
+                            &copy; {DateTime.UtcNow.Year}
+                            {siteName}.
+                            All rights reserved.
+
+                        </p>
+
+                        <p style="
+                            margin:0;
+                            font-size:12px;
+                            line-height:18px;">
+
+                            {websiteHtml}
+                            {supportHtml}
+
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
 
 </body>
 </html>
 """;
-    }
+}
 
-    // ============================================================
-    // PRIVATE: PASSWORD RESET EMAIL HTML
-    // ============================================================
 
-    private static string BuildPasswordResetEmail(
-        string displayName,
-        string otp)
-    {
-        var safeName =
-            System.Net.WebUtility.HtmlEncode(displayName);
+// ============================================================
+// PRIVATE: PASSWORD RESET EMAIL HTML
+// ============================================================
 
-        return $"""
+private static string BuildPasswordResetEmail(
+    string displayName,
+    string otp,
+    AdMindEmailBranding branding)
+{
+    var safeName =
+        System.Net.WebUtility.HtmlEncode(displayName);
+
+    var safeSiteName =
+        System.Net.WebUtility.HtmlEncode(branding.SiteName);
+
+    var safeTagline =
+        System.Net.WebUtility.HtmlEncode(branding.SiteTagline);
+
+    var safeLogoUrl =
+        System.Net.WebUtility.HtmlEncode(branding.LogoUrl);
+
+    var safeSiteUrl =
+        System.Net.WebUtility.HtmlEncode(branding.SiteUrl);
+
+    var safeSupportEmail =
+        System.Net.WebUtility.HtmlEncode(branding.SupportEmail);
+
+    var siteName = string.IsNullOrWhiteSpace(safeSiteName)
+        ? "AdMind"
+        : safeSiteName;
+
+    var tagline = string.IsNullOrWhiteSpace(safeTagline)
+        ? "Your marketplace for everything"
+        : safeTagline;
+
+    var otpExpiryMinutes = branding.OtpExpiryMinutes > 0
+        ? branding.OtpExpiryMinutes
+        : 10;
+
+    var logoHtml = string.IsNullOrWhiteSpace(branding.LogoUrl)
+        ? $"""
+            <div style="
+                font-size:30px;
+                line-height:36px;
+                font-weight:700;
+                color:#ffffff;
+                letter-spacing:-0.5px;">
+                {siteName}
+            </div>
+            """
+        : $"""
+            <img
+                src="{safeLogoUrl}"
+                alt="{siteName}"
+                width="240"
+                style="
+                    display:block;
+                    width:240px;
+                    max-width:100%;
+                    height:auto;
+                    margin:0 auto;
+                    border:0;
+                    outline:none;
+                    text-decoration:none;" />
+            """;
+
+    var websiteHtml = string.IsNullOrWhiteSpace(branding.SiteUrl)
+        ? string.Empty
+        : $"""
+            <a
+                href="{safeSiteUrl}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Visit {siteName}
+            </a>
+            """;
+
+    var supportHtml = string.IsNullOrWhiteSpace(branding.SupportEmail)
+        ? string.Empty
+        : $"""
+            <span style="color:#999999;">&nbsp;&bull;&nbsp;</span>
+            <a
+                href="mailto:{safeSupportEmail}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Contact Support
+            </a>
+            """;
+
+    return $"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HR INFO ADs password reset</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0" />
+
+    <title>Reset your {siteName} password</title>
 </head>
-<body style="margin:0;padding:0;background:#f5f3f0;font-family:Arial,Helvetica,sans-serif;color:#333333;">
 
-    <div style="width:100%;padding:40px 15px;box-sizing:border-box;">
+<body style="
+    margin:0;
+    padding:0;
+    background:#f3f6fb;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#263238;">
 
-        <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,0.08);">
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="
+        width:100%;
+        margin:0;
+        padding:0;
+        background:#f3f6fb;">
 
-            <div style="background:#663333;padding:28px 30px;text-align:center;">
-                <div style="font-size:28px;font-weight:700;color:#ffffff;">
-                    HR INFO ADs
-                </div>
-                <div style="font-size:14px;color:#ffbf00;margin-top:6px;">
-                    Your marketplace for everything
-                </div>
-            </div>
+    <tr>
+        <td
+            align="center"
+            style="padding:40px 15px;">
 
-            <div style="padding:35px 30px;">
+            <table
+                role="presentation"
+                width="600"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    width:100%;
+                    max-width:600px;
+                    background:#ffffff;
+                    border-radius:16px;
+                    overflow:hidden;">
 
-                <h1 style="margin:0 0 18px;font-size:24px;color:#663333;">
-                    Password reset code
-                </h1>
+                <!-- BRAND HEADER -->
 
-                <p style="margin:0 0 15px;font-size:15px;line-height:1.7;">
-                    Hello {safeName},
-                </p>
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:32px 30px 28px;
+                            background:#153a7c;">
 
-                <p style="margin:0 0 25px;font-size:15px;line-height:1.7;">
-                    We received a request to reset the password for your
-                    HR INFO ADs account. Use the code below to continue.
-                </p>
+                        {logoHtml}
 
-                <div style="text-align:center;margin:30px 0;">
-                    <div style="display:inline-block;padding:18px 35px;background:#f8f5ef;border:2px solid #ffbf00;border-radius:10px;">
-                        <span style="font-size:32px;font-weight:700;letter-spacing:8px;color:#663333;">
-                            {otp}
-                        </span>
-                    </div>
-                </div>
+                        <div style="
+                            margin-top:12px;
+                            font-size:14px;
+                            line-height:20px;
+                            color:#dbe7ff;">
+                            {tagline}
+                        </div>
 
-                <p style="margin:0 0 10px;text-align:center;font-size:14px;color:#666666;">
-                    This code is valid for <strong>10 minutes</strong>.
-                </p>
+                    </td>
+                </tr>
 
-                <p style="margin:25px 0 0;font-size:13px;line-height:1.6;color:#777777;">
-                    If you did not request a password reset, please ignore
-                    this email. Your password will remain unchanged.
-                </p>
+                <!-- CONTENT -->
 
-            </div>
+                <tr>
+                    <td
+                        style="
+                            padding:38px 35px 30px;">
 
-            <div style="background:#f8f8f8;padding:20px 30px;text-align:center;">
-                <p style="margin:0;font-size:12px;color:#888888;">
-                    © HR INFO ADs. All rights reserved.
-                </p>
-            </div>
+                        <h1 style="
+                            margin:0 0 18px;
+                            font-size:26px;
+                            line-height:34px;
+                            font-weight:700;
+                            color:#153a7c;">
+                            Password reset code
+                        </h1>
 
-        </div>
+                        <p style="
+                            margin:0 0 16px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#374151;">
+                            Hello {safeName},
+                        </p>
 
-    </div>
+                        <p style="
+                            margin:0 0 26px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#4b5563;">
+                            We received a request to reset the password
+                            for your
+                            <strong style="color:#153a7c;">
+                                {siteName}
+                            </strong>
+                            account.
+                            Use the code below to continue.
+                        </p>
+
+                        <!-- OTP -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0">
+
+                            <tr>
+                                <td align="center">
+
+                                    <div style="
+                                        display:inline-block;
+                                        padding:18px 32px;
+                                        background:#eef4ff;
+                                        border:2px solid #2868d7;
+                                        border-radius:12px;">
+
+                                        <span style="
+                                            font-size:32px;
+                                            line-height:38px;
+                                            font-weight:700;
+                                            letter-spacing:8px;
+                                            color:#153a7c;">
+                                            {otp}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:18px 0 0;
+                            text-align:center;
+                            font-size:13px;
+                            line-height:20px;
+                            color:#6b7280;">
+
+                            This code is valid for
+
+                            <strong style="color:#153a7c;">
+                                {otpExpiryMinutes} minutes
+                            </strong>.
+
+                        </p>
+
+                        <!-- SECURITY NOTICE -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0"
+                            style="margin-top:30px;">
+
+                            <tr>
+                                <td style="
+                                    padding:16px 18px;
+                                    background:#fff8ed;
+                                    border-left:4px solid #f59e0b;
+                                    border-radius:6px;">
+
+                                    <p style="
+                                        margin:0;
+                                        font-size:13px;
+                                        line-height:21px;
+                                        color:#6b7280;">
+
+                                        If you did not request a password
+                                        reset, you can safely ignore this
+                                        email. Your password will remain
+                                        unchanged.
+
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:28px 0 0;
+                            font-size:13px;
+                            line-height:21px;
+                            color:#7b8491;">
+
+                            For your security, never share this code with
+                            anyone.
+
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:24px 30px;
+                            background:#f8fafc;
+                            border-top:1px solid #e5e7eb;">
+
+                        <p style="
+                            margin:0 0 10px;
+                            font-size:12px;
+                            line-height:18px;
+                            color:#8a94a3;">
+
+                            &copy; {DateTime.UtcNow.Year}
+                            {siteName}.
+                            All rights reserved.
+
+                        </p>
+
+                        <p style="
+                            margin:0;
+                            font-size:12px;
+                            line-height:18px;">
+
+                            {websiteHtml}
+                            {supportHtml}
+
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
 
 </body>
 </html>
 """;
-    }
+}
 }

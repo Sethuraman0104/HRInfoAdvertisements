@@ -224,6 +224,10 @@ builder.Services.AddScoped<
     LocalFileStorageService>();
 
 builder.Services.AddScoped<
+    IApplicationSettingsService,
+    ApplicationSettingsService>();
+
+builder.Services.AddScoped<
     ISystemSettingService,
     SystemSettingService>();
 

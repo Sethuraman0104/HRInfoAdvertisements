@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using HRInfoAdvertisements.Application.DTOs.SystemSettings;
+using HRInfoAdvertisements.Application.DTOs.Settings;
 
 namespace HRInfoAdvertisements.Admin.Services;
 
@@ -237,4 +238,32 @@ public class SystemSettingsApiService
 
         return true;
     }
+    public async Task<ApplicationSettings>
+    GetApplicationSettingsAsync()
+{
+    var client = CreateClient();
+
+    var response =
+        await client.GetAsync(
+            $"{BaseEndpoint}/application");
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new HttpRequestException(
+            $"Unable to load application settings. " +
+            $"HTTP {(int)response.StatusCode} " +
+            $"({response.StatusCode}). " +
+            $"{responseBody}");
+    }
+
+    var result =
+        JsonSerializer.Deserialize<ApplicationSettings>(
+            responseBody,
+            JsonOptions);
+
+    return result ?? new ApplicationSettings();
+}
 }

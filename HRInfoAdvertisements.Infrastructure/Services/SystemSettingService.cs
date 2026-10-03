@@ -1,3 +1,4 @@
+using HRInfoAdvertisements.Application.DTOs.Settings;
 using HRInfoAdvertisements.Application.DTOs.SystemSettings;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Application.Security;
@@ -397,6 +398,136 @@ public class SystemSettingService : ISystemSettingService
     }
 
     // ============================================================
+// GET APPLICATION SETTINGS
+// ============================================================
+
+public async Task<ApplicationSettings>
+    GetApplicationSettingsAsync(
+        CancellationToken cancellationToken = default)
+{
+    var settings =
+        await _context.SystemSettings
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .ToDictionaryAsync(
+                x => x.SettingKey,
+                x => x.SettingValue,
+                StringComparer.OrdinalIgnoreCase,
+                cancellationToken);
+
+    return new ApplicationSettings
+    {
+        SiteName =
+            GetString(
+                settings,
+                "SITE_NAME",
+                "AdMind"),
+
+        DefaultCurrency =
+            GetString(
+                settings,
+                "DEFAULT_CURRENCY",
+                "BHD"),
+
+        AdvertisementExpiryDays =
+            GetInt(
+                settings,
+                "ADVERTISEMENT_EXPIRY_DAYS",
+                30),
+
+        MaxImagesPerAdvertisement =
+            GetInt(
+                settings,
+                "MAX_IMAGES_PER_ADVERTISEMENT",
+                2),
+
+        MaxVideoSizeMb =
+            GetInt(
+                settings,
+                "MAX_VIDEO_SIZE_MB",
+                100),
+
+        RequireAdminApproval =
+            GetBool(
+                settings,
+                "REQUIRE_ADMIN_APPROVAL",
+                true),
+
+        RequireEmailVerification =
+            GetBool(
+                settings,
+                "REQUIRE_EMAIL_VERIFICATION",
+                true),
+
+        RequireMobileVerification =
+            GetBool(
+                settings,
+                "REQUIRE_MOBILE_VERIFICATION",
+                true),
+
+        AdminMfaRequired =
+            GetBool(
+                settings,
+                "ADMIN_MFA_REQUIRED",
+                true),
+
+        SiteTagline =
+            GetString(
+                settings,
+                "SITE_TAGLINE",
+                "Your marketplace for everything"),
+
+        SiteUrl =
+            GetString(
+                settings,
+                "SITE_URL",
+                string.Empty),
+
+        EmailLogoUrl =
+            GetString(
+                settings,
+                "EMAIL_LOGO_URL",
+                string.Empty),
+
+        SupportEmail =
+            GetString(
+                settings,
+                "SUPPORT_EMAIL",
+                string.Empty),
+
+        EmailFromName =
+            GetString(
+                settings,
+                "EMAIL_FROM_NAME",
+                "AdMind"),
+
+        EmailVerificationSubject =
+            GetString(
+                settings,
+                "EMAIL_VERIFICATION_SUBJECT",
+                "Verify your AdMind account"),
+
+        EmailPasswordResetSubject =
+            GetString(
+                settings,
+                "EMAIL_PASSWORD_RESET_SUBJECT",
+                "Reset your AdMind password"),
+
+        EmailOtpExpiryMinutes =
+            GetInt(
+                settings,
+                "EMAIL_OTP_EXPIRY_MINUTES",
+                10),
+
+        EmailEnabled =
+            GetBool(
+                settings,
+                "EMAIL_ENABLED",
+                true)
+    };
+}
+
+    // ============================================================
     // GET DECRYPTED VALUE
     // ============================================================
     //
@@ -452,4 +583,58 @@ public class SystemSettingService : ISystemSettingService
             return null;
         }
     }
+
+    // ============================================================
+// APPLICATION SETTINGS HELPERS
+// ============================================================
+
+private static string GetString(
+    IReadOnlyDictionary<string, string?> settings,
+    string key,
+    string defaultValue)
+{
+    if (!settings.TryGetValue(key, out var value) ||
+        string.IsNullOrWhiteSpace(value))
+    {
+        return defaultValue;
+    }
+
+    return value.Trim();
+}
+
+private static int GetInt(
+    IReadOnlyDictionary<string, string?> settings,
+    string key,
+    int defaultValue)
+{
+    if (!settings.TryGetValue(key, out var value) ||
+        string.IsNullOrWhiteSpace(value))
+    {
+        return defaultValue;
+    }
+
+    return int.TryParse(
+        value.Trim(),
+        out var result)
+            ? result
+            : defaultValue;
+}
+
+private static bool GetBool(
+    IReadOnlyDictionary<string, string?> settings,
+    string key,
+    bool defaultValue)
+{
+    if (!settings.TryGetValue(key, out var value) ||
+        string.IsNullOrWhiteSpace(value))
+    {
+        return defaultValue;
+    }
+
+    return bool.TryParse(
+        value.Trim(),
+        out var result)
+            ? result
+            : defaultValue;
+}
 }

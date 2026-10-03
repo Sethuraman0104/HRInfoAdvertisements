@@ -5,15 +5,18 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Admin
+@using HRInfoAdvertisements.Application.DTOs.Settings
 @using HRInfoAdvertisements.Application.Interfaces
+@using HRInfoAdvertisements.Application.Services
 
 @inject IAdvertisementModerationService AdvertisementModerationService
+@inject SystemSettingsApiService SystemSettingsApiService
 @inject AdminAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
-<PageTitle>Advertisements | HR INFO ADs</PageTitle>
+<PageTitle>Advertisements | AdMind</PageTitle>
 
 <div class="hr-ad-management">
 
@@ -1023,6 +1026,8 @@
 
     private bool _showValidationMessage;
 
+    private ApplicationSettings? _applicationSettings;
+
 
     // =============================================================
     // INITIALIZATION
@@ -1030,9 +1035,27 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadApplicationSettingsAsync();
+
         await LoadAdvertisementsAsync();
     }
 
+private async Task LoadApplicationSettingsAsync()
+{
+    try
+    {
+        _applicationSettings =
+            await SystemSettingsApiService
+                .GetApplicationSettingsAsync();
+    }
+    catch (Exception ex)
+    {
+        _applicationSettings = null;
+
+        _errorMessage =
+            $"Unable to load application settings: {ex.Message}";
+    }
+}
 
     // =============================================================
     // LOAD
@@ -1288,22 +1311,22 @@
     // DISPLAY HELPERS
     // =============================================================
 
-    private static string FormatPrice(
-        decimal? price,
-        string? currency)
+    private string FormatPrice(
+    decimal? price,
+    string? currency)
+{
+    if (!price.HasValue)
     {
-        if (!price.HasValue)
-        {
-            return "—";
-        }
-
-        var currencyCode =
-            string.IsNullOrWhiteSpace(currency)
-                ? "BHD"
-                : currency.Trim();
-
-        return $"{price.Value:N3} {currencyCode}";
+        return "—";
     }
+
+    var currencyCode =
+        string.IsNullOrWhiteSpace(currency)
+            ? _applicationSettings?.DefaultCurrency ?? "BHD"
+            : currency.Trim();
+
+    return $"{price.Value:N3} {currencyCode}";
+}
 
 
     private static string GetInitials(
@@ -1915,3 +1938,4 @@
         Reactivate
     }
 }
+

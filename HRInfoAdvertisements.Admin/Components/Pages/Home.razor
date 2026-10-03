@@ -15,7 +15,7 @@
 @inject PublicFavoritesApiService PublicFavoritesApiService
 @inject NavigationManager Navigation
 
-<PageTitle>HR INFO ADs - Find What You Need</PageTitle>
+<PageTitle>AdMind - Find What You Need</PageTitle>
 
 <div class="marketplace">
 
@@ -120,7 +120,7 @@
 
             <div class="hero-eyebrow">
                 <span class="hero-brand-dot"></span>
-                <span>HR INFO <strong>ADs</strong></span>
+                <span><strong>A</strong>d<strong>M</strong>ind</span>
             </div>
 
             <h1>
@@ -1504,7 +1504,7 @@
                     </span>
 
                     <h2>
-                        How HR INFO ADs works
+                        How AdMind works
                     </h2>
 
                     <p>
@@ -1608,7 +1608,7 @@
                 <div>
 
                     <strong>
-                        HR INFO ADs
+                        AdMind
                     </strong>
 
                     <p>
@@ -1696,7 +1696,7 @@
         <div class="footer-bottom">
 
             <span>
-                © @DateTime.Now.Year HR INFO ADs. All rights reserved.
+                © @DateTime.Now.Year AdMind. All rights reserved.
             </span>
 
             <span>
@@ -1707,776 +1707,886 @@
 
     </footer>
 
+<!-- ============================================================
+     AUTHENTICATION MODAL
+     ============================================================ -->
+@if (showAuthModal)
+{
+    <div class="auth-overlay" @onclick="CloseAuthModal">
 
-        <!-- ============================================================
-         AUTHENTICATION MODAL
-         ============================================================ -->
-    @if (showAuthModal)
-    {
-        <div class="auth-overlay" @onclick="CloseAuthModal">
+        <section class="auth-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="auth-modal-title"
+                 @onclick:stopPropagation="true">
 
-            <section class="auth-modal"
-                     role="dialog"
-                     aria-modal="true"
-                     aria-labelledby="auth-modal-title"
-                     @onclick:stopPropagation="true">
+            <!-- ====================================================
+                 BRAND PANEL - DESKTOP
+                 ==================================================== -->
+            <aside class="auth-aside" aria-hidden="true">
 
-                <!-- ================= BRAND PANEL (desktop only) ================= -->
-                <aside class="auth-aside" aria-hidden="true">
+                <div class="auth-aside-glow"></div>
 
-                    <div class="auth-aside-glow"></div>
+                <!-- ============================================================
+     ADMIND LOGO
+     ============================================================ -->
+<div class="auth-aside-brand">
 
-                    <div class="auth-aside-brand">
-                        <div class="auth-brand-logo">HR</div>
-                        <span>HR INFO <strong>ADs</strong></span>
+    <div class="auth-logo-glow"></div>
+
+    <div class="auth-logo-glow-secondary"></div>
+
+    <div class="auth-logo-stage">
+
+        <img src="/images/logo/admind_logo_transparent.png"
+             alt="AdMind"
+             class="auth-aside-logo" />
+
+    </div>
+
+</div>
+
+
+                <!-- BRAND MESSAGE -->
+                <div class="auth-aside-copy">
+
+                    <h3>
+                        Your marketplace,<br />
+                        one account.
+                    </h3>
+
+                    <p>
+                        Buy, sell and promote with trusted advertisers.
+                    </p>
+
+                </div>
+
+
+                <!-- BENEFITS -->
+                <ul class="auth-aside-list">
+
+                    <li>
+                        <span>✓</span>
+                        <span>Post and manage your advertisements</span>
+                    </li>
+
+                    <li>
+                        <span>✓</span>
+                        <span>Save favourites across devices</span>
+                    </li>
+
+                    <li>
+                        <span>✓</span>
+                        <span>Contact advertisers instantly</span>
+                    </li>
+
+                </ul>
+
+            </aside>
+
+
+            <!-- ====================================================
+                 MAIN COLUMN
+                 ==================================================== -->
+            <div class="auth-main">
+
+                <div class="auth-accent"></div>
+
+
+                <!-- CLOSE -->
+                <button type="button"
+                        class="auth-close"
+                        title="Close"
+                        aria-label="Close"
+                        @onclick="CloseAuthModal">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 6l12 12" />
+                        <path d="M18 6 6 18" />
+                    </svg>
+
+                </button>
+
+
+                <!-- ====================================================
+                     AUTH HEADER
+                     ==================================================== -->
+                <div class="auth-header">
+
+                    <!-- ADMIND BRAND - MOBILE / TABLET -->
+                    <div class="auth-brand">
+
+                        <img src="/images/logo/admind_logo_transparent.png"
+                             alt="AdMind"
+                             class="auth-brand-logo-image" />
+
                     </div>
 
-                    <div class="auth-aside-copy">
-                        <h3>Your marketplace,<br />one account.</h3>
-                        <p>Buy, sell and promote with trusted advertisers.</p>
-                    </div>
 
-                    <ul class="auth-aside-list">
-                        <li><span>✓</span> Post and manage your advertisements</li>
-                        <li><span>✓</span> Save favourites across devices</li>
-                        <li><span>✓</span> Contact advertisers instantly</li>
-                    </ul>
+                    <!-- WELCOME -->
+                    <div class="auth-welcome">
 
-                </aside>
+                        <div class="auth-welcome-icon">
 
-                <!-- ================= MAIN COLUMN ================= -->
-                <div class="auth-main">
+                            @if (authStep == AuthStep.VerifyEmail)
+                            {
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <rect x="3"
+                                          y="5"
+                                          width="18"
+                                          height="14"
+                                          rx="2" />
 
-                    <div class="auth-accent"></div>
+                                    <path d="m3 7 9 6 9-6" />
 
-                    <button type="button"
-                            class="auth-close"
-                            title="Close"
-                            aria-label="Close"
-                            @onclick="CloseAuthModal">
-
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M6 6l12 12" />
-                            <path d="M18 6 6 18" />
-                        </svg>
-
-                    </button>
-
-                    <!-- ================= AUTH HEADER ================= -->
-                    <div class="auth-header">
-
-                        <div class="auth-brand">
-
-                            <div class="auth-brand-logo">HR</div>
-
-                            <div>
-                                <div class="auth-brand-name">
-                                    HR INFO <strong>ADs</strong>
-                                </div>
-                                <div class="auth-brand-sub">
-                                    Advertisement Marketplace
-                                </div>
-                            </div>
+                                    <path d="M16 16h.01" />
+                                </svg>
+                            }
+                            else if (authMode == AuthMode.SignIn)
+                            {
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
+                                    <path d="M10 12h10" />
+                                    <path d="m17 8 4 4-4 4" />
+                                </svg>
+                            }
+                            else
+                            {
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M19 8v6" />
+                                    <path d="M22 11h-6" />
+                                </svg>
+                            }
 
                         </div>
 
-                        <div class="auth-welcome">
 
-                            <div class="auth-welcome-icon">
+                        <div>
+
+                            <h2 id="auth-modal-title">
 
                                 @if (authStep == AuthStep.VerifyEmail)
                                 {
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <rect x="3" y="5" width="18" height="14" rx="2" />
-                                        <path d="m3 7 9 6 9-6" />
-                                        <path d="M16 16h.01" />
-                                    </svg>
+                                    @:Verify your email
                                 }
                                 else if (authMode == AuthMode.SignIn)
                                 {
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
-                                        <path d="M10 12h10" />
-                                        <path d="m17 8 4 4-4 4" />
-                                    </svg>
+                                    @:Welcome back
                                 }
                                 else
                                 {
-                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                                        <circle cx="9" cy="7" r="4" />
-                                        <path d="M19 8v6" />
-                                        <path d="M22 11h-6" />
-                                    </svg>
+                                    @:Create your account
                                 }
 
-                            </div>
+                            </h2>
 
-                            <div>
 
-                                <h2 id="auth-modal-title">
-                                    @if (authStep == AuthStep.VerifyEmail)
-                                    {
-                                        @:Verify your email
-                                    }
-                                    else if (authMode == AuthMode.SignIn)
-                                    {
-                                        @:Welcome back
-                                    }
-                                    else
-                                    {
-                                        @:Create your account
-                                    }
-                                </h2>
+                            <p>
 
-                                <p>
-                                    @if (authStep == AuthStep.VerifyEmail)
-                                    {
-                                        @:Enter the verification code sent to your email address.
-                                    }
-                                    else if (authMode == AuthMode.SignIn)
-                                    {
-                                        @:Sign in to manage your advertisements and account.
-                                    }
-                                    else
-                                    {
-                                        @:Join HR INFO ADs and start managing your advertisements.
-                                    }
-                                </p>
+                                @if (authStep == AuthStep.VerifyEmail)
+                                {
+                                    @:Enter the verification code sent to your email address.
+                                }
+                                else if (authMode == AuthMode.SignIn)
+                                {
+                                    @:Sign in to manage your advertisements and account.
+                                }
+                                else
+                                {
+                                    @:Join AdMind and start managing your advertisements.
+                                }
 
-                            </div>
+                            </p>
 
                         </div>
 
                     </div>
 
+                </div>
 
-                    <!-- ================= AUTH TABS ================= -->
-                    @if (authStep != AuthStep.VerifyEmail)
+
+                <!-- ====================================================
+                     AUTH TABS
+                     ==================================================== -->
+                @if (authStep != AuthStep.VerifyEmail)
+                {
+                    <div class="auth-tabs">
+
+                        <button type="button"
+                                class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")"
+                                @onclick="ShowSignIn">
+
+                            Sign In
+
+                        </button>
+
+
+                        <button type="button"
+                                class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")"
+                                @onclick="ShowSignUp">
+
+                            Sign Up
+
+                        </button>
+
+                    </div>
+                }
+
+
+                <!-- ====================================================
+                     SCROLLABLE BODY
+                     ==================================================== -->
+                <div class="auth-scroll">
+
+
+                    <!-- =================================================
+                         SIGN IN
+                         ================================================= -->
+                    @if (authStep == AuthStep.SignIn &&
+                         authMode == AuthMode.SignIn)
                     {
-                        <div class="auth-tabs">
+                        <EditForm Model="@loginModel"
+                                  OnValidSubmit="@HandleLogin"
+                                  FormName="PublicLoginForm">
 
-                            <button type="button"
-                                    class="auth-tab @(authMode == AuthMode.SignIn ? "active" : "")"
-                                    @onclick="ShowSignIn">
-                                Sign In
-                            </button>
+                            <DataAnnotationsValidator />
 
-                            <button type="button"
-                                    class="auth-tab @(authMode == AuthMode.SignUp ? "active" : "")"
-                                    @onclick="ShowSignUp">
-                                Sign Up
-                            </button>
-
-                        </div>
-                    }
-
-
-                    <!-- ================= SCROLLABLE BODY ================= -->
-                    <div class="auth-scroll">
-
-                        <!-- ========================= SIGN IN ========================= -->
-                        @if (authStep == AuthStep.SignIn &&
-                             authMode == AuthMode.SignIn)
-                        {
-                            <EditForm Model="@loginModel"
-                                      OnValidSubmit="@HandleLogin"
-                                      FormName="PublicLoginForm">
-
-                                <DataAnnotationsValidator />
-
-                                <div class="auth-form">
-
-                                    <div class="auth-field">
-
-                                        <label for="auth-email">Email Address</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                                    <path d="m3 7 9 6 9-6" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="auth-email"
-                                                       class="auth-input"
-                                                       @bind-Value="loginModel.Email"
-                                                       autocomplete="username"
-                                                       placeholder="Enter your email address" />
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => loginModel.Email)" />
-
-                                    </div>
-
-
-                                    <div class="auth-field">
-
-                                        <div class="auth-label-row">
-
-                                            <label for="auth-password">Password</label>
-
-                                            <button type="button"
-                                                    class="auth-forgot"
-                                                    @onclick="ForgotPassword">
-                                                Forgot password?
-                                            </button>
-
-                                        </div>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="4" y="10" width="16" height="11" rx="2" />
-                                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="auth-password"
-                                                       class="auth-input"
-                                                       type="@(showPassword ? "text" : "password")"
-                                                       @bind-Value="loginModel.Password"
-                                                       autocomplete="current-password"
-                                                       placeholder="Enter your password" />
-
-                                            <button type="button"
-                                                    class="auth-password-toggle"
-                                                    title="Show / hide password"
-                                                    aria-label="Show / hide password"
-                                                    @onclick="TogglePassword">
-
-                                                @if (showPassword)
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                                                        <circle cx="12" cy="12" r="3" />
-                                                    </svg>
-                                                }
-                                                else
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="m3 3 18 18" />
-                                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                                                        <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
-                                                        <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
-                                                    </svg>
-                                                }
-
-                                            </button>
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => loginModel.Password)" />
-
-                                    </div>
-
-
-                                    @if (!string.IsNullOrWhiteSpace(errorMessage))
-                                    {
-                                        <div class="auth-error" role="alert">
-
-                                            <div class="auth-error-icon">!</div>
-
-                                            <div class="auth-error-content">
-                                                <strong>Sign in failed</strong>
-                                                <span>@errorMessage</span>
-                                            </div>
-
-                                            <button type="button"
-                                                    class="auth-error-close"
-                                                    aria-label="Close error"
-                                                    @onclick="ClearError">
-                                                ×
-                                            </button>
-
-                                        </div>
-                                    }
-
-
-                                    <button type="submit"
-                                            class="btn-primary auth-submit"
-                                            disabled="@isLoginLoading">
-
-                                        @if (isLoginLoading)
-                                        {
-                                            <span class="spinner"></span>
-                                            <span>Signing in...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Sign In</span>
-
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M5 12h13" />
-                                                <path d="m13 6 6 6-6 6" />
-                                            </svg>
-                                        }
-
-                                    </button>
-
-
-                                    <div class="auth-security">
-
-                                        <div class="auth-security-icon">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
-                                                <path d="m9 12 2 2 4-4" />
-                                            </svg>
-                                        </div>
-
-                                        <div>
-                                            <strong>Secure account access</strong>
-                                            <span>Your credentials are transmitted securely.</span>
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </EditForm>
-                        }
-
-
-                        <!-- ========================= SIGN UP ========================= -->
-                        @if (authStep == AuthStep.SignIn &&
-                             authMode == AuthMode.SignUp)
-                        {
-                            <EditForm Model="@signupModel"
-                                      OnValidSubmit="@HandleRegistration"
-                                      FormName="PublicSignupForm">
-
-                                <DataAnnotationsValidator />
-
-                                <div class="auth-form signup">
-
-                                    <div class="signup-info">
-
-                                        <div class="auth-security-icon">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" />
-                                                <path d="M12 8v5" />
-                                                <circle cx="12" cy="16.5" r=".8" />
-                                            </svg>
-                                        </div>
-
-                                        <div>
-                                            <strong>Advertiser registration</strong>
-                                            <p>Create an account to publish and manage your advertisements.</p>
-                                        </div>
-
-                                    </div>
-
-
-                                    <!-- FULL NAME -->
-                                    <div class="auth-field full">
-
-                                        <label for="signup-full-name">Full Name</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <circle cx="12" cy="8" r="4" />
-                                                    <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="signup-full-name"
-                                                       class="auth-input"
-                                                       @bind-Value="signupModel.FullName"
-                                                       autocomplete="name"
-                                                       placeholder="Enter your full name" />
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => signupModel.FullName)" />
-
-                                    </div>
-
-
-                                    <!-- EMAIL -->
-                                    <div class="auth-field">
-
-                                        <label for="signup-email">Email Address</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="3" y="5" width="18" height="14" rx="2" />
-                                                    <path d="m3 7 9 6 9-6" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="signup-email"
-                                                       class="auth-input"
-                                                       @bind-Value="signupModel.Email"
-                                                       autocomplete="email"
-                                                       placeholder="Enter your email address" />
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => signupModel.Email)" />
-
-                                    </div>
-
-
-                                    <!-- MOBILE -->
-                                    <div class="auth-field">
-
-                                        <label for="signup-mobile">Mobile Number</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="6" y="2" width="12" height="20" rx="2" />
-                                                    <path d="M10 18h4" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="signup-mobile"
-                                                       class="auth-input"
-                                                       @bind-Value="signupModel.MobileNo"
-                                                       autocomplete="tel"
-                                                       placeholder="Enter your mobile number" />
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => signupModel.MobileNo)" />
-
-                                    </div>
-
-
-                                    <!-- PASSWORD -->
-                                    <div class="auth-field">
-
-                                        <label for="signup-password">Password</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="4" y="10" width="16" height="11" rx="2" />
-                                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="signup-password"
-                                                       class="auth-input"
-                                                       type="@(showSignupPassword ? "text" : "password")"
-                                                       @bind-Value="signupModel.Password"
-                                                       autocomplete="new-password"
-                                                       placeholder="Create a password" />
-
-                                            <button type="button"
-                                                    class="auth-password-toggle"
-                                                    title="Show / hide password"
-                                                    aria-label="Show / hide password"
-                                                    @onclick="ToggleSignupPassword">
-
-                                                @if (showSignupPassword)
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                                                        <circle cx="12" cy="12" r="3" />
-                                                    </svg>
-                                                }
-                                                else
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="m3 3 18 18" />
-                                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                                                        <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
-                                                        <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
-                                                    </svg>
-                                                }
-
-                                            </button>
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => signupModel.Password)" />
-
-                                    </div>
-
-
-                                    <!-- CONFIRM PASSWORD -->
-                                    <div class="auth-field">
-
-                                        <label for="signup-confirm-password">Confirm Password</label>
-
-                                        <div class="auth-input-box">
-
-                                            <span class="auth-input-icon">
-                                                <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                    <rect x="4" y="10" width="16" height="11" rx="2" />
-                                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                                                </svg>
-                                            </span>
-
-                                            <InputText id="signup-confirm-password"
-                                                       class="auth-input"
-                                                       type="@(showConfirmPassword ? "text" : "password")"
-                                                       @bind-Value="signupModel.ConfirmPassword"
-                                                       autocomplete="new-password"
-                                                       placeholder="Confirm your password" />
-
-                                            <button type="button"
-                                                    class="auth-password-toggle"
-                                                    title="Show / hide password"
-                                                    aria-label="Show / hide password"
-                                                    @onclick="ToggleConfirmPassword">
-
-                                                @if (showConfirmPassword)
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-                                                        <circle cx="12" cy="12" r="3" />
-                                                    </svg>
-                                                }
-                                                else
-                                                {
-                                                    <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                        <path d="m3 3 18 18" />
-                                                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                                                        <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
-                                                        <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
-                                                    </svg>
-                                                }
-
-                                            </button>
-
-                                        </div>
-
-                                        <ValidationMessage For="@(() => signupModel.ConfirmPassword)" />
-
-                                    </div>
-
-
-                                    @if (!string.IsNullOrWhiteSpace(signupErrorMessage))
-                                    {
-                                        <div class="auth-error" role="alert">
-
-                                            <div class="auth-error-icon">!</div>
-
-                                            <div class="auth-error-content">
-                                                <strong>Registration failed</strong>
-                                                <span>@signupErrorMessage</span>
-                                            </div>
-
-                                            <button type="button"
-                                                    class="auth-error-close"
-                                                    aria-label="Close error"
-                                                    @onclick="ClearSignupError">
-                                                ×
-                                            </button>
-
-                                        </div>
-                                    }
-
-
-                                    <button type="submit"
-                                            class="btn-primary auth-submit"
-                                            disabled="@isSignupLoading">
-
-                                        @if (isSignupLoading)
-                                        {
-                                            <span class="spinner"></span>
-                                            <span>Creating account...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Create Account</span>
-
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M5 12h13" />
-                                                <path d="m13 6 6 6-6 6" />
-                                            </svg>
-                                        }
-
-                                    </button>
-
-
-                                    <div class="auth-security">
-
-                                        <div class="auth-security-icon">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
-                                                <path d="m9 12 2 2 4-4" />
-                                            </svg>
-                                        </div>
-
-                                        <div>
-                                            <strong>Email verification required</strong>
-                                            <span>We will send a verification code to your email.</span>
-                                        </div>
-
-                                    </div>
-
-
-                                    <div class="auth-signup-note">
-
-                                        Already have an account?
-
-                                        <button type="button" @onclick="ShowSignIn">
-                                            Sign In
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                            </EditForm>
-                        }
-
-
-                        <!-- ===================== EMAIL OTP VERIFICATION ===================== -->
-                        @if (authStep == AuthStep.VerifyEmail)
-                        {
                             <div class="auth-form">
 
-                                <div class="signup-info">
+                                <div class="auth-field">
 
-                                    <div class="auth-security-icon">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                                            <rect x="3" y="5" width="18" height="14" rx="2" />
-                                            <path d="m3 7 9 6 9-6" />
-                                            <path d="M8 12h.01" />
-                                            <path d="M12 12h.01" />
-                                            <path d="M16 12h.01" />
-                                        </svg>
+                                    <label for="auth-email">
+                                        Email Address
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="3"
+                                                      y="5"
+                                                      width="18"
+                                                      height="14"
+                                                      rx="2" />
+
+                                                <path d="m3 7 9 6 9-6" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="auth-email"
+                                                   class="auth-input"
+                                                   @bind-Value="loginModel.Email"
+                                                   autocomplete="username"
+                                                   placeholder="Enter your email address" />
+
                                     </div>
 
-                                    <div>
-                                        <strong>Check your email</strong>
-                                        <p>
-                                            We sent a 6-digit verification code to
-                                            <strong>@verificationEmail</strong>.
-                                        </p>
-                                    </div>
+                                    <ValidationMessage For="@(() => loginModel.Email)" />
 
                                 </div>
 
 
                                 <div class="auth-field">
 
-                                    <label for="email-otp">Verification Code</label>
+                                    <div class="auth-label-row">
+
+                                        <label for="auth-password">
+                                            Password
+                                        </label>
+
+                                        <button type="button"
+                                                class="auth-forgot"
+                                                @onclick="ForgotPassword">
+
+                                            Forgot password?
+
+                                        </button>
+
+                                    </div>
+
 
                                     <div class="auth-input-box">
 
                                         <span class="auth-input-icon">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true">
-                                                <rect x="3" y="5" width="18" height="14" rx="2" />
-                                                <path d="M7 10h10" />
-                                                <path d="M7 14h6" />
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="4"
+                                                      y="10"
+                                                      width="16"
+                                                      height="11"
+                                                      rx="2" />
+
+                                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
                                             </svg>
+
                                         </span>
 
-                                        <input id="email-otp"
-                                               class="auth-input"
-                                               type="text"
-                                               inputmode="numeric"
-                                               maxlength="6"
-                                               autocomplete="one-time-code"
-                                               @bind="otpCode"
-                                               placeholder="000000" />
+
+                                        <InputText id="auth-password"
+                                                   class="auth-input"
+                                                   type="@(showPassword ? "text" : "password")"
+                                                   @bind-Value="loginModel.Password"
+                                                   autocomplete="current-password"
+                                                   placeholder="Enter your password" />
+
+
+                                        <button type="button"
+                                                class="auth-password-toggle"
+                                                title="Show / hide password"
+                                                aria-label="Show / hide password"
+                                                @onclick="TogglePassword">
+
+                                            @if (showPassword)
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+
+                                                    <circle cx="12"
+                                                            cy="12"
+                                                            r="3" />
+
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="m3 3 18 18" />
+
+                                                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+
+                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
+
+                                                    <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
+                                                </svg>
+                                            }
+
+                                        </button>
 
                                     </div>
+
+                                    <ValidationMessage For="@(() => loginModel.Password)" />
 
                                 </div>
 
 
-                                @if (!string.IsNullOrWhiteSpace(otpInfoMessage))
-                                {
-                                    <div class="auth-info" role="status">
-                                        <span>@otpInfoMessage</span>
-                                    </div>
-                                }
-
-                                @if (!string.IsNullOrWhiteSpace(otpErrorMessage))
+                                @if (!string.IsNullOrWhiteSpace(errorMessage))
                                 {
                                     <div class="auth-error" role="alert">
 
-                                        <div class="auth-error-icon">!</div>
+                                        <div class="auth-error-icon">
+                                            !
+                                        </div>
 
                                         <div class="auth-error-content">
-                                            <strong>Verification failed</strong>
-                                            <span>@otpErrorMessage</span>
+
+                                            <strong>
+                                                Sign in failed
+                                            </strong>
+
+                                            <span>
+                                                @errorMessage
+                                            </span>
+
                                         </div>
 
                                         <button type="button"
                                                 class="auth-error-close"
                                                 aria-label="Close error"
-                                                @onclick="ClearOtpError">
+                                                @onclick="ClearError">
+
                                             ×
+
                                         </button>
 
                                     </div>
                                 }
 
 
-                                <button type="button"
+                                <button type="submit"
                                         class="btn-primary auth-submit"
-                                        @onclick="HandleVerifyEmailOtp"
-                                        disabled="@isOtpLoading">
+                                        disabled="@isLoginLoading">
 
-                                    @if (isOtpLoading)
+                                    @if (isLoginLoading)
                                     {
                                         <span class="spinner"></span>
-                                        <span>Verifying...</span>
+
+                                        <span>
+                                            Signing in...
+                                        </span>
                                     }
                                     else
                                     {
-                                        <span>Verify Email</span>
+                                        <span>
+                                            Sign In
+                                        </span>
 
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
                                             <path d="M5 12h13" />
                                             <path d="m13 6 6 6-6 6" />
+
                                         </svg>
                                     }
 
                                 </button>
 
 
-                                <div class="auth-otp-actions">
+                                <div class="auth-security">
 
-                                    <button type="button"
-                                            class="auth-forgot"
-                                            @onclick="HandleResendEmailOtp"
-                                            disabled="@isResendOtpLoading">
+                                    <div class="auth-security-icon">
 
-                                        @if (isResendOtpLoading)
-                                        {
-                                            <span>Sending...</span>
-                                        }
-                                        else
-                                        {
-                                            <span>Resend verification code</span>
-                                        }
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
 
-                                    </button>
+                                            <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
+
+                                            <path d="m9 12 2 2 4-4" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            Secure account access
+                                        </strong>
+
+                                        <span>
+                                            Your credentials are transmitted securely.
+                                        </span>
+
+                                    </div>
 
                                 </div>
+
+                            </div>
+
+                        </EditForm>
+                    }
+
+
+                    <!-- =================================================
+                         SIGN UP
+                         ================================================= -->
+                    @if (authStep == AuthStep.SignIn &&
+                         authMode == AuthMode.SignUp)
+                    {
+                        <EditForm Model="@signupModel"
+                                  OnValidSubmit="@HandleRegistration"
+                                  FormName="PublicSignupForm">
+
+                            <DataAnnotationsValidator />
+
+                            <div class="auth-form signup">
+
+                                <div class="signup-info">
+
+                                    <div class="auth-security-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4Z" />
+
+                                            <path d="M12 8v5" />
+
+                                            <circle cx="12"
+                                                    cy="16.5"
+                                                    r=".8" />
+
+                                        </svg>
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            Advertiser registration
+                                        </strong>
+
+                                        <p>
+                                            Create an account to publish and manage your advertisements.
+                                        </p>
+
+                                    </div>
+
+                                </div>
+
+
+                                <!-- FULL NAME -->
+                                <div class="auth-field full">
+
+                                    <label for="signup-full-name">
+                                        Full Name
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <circle cx="12"
+                                                        cy="8"
+                                                        r="4" />
+
+                                                <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="signup-full-name"
+                                                   class="auth-input"
+                                                   @bind-Value="signupModel.FullName"
+                                                   autocomplete="name"
+                                                   placeholder="Enter your full name" />
+
+                                    </div>
+
+                                    <ValidationMessage For="@(() => signupModel.FullName)" />
+
+                                </div>
+
+
+                                <!-- EMAIL -->
+                                <div class="auth-field">
+
+                                    <label for="signup-email">
+                                        Email Address
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="3"
+                                                      y="5"
+                                                      width="18"
+                                                      height="14"
+                                                      rx="2" />
+
+                                                <path d="m3 7 9 6 9-6" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="signup-email"
+                                                   class="auth-input"
+                                                   @bind-Value="signupModel.Email"
+                                                   autocomplete="email"
+                                                   placeholder="Enter your email address" />
+
+                                    </div>
+
+                                    <ValidationMessage For="@(() => signupModel.Email)" />
+
+                                </div>
+
+
+                                <!-- MOBILE -->
+                                <div class="auth-field">
+
+                                    <label for="signup-mobile">
+                                        Mobile Number
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="6"
+                                                      y="2"
+                                                      width="12"
+                                                      height="20"
+                                                      rx="2" />
+
+                                                <path d="M10 18h4" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="signup-mobile"
+                                                   class="auth-input"
+                                                   @bind-Value="signupModel.MobileNo"
+                                                   autocomplete="tel"
+                                                   placeholder="Enter your mobile number" />
+
+                                    </div>
+
+                                    <ValidationMessage For="@(() => signupModel.MobileNo)" />
+
+                                </div>
+
+
+                                <!-- PASSWORD -->
+                                <div class="auth-field">
+
+                                    <label for="signup-password">
+                                        Password
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="4"
+                                                      y="10"
+                                                      width="16"
+                                                      height="11"
+                                                      rx="2" />
+
+                                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="signup-password"
+                                                   class="auth-input"
+                                                   type="@(showSignupPassword ? "text" : "password")"
+                                                   @bind-Value="signupModel.Password"
+                                                   autocomplete="new-password"
+                                                   placeholder="Create a password" />
+
+                                        <button type="button"
+                                                class="auth-password-toggle"
+                                                title="Show / hide password"
+                                                aria-label="Show / hide password"
+                                                @onclick="ToggleSignupPassword">
+
+                                            @if (showSignupPassword)
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+
+                                                    <circle cx="12"
+                                                            cy="12"
+                                                            r="3" />
+
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="m3 3 18 18" />
+
+                                                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+
+                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1 3.1 4.1" />
+
+                                                    <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
+                                                </svg>
+                                            }
+
+                                        </button>
+
+                                    </div>
+
+                                    <ValidationMessage For="@(() => signupModel.Password)" />
+
+                                </div>
+
+
+                                <!-- CONFIRM PASSWORD -->
+                                <div class="auth-field">
+
+                                    <label for="signup-confirm-password">
+                                        Confirm Password
+                                    </label>
+
+                                    <div class="auth-input-box">
+
+                                        <span class="auth-input-icon">
+
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
+
+                                                <rect x="4"
+                                                      y="10"
+                                                      width="16"
+                                                      height="11"
+                                                      rx="2" />
+
+                                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+
+                                            </svg>
+
+                                        </span>
+
+                                        <InputText id="signup-confirm-password"
+                                                   class="auth-input"
+                                                   type="@(showConfirmPassword ? "text" : "password")"
+                                                   @bind-Value="signupModel.ConfirmPassword"
+                                                   autocomplete="new-password"
+                                                   placeholder="Confirm your password" />
+
+                                        <button type="button"
+                                                class="auth-password-toggle"
+                                                title="Show / hide password"
+                                                aria-label="Show / hide password"
+                                                @onclick="ToggleConfirmPassword">
+
+                                            @if (showConfirmPassword)
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+
+                                                    <circle cx="12"
+                                                            cy="12"
+                                                            r="3" />
+
+                                                </svg>
+                                            }
+                                            else
+                                            {
+                                                <svg viewBox="0 0 24 24"
+                                                     aria-hidden="true">
+
+                                                    <path d="m3 3 18 18" />
+
+                                                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+
+                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1 3.1 4.1" />
+
+                                                    <path d="M6.2 6.2C3.6 6.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+
+                                                </svg>
+                                            }
+
+                                        </button>
+
+                                    </div>
+
+                                    <ValidationMessage For="@(() => signupModel.ConfirmPassword)" />
+
+                                </div>
+
+
+                                @if (!string.IsNullOrWhiteSpace(signupErrorMessage))
+                                {
+                                    <div class="auth-error" role="alert">
+
+                                        <div class="auth-error-icon">
+                                            !
+                                        </div>
+
+                                        <div class="auth-error-content">
+
+                                            <strong>
+                                                Registration failed
+                                            </strong>
+
+                                            <span>
+                                                @signupErrorMessage
+                                            </span>
+
+                                        </div>
+
+                                        <button type="button"
+                                                class="auth-error-close"
+                                                aria-label="Close error"
+                                                @onclick="ClearSignupError">
+
+                                            ×
+
+                                        </button>
+
+                                    </div>
+                                }
+
+
+                                <button type="submit"
+                                        class="btn-primary auth-submit"
+                                        disabled="@isSignupLoading">
+
+                                    @if (isSignupLoading)
+                                    {
+                                        <span class="spinner"></span>
+
+                                        <span>
+                                            Creating account...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Create Account
+                                        </span>
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <path d="M5 12h13" />
+                                            <path d="m13 6 6 6-6 6" />
+
+                                        </svg>
+                                    }
+
+                                </button>
 
 
                                 <div class="auth-security">
 
                                     <div class="auth-security-icon">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
                                             <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
-                                            <path d="M12 8v4" />
-                                            <path d="M12 16h.01" />
+
+                                            <path d="m9 12 2 2 4-4" />
+
                                         </svg>
+
                                     </div>
 
                                     <div>
-                                        <strong>Verification code expires soon</strong>
-                                        <span>If you do not receive the email, check your spam or junk folder.</span>
+
+                                        <strong>
+                                            Email verification required
+                                        </strong>
+
+                                        <span>
+                                            We will send a verification code to your email.
+                                        </span>
+
                                     </div>
 
                                 </div>
@@ -2484,40 +2594,291 @@
 
                                 <div class="auth-signup-note">
 
-                                    <button type="button" @onclick="BackFromVerification">
-                                        ← Back
+                                    Already have an account?
+
+                                    <button type="button"
+                                            @onclick="ShowSignIn">
+
+                                        Sign In
+
                                     </button>
 
                                 </div>
 
                             </div>
-                        }
 
-                    </div>
-                    <!-- /auth-scroll -->
+                        </EditForm>
+                    }
 
 
-                    <!-- ================= AUTH FOOTER ================= -->
-                    <div class="auth-footer">
+                    <!-- =================================================
+                         EMAIL OTP VERIFICATION
+                         ================================================= -->
+                    @if (authStep == AuthStep.VerifyEmail)
+                    {
+                        <div class="auth-form">
 
-                        <span>© @DateTime.Now.Year HR INFO ADs</span>
+                            <div class="signup-info">
 
-                        <span class="dot-sep">•</span>
+                                <div class="auth-security-icon">
 
-                        <button type="button" @onclick="CloseAuthModal">
-                            Return to marketplace
-                        </button>
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
 
-                    </div>
+                                        <rect x="3"
+                                              y="5"
+                                              width="18"
+                                              height="14"
+                                              rx="2" />
+
+                                        <path d="m3 7 9 6 9-6" />
+
+                                        <path d="M8 12h.01" />
+                                        <path d="M12 12h.01" />
+                                        <path d="M16 12h.01" />
+
+                                    </svg>
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Check your email
+                                    </strong>
+
+                                    <p>
+                                        We sent a 6-digit verification code to
+                                        <strong>@verificationEmail</strong>.
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="auth-field">
+
+                                <label for="email-otp">
+                                    Verification Code
+                                </label>
+
+                                <div class="auth-input-box">
+
+                                    <span class="auth-input-icon">
+
+                                        <svg viewBox="0 0 24 24"
+                                             aria-hidden="true">
+
+                                            <rect x="3"
+                                                  y="5"
+                                                  width="18"
+                                                  height="14"
+                                                  rx="2" />
+
+                                            <path d="M7 10h10" />
+                                            <path d="M7 14h6" />
+
+                                        </svg>
+
+                                    </span>
+
+                                    <input id="email-otp"
+                                           class="auth-input"
+                                           type="text"
+                                           inputmode="numeric"
+                                           maxlength="6"
+                                           autocomplete="one-time-code"
+                                           @bind="otpCode"
+                                           placeholder="000000" />
+
+                                </div>
+
+                            </div>
+
+
+                            @if (!string.IsNullOrWhiteSpace(otpInfoMessage))
+                            {
+                                <div class="auth-info"
+                                     role="status">
+
+                                    <span>
+                                        @otpInfoMessage
+                                    </span>
+
+                                </div>
+                            }
+
+
+                            @if (!string.IsNullOrWhiteSpace(otpErrorMessage))
+                            {
+                                <div class="auth-error"
+                                     role="alert">
+
+                                    <div class="auth-error-icon">
+                                        !
+                                    </div>
+
+                                    <div class="auth-error-content">
+
+                                        <strong>
+                                            Verification failed
+                                        </strong>
+
+                                        <span>
+                                            @otpErrorMessage
+                                        </span>
+
+                                    </div>
+
+                                    <button type="button"
+                                            class="auth-error-close"
+                                            aria-label="Close error"
+                                            @onclick="ClearOtpError">
+
+                                        ×
+
+                                    </button>
+
+                                </div>
+                            }
+
+
+                            <button type="button"
+                                    class="btn-primary auth-submit"
+                                    @onclick="HandleVerifyEmailOtp"
+                                    disabled="@isOtpLoading">
+
+                                @if (isOtpLoading)
+                                {
+                                    <span class="spinner"></span>
+
+                                    <span>
+                                        Verifying...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        Verify Email
+                                    </span>
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M5 12h13" />
+                                        <path d="m13 6 6 6-6 6" />
+
+                                    </svg>
+                                }
+
+                            </button>
+
+
+                            <div class="auth-otp-actions">
+
+                                <button type="button"
+                                        class="auth-forgot"
+                                        @onclick="HandleResendEmailOtp"
+                                        disabled="@isResendOtpLoading">
+
+                                    @if (isResendOtpLoading)
+                                    {
+                                        <span>
+                                            Sending...
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span>
+                                            Resend verification code
+                                        </span>
+                                    }
+
+                                </button>
+
+                            </div>
+
+
+                            <div class="auth-security">
+
+                                <div class="auth-security-icon">
+
+                                    <svg viewBox="0 0 24 24"
+                                         aria-hidden="true">
+
+                                        <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
+
+                                        <path d="M12 8v4" />
+
+                                        <path d="M12 16h.01" />
+
+                                    </svg>
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        Verification code expires soon
+                                    </strong>
+
+                                    <span>
+                                        If you do not receive the email, check your spam or junk folder.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="auth-signup-note">
+
+                                <button type="button"
+                                        @onclick="BackFromVerification">
+
+                                    ← Back
+
+                                </button>
+
+                            </div>
+
+                        </div>
+                    }
 
                 </div>
-                <!-- /auth-main -->
+                <!-- /auth-scroll -->
 
-            </section>
 
-        </div>
-    }
+                <!-- ====================================================
+                     AUTH FOOTER
+                     ==================================================== -->
+                <div class="auth-footer">
 
+                    <span>
+                        © @DateTime.Now.Year AdMind
+                    </span>
+
+                    <span class="dot-sep">
+                        •
+                    </span>
+
+                    <button type="button"
+                            @onclick="CloseAuthModal">
+
+                        Return to marketplace
+
+                    </button>
+
+                </div>
+
+            </div>
+            <!-- /auth-main -->
+
+        </section>
+
+    </div>
+}
 </div>
 
 
@@ -3642,50 +4003,294 @@
 
 
     // ============================================================
-    // AUTH MODAL
-    // ============================================================
+// AUTH MODAL
+// ============================================================
 
-    private void OpenLogin()
+private async Task OpenLogin()
+{
+    // ------------------------------------------------------------
+    // Clear previous authentication messages
+    // ------------------------------------------------------------
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    // ------------------------------------------------------------
+    // Reset password visibility
+    // ------------------------------------------------------------
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    // ------------------------------------------------------------
+    // Reset authentication state
+    // ------------------------------------------------------------
+
+    authMode = AuthMode.SignIn;
+    authStep = AuthStep.SignIn;
+
+    // ------------------------------------------------------------
+    // Open modal
+    // ------------------------------------------------------------
+
+    showAuthModal = true;
+
+    // ------------------------------------------------------------
+    // Explicitly refresh the component.
+    //
+    // This is important because OpenLogin is invoked through the
+    // PublicTopBar EventCallback.
+    // ------------------------------------------------------------
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task OpenSignup()
+{
+    // ------------------------------------------------------------
+    // Clear previous authentication messages
+    // ------------------------------------------------------------
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    // ------------------------------------------------------------
+    // Reset password visibility
+    // ------------------------------------------------------------
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    // ------------------------------------------------------------
+    // Reset authentication state
+    // ------------------------------------------------------------
+
+    authMode = AuthMode.SignUp;
+    authStep = AuthStep.SignIn;
+
+    // ------------------------------------------------------------
+    // Open modal
+    // ------------------------------------------------------------
+
+    showAuthModal = true;
+
+    // ------------------------------------------------------------
+    // Explicitly refresh the component.
+    // ------------------------------------------------------------
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task CloseAuthModal()
+{
+    // ------------------------------------------------------------
+    // Do not allow the modal to close while an operation is active
+    // ------------------------------------------------------------
+
+    if (isLoginLoading ||
+        isSignupLoading ||
+        isOtpLoading ||
+        isResendOtpLoading)
     {
-        errorMessage = null;
-        signupErrorMessage = null;
-        otpErrorMessage = null;
-
-        showPassword = false;
-        showSignupPassword = false;
-        showConfirmPassword = false;
-
-        authMode = AuthMode.SignIn;
-        authStep = AuthStep.SignIn;
-
-        showAuthModal = true;
+        return;
     }
 
-    private void OpenSignup()
+    // ------------------------------------------------------------
+    // Close modal
+    // ------------------------------------------------------------
+
+    showAuthModal = false;
+
+    // ------------------------------------------------------------
+    // Reset authentication step
+    // ------------------------------------------------------------
+
+    authStep = AuthStep.SignIn;
+
+    // ------------------------------------------------------------
+    // Clear messages
+    // ------------------------------------------------------------
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    // ------------------------------------------------------------
+    // Reset password visibility
+    // ------------------------------------------------------------
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    // ------------------------------------------------------------
+    // Reset OTP state
+    // ------------------------------------------------------------
+
+    otpCode = string.Empty;
+    verificationEmail = string.Empty;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ShowSignIn()
+{
+    authMode = AuthMode.SignIn;
+    authStep = AuthStep.SignIn;
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ShowSignUp()
+{
+    authMode = AuthMode.SignUp;
+    authStep = AuthStep.SignIn;
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task TogglePassword()
+{
+    showPassword = !showPassword;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ToggleSignupPassword()
+{
+    showSignupPassword = !showSignupPassword;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ToggleConfirmPassword()
+{
+    showConfirmPassword = !showConfirmPassword;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+// ============================================================
+// LOGIN
+// ============================================================
+
+private async Task HandleLogin()
+{
+    errorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    isLoginLoading = true;
+
+    try
     {
-        errorMessage = null;
-        signupErrorMessage = null;
-        otpErrorMessage = null;
+        var result =
+            await AuthApiService.LoginAsync(
+                loginModel.Email,
+                loginModel.Password);
 
-        showPassword = false;
-        showSignupPassword = false;
-        showConfirmPassword = false;
-
-        authMode = AuthMode.SignUp;
-        authStep = AuthStep.SignIn;
-
-        showAuthModal = true;
-    }
-
-    private void CloseAuthModal()
-    {
-        if (isLoginLoading ||
-            isSignupLoading ||
-            isOtpLoading ||
-            isResendOtpLoading)
+        if (result is null)
         {
+            errorMessage =
+                "Invalid email address or password.";
+
             return;
         }
+
+        // --------------------------------------------------------
+        // Existing account but email has not yet been verified.
+        // AuthService generates/sends the OTP during LoginAsync.
+        // --------------------------------------------------------
+
+        if (result.RequiresEmailVerification)
+        {
+            verificationEmail =
+                string.IsNullOrWhiteSpace(result.Email)
+                    ? loginModel.Email
+                    : result.Email;
+
+            otpCode = string.Empty;
+            otpErrorMessage = null;
+            otpInfoMessage = null;
+
+            authStep = AuthStep.VerifyEmail;
+
+            await InvokeAsync(StateHasChanged);
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Login failed
+        // --------------------------------------------------------
+
+        if (!result.Success)
+        {
+            errorMessage =
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "Login failed. Please check your credentials."
+                    : result.Message;
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Successful authentication
+        // --------------------------------------------------------
+
+        AuthenticationStateProvider.SignIn(
+            result.UserID,
+            result.UserName,
+            result.Email,
+            result.Roles,
+            result.Permissions,
+            result.AccessToken,
+            result.RefreshToken,
+            result.ExpiresAt);
+
+        isAuthenticated = true;
+
+        currentUserName =
+            result.UserName;
+
+        await LoadMyFavoritesAsync();
+
+        // --------------------------------------------------------
+        // Close modal
+        // --------------------------------------------------------
 
         showAuthModal = false;
 
@@ -3694,396 +4299,298 @@
         errorMessage = null;
         signupErrorMessage = null;
         otpErrorMessage = null;
+        otpInfoMessage = null;
 
         showPassword = false;
         showSignupPassword = false;
         showConfirmPassword = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    catch (HttpRequestException)
+    {
+        errorMessage =
+            "Unable to connect to the authentication service. Please try again.";
+    }
+    catch
+    {
+        errorMessage =
+            "An unexpected error occurred while signing in.";
+    }
+    finally
+    {
+        isLoginLoading = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
+
+
+// ============================================================
+// REGISTRATION
+// ============================================================
+
+private async Task HandleRegistration()
+{
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    isSignupLoading = true;
+
+    try
+    {
+        var fullName =
+            (signupModel.FullName ?? string.Empty)
+                .Trim();
+
+        var nameParts =
+            fullName.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+        var firstName =
+            nameParts.Length > 0
+                ? nameParts[0]
+                : string.Empty;
+
+        var lastName =
+            nameParts.Length > 1
+                ? string.Join(
+                    " ",
+                    nameParts.Skip(1))
+                : string.Empty;
+
+        // --------------------------------------------------------
+        // Register user
+        // --------------------------------------------------------
+
+        var result =
+            await AuthApiService.RegisterAsync(
+                new HRInfoAdvertisements.Application.DTOs.Authentication.RegisterRequest
+                {
+                    UserName = fullName,
+                    Email = signupModel.Email.Trim(),
+                    MobileNo = signupModel.MobileNo?.Trim(),
+                    Password = signupModel.Password,
+                    FirstName = firstName,
+                    LastName = lastName
+                });
+
+        if (result is null)
+        {
+            signupErrorMessage =
+                "Unable to create your account. Please try again.";
+
+            return;
+        }
+
+        if (!result.Success)
+        {
+            signupErrorMessage =
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "Registration failed. Please check your information and try again."
+                    : result.Message;
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Registration does not authenticate the user.
+        // User must verify email through OTP.
+        // --------------------------------------------------------
+
+        verificationEmail =
+            string.IsNullOrWhiteSpace(result.Email)
+                ? signupModel.Email.Trim()
+                : result.Email;
 
         otpCode = string.Empty;
-        verificationEmail = string.Empty;
-    }
 
-    private void ShowSignIn()
-    {
-        authMode = AuthMode.SignIn;
-        authStep = AuthStep.SignIn;
-
-        errorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
         signupErrorMessage = null;
-        otpErrorMessage = null;
 
-        showPassword = false;
-        showSignupPassword = false;
-        showConfirmPassword = false;
+        authStep = AuthStep.VerifyEmail;
+
+        await InvokeAsync(StateHasChanged);
     }
-
-    private void ShowSignUp()
+    catch (HttpRequestException)
     {
-        authMode = AuthMode.SignUp;
-        authStep = AuthStep.SignIn;
-
-        errorMessage = null;
-        signupErrorMessage = null;
-        otpErrorMessage = null;
-
-        showPassword = false;
-        showSignupPassword = false;
-        showConfirmPassword = false;
+        signupErrorMessage =
+            "Unable to connect to the authentication service. Please try again.";
     }
-
-    private void TogglePassword()
+    catch
     {
-        showPassword = !showPassword;
+        signupErrorMessage =
+            "An unexpected error occurred while creating your account.";
     }
-
-    private void ToggleSignupPassword()
+    finally
     {
-        showSignupPassword = !showSignupPassword;
+        isSignupLoading = false;
+
+        await InvokeAsync(StateHasChanged);
     }
+}
 
-    private void ToggleConfirmPassword()
-    {
-        showConfirmPassword = !showConfirmPassword;
-    }
 
+// ============================================================
+// VERIFY EMAIL OTP
+// ============================================================
 
-    // ============================================================
-    // LOGIN
-    // ============================================================
-
-    private async Task HandleLogin()
-    {
-        errorMessage = null;
-        otpErrorMessage = null;
-
-        isLoginLoading = true;
-
-        try
-        {
-            var result =
-                await AuthApiService.LoginAsync(
-                    loginModel.Email,
-                    loginModel.Password);
-
-            if (result is null)
-            {
-                errorMessage =
-                    "Invalid email address or password.";
-
-                return;
-            }
-
-            /*
-             * Existing account but email has not yet been verified.
-             *
-             * AuthService generates/sends the OTP during LoginAsync.
-             */
-            if (result.RequiresEmailVerification)
-            {
-                verificationEmail =
-                    string.IsNullOrWhiteSpace(result.Email)
-                        ? loginModel.Email
-                        : result.Email;
-
-                otpCode = string.Empty;
-                otpErrorMessage = null;
-
-                authStep = AuthStep.VerifyEmail;
-
-                return;
-            }
-
-            if (!result.Success)
-            {
-                errorMessage =
-                    string.IsNullOrWhiteSpace(result.Message)
-                        ? "Login failed. Please check your credentials."
-                        : result.Message;
-
-                return;
-            }
-
-            AuthenticationStateProvider.SignIn(
-                result.UserID,
-                result.UserName,
-                result.Email,
-                result.Roles,
-                result.Permissions,
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt);
-
-            isAuthenticated = true;
-
-            currentUserName =
-                result.UserName;
-
-            await LoadMyFavoritesAsync();
-
-            showAuthModal = false;
-
-            errorMessage = null;
-
-            showPassword = false;
-
-            StateHasChanged();
-        }
-        catch (HttpRequestException)
-        {
-            errorMessage =
-                "Unable to connect to the authentication service. Please try again.";
-        }
-        catch
-        {
-            errorMessage =
-                "An unexpected error occurred while signing in.";
-        }
-        finally
-        {
-            isLoginLoading = false;
-        }
-    }
-
-
-    // ============================================================
-    // REGISTRATION
-    // ============================================================
-
-    private async Task HandleRegistration()
-    {
-        signupErrorMessage = null;
-        otpErrorMessage = null;
-
-        isSignupLoading = true;
-
-        try
-        {
-            var fullName =
-                (signupModel.FullName ?? string.Empty)
-                    .Trim();
-
-            var nameParts =
-                fullName
-                    .Split(
-                        ' ',
-                        StringSplitOptions.RemoveEmptyEntries);
-
-            var firstName =
-                nameParts.Length > 0
-                    ? nameParts[0]
-                    : string.Empty;
-
-            var lastName =
-                nameParts.Length > 1
-                    ? string.Join(
-                        " ",
-                        nameParts.Skip(1))
-                    : string.Empty;
-
-            /*
-             * RegisterAsync uses the existing Application DTO:
-             *
-             * UserName
-             * Email
-             * MobileNo
-             * Password
-             * FirstName
-             * LastName
-             */
-            var result =
-                await AuthApiService.RegisterAsync(
-                    new HRInfoAdvertisements.Application.DTOs.Authentication.RegisterRequest
-                    {
-                        UserName = fullName,
-                        Email = signupModel.Email.Trim(),
-                        MobileNo = signupModel.MobileNo?.Trim(),
-                        Password = signupModel.Password,
-                        FirstName = firstName,
-                        LastName = lastName
-                    });
-
-            if (result is null)
-            {
-                signupErrorMessage =
-                    "Unable to create your account. Please try again.";
-
-                return;
-            }
-
-            if (!result.Success)
-            {
-                signupErrorMessage =
-                    string.IsNullOrWhiteSpace(result.Message)
-                        ? "Registration failed. Please check your information and try again."
-                        : result.Message;
-
-                return;
-            }
-
-            /*
-             * Registration intentionally does not authenticate the user.
-             * The account must first be verified through email OTP.
-             */
-            verificationEmail =
-                string.IsNullOrWhiteSpace(result.Email)
-                    ? signupModel.Email.Trim()
-                    : result.Email;
-
-            otpCode = string.Empty;
-
-            otpErrorMessage = null;
-            signupErrorMessage = null;
-
-            authStep = AuthStep.VerifyEmail;
-        }
-        catch (HttpRequestException)
-        {
-            signupErrorMessage =
-                "Unable to connect to the authentication service. Please try again.";
-        }
-        catch
-        {
-            signupErrorMessage =
-                "An unexpected error occurred while creating your account.";
-        }
-        finally
-        {
-            isSignupLoading = false;
-        }
-    }
-
-
-    // ============================================================
-    // VERIFY EMAIL OTP
-    // ============================================================
-
-    private async Task HandleVerifyEmailOtp()
-    {
-        otpErrorMessage = null;
-
-        var email =
-            (verificationEmail ?? string.Empty)
-                .Trim();
-
-        var otp =
-            (otpCode ?? string.Empty)
-                .Trim();
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            otpErrorMessage =
-                "Email address is missing. Please return to Sign Up and try again.";
-
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(otp))
-        {
-            otpErrorMessage =
-                "Please enter the 6-digit verification code.";
-
-            return;
-        }
-
-        if (otp.Length != 6 ||
-            !otp.All(char.IsDigit))
-        {
-            otpErrorMessage =
-                "Please enter a valid 6-digit verification code.";
-
-            return;
-        }
-
-        isOtpLoading = true;
-
-        try
-        {
-            var result =
-                await AuthApiService.VerifyEmailOtpAsync(
-                    email,
-                    otp);
-
-            if (result is null)
-            {
-                otpErrorMessage =
-                    "Unable to verify the email address. Please try again.";
-
-                return;
-            }
-
-            if (!result.Success)
-            {
-                otpErrorMessage =
-                    string.IsNullOrWhiteSpace(result.Message)
-                        ? "The verification code is invalid or has expired."
-                        : result.Message;
-
-                return;
-            }
-
-            /*
-             * VerifyEmailOtpAsync returns authentication tokens after
-             * successful email verification.
-             */
-            AuthenticationStateProvider.SignIn(
-                result.UserID,
-                result.UserName,
-                result.Email,
-                result.Roles,
-                result.Permissions,
-                result.AccessToken,
-                result.RefreshToken,
-                result.ExpiresAt);
-
-            isAuthenticated = true;
-
-            currentUserName =
-                result.UserName;
-
-            await LoadMyFavoritesAsync();
-
-            showAuthModal = false;
-
-            authStep = AuthStep.SignIn;
-
-            otpCode = string.Empty;
-            verificationEmail = string.Empty;
-
-            otpErrorMessage = null;
-
-            showPassword = false;
-            showSignupPassword = false;
-            showConfirmPassword = false;
-
-            StateHasChanged();
-        }
-        catch (HttpRequestException)
-        {
-            otpErrorMessage =
-                "Unable to connect to the authentication service. Please try again.";
-        }
-        catch
-        {
-            otpErrorMessage =
-                "An unexpected error occurred while verifying your email.";
-        }
-        finally
-        {
-            isOtpLoading = false;
-        }
-    }
-
-
-    private async Task HandleResendEmailOtp()
+private async Task HandleVerifyEmailOtp()
 {
     otpErrorMessage = null;
     otpInfoMessage = null;
 
-    var email = (verificationEmail ?? string.Empty).Trim();
+    var email =
+        (verificationEmail ?? string.Empty)
+            .Trim();
+
+    var otp =
+        (otpCode ?? string.Empty)
+            .Trim();
+
+    // ------------------------------------------------------------
+    // Validate email
+    // ------------------------------------------------------------
 
     if (string.IsNullOrWhiteSpace(email))
     {
-        otpErrorMessage = "Email address is missing. Please return to Sign Up and try again.";
+        otpErrorMessage =
+            "Email address is missing. Please return to Sign Up and try again.";
+
+        return;
+    }
+
+    // ------------------------------------------------------------
+    // Validate OTP
+    // ------------------------------------------------------------
+
+    if (string.IsNullOrWhiteSpace(otp))
+    {
+        otpErrorMessage =
+            "Please enter the 6-digit verification code.";
+
+        return;
+    }
+
+    if (otp.Length != 6 ||
+        !otp.All(char.IsDigit))
+    {
+        otpErrorMessage =
+            "Please enter a valid 6-digit verification code.";
+
+        return;
+    }
+
+    isOtpLoading = true;
+
+    try
+    {
+        var result =
+            await AuthApiService.VerifyEmailOtpAsync(
+                email,
+                otp);
+
+        if (result is null)
+        {
+            otpErrorMessage =
+                "Unable to verify the email address. Please try again.";
+
+            return;
+        }
+
+        if (!result.Success)
+        {
+            otpErrorMessage =
+                string.IsNullOrWhiteSpace(result.Message)
+                    ? "The verification code is invalid or has expired."
+                    : result.Message;
+
+            return;
+        }
+
+        // --------------------------------------------------------
+        // Successful email verification also authenticates user
+        // --------------------------------------------------------
+
+        AuthenticationStateProvider.SignIn(
+            result.UserID,
+            result.UserName,
+            result.Email,
+            result.Roles,
+            result.Permissions,
+            result.AccessToken,
+            result.RefreshToken,
+            result.ExpiresAt);
+
+        isAuthenticated = true;
+
+        currentUserName =
+            result.UserName;
+
+        await LoadMyFavoritesAsync();
+
+        // --------------------------------------------------------
+        // Close modal
+        // --------------------------------------------------------
+
+        showAuthModal = false;
+
+        authStep = AuthStep.SignIn;
+
+        otpCode = string.Empty;
+        verificationEmail = string.Empty;
+
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+    catch (HttpRequestException)
+    {
+        otpErrorMessage =
+            "Unable to connect to the authentication service. Please try again.";
+    }
+    catch
+    {
+        otpErrorMessage =
+            "An unexpected error occurred while verifying your email.";
+    }
+    finally
+    {
+        isOtpLoading = false;
+
+        await InvokeAsync(StateHasChanged);
+    }
+}
+
+
+// ============================================================
+// RESEND EMAIL OTP
+// ============================================================
+
+private async Task HandleResendEmailOtp()
+{
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    var email =
+        (verificationEmail ?? string.Empty)
+            .Trim();
+
+    if (string.IsNullOrWhiteSpace(email))
+    {
+        otpErrorMessage =
+            "Email address is missing. Please return to Sign Up and try again.";
+
         return;
     }
 
@@ -4091,215 +4598,248 @@
 
     try
     {
-        var sent = await AuthApiService.ResendEmailVerificationAsync(email);
+        var sent =
+            await AuthApiService.ResendEmailVerificationAsync(
+                email);
 
         if (!sent)
         {
-            otpErrorMessage = "Unable to resend the verification code. Please try again.";
+            otpErrorMessage =
+                "Unable to resend the verification code. Please try again.";
+
             return;
         }
 
         otpCode = string.Empty;
-        otpInfoMessage = "A new verification code has been sent to your email.";   // <-- was otpErrorMessage
+
+        otpInfoMessage =
+            "A new verification code has been sent to your email.";
+
+        await InvokeAsync(StateHasChanged);
     }
     catch (HttpRequestException)
     {
-        otpErrorMessage = "Unable to connect to the authentication service. Please try again.";
+        otpErrorMessage =
+            "Unable to connect to the authentication service. Please try again.";
     }
     catch
     {
-        otpErrorMessage = "An unexpected error occurred while resending the verification code.";
+        otpErrorMessage =
+            "An unexpected error occurred while resending the verification code.";
     }
     finally
     {
         isResendOtpLoading = false;
+
+        await InvokeAsync(StateHasChanged);
     }
 }
 
 
-    // ============================================================
-    // AUTH ERROR / NAVIGATION
-    // ============================================================
+// ============================================================
+// AUTH ERROR / NAVIGATION
+// ============================================================
 
-    private void ClearError()
+private async Task ClearError()
+{
+    errorMessage = null;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ClearSignupError()
+{
+    signupErrorMessage = null;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task ClearOtpError()
+{
+    otpErrorMessage = null;
+
+    await InvokeAsync(StateHasChanged);
+}
+
+
+private async Task BackFromVerification()
+{
+    otpCode = string.Empty;
+
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    authStep = AuthStep.SignIn;
+
+    // ------------------------------------------------------------
+    // Registration verification returns to Sign Up.
+    // Login verification returns to Sign In.
+    // ------------------------------------------------------------
+
+    if (!string.IsNullOrWhiteSpace(signupModel.Email) &&
+        string.Equals(
+            verificationEmail,
+            signupModel.Email,
+            StringComparison.OrdinalIgnoreCase))
     {
-        errorMessage = null;
+        authMode = AuthMode.SignUp;
+    }
+    else
+    {
+        authMode = AuthMode.SignIn;
     }
 
-    private void ClearSignupError()
-    {
-        signupErrorMessage = null;
-    }
-
-    private void ClearOtpError()
-    {
-        otpErrorMessage = null;
-    }
-
-    private void BackFromVerification()
-    {
-        otpCode = string.Empty;
-        otpErrorMessage = null;
-
-        authStep = AuthStep.SignIn;
-
-        /*
-         * Return to the appropriate authentication tab.
-         * Registration verification returns to Sign Up.
-         * Existing unverified login returns to Sign In.
-         */
-        if (!string.IsNullOrWhiteSpace(signupModel.Email) &&
-            string.Equals(
-                verificationEmail,
-                signupModel.Email,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            authMode = AuthMode.SignUp;
-        }
-        else
-        {
-            authMode = AuthMode.SignIn;
-        }
-    }
-
-    private void ForgotPassword()
-    {
-        errorMessage =
-            "Please contact the HR INFO ADs administrator to reset your password.";
-    }
-
-    private void HandleSignOut()
-    {
-        AuthenticationStateProvider.SignOut();
-
-        isAuthenticated = false;
-
-        currentUserName = string.Empty;
-
-        favoriteAdvertisementIds.Clear();
-        favoriteLoadingIds.Clear();
-
-        showAuthModal = false;
-
-        authStep = AuthStep.SignIn;
-
-        errorMessage = null;
-        signupErrorMessage = null;
-        otpErrorMessage = null;
-
-        showPassword = false;
-        showSignupPassword = false;
-        showConfirmPassword = false;
-
-        otpCode = string.Empty;
-        verificationEmail = string.Empty;
-    }
+    await InvokeAsync(StateHasChanged);
+}
 
 
-    // ============================================================
-    // MODELS
-    // ============================================================
+private async Task ForgotPassword()
+{
+    errorMessage =
+        "Please contact the AdMind administrator to reset your password.";
 
-    private enum AuthMode
-    {
-        SignIn,
-        SignUp
-    }
-
-    private enum AuthStep
-    {
-        SignIn,
-        VerifyEmail
-    }
+    await InvokeAsync(StateHasChanged);
+}
 
 
-    private sealed class LoginModel
-    {
-        [Required(
-            ErrorMessage =
-                "Email address is required.")]
-        [EmailAddress(
-            ErrorMessage =
-                "Please enter a valid email address.")]
-        public string Email { get; set; } =
-            string.Empty;
+private async Task HandleSignOut()
+{
+    AuthenticationStateProvider.SignOut();
 
-        [Required(
-            ErrorMessage =
-                "Password is required.")]
-        public string Password { get; set; } =
-            string.Empty;
-    }
+    isAuthenticated = false;
 
+    currentUserName = string.Empty;
 
-    private sealed class SignupModel
-    {
-        [Required(
-            ErrorMessage =
-                "Full name is required.")]
-        [MinLength(
-            2,
-            ErrorMessage =
-                "Please enter your full name.")]
-        public string FullName { get; set; } =
-            string.Empty;
+    favoriteAdvertisementIds.Clear();
+    favoriteLoadingIds.Clear();
 
+    showAuthModal = false;
 
-        [Required(
-            ErrorMessage =
-                "Email address is required.")]
-        [EmailAddress(
-            ErrorMessage =
-                "Please enter a valid email address.")]
-        public string Email { get; set; } =
-            string.Empty;
+    authStep = AuthStep.SignIn;
+
+    errorMessage = null;
+    signupErrorMessage = null;
+    otpErrorMessage = null;
+    otpInfoMessage = null;
+
+    showPassword = false;
+    showSignupPassword = false;
+    showConfirmPassword = false;
+
+    otpCode = string.Empty;
+    verificationEmail = string.Empty;
+
+    await InvokeAsync(StateHasChanged);
+}
 
 
-        [Required(
-            ErrorMessage =
-                "Mobile number is required.")]
-        public string MobileNo { get; set; } =
-            string.Empty;
+// ============================================================
+// MODELS
+// ============================================================
+
+private enum AuthMode
+{
+    SignIn,
+    SignUp
+}
 
 
-        [Required(
-            ErrorMessage =
-                "Password is required.")]
-        [MinLength(
-            6,
-            ErrorMessage =
-                "Password must be at least 6 characters.")]
-        public string Password { get; set; } =
-            string.Empty;
+private enum AuthStep
+{
+    SignIn,
+    VerifyEmail
+}
 
 
-        [Required(
-            ErrorMessage =
-                "Please confirm your password.")]
-        [Compare(
-            nameof(Password),
-            ErrorMessage =
-                "Passwords do not match.")]
-        public string ConfirmPassword { get; set; } =
-            string.Empty;
-    }
+private sealed class LoginModel
+{
+    [Required(
+        ErrorMessage =
+            "Email address is required.")]
+    [EmailAddress(
+        ErrorMessage =
+            "Please enter a valid email address.")]
+    public string Email { get; set; } =
+        string.Empty;
+
+    [Required(
+        ErrorMessage =
+            "Password is required.")]
+    public string Password { get; set; } =
+        string.Empty;
+}
 
 
-    private sealed class CategoryOption
-    {
-        public int CategoryID { get; set; }
+private sealed class SignupModel
+{
+    [Required(
+        ErrorMessage =
+            "Full name is required.")]
+    [MinLength(
+        2,
+        ErrorMessage =
+            "Please enter your full name.")]
+    public string FullName { get; set; } =
+        string.Empty;
 
-        public string CategoryName { get; set; } =
-            string.Empty;
-    }
+
+    [Required(
+        ErrorMessage =
+            "Email address is required.")]
+    [EmailAddress(
+        ErrorMessage =
+            "Please enter a valid email address.")]
+    public string Email { get; set; } =
+        string.Empty;
 
 
-    private sealed class AdvertisementTypeOption
-    {
-        public int AdvertisementTypeID { get; set; }
+    [Required(
+        ErrorMessage =
+            "Mobile number is required.")]
+    public string MobileNo { get; set; } =
+        string.Empty;
 
-        public string TypeName { get; set; } =
-            string.Empty;
-    }
+
+    [Required(
+        ErrorMessage =
+            "Password is required.")]
+    [MinLength(
+        6,
+        ErrorMessage =
+            "Password must be at least 6 characters.")]
+    public string Password { get; set; } =
+        string.Empty;
+
+
+    [Required(
+        ErrorMessage =
+            "Please confirm your password.")]
+    [Compare(
+        nameof(Password),
+        ErrorMessage =
+            "Passwords do not match.")]
+    public string ConfirmPassword { get; set; } =
+        string.Empty;
+}
+
+
+private sealed class CategoryOption
+{
+    public int CategoryID { get; set; }
+
+    public string CategoryName { get; set; } =
+        string.Empty;
+}
+
+
+private sealed class AdvertisementTypeOption
+{
+    public int AdvertisementTypeID { get; set; }
+
+    public string TypeName { get; set; } =
+        string.Empty;
+}
 
 }

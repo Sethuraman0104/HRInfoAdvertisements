@@ -1,3 +1,4 @@
+using HRInfoAdvertisements.Application.DTOs.Settings;
 using HRInfoAdvertisements.Application.DTOs.SystemSettings;
 
 namespace HRInfoAdvertisements.Application.Interfaces;
@@ -23,4 +24,7 @@ public interface ISystemSettingService
         int systemSettingId,
         bool isActive,
         long modifiedBy);
+
+    Task<ApplicationSettings> GetApplicationSettingsAsync(
+        CancellationToken cancellationToken = default);
 }

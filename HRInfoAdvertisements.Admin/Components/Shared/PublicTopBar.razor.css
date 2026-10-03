@@ -1,5 +1,5 @@
 /* ============================================================
-   HR INFO ADs
+   AdMind
    PUBLIC TOP BAR
    PublicTopBar.razor.css
 
@@ -21,8 +21,8 @@
     background:
         linear-gradient(
             180deg,
-            rgba(255, 255, 255, 0.98) 0%,
-            rgba(255, 255, 255, 0.96) 100%
+            rgba(255, 255, 255, 0.99) 0%,
+            rgba(255, 255, 255, 0.97) 100%
         );
 
     border-bottom: 1px solid rgba(227, 232, 240, 0.95);
@@ -54,155 +54,295 @@
 
 
 /* ============================================================
-   BRAND
+   ADMIND BRAND
    ============================================================ */
 
 .public-topbar-brand {
-    flex: 0 0 auto;
+    position: relative;
 
     display: inline-flex;
     align-items: center;
+    justify-content: flex-start;
 
-    gap: 12px;
+    flex: 0 0 auto;
 
-    min-width: 250px;
+    width: 330px;
+    min-width: 330px;
+    height: 70px;
 
-    padding: 0;
+    padding: 3px 8px;
+    margin: 0;
 
     border: 0;
-    outline: 0;
+    border-radius: 16px;
 
     background: transparent;
 
-    color: #071d41;
-
     cursor: pointer;
 
-    text-align: left;
+    text-decoration: none;
 
-    transition:
-        transform 0.2s ease,
-        opacity 0.2s ease;
-}
+    overflow: visible;
 
-.public-topbar-brand:hover {
-    transform: translateY(-1px);
-
-    opacity: 0.94;
+    isolation: isolate;
 }
 
 
 /* ============================================================
-   LOGO
+   ADMIND BRAND - PRIMARY AMBIENT GLOW
    ============================================================ */
 
-.public-topbar-logo {
-    position: relative;
+.public-topbar-brand::before {
+    content: "";
 
-    width: 48px;
-    height: 48px;
+    position: absolute;
 
-    flex: 0 0 48px;
+    left: 46%;
+    top: 50%;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 270px;
+    height: 58px;
 
-    border-radius: 14px;
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
 
     background:
-        linear-gradient(
-            145deg,
-            #153a7c 0%,
-            #2868d7 55%,
-            #3f82f7 100%
+        radial-gradient(
+            ellipse,
+            rgba(63, 130, 247, 0.19) 0%,
+            rgba(63, 130, 247, 0.105) 34%,
+            rgba(63, 130, 247, 0.045) 58%,
+            transparent 78%
         );
 
-    color: #ffffff;
+    filter: blur(15px);
 
-    font-size: 17px;
-    font-weight: 800;
+    opacity: 0.72;
 
-    letter-spacing: -0.5px;
+    pointer-events: none;
 
-    box-shadow:
-        0 7px 18px rgba(40, 104, 215, 0.22);
+    z-index: -2;
 
-    overflow: hidden;
-}
-
-.public-topbar-logo::before {
-    content: "";
-
-    position: absolute;
-
-    width: 24px;
-    height: 24px;
-
-    top: -8px;
-    right: -8px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.18);
-}
-
-.public-topbar-logo::after {
-    content: "";
-
-    position: absolute;
-
-    width: 8px;
-    height: 8px;
-
-    bottom: 7px;
-    left: 7px;
-
-    border-radius: 50%;
-
-    background:
-        rgba(255, 255, 255, 0.65);
+    animation:
+        public-admind-logo-glow
+        5s
+        ease-in-out
+        infinite;
 }
 
 
 /* ============================================================
-   BRAND TEXT
+   ADMIND BRAND - SECONDARY GLOW
    ============================================================ */
 
-.public-topbar-brand-text {
-    display: flex;
-    flex-direction: column;
+.public-topbar-brand::after {
+    content: "";
 
-    line-height: 1;
+    position: absolute;
+
+    left: 43%;
+    top: 50%;
+
+    width: 205px;
+    height: 43px;
+
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            ellipse,
+            rgba(96, 165, 250, 0.17) 0%,
+            rgba(96, 165, 250, 0.08) 42%,
+            transparent 72%
+        );
+
+    filter: blur(10px);
+
+    opacity: 0.52;
+
+    pointer-events: none;
+
+    z-index: -1;
+
+    animation:
+        public-admind-logo-secondary-glow
+        6s
+        ease-in-out
+        infinite;
 }
 
-.public-topbar-brand-name {
-    color: #071d41;
 
-    font-size: 20px;
-    font-weight: 750;
+/* ============================================================
+   ADMIND LOGO
+   ============================================================ */
 
-    letter-spacing: -0.4px;
+.public-topbar-logo-image {
+    position: relative;
+
+    z-index: 2;
+
+    display: block;
+
+    width: 330px;
+    height: 65px;
+
+    max-width: none;
+
+    object-fit: contain;
+    object-position: left center;
+
+    flex: 0 0 auto;
+
+    /*
+       Very subtle depth around the transparent logo.
+       The logo itself remains completely transparent.
+    */
+
+    filter:
+        drop-shadow(
+            0 2px 5px
+            rgba(7, 29, 65, 0.10)
+        )
+        drop-shadow(
+            0 0 8px
+            rgba(63, 130, 247, 0.10)
+        );
+
+    opacity: 1;
+
+    transition:
+        transform 0.25s ease,
+        opacity 0.25s ease,
+        filter 0.25s ease;
+
+    animation:
+        public-admind-logo-breathe
+        5s
+        ease-in-out
+        infinite;
 }
 
-.public-topbar-brand-name strong {
-    color: #2868d7;
 
-    font-weight: 850;
+/* ============================================================
+   ADMIND LOGO HOVER
+   ============================================================ */
+
+.public-topbar-brand:hover .public-topbar-logo-image {
+    transform:
+        translateY(-1px)
+        scale(1.015);
+
+    opacity: 0.97;
+
+    filter:
+        drop-shadow(
+            0 3px 7px
+            rgba(7, 29, 65, 0.13)
+        )
+        drop-shadow(
+            0 0 14px
+            rgba(63, 130, 247, 0.22)
+        );
 }
 
-.public-topbar-brand-subtitle {
-    margin-top: 6px;
 
-    color: #68758a;
+.public-topbar-brand:hover::before {
+    opacity: 1;
 
-    font-size: 10px;
-    font-weight: 600;
+    animation-duration: 2.5s;
+}
 
-    letter-spacing: 0.55px;
 
-    text-transform: uppercase;
+.public-topbar-brand:hover::after {
+    opacity: 0.78;
+
+    animation-duration: 3s;
+}
+
+
+/* ============================================================
+   ADMIND BRAND FOCUS
+   ============================================================ */
+
+.public-topbar-brand:focus-visible {
+    outline: 2px solid #ffbf00;
+    outline-offset: 5px;
+
+    border-radius: 8px;
+}
+
+
+/* ============================================================
+   ADMIND LOGO ANIMATIONS
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   Primary ambient glow
+   ------------------------------------------------------------ */
+
+@keyframes public-admind-logo-glow {
+
+    0%,
+    100% {
+        transform:
+            translate(-50%, -50%)
+            scale(0.92);
+
+        opacity: 0.50;
+    }
+
+    50% {
+        transform:
+            translate(-50%, -50%)
+            scale(1.08);
+
+        opacity: 0.90;
+    }
+}
+
+
+/* ------------------------------------------------------------
+   Secondary ambient glow
+   ------------------------------------------------------------ */
+
+@keyframes public-admind-logo-secondary-glow {
+
+    0%,
+    100% {
+        transform:
+            translate(-50%, -50%)
+            scale(0.86);
+
+        opacity: 0.28;
+    }
+
+    50% {
+        transform:
+            translate(-50%, -50%)
+            scale(1.12);
+
+        opacity: 0.68;
+    }
+}
+
+
+/* ------------------------------------------------------------
+   Very subtle logo breathing
+   ------------------------------------------------------------ */
+
+@keyframes public-admind-logo-breathe {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.012);
+    }
 }
 
 
@@ -665,6 +805,11 @@
    RESPONSIVE
    ============================================================ */
 
+
+/* ------------------------------------------------------------
+   TABLET / SMALL DESKTOP
+   ------------------------------------------------------------ */
+
 @media (max-width: 1250px) {
 
     .public-topbar-shell {
@@ -674,7 +819,24 @@
     }
 
     .public-topbar-brand {
+        width: 220px;
         min-width: 220px;
+        height: 66px;
+    }
+
+    .public-topbar-logo-image {
+        width: 215px;
+        height: 58px;
+    }
+
+    .public-topbar-brand::before {
+        width: 190px;
+        height: 52px;
+    }
+
+    .public-topbar-brand::after {
+        width: 145px;
+        height: 38px;
     }
 
     .public-topbar-brand-name {
@@ -688,9 +850,12 @@
     .public-topbar-post-button {
         padding: 0 13px;
     }
-
 }
 
+
+/* ------------------------------------------------------------
+   TABLET
+   ------------------------------------------------------------ */
 
 @media (max-width: 1050px) {
 
@@ -699,7 +864,24 @@
     }
 
     .public-topbar-brand {
-        min-width: auto;
+        width: 195px;
+        min-width: 195px;
+        height: 62px;
+    }
+
+    .public-topbar-logo-image {
+        width: 190px;
+        height: 54px;
+    }
+
+    .public-topbar-brand::before {
+        width: 175px;
+        height: 48px;
+    }
+
+    .public-topbar-brand::after {
+        width: 135px;
+        height: 35px;
     }
 
     .public-topbar-brand-subtitle {
@@ -719,9 +901,12 @@
     .public-topbar-text-button {
         padding: 0 8px;
     }
-
 }
 
+
+/* ------------------------------------------------------------
+   MOBILE / SMALL TABLET
+   ------------------------------------------------------------ */
 
 @media (max-width: 850px) {
 
@@ -731,6 +916,30 @@
         padding: 0 15px;
 
         gap: 12px;
+    }
+
+    .public-topbar-brand {
+        width: 175px;
+        min-width: 175px;
+        height: 58px;
+
+        padding-left: 4px;
+        padding-right: 4px;
+    }
+
+    .public-topbar-logo-image {
+        width: 170px;
+        height: 48px;
+    }
+
+    .public-topbar-brand::before {
+        width: 155px;
+        height: 45px;
+    }
+
+    .public-topbar-brand::after {
+        width: 115px;
+        height: 32px;
     }
 
     .public-topbar-brand-text {
@@ -776,14 +985,38 @@
     .public-topbar-post-button span {
         display: none;
     }
-
 }
 
+
+/* ------------------------------------------------------------
+   MOBILE
+   ------------------------------------------------------------ */
 
 @media (max-width: 620px) {
 
     .public-topbar-shell {
         padding: 0 10px;
+    }
+
+    .public-topbar-brand {
+        width: 155px;
+        min-width: 155px;
+        height: 56px;
+    }
+
+    .public-topbar-logo-image {
+        width: 150px;
+        height: 44px;
+    }
+
+    .public-topbar-brand::before {
+        width: 135px;
+        height: 42px;
+    }
+
+    .public-topbar-brand::after {
+        width: 100px;
+        height: 30px;
     }
 
     .public-topbar-nav-link {
@@ -807,11 +1040,41 @@
     .public-topbar-account-button > span:last-child {
         display: none;
     }
-
 }
 
 
+/* ------------------------------------------------------------
+   SMALL MOBILE
+   ------------------------------------------------------------ */
+
 @media (max-width: 450px) {
+
+    .public-topbar-shell {
+        min-height: 58px;
+
+        padding: 0 8px;
+    }
+
+    .public-topbar-brand {
+        width: 140px;
+        min-width: 140px;
+        height: 52px;
+    }
+
+    .public-topbar-logo-image {
+        width: 135px;
+        height: 40px;
+    }
+
+    .public-topbar-brand::before {
+        width: 120px;
+        height: 38px;
+    }
+
+    .public-topbar-brand::after {
+        width: 90px;
+        height: 27px;
+    }
 
     .public-topbar-nav {
         display: none;
@@ -824,5 +1087,22 @@
     .public-topbar-signup-button {
         display: none;
     }
+}
 
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .public-topbar-brand::before,
+    .public-topbar-brand::after,
+    .public-topbar-logo-image {
+        animation: none !important;
+    }
+
+    .public-topbar-brand:hover .public-topbar-logo-image {
+        transform: none;
+    }
 }

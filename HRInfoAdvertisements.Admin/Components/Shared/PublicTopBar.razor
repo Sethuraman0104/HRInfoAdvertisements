@@ -11,28 +11,20 @@
              BRAND
              ======================================================== -->
 
-        <button type="button"
-                class="public-topbar-brand"
-                @onclick="GoHome"
-                aria-label="HR INFO ADs Home">
+        <!-- ========================================================
+     BRAND
+     ======================================================== -->
 
-            <span class="public-topbar-logo">
-                HR
-            </span>
+<button type="button"
+        class="public-topbar-brand"
+        @onclick="GoHome"
+        aria-label="AdMind Home">
 
-            <span class="public-topbar-brand-text">
+    <img src="/images/logo/admind_logo_transparent.png"
+         alt="AdMind"
+         class="public-topbar-logo-image" />
 
-                <span class="public-topbar-brand-name">
-                    HR INFO <strong>ADs</strong>
-                </span>
-
-                <span class="public-topbar-brand-subtitle">
-                    Your marketplace for everything
-                </span>
-
-            </span>
-
-        </button>
+</button>
 
 
         <!-- ========================================================
@@ -292,15 +284,22 @@
     // ============================================================
 
     private async Task OpenLogin()
-    {
-        if (OnSignIn.HasDelegate)
-        {
-            await OnSignIn.InvokeAsync();
-            return;
-        }
+{
+    Console.WriteLine("SIGN IN CLICKED");
 
-        Navigation.NavigateTo("/");
+    if (OnSignIn.HasDelegate)
+    {
+        Console.WriteLine("OnSignIn delegate exists");
+
+        await OnSignIn.InvokeAsync();
+
+        Console.WriteLine("OnSignIn invoked");
+
+        return;
     }
+
+    Console.WriteLine("NO OnSignIn delegate");
+}
 
 
     // ============================================================
