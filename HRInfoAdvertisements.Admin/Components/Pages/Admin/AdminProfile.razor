@@ -1,0 +1,1732 @@
+@page "/admin/profile"
+
+@using HRInfoAdvertisements.Application.DTOs.AdminManagement
+@using HRInfoAdvertisements.Application.DTOs.UserManagement
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Settings
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject SystemSettingsApiService SystemSettingsApiService
+@inject AdminProfileApiService AdminProfileApiService
+@inject RoleManagementApiService RoleManagementApiService
+@inject NavigationManager Navigation
+
+<div class="admin-user-details">
+
+    <PageHeader Icon="bi-person-badge-fill"
+                Eyebrow="ADMINISTRATION"
+                Title="Admin Profile"
+                SetBrowserTitle="true" />
+
+    @if (isLoading)
+    {
+        <div class="user-details-loading">
+
+            <div class="user-loading-spinner">
+                <i class="bi bi-arrow-repeat"></i>
+            </div>
+
+            <div>
+                <strong>Loading administrator information...</strong>
+                <span>Please wait while your account details are retrieved.</span>
+            </div>
+
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage) && admin is null)
+    {
+        <section class="user-details-message error">
+
+            <div class="message-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="message-content">
+                <strong>Unable to load administrator profile</strong>
+                <span>@errorMessage</span>
+            </div>
+
+            <button type="button"
+                    class="user-message-button"
+                    @onclick="LoadAdminProfileAsync">
+
+                <i class="bi bi-arrow-clockwise"></i>
+                Retry
+
+            </button>
+
+        </section>
+    }
+    else if (admin is not null)
+    {
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <section class="user-details-message success">
+
+                <div class="message-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+
+                <div class="message-content">
+                    <strong>Success</strong>
+                    <span>@successMessage</span>
+                </div>
+
+                <button type="button"
+                        class="message-close"
+                        @onclick="ClearMessages">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </section>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <section class="user-details-message error">
+
+                <div class="message-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+
+                <div class="message-content">
+                    <strong>Action could not be completed</strong>
+                    <span>@errorMessage</span>
+                </div>
+
+                <button type="button"
+                        class="message-close"
+                        @onclick="ClearMessages">
+
+                    <i class="bi bi-x-lg"></i>
+
+                </button>
+
+            </section>
+        }
+
+        <!-- =========================================================
+             ADMIN PROFILE HERO
+             ========================================================= -->
+
+        <section class="user-profile-hero">
+
+            <div class="user-profile-identity">
+
+                <div class="user-profile-avatar">
+
+                    @if (!string.IsNullOrWhiteSpace(
+                        admin.Profile?.ProfilePhotoURL))
+                    {
+                        <img src="@admin.Profile.ProfilePhotoURL"
+                             alt="@DisplayName" />
+                    }
+                    else
+                    {
+                        <span>@GetInitials()</span>
+                    }
+
+                    <span class="avatar-status @GetStatusClass()"></span>
+
+                </div>
+
+                <div class="user-profile-main">
+
+                    <div class="user-profile-name-row">
+
+                        <h2>@DisplayName</h2>
+
+                        <span class="user-status-badge @GetStatusClass()">
+
+                            <i class="bi @GetStatusIcon()"></i>
+
+                            @DisplayStatus
+
+                        </span>
+
+                    </div>
+
+                    <div class="user-profile-username">
+
+                        <i class="bi bi-at"></i>
+
+                        @admin.UserName
+
+                    </div>
+
+                    <div class="user-profile-meta">
+
+                        <span>
+                            <i class="bi bi-shield-lock-fill"></i>
+                            Administrator
+                        </span>
+
+                        <span>
+                            <i class="bi bi-hash"></i>
+                            User ID: @admin.UserID
+                        </span>
+
+                        <span>
+                            <i class="bi bi-calendar3"></i>
+                            Joined @FormatDate(admin.CreatedDate)
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="user-profile-actions">
+
+                <button type="button"
+                        class="user-action secondary"
+                        @onclick="GoBack">
+
+                    <i class="bi bi-arrow-left"></i>
+
+                    <span>Back to Dashboard</span>
+
+                </button>
+
+                @if (!isEditMode)
+                {
+                    <button type="button"
+                            class="user-action primary"
+                            @onclick="StartEdit">
+
+                        <i class="bi bi-pencil-square"></i>
+
+                        <span>Edit Profile</span>
+
+                    </button>
+                }
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================================
+             PROFILE EDITOR
+             ========================================================= -->
+
+        @if (isEditMode)
+        {
+            <section class="user-card edit-card">
+
+                <div class="user-card-header">
+
+                    <div>
+
+                        <span class="card-eyebrow">
+                            PROFILE EDITOR
+                        </span>
+
+                        <h3>Edit Administrator Profile</h3>
+
+                        <p>
+                            Update the personal and profile information
+                            associated with your administrator account.
+                        </p>
+
+                    </div>
+
+                    <div class="edit-card-actions">
+
+                        <button type="button"
+                                class="user-action secondary"
+                                @onclick="CancelEdit"
+                                disabled="@isSaving">
+
+                            <i class="bi bi-x-lg"></i>
+
+                            Cancel
+
+                        </button>
+
+                        <button type="button"
+                                class="user-action primary"
+                                @onclick="SaveProfileAsync"
+                                disabled="@isSaving">
+
+                            <i class="bi @(isSaving
+                                ? "bi-arrow-repeat user-spin"
+                                : "bi-check-lg")"></i>
+
+                            @(isSaving
+                                ? "Saving..."
+                                : "Save Changes")
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <div class="user-form-grid">
+
+                    <div class="user-form-field">
+
+                        <label for="firstName">
+                            First Name
+                        </label>
+
+                        <input id="firstName"
+                               class="user-form-input"
+                               @bind="editFirstName"
+                               maxlength="100" />
+
+                    </div>
+
+                    <div class="user-form-field">
+
+                        <label for="lastName">
+                            Last Name
+                        </label>
+
+                        <input id="lastName"
+                               class="user-form-input"
+                               @bind="editLastName"
+                               maxlength="100" />
+
+                    </div>
+
+                    <div class="user-form-field">
+
+                        <label for="nationality">
+                            Nationality
+                        </label>
+
+                        <input id="nationality"
+                               class="user-form-input"
+                               @bind="editNationality"
+                               maxlength="100" />
+
+                    </div>
+
+                    <div class="user-form-field">
+
+                        <label for="preferredLanguage">
+                            Preferred Language
+                        </label>
+
+                        <select id="preferredLanguage"
+                                class="user-form-input"
+                                @bind="editPreferredLanguage">
+
+                            <option value="en">
+                                English
+                            </option>
+
+                            <option value="ar">
+                                Arabic
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="user-form-field full-width">
+
+                        <label for="profilePhotoUrl">
+                            Profile Photo URL
+                        </label>
+
+                        <input id="profilePhotoUrl"
+                               class="user-form-input"
+                               @bind="editProfilePhotoUrl"
+                               maxlength="1000"
+                               placeholder="https://..." />
+
+                    </div>
+
+                </div>
+
+            </section>
+        }
+
+
+        <!-- =========================================================
+             MAIN CONTENT
+             ========================================================= -->
+
+        <div class="user-details-grid">
+
+            <!-- =====================================================
+                 LEFT COLUMN
+                 ===================================================== -->
+
+            <div class="user-details-main">
+
+
+                <!-- =================================================
+                     CONTACT INFORMATION
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                CONTACT
+                            </span>
+
+                            <h3>Contact Information</h3>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="user-info-grid">
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Email
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi bi-envelope"></i>
+
+                                @admin.Email
+
+                            </span>
+
+                            <span class="verification-badge
+                                @(admin.IsEmailVerified
+                                    ? "verified"
+                                    : "unverified")">
+
+                                <i class="bi @(admin.IsEmailVerified
+                                    ? "bi-check-circle-fill"
+                                    : "bi-x-circle-fill")"></i>
+
+                                @(admin.IsEmailVerified
+                                    ? "Verified"
+                                    : "Not verified")
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Mobile
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi bi-phone"></i>
+
+                                @(string.IsNullOrWhiteSpace(admin.MobileNo)
+                                    ? "Not provided"
+                                    : admin.MobileNo)
+
+                            </span>
+
+                            @if (!string.IsNullOrWhiteSpace(admin.MobileNo))
+                            {
+                                <span class="verification-badge
+                                    @(admin.IsMobileVerified
+                                        ? "verified"
+                                        : "unverified")">
+
+                                    <i class="bi @(admin.IsMobileVerified
+                                        ? "bi-check-circle-fill"
+                                        : "bi-x-circle-fill")"></i>
+
+                                    @(admin.IsMobileVerified
+                                        ? "Verified"
+                                        : "Not verified")
+
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Username
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi bi-person-circle"></i>
+
+                                @admin.UserName
+
+                            </span>
+
+                        </div>
+
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Account Status
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi bi-person-check-fill"></i>
+
+                                @DisplayStatus
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     PERSONAL INFORMATION
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                PROFILE
+                            </span>
+
+                            <h3>Personal Information</h3>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-person-vcard-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="user-info-grid">
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                First Name
+                            </span>
+
+                            <span class="info-value">
+                                @(admin.Profile?.FirstName ?? "—")
+                            </span>
+
+                        </div>
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Last Name
+                            </span>
+
+                            <span class="info-value">
+                                @(admin.Profile?.LastName ?? "—")
+                            </span>
+
+                        </div>
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Nationality
+                            </span>
+
+                            <span class="info-value">
+                                @(admin.Profile?.Nationality ?? "—")
+                            </span>
+
+                        </div>
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Preferred Language
+                            </span>
+
+                            <span class="info-value">
+
+                                @(string.IsNullOrWhiteSpace(
+                                    admin.Profile?.PreferredLanguage)
+                                    ? "EN"
+                                    : admin.Profile.PreferredLanguage
+                                        .ToUpperInvariant())
+
+                            </span>
+
+                        </div>
+
+                        <div class="user-info-item">
+
+                            <span class="info-label">
+                                Account Type
+                            </span>
+
+                            <span class="info-value">
+
+                                <i class="bi bi-shield-fill-check"></i>
+
+                                Administrator Account
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ADDRESS
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ADDRESS
+                            </span>
+
+                            <h3>Address Information</h3>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </span>
+
+                    </div>
+
+                    @if (admin.PrimaryAddress is not null)
+                    {
+                        <div class="user-info-grid">
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    Address Type
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.AddressType ?? "Primary")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    Country
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.CountryName ?? "—")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    State
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.StateName ?? "—")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    City
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.CityName ?? "—")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    Area
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.AreaName ?? "—")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item">
+
+                                <span class="info-label">
+                                    Postal Code
+                                </span>
+
+                                <span class="info-value">
+                                    @(admin.PrimaryAddress.PostalCode ?? "—")
+                                </span>
+
+                            </div>
+
+                            <div class="user-info-item full-width">
+
+                                <span class="info-label">
+                                    Address
+                                </span>
+
+                                <span class="info-value">
+
+                                    @BuildAddress(admin.PrimaryAddress)
+
+                                </span>
+
+                            </div>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="empty-roles">
+
+                            <i class="bi bi-geo-alt"></i>
+
+                            <strong>No address available</strong>
+
+                            <span>
+                                No primary address has been configured
+                                for this administrator.
+                            </span>
+
+                        </div>
+                    }
+
+                </section>
+
+
+                <!-- =================================================
+                     ROLES & ACCESS
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ACCESS CONTROL
+                            </span>
+
+                            <h3>Roles & Access</h3>
+
+                            <p>
+                                Roles currently assigned to your
+                                administrator account.
+                            </p>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-shield-lock-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="assigned-roles">
+
+                        @if (admin.Roles.Count == 0)
+                        {
+                            <div class="empty-roles">
+
+                                <i class="bi bi-shield-x"></i>
+
+                                <strong>No roles assigned</strong>
+
+                                <span>
+                                    No administrator roles are currently
+                                    assigned to this account.
+                                </span>
+
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var role in admin.Roles)
+                            {
+                                <div class="role-item">
+
+                                    <div class="role-item-icon">
+
+                                        <i class="bi bi-shield-fill-check"></i>
+
+                                    </div>
+
+                                    <div class="role-item-content">
+
+                                        <strong>
+                                            @role.RoleName
+                                        </strong>
+
+                                        @if (!string.IsNullOrWhiteSpace(
+                                            role.RoleDescription))
+                                        {
+                                            <span>
+                                                @role.RoleDescription
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                    <div class="role-item-status">
+
+                                        <span class="role-status
+                                            @(role.IsActive
+                                                ? "active"
+                                                : "inactive")">
+
+                                            @(role.IsActive
+                                                ? "Active"
+                                                : "Inactive")
+
+                                        </span>
+
+                                    </div>
+
+                                </div>
+                            }
+                        }
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- =====================================================
+                 RIGHT COLUMN
+                 ===================================================== -->
+
+            <aside class="user-details-side">
+
+
+                <!-- =================================================
+                     SECURITY
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                SECURITY
+                            </span>
+
+                            <h3>Account Security</h3>
+
+                        </div>
+
+                        <span class="card-icon security">
+
+                            <i class="bi bi-shield-check"></i>
+
+                        </span>
+
+                    </div>
+
+                    <div class="security-list">
+
+
+                        <!-- Email -->
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-envelope-check"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Email Verification
+                                </strong>
+
+                                <span>
+                                    @(admin.IsEmailVerified
+                                        ? "Verified"
+                                        : "Not verified")
+                                </span>
+
+                            </div>
+
+                            <i class="bi @(admin.IsEmailVerified
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-exclamation-circle-fill security-warning")">
+                            </i>
+
+                        </div>
+
+
+                        <!-- Mobile -->
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-phone-fill"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Mobile Verification
+                                </strong>
+
+                                <span>
+                                    @(admin.IsMobileVerified
+                                        ? "Verified"
+                                        : "Not verified")
+                                </span>
+
+                            </div>
+
+                            <i class="bi @(admin.IsMobileVerified
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-exclamation-circle-fill security-warning")">
+                            </i>
+
+                        </div>
+
+
+                        <!-- MFA -->
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-fingerprint"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Multi-Factor Authentication
+                                </strong>
+
+                                <span>
+                                    @(admin.IsMFAEnabled
+                                        ? "Enabled"
+                                        : "Disabled")
+                                </span>
+
+                            </div>
+
+                            <i class="bi @(admin.IsMFAEnabled
+                                ? "bi-check-circle-fill security-good"
+                                : "bi-exclamation-circle-fill security-warning")">
+                            </i>
+
+                        </div>
+
+
+                        <!-- Failed logins -->
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-exclamation-diamond-fill"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Failed Login Attempts
+                                </strong>
+
+                                <span>
+                                    @admin.FailedLoginAttempts attempt(s)
+                                </span>
+
+                            </div>
+
+                            <span class="security-count
+                                @(admin.FailedLoginAttempts > 0
+                                    ? "warning"
+                                    : "normal")">
+
+                                @admin.FailedLoginAttempts
+
+                            </span>
+
+                        </div>
+
+
+                        <!-- Lock -->
+
+                        <div class="security-row">
+
+                            <div class="security-row-icon">
+                                <i class="bi bi-lock-fill"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Lock Status
+                                </strong>
+
+                                <span>
+                                    @(IsLocked
+                                        ? "Account is locked"
+                                        : "Account is unlocked")
+                                </span>
+
+                            </div>
+
+                            <i class="bi @(IsLocked
+                                ? "bi-lock-fill security-warning"
+                                : "bi-unlock-fill security-good")">
+                            </i>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ACCOUNT ACTIONS
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ADMINISTRATION
+                            </span>
+
+                            <h3>Account Actions</h3>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-gear-fill"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="admin-actions">
+
+
+                        <!-- Change Password -->
+
+                        <button type="button"
+                                class="admin-action warning"
+                                @onclick="ChangePassword">
+
+                            <i class="bi bi-key-fill"></i>
+
+                            <span>
+
+                                <strong>
+                                    Change Password
+                                </strong>
+
+                                <small>
+                                    Update your account password.
+                                </small>
+
+                            </span>
+
+                        </button>
+
+
+                        <!-- MFA -->
+
+                        <button type="button"
+                                class="admin-action success"
+                                @onclick="ManageMfa">
+
+                            <i class="bi bi-fingerprint"></i>
+
+                            <span>
+
+                                <strong>
+                                    @(admin.IsMFAEnabled
+                                        ? "Manage MFA"
+                                        : "Enable MFA")
+                                </strong>
+
+                                <small>
+                                    Manage multi-factor authentication.
+                                </small>
+
+                            </span>
+
+                        </button>
+
+
+                        <!-- Sessions -->
+
+                        <button type="button"
+                                class="admin-action">
+
+                            <i class="bi bi-pc-display"></i>
+
+                            <span>
+
+                                <strong>
+                                    Active Sessions
+                                </strong>
+
+                                <small>
+                                    Review your active login sessions.
+                                </small>
+
+                            </span>
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ACCOUNT TIMELINE
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                ACCOUNT
+                            </span>
+
+                            <h3>Account Timeline</h3>
+
+                        </div>
+
+                        <span class="card-icon">
+                            <i class="bi bi-clock-history"></i>
+                        </span>
+
+                    </div>
+
+                    <div class="account-timeline">
+
+
+                        <div class="timeline-item">
+
+                            <span class="timeline-dot created"></span>
+
+                            <div>
+
+                                <strong>
+                                    Account Created
+                                </strong>
+
+                                <span>
+                                    @FormatDateTime(admin.CreatedDate)
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="timeline-item">
+
+                            <span class="timeline-dot login"></span>
+
+                            <div>
+
+                                <strong>
+                                    Last Login
+                                </strong>
+
+                                <span>
+                                    @(admin.LastLoginDate.HasValue
+                                        ? FormatDateTime(
+                                            admin.LastLoginDate.Value)
+                                        : "Never")
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="timeline-item">
+
+                            <span class="timeline-dot modified"></span>
+
+                            <div>
+
+                                <strong>
+                                    Last Modified
+                                </strong>
+
+                                <span>
+                                    @(admin.ModifiedDate.HasValue
+                                        ? FormatDateTime(
+                                            admin.ModifiedDate.Value)
+                                        : "Not modified")
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        @if (admin.LockoutEndDate.HasValue)
+                        {
+                            <div class="timeline-item">
+
+                                <span class="timeline-dot lock"></span>
+
+                                <div>
+
+                                    <strong>
+                                        Lockout End
+                                    </strong>
+
+                                    <span>
+                                        @FormatDateTime(
+                                            admin.LockoutEndDate.Value)
+                                    </span>
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTIVE SESSIONS
+                     ================================================= -->
+
+                <section class="user-card">
+
+                    <div class="user-card-header">
+
+                        <div>
+
+                            <span class="card-eyebrow">
+                                SECURITY
+                            </span>
+
+                            <h3>Active Sessions</h3>
+
+                            <p>
+                                Devices currently signed in to your
+                                administrator account.
+                            </p>
+
+                        </div>
+
+                        <span class="card-icon security">
+
+                            <i class="bi bi-pc-display"></i>
+
+                        </span>
+
+                    </div>
+
+                    <div class="security-list">
+
+                        @if (admin.ActiveSessions.Count == 0)
+                        {
+                            <div class="empty-roles">
+
+                                <i class="bi bi-device-ssd"></i>
+
+                                <strong>
+                                    No active sessions
+                                </strong>
+
+                                <span>
+                                    No other active sessions were found.
+                                </span>
+
+                            </div>
+                        }
+                        else
+                        {
+                            @foreach (var session in admin.ActiveSessions)
+                            {
+                                <div class="security-row">
+
+                                    <div class="security-row-icon">
+
+                                        <i class="bi
+                                            @(GetDeviceIcon(
+                                                session.DeviceType))">
+                                        </i>
+
+                                    </div>
+
+                                    <div>
+
+                                        <strong>
+                                            @(string.IsNullOrWhiteSpace(
+                                                session.DeviceName)
+                                                ? "Unknown Device"
+                                                : session.DeviceName)
+                                        </strong>
+
+                                        <span>
+                                            @session.IPAddress
+                                        </span>
+
+                                        <span>
+                                            Last activity:
+                                            @FormatDateTime(
+                                                session.LastActivityDate)
+                                        </span>
+
+                                    </div>
+
+                                    @if (session.IsCurrentSession)
+                                    {
+                                        <span class="role-status active">
+                                            Current
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="role-remove-button"
+                                                title="Revoke session"
+                                                @onclick="() =>
+                                                    RevokeSessionAsync(
+                                                        session.UserSessionID)">
+
+                                            <i class="bi bi-x-circle"></i>
+
+                                        </button>
+                                    }
+
+                                </div>
+                            }
+                        }
+
+                    </div>
+
+                </section>
+
+            </aside>
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    private AdminProfileResponse? admin;
+
+    private bool isLoading;
+    private bool isSaving;
+    private string? errorMessage;
+    private string? successMessage;
+
+    private bool isEditMode;
+
+    private string editFirstName = string.Empty;
+    private string? editLastName;
+    private string? editNationality;
+    private string editPreferredLanguage = "en";
+    private string? editProfilePhotoUrl;
+
+
+    private bool IsLocked =>
+        admin?.LockoutEndDate.HasValue == true &&
+        admin.LockoutEndDate.Value > DateTime.UtcNow;
+
+
+    private bool IsActive =>
+        string.Equals(
+            admin?.AccountStatus,
+            "Active",
+            StringComparison.OrdinalIgnoreCase);
+
+
+    private string DisplayName =>
+        string.Join(
+                " ",
+                new[]
+                {
+                    admin?.Profile?.FirstName,
+                    admin?.Profile?.LastName
+                }
+                .Where(x => !string.IsNullOrWhiteSpace(x)))
+            .Trim()
+        is { Length: > 0 } name
+            ? name
+            : admin?.UserName ?? "Administrator";
+
+
+    private string DisplayStatus =>
+        string.IsNullOrWhiteSpace(admin?.AccountStatus)
+            ? "Unknown"
+            : admin.AccountStatus;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAdminProfileAsync();
+    }
+
+
+    private async Task LoadAdminProfileAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            admin =
+                await AdminProfileApiService
+                    .GetMyProfileAsync();
+
+            if (admin is null)
+            {
+                errorMessage =
+                    "The administrator profile could not be found.";
+
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to load administrator profile.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void StartEdit()
+    {
+        if (admin is null)
+            return;
+
+        editFirstName =
+            admin.Profile?.FirstName ?? string.Empty;
+
+        editLastName =
+            admin.Profile?.LastName;
+
+        editNationality =
+            admin.Profile?.Nationality;
+
+        editPreferredLanguage =
+            string.IsNullOrWhiteSpace(
+                admin.Profile?.PreferredLanguage)
+                ? "en"
+                : admin.Profile!.PreferredLanguage;
+
+        editProfilePhotoUrl =
+            admin.Profile?.ProfilePhotoURL;
+
+        errorMessage = null;
+        successMessage = null;
+
+        isEditMode = true;
+    }
+
+
+    private void CancelEdit()
+    {
+        if (isSaving)
+            return;
+
+        isEditMode = false;
+        errorMessage = null;
+    }
+
+
+    private async Task SaveProfileAsync()
+    {
+        if (admin is null || isSaving)
+            return;
+
+        errorMessage = null;
+        successMessage = null;
+
+        if (string.IsNullOrWhiteSpace(editFirstName))
+        {
+            errorMessage =
+                "First name is required.";
+
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            var request =
+                new UpdateAdminProfileRequest
+                {
+                    FirstName =
+                        editFirstName.Trim(),
+
+                    LastName =
+                        string.IsNullOrWhiteSpace(editLastName)
+                            ? null
+                            : editLastName.Trim(),
+
+                    Nationality =
+                        string.IsNullOrWhiteSpace(editNationality)
+                            ? null
+                            : editNationality.Trim(),
+
+                    PreferredLanguage =
+                        editPreferredLanguage,
+
+                    ProfilePhotoURL =
+                        string.IsNullOrWhiteSpace(editProfilePhotoUrl)
+                            ? null
+                            : editProfilePhotoUrl.Trim()
+                };
+
+            await AdminProfileApiService
+                .UpdateMyProfileAsync(request);
+
+            await LoadAdminProfileAsync();
+
+            isEditMode = false;
+
+            successMessage =
+                "Administrator profile updated successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to update your profile.");
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    private async Task RevokeSessionAsync(long sessionId)
+    {
+        if (admin is null)
+            return;
+
+        try
+        {
+            errorMessage = null;
+            successMessage = null;
+
+            await AdminProfileApiService
+                .RevokeSessionAsync(sessionId);
+
+            await LoadAdminProfileAsync();
+
+            successMessage =
+                "The selected session was revoked successfully.";
+        }
+        catch (Exception ex)
+        {
+            errorMessage =
+                GetExceptionMessage(
+                    ex,
+                    "Unable to revoke the selected session.");
+        }
+    }
+
+
+    private void ChangePassword()
+    {
+        Navigation.NavigateTo(
+            "/admin/profile/change-password");
+    }
+
+
+    private void ManageMfa()
+    {
+        Navigation.NavigateTo(
+            "/admin/profile/security");
+    }
+
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin");
+    }
+
+
+    private void ClearMessages()
+    {
+        errorMessage = null;
+        successMessage = null;
+    }
+
+
+    private string GetInitials()
+    {
+        var first =
+            admin?.Profile?.FirstName;
+
+        var last =
+            admin?.Profile?.LastName;
+
+        if (!string.IsNullOrWhiteSpace(first) &&
+            !string.IsNullOrWhiteSpace(last))
+        {
+            return
+                $"{char.ToUpperInvariant(first[0])}" +
+                $"{char.ToUpperInvariant(last[0])}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(first))
+            return char.ToUpperInvariant(first[0]).ToString();
+
+        if (!string.IsNullOrWhiteSpace(admin?.UserName))
+            return char.ToUpperInvariant(admin.UserName[0]).ToString();
+
+        return "?";
+    }
+
+
+    private string GetStatusClass()
+    {
+        if (IsLocked)
+            return "locked";
+
+        if (IsActive)
+            return "active";
+
+        return "inactive";
+    }
+
+
+    private string GetStatusIcon()
+    {
+        if (IsLocked)
+            return "bi-lock-fill";
+
+        if (IsActive)
+            return "bi-check-circle-fill";
+
+        return "bi-pause-circle-fill";
+    }
+
+
+    private static string GetDeviceIcon(
+        string? deviceType)
+    {
+        if (string.IsNullOrWhiteSpace(deviceType))
+            return "bi-display";
+
+        return deviceType.ToLowerInvariant() switch
+        {
+            "mobile" => "bi-phone",
+            "tablet" => "bi-tablet",
+            "desktop" => "bi-pc-display",
+            _ => "bi-display"
+        };
+    }
+
+
+    private static string BuildAddress(
+        AdminAddressDto address)
+    {
+        var parts = new[]
+        {
+            address.BuildingNo,
+            address.RoadNo,
+            address.BlockNo,
+            address.AddressLine1,
+            address.AddressLine2
+        }
+        .Where(x => !string.IsNullOrWhiteSpace(x))
+        .Select(x => x!.Trim());
+
+        return string.Join(", ", parts);
+    }
+
+
+    private static string FormatDate(DateTime? date)
+{
+    return date.HasValue
+        ? date.Value
+            .ToLocalTime()
+            .ToString("dd MMM yyyy")
+        : "—";
+}
+
+private static string FormatDateTime(DateTime? date)
+{
+    return date.HasValue
+        ? date.Value
+            .ToLocalTime()
+            .ToString("dd MMM yyyy, hh:mm tt")
+        : "—";
+}
+
+
+    private static string GetExceptionMessage(
+        Exception ex,
+        string fallback)
+    {
+        if (!string.IsNullOrWhiteSpace(ex.Message))
+            return ex.Message;
+
+        return fallback;
+    }
+}

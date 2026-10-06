@@ -73,17 +73,17 @@ public class AuthService : IAuthService
         // Check duplicate username
         // --------------------------------------------------------
 
-        var usernameExists = await _context.Users
-            .AnyAsync(x => x.UserName == userName);
+        // var usernameExists = await _context.Users
+        //     .AnyAsync(x => x.UserName == userName);
 
-        if (usernameExists)
-        {
-            return new AuthResponse
-            {
-                Success = false,
-                Message = "Username already exists."
-            };
-        }
+        // if (usernameExists)
+        // {
+        //     return new AuthResponse
+        //     {
+        //         Success = false,
+        //         Message = "Username already exists."
+        //     };
+        // }
 
         // --------------------------------------------------------
         // Check duplicate email
