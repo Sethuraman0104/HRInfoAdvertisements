@@ -3,8 +3,10 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
-@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject AdminAuthenticationStateProvider AdminAuthProvider
+@inject SiteSettingsService SiteSettingsService
 @inject NavigationManager Navigation
 
 
@@ -58,7 +60,7 @@
                     <div class="hr-topbar-brand">
 
                         <img src="/images/hr-info-ads-logo.png"
-                             alt="AdMind"
+                             alt="@Site.SiteName"
                              class="hr-topbar-logo" />
 
                         <div class="hr-topbar-brand-text">
@@ -68,7 +70,7 @@
                             </span>
 
                             <span class="hr-page-context-subtitle">
-                                AdMind
+                                @Site.SiteName
                             </span>
 
                         </div>
@@ -209,6 +211,24 @@
                             </button>
 
 
+                            <!-- HELP & SUPPORT (SUPPORT_EMAIL) -->
+
+                            @if (!string.IsNullOrWhiteSpace(Site.SupportEmail))
+                            {
+                                <button type="button"
+                                        class="hr-user-dropdown-item"
+                                        @onclick="ContactSupport">
+
+                                    <i class="bi bi-life-preserver"></i>
+
+                                    <span>
+                                        Help &amp; Support
+                                    </span>
+
+                                </button>
+                            }
+
+
                             <div class="hr-user-dropdown-divider"></div>
 
 
@@ -253,27 +273,27 @@
 
         <footer class="hr-footer">
 
-    <div class="hr-footer-left">
-        <span class="hr-footer-brand">
-            <span class="hr-footer-brand-dot"></span>
-            <span>© @DateTime.Now.Year AdMind</span>
-        </span>
-    </div>
+            <div class="hr-footer-left">
+                <span class="hr-footer-brand">
+                    <span class="hr-footer-brand-dot"></span>
+                    <span>© @DateTime.Now.Year @Site.SiteName</span>
+                </span>
+            </div>
 
-    <div class="hr-footer-right">
-        <span class="hr-footer-status">
-            <span class="hr-footer-status-dot"></span>
-            System Online
-        </span>
+            <div class="hr-footer-right">
+                <span class="hr-footer-status">
+                    <span class="hr-footer-status-dot"></span>
+                    System Online
+                </span>
 
-        <span class="hr-footer-divider"></span>
+                <span class="hr-footer-divider"></span>
 
-        <span class="hr-footer-description">
-            Advertisement Management Platform
-        </span>
-    </div>
+                <span class="hr-footer-description">
+                    Advertisement Management Platform
+                </span>
+            </div>
 
-</footer>
+        </footer>
 
     </section>
 
@@ -332,6 +352,10 @@
     private bool userMenuOpen;
 
 
+    // Defaults are used until the API answers (or if it fails).
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+
     private string CurrentUserName { get; set; }
         = "Administrator";
 
@@ -346,8 +370,21 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // ----------------------------------------------------
+        // SYSTEM SETTINGS
+        // ----------------------------------------------------
+
+        Site =
+            await SiteSettingsService
+                .GetAsync();
+
+
+        // ----------------------------------------------------
+        // CURRENT ADMIN USER
+        // ----------------------------------------------------
+
         var authenticationState =
-            await AuthenticationStateProvider
+            await AdminAuthProvider
                 .GetAuthenticationStateAsync();
 
         var user =
@@ -447,17 +484,21 @@
     }
 
 
+    private void ContactSupport()
+    {
+        userMenuOpen = false;
+
+        Navigation.NavigateTo(
+            $"mailto:{Site.SupportEmail}",
+            forceLoad: true);
+    }
+
+
     private void Logout()
     {
         userMenuOpen = false;
 
-
-        if (AuthenticationStateProvider
-            is AdminAuthenticationStateProvider adminProvider)
-        {
-            adminProvider.SignOut();
-        }
-
+        AdminAuthProvider.SignOut();
 
         Navigation.NavigateTo(
             "/login",

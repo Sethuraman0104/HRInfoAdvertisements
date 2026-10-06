@@ -11,12 +11,13 @@
 
 @inject IAdvertisementModerationService AdvertisementModerationService
 @inject AdvertisementApiService AdvertisementApiService
+@inject SiteSettingsService SiteSettingsService
 @inject AdminAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
-<PageTitle>Advertisement Details | AdMind</PageTitle>
+<PageTitle>Advertisement Details | @_siteName</PageTitle>
 
 <div class="admin-ad-detail-page">
 
@@ -469,7 +470,7 @@
                                 else
                                 {
                                     <div class="admin-ad-price-value">
-                                        @FormatPrice(_advertisement.Price)
+                                        @FormatPrice(_advertisement.Price, _advertisement.CurrencyCode)
                                     </div>
                                 }
 
@@ -1108,8 +1109,8 @@
                             </div>
 
                             <span class="admin-ad-card-count">
-                                @_advertisement.Images.Count
-                            </span>
+    @_advertisement.Images.Count / @_maxImages
+</span>
 
                         </div>
 
@@ -1350,6 +1351,17 @@
                     </div>
 
                     <div class="admin-ad-card-body">
+
+                        @if (!_requireAdminApproval)
+{
+    <div class="admin-ad-contact-note" style="margin: 0 0 12px;">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>
+            Admin approval is currently turned off in System Settings,
+            so new advertisements may publish automatically.
+        </span>
+    </div>
+}
 
                         <div class="admin-ad-moderation-actions">
 
@@ -3115,6 +3127,36 @@
 
     private int? _selectedRejectionReasonId;
 
+    // ============================================================
+// SITE SETTINGS (cached by SiteSettingsService)
+// ============================================================
+
+private string _siteName = "AdMind";
+private string _defaultCurrency = "INR";
+private int _maxImages = 5;
+private bool _requireAdminApproval = true;
+
+protected override async Task OnInitializedAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            _siteName = settings.SiteName;
+            _defaultCurrency = settings.DefaultCurrency;
+            _maxImages = settings.MaxImagesPerAdvertisement;
+            _requireAdminApproval = settings.RequireAdminApproval;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"[Admin Advertisement Detail] Settings error: {ex.Message}");
+    }
+}
+
 
     // ============================================================
     // LIFECYCLE
@@ -3313,7 +3355,9 @@
                     _advertisement.Price,
 
                 CurrencyCode =
-                    _advertisement.CurrencyCode,
+    string.IsNullOrWhiteSpace(_advertisement.CurrencyCode)
+        ? _defaultCurrency
+        : _advertisement.CurrencyCode,
 
                 IsNegotiable =
                     _advertisement.IsNegotiable,
@@ -3913,16 +3957,29 @@
     }
 
 
-    private static string FormatPrice(
-        decimal? value)
+    private static readonly HashSet<string> ThreeDecimalCurrencies =
+    new(StringComparer.OrdinalIgnoreCase)
+    { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
+
+private string FormatPrice(decimal? value, string? currencyCode)
+{
+    if (!value.HasValue)
     {
-        return value.HasValue
-            ? value.Value.ToString(
-                "#,##0.000",
-                CultureInfo.InvariantCulture) +
-              " BHD"
-            : "Price not specified";
+        return "Price not specified";
     }
+
+    var code =
+        string.IsNullOrWhiteSpace(currencyCode)
+            ? _defaultCurrency
+            : currencyCode.Trim().ToUpperInvariant();
+
+    var format =
+        ThreeDecimalCurrencies.Contains(code)
+            ? "#,##0.000"
+            : "#,##0.00";
+
+    return $"{value.Value.ToString(format, CultureInfo.InvariantCulture)} {code}";
+}
 
 
     private static string GetLookupName(

@@ -3,21 +3,21 @@
 @using System.Globalization
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.UserManagement
+@using HRInfoAdvertisements.Application.DTOs.Settings
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
-
+@inject SystemSettingsApiService SystemSettingsApiService
 @inject UserManagementApiService UserManagementApiService
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>User Management | AdMind</PageTitle>
-
 <div class="admin-users">
 
     <PageHeader Icon="bi-people-fill"
-                Eyebrow="USER MANAGEMENT"
-                Title="Users"
-                DescriptionContent="@UserHeaderDescription"
-                ActionContent="@UserHeaderActions" />
+            Eyebrow="USER MANAGEMENT"
+            Title="Users"
+            SetBrowserTitle="true"
+            DescriptionContent="@UserHeaderDescription"
+            ActionContent="@UserHeaderActions" />
 
     <!-- =========================================================
          ERROR
@@ -464,7 +464,7 @@
 
                                     <div class="users-verification-list">
 
-                                        <span class="@GetVerificationClass(user.IsEmailVerified)">
+                                        <span class="@GetVerificationClass(user.IsEmailVerified, RequireEmailVerification)">
 
                                             <i class="bi @(user.IsEmailVerified
                                                 ? "bi-check-circle-fill"
@@ -475,7 +475,7 @@
 
                                         </span>
 
-                                        <span class="@GetVerificationClass(user.IsMobileVerified)">
+                                        <span class="@GetVerificationClass(user.IsMobileVerified, RequireMobileVerification)">
 
                                             <i class="bi @(user.IsMobileVerified
                                                 ? "bi-check-circle-fill"
@@ -738,6 +738,15 @@
     private bool hasLoaded;
 
     private string? errorMessage;
+    private ApplicationSettings? settings;
+
+private string SiteName => settings?.SiteName ?? "AdMind";
+
+private bool RequireEmailVerification =>
+    settings?.RequireEmailVerification ?? true;
+
+private bool RequireMobileVerification =>
+    settings?.RequireMobileVerification ?? true;
 
     // ============================================================
     // INITIALIZATION
@@ -757,6 +766,18 @@
 
             return;
         }
+
+        try
+{
+    settings =
+        await SystemSettingsApiService
+            .GetApplicationSettingsAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine(
+        $"[Admin Users] Settings error: {ex.Message}");
+}
 
         await LoadUsersAsync();
     }
@@ -1059,7 +1080,7 @@ private RenderFragment UserHeaderActions => @<text>
             return "Accounts matching your current search and filter criteria.";
         }
 
-        return "All registered accounts on the AdMind platform.";
+        return $"All registered accounts on the {SiteName} platform.";
     }
 
     private string GetEmptyMessage()
@@ -1150,7 +1171,7 @@ private RenderFragment UserHeaderActions => @<text>
     {
         if (user.LockoutEndDate.HasValue)
         {
-            return user.LockoutEndDate.Value > DateTime.Now;
+            return user.LockoutEndDate.Value > DateTime.UtcNow;
         }
 
         return string.Equals(
@@ -1212,12 +1233,18 @@ private RenderFragment UserHeaderActions => @<text>
     // ============================================================
 
     private static string GetVerificationClass(
-        bool verified)
+    bool verified,
+    bool required)
+{
+    if (verified)
     {
-        return verified
-            ? "users-verification verified"
-            : "users-verification not-verified";
+        return "users-verification verified";
     }
+
+    return required
+        ? "users-verification not-verified"
+        : "users-verification";
+}
 
     // ============================================================
     // DATES

@@ -1,4 +1,9 @@
-﻿<div class="hr-sidebar-container">
+﻿@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+
+@inject SiteSettingsService SiteSettingsService
+
+<div class="hr-sidebar-container">
 
 
     <!-- =========================================================
@@ -13,7 +18,7 @@
             <div class="hr-sidebar-logo">
 
                 <img src="/images/hr-info-ads-logo.png"
-                     alt="AdMind"
+                     alt="@Site.SiteName"
                      class="hr-sidebar-logo-image" />
 
             </div>
@@ -22,7 +27,7 @@
             <div class="hr-sidebar-brand-content">
 
                 <div class="hr-sidebar-brand-title">
-                    AdMind
+                    @Site.SiteName
                 </div>
 
                 <div class="hr-sidebar-brand-caption">
@@ -249,3 +254,16 @@
     </div>
 
 </div>
+
+@code
+{
+    // Defaults are used until the API answers (or if it fails).
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Site =
+            await SiteSettingsService
+                .GetAsync();
+    }
+}

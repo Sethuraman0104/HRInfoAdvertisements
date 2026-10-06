@@ -6,12 +6,12 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
-
+@inject SiteSettingsService SiteSettingsService
 @inject AdvertisementApiService AdvertisementApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Post Advertisement | AdMind</PageTitle>
+<PageTitle>@(isEditMode ? "Edit Advertisement" : "Post Advertisement") | @siteName</PageTitle>
 <style>
     /* ============================================================
        AdMind
@@ -4286,8 +4286,10 @@ else
                             <i class="bi bi-send"></i>
 
                             <span>
-                                Submit for Approval
-                            </span>
+    @(requireAdminApproval
+        ? "Submit for Approval"
+        : "Publish Advertisement")
+</span>
                         }
 
                     </button>
@@ -4327,11 +4329,7 @@ private bool isLoadingAdvertisement;
 // FORM MODEL
 // ============================================================
 
-private CreateAdvertisementRequest model =
-    new()
-    {
-        CurrencyCode = "BHD"
-    };
+private CreateAdvertisementRequest model = new();
 
 
 // ============================================================
@@ -4422,8 +4420,38 @@ private bool IsBusy =>
 private const long MaxImageSize =
     10 * 1024 * 1024;
 
-private const int MaxImages =
-    20;
+// ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// Defaults are used if the API is unavailable.
+// ============================================================
+
+private string siteName = "AdMind";
+private string defaultCurrency = "INR";
+private int MaxImages = 5;
+private int expiryDays = 30;
+private bool requireAdminApproval = true;
+
+private async Task LoadSiteSettingsAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            defaultCurrency = settings.DefaultCurrency;
+            MaxImages = Math.Max(1, settings.MaxImagesPerAdvertisement);
+            expiryDays = settings.AdvertisementExpiryDays;
+            requireAdminApproval = settings.RequireAdminApproval;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"CREATE AD SETTINGS ERROR: {ex.Message}");
+    }
+}
 
 
 // ============================================================
@@ -4473,6 +4501,9 @@ protected override async Task OnInitializedAsync()
         Navigation.NavigateTo("/");
         return;
     }
+    await LoadSiteSettingsAsync();
+
+    model.CurrencyCode = defaultCurrency;
 
     await LoadLookupsAsync();
 
@@ -4696,8 +4727,9 @@ private async Task LoadExistingAdvertisementAsync(
             advertisement.Price;
 
         model.CurrencyCode =
-            advertisement.CurrencyCode;
-
+    string.IsNullOrWhiteSpace(advertisement.CurrencyCode)
+        ? defaultCurrency
+        : advertisement.CurrencyCode;
         model.IsNegotiable =
             advertisement.IsNegotiable;
 
@@ -6193,8 +6225,11 @@ private async Task SubmitForApproval()
 
 
         successMessage =
-            "Your advertisement has been submitted for approval. " +
-            "We’ll process it according to the review workflow.";
+    requireAdminApproval
+        ? $"Your advertisement has been submitted for approval. " +
+          $"Once approved, it will stay live for {expiryDays} days."
+        : $"Your advertisement has been submitted. " +
+          $"It will stay live for {expiryDays} days.";
 
 
         await Task.Delay(1200);

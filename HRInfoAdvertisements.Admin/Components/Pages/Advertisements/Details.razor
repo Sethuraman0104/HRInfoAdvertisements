@@ -4,16 +4,17 @@
 @using System.Linq
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Admin.Components.Shared
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
-
+@inject SiteSettingsService SiteSettingsService
 @inject AdvertisementApiService AdvertisementApiService
 @inject NavigationManager Navigation
 
 <PageTitle>
     @(Advertisement is null
-        ? "Advertisement | AdMind"
-        : $"{Advertisement.Title} | AdMind")
+        ? $"Advertisement | {siteName}"
+        : $"{Advertisement.Title} | {siteName}")
 </PageTitle>
 
 <div class="public-ad-details-page">
@@ -22,8 +23,7 @@
          SHARED PUBLIC TOP BAR
          ========================================================= -->
 
-    <PublicTopBar />
-
+    <PublicTopBar OnSignIn="OpenLogin" OnSignUp="OpenSignup" />
 
     <!-- =========================================================
          MAIN
@@ -1090,6 +1090,13 @@
                                 before making any payment.
                             </p>
 
+                            @if (!string.IsNullOrWhiteSpace(supportEmail))
+{
+    <p style="margin-top:8px;">
+        <a href="@GetReportUrl()">Report this advertisement</a>
+    </p>
+}
+
                         </div>
 
                     </section>
@@ -1218,6 +1225,9 @@
 
     </main>
 
+    <PublicAuthModal @bind-IsOpen="showAuthModal"
+                 @bind-Mode="authMode" />
+
 </div>
 
 
@@ -1252,6 +1262,65 @@
     private string? errorMessage;
 
     private int selectedImageIndex;
+
+    // ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// ============================================================
+
+private string siteName = "AdMind";
+private string supportEmail = string.Empty;
+private string defaultCurrency = "INR";
+
+private bool showAuthModal;
+
+private PublicAuthModal.AuthMode authMode =
+    PublicAuthModal.AuthMode.SignIn;
+
+protected override async Task OnInitializedAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            supportEmail = settings.SupportEmail;
+            defaultCurrency = settings.DefaultCurrency;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"PUBLIC AD DETAILS SETTINGS ERROR: {ex.Message}");
+    }
+}
+
+private void OpenLogin()
+{
+    authMode = PublicAuthModal.AuthMode.SignIn;
+    showAuthModal = true;
+}
+
+private void OpenSignup()
+{
+    authMode = PublicAuthModal.AuthMode.SignUp;
+    showAuthModal = true;
+}
+
+private string GetReportUrl()
+{
+    var subject =
+        Uri.EscapeDataString(
+            $"Report advertisement {GetAdvertisementNumber()}");
+
+    var body =
+        Uri.EscapeDataString(
+            $"I would like to report advertisement " +
+            $"{GetAdvertisementNumber()} ({Navigation.Uri}).\n\nReason:");
+
+    return $"mailto:{supportEmail}?subject={subject}&body={body}";
+}
 
 
     // ============================================================
@@ -1677,23 +1746,34 @@
     }
 
 
-    private string FormatPrice(
-        AdvertisementResponse advertisement)
+    private static readonly HashSet<string> ThreeDecimalCurrencies =
+    new(StringComparer.OrdinalIgnoreCase)
+    { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
+
+private string FormatPrice(
+    AdvertisementResponse advertisement)
+{
+    if (!advertisement.Price.HasValue)
     {
-        if (!advertisement.Price.HasValue)
-        {
-            return "Price on request";
-        }
-
-        var currency =
-            string.IsNullOrWhiteSpace(
-                advertisement.CurrencyCode)
-                ? "BHD"
-                : advertisement.CurrencyCode;
-
-        return $"{currency} " +
-               $"{advertisement.Price.Value:N0}";
+        return "Price on request";
     }
+
+    var currency =
+        string.IsNullOrWhiteSpace(advertisement.CurrencyCode)
+            ? defaultCurrency
+            : advertisement.CurrencyCode.Trim().ToUpperInvariant();
+
+    var price = advertisement.Price.Value;
+
+    var format =
+        price == decimal.Truncate(price)
+            ? "N0"
+            : ThreeDecimalCurrencies.Contains(currency)
+                ? "N3"
+                : "N2";
+
+    return $"{currency} {price.ToString(format, CultureInfo.CurrentCulture)}";
+}
 
 
     private string FormatNumber(

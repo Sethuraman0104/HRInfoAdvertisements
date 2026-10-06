@@ -2,14 +2,17 @@
 
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
-@inject HRInfoAdvertisements.Admin.Services.AuthApiService AuthApiService
-@inject HRInfoAdvertisements.Admin.Services.PublicAuthenticationStateProvider PublicAuthenticationStateProvider
+@inject AuthApiService AuthApiService
+@inject PublicAuthenticationStateProvider PublicAuthenticationStateProvider
+@inject SiteSettingsService SiteSettingsService
 @inject NavigationManager Navigation
 
-<PageTitle>Sign In | AdMind</PageTitle>
+<PageTitle>Sign In | @Site.SiteName</PageTitle>
 
 <div class="public-auth-page">
 
@@ -18,11 +21,11 @@
         <div class="public-auth-header">
 
             <div class="public-auth-logo">
-                HR
+                @BrandInitials()
             </div>
 
             <div class="public-auth-brand">
-                <strong>AdMind</strong>
+                <strong>@Site.SiteName</strong>
                 <span>ADs</span>
             </div>
 
@@ -51,6 +54,15 @@
                  role="alert">
 
                 @errorMessage
+
+                @if (showVerifyLink)
+                {
+                    <div>
+                        <a href="/?auth=signin">
+                            Go to sign in and verify your email
+                        </a>
+                    </div>
+                }
 
             </div>
         }
@@ -121,6 +133,28 @@
 
         </EditForm>
 
+        <!-- SUPPORT_EMAIL -->
+        <div class="public-auth-register">
+
+            <span>
+                Forgot your password?
+            </span>
+
+            @if (!string.IsNullOrWhiteSpace(Site.SupportEmail))
+            {
+                <a href="@($"mailto:{Site.SupportEmail}")">
+                    Contact @Site.SupportEmail
+                </a>
+            }
+            else
+            {
+                <span>
+                    Please contact the @Site.SiteName administrator.
+                </span>
+            }
+
+        </div>
+
         <div class="public-auth-register">
 
             <span>
@@ -136,7 +170,7 @@
         <div class="public-auth-back">
 
             <a href="/">
-                ← Return to AdMind
+                ← Return to @Site.SiteName
             </a>
 
         </div>
@@ -147,11 +181,40 @@
 
 @code
 {
+    // Loaded from /api/v1/system-settings/public (cached).
+    // Defaults are used if the API is unavailable.
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
     private readonly LoginModel loginModel = new();
 
     private bool isLoading;
 
+    private bool showVerifyLink;
+
     private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Site = await SiteSettingsService.GetAsync();
+    }
+
+    // "AdMind" -> "AM"
+    private string BrandInitials()
+    {
+        var name = Site.SiteName ?? string.Empty;
+
+        var capitals =
+            new string(name.Where(char.IsUpper).Take(2).ToArray());
+
+        if (capitals.Length >= 2)
+        {
+            return capitals;
+        }
+
+        return name.Length >= 2
+            ? name[..2].ToUpperInvariant()
+            : name.ToUpperInvariant();
+    }
 
     private async Task HandleLogin()
     {
@@ -161,6 +224,7 @@
         }
 
         errorMessage = null;
+        showVerifyLink = false;
         isLoading = true;
 
         try
@@ -174,6 +238,18 @@
             {
                 errorMessage =
                     "The authentication service is currently unavailable.";
+
+                return;
+            }
+
+            // Account exists but the email is not verified yet.
+            // The OTP step lives in the home page sign-in modal.
+            if (result.RequiresEmailVerification)
+            {
+                errorMessage =
+                    "Your email address has not been verified yet.";
+
+                showVerifyLink = true;
 
                 return;
             }
@@ -229,10 +305,11 @@
             errorMessage =
                 "The authentication service is currently unavailable.";
         }
-        catch (Exception ex)
+        catch
         {
+            // Do not show raw exception text to visitors.
             errorMessage =
-                $"Sign-in failed: {ex.Message}";
+                "An unexpected error occurred while signing in.";
         }
         finally
         {

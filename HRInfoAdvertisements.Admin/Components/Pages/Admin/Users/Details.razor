@@ -4,20 +4,20 @@
 @using HRInfoAdvertisements.Application.DTOs.UserManagement
 @using HRInfoAdvertisements.Application.Profile.DTOs
 @using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Settings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
-
+@inject SystemSettingsApiService SystemSettingsApiService
 @inject UserManagementApiService UserManagementApiService
 @inject RoleManagementApiService RoleManagementApiService
 @inject NavigationManager Navigation
 
-<PageTitle>User Details | AdMind</PageTitle>
-
 <div class="admin-user-details">
 
     <PageHeader Icon="bi-person-badge-fill"
-                Eyebrow="USER MANAGEMENT"
-                Title="User Details" />
+            Eyebrow="USER MANAGEMENT"
+            Title="User Details"
+            SetBrowserTitle="true" />
 
     @if (isLoading)
     {
@@ -645,17 +645,17 @@
                             </div>
 
                             <div>
-                                <strong>Email Verification</strong>
-                                <span>
-                                    @(user.IsEmailVerified
-                                        ? "Verified"
-                                        : "Not verified")
-                                </span>
-                            </div>
+    <strong>Email Verification</strong>
+    <span>
+        @(user.IsEmailVerified
+            ? "Verified"
+            : RequireEmailVerification
+                ? "Not verified (required)"
+                : "Not verified (optional)")
+    </span>
+</div>
 
-                            <i class="bi @(user.IsEmailVerified
-                                ? "bi-check-circle-fill security-good"
-                                : "bi-exclamation-circle-fill security-warning")"></i>
+<i class="bi @GetVerificationIcon(user.IsEmailVerified, RequireEmailVerification)"></i>
 
                         </div>
 
@@ -666,17 +666,17 @@
                             </div>
 
                             <div>
-                                <strong>Mobile Verification</strong>
-                                <span>
-                                    @(user.IsMobileVerified
-                                        ? "Verified"
-                                        : "Not verified")
-                                </span>
-                            </div>
+    <strong>Mobile Verification</strong>
+    <span>
+        @(user.IsMobileVerified
+            ? "Verified"
+            : RequireMobileVerification
+                ? "Not verified (required)"
+                : "Not verified (optional)")
+    </span>
+</div>
 
-                            <i class="bi @(user.IsMobileVerified
-                                ? "bi-check-circle-fill security-good"
-                                : "bi-exclamation-circle-fill security-warning")"></i>
+<i class="bi @GetVerificationIcon(user.IsMobileVerified, RequireMobileVerification)"></i>
 
                         </div>
 
@@ -687,17 +687,21 @@
                             </div>
 
                             <div>
-                                <strong>Multi-Factor Authentication</strong>
-                                <span>
-                                    @(user.IsMFAEnabled
-                                        ? "Enabled"
-                                        : "Disabled")
-                                </span>
-                            </div>
+    <strong>Multi-Factor Authentication</strong>
+    <span>
+        @(user.IsMFAEnabled
+            ? "Enabled"
+            : MfaRequiredForThisUser
+                ? "Disabled (required for administrators)"
+                : "Disabled")
+    </span>
+</div>
 
-                            <i class="bi @(user.IsMFAEnabled
-                                ? "bi-check-circle-fill security-good"
-                                : "bi-dash-circle-fill security-neutral")"></i>
+<i class="bi @(user.IsMFAEnabled
+    ? "bi-check-circle-fill security-good"
+    : MfaRequiredForThisUser
+        ? "bi-exclamation-circle-fill security-warning"
+        : "bi-dash-circle-fill security-neutral")"></i>
 
                         </div>
 
@@ -986,6 +990,30 @@
         user?.LockoutEndDate.HasValue == true &&
         user.LockoutEndDate.Value > DateTime.UtcNow;
 
+    private ApplicationSettings? settings;
+
+private bool RequireEmailVerification =>
+    settings?.RequireEmailVerification ?? true;
+
+private bool RequireMobileVerification =>
+    settings?.RequireMobileVerification ?? true;
+
+private bool IsAdminAccount =>
+    user?.Roles.Any(r =>
+        r.RoleName.Contains(
+            "admin",
+            StringComparison.OrdinalIgnoreCase)) == true;
+
+private bool MfaRequiredForThisUser =>
+    (settings?.AdminMfaRequired ?? true) && IsAdminAccount;
+
+private static string GetVerificationIcon(bool verified, bool required) =>
+    verified
+        ? "bi-check-circle-fill security-good"
+        : required
+            ? "bi-exclamation-circle-fill security-warning"
+            : "bi-dash-circle-fill security-neutral";
+
     private bool IsActive =>
         string.Equals(
             user?.AccountStatus,
@@ -1018,11 +1046,23 @@
                 user?.Roles.All(
                     assigned => assigned.RoleID != role.RoleID) == true)
             .OrderBy(role => role.RoleName);
-
     protected override async Task OnInitializedAsync()
+{
+    try
     {
-        await LoadUserAsync();
+
+        settings =
+            await SystemSettingsApiService
+                .GetApplicationSettingsAsync();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"[Admin User Details] Settings error: {ex.Message}");
+    }
+
+    await LoadUserAsync();
+}
 
     private async Task LoadUserAsync()
     {

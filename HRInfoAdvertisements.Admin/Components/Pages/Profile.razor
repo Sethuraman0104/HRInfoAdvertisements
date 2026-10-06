@@ -7,16 +7,18 @@
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.Profile.DTOs
 @using HRInfoAdvertisements.Application.DTOs.Authentication
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject PublicAuthenticationStateProvider PublicAuthStateProvider
 @inject AuthApiService AuthApiService
+@inject SiteSettingsService SiteSettingsService
 @inject IHttpClientFactory HttpClientFactory
 @inject NavigationManager Navigation
 
-<PageTitle>My Profile | AdMind</PageTitle>
+<PageTitle>My Profile | @Site.SiteName</PageTitle>
 
 <div class="profile-page">
 
@@ -203,7 +205,7 @@
                         </span>
 
                         <span class="profile-member-label">
-                            AdMind Member
+                            @Site.SiteName Member
                         </span>
 
                     </div>
@@ -416,6 +418,7 @@
                     </div>
 
 
+                    <!-- SUPPORT_EMAIL -->
                     <div class="profile-readonly-note">
 
                         <i class="bi bi-info-circle"></i>
@@ -423,6 +426,12 @@
                         <span>
                             Email address and mobile number are managed separately
                             from your public profile information.
+                            @if (!string.IsNullOrWhiteSpace(Site.SupportEmail))
+                            {
+                                <text>To change them, contact </text>
+                                <a href="@($"mailto:{Site.SupportEmail}")">@Site.SupportEmail</a>
+                                <text>.</text>
+                            }
                         </span>
 
                     </div>
@@ -487,7 +496,7 @@
 
                     <p class="profile-card-description">
                         Your account information is managed securely and is used
-                        to identify your AdMind account.
+                        to identify your @Site.SiteName account.
                     </p>
 
                     <div class="profile-information-list">
@@ -594,7 +603,7 @@
                             </div>
 
                             <strong>
-                                AdMind Member
+                                @Site.SiteName Member
                             </strong>
 
                         </div>
@@ -797,7 +806,7 @@
                     </div>
 
                     <p class="profile-card-description">
-                        Choose how you would like AdMind to keep you
+                        Choose how you would like @Site.SiteName to keep you
                         informed about your account and advertisements.
                     </p>
 
@@ -845,9 +854,14 @@
                                     Email Notifications
                                 </strong>
 
+                                <!-- EMAIL_ENABLED -->
                                 <small>
                                     Receive important account and marketplace
                                     notifications by email.
+                                    @if (!Site.EmailEnabled)
+                                    {
+                                        <text> Email delivery is currently turned off.</text>
+                                    }
                                 </small>
 
                             </span>
@@ -1001,15 +1015,29 @@
          ============================================================ -->
 
     <PublicAuthModal IsOpen="@showAuthModal"
-                 IsOpenChanged="@OnAuthModalVisibilityChanged"
-                 Mode="@authMode"
-                 ModeChanged="@OnAuthModalModeChanged"
-                 OnAuthenticated="@OnAuthenticated" />
+                     IsOpenChanged="@OnAuthModalVisibilityChanged"
+                     Mode="@authMode"
+                     ModeChanged="@OnAuthModalModeChanged"
+                     OnAuthenticated="@OnAuthenticated" />
 
 </div>
 
 
 @code {
+
+    // ================================================================
+    // SITE SETTINGS
+    // ================================================================
+    //
+    // Loaded from /api/v1/system-settings/public (cached).
+    // Defaults are used if the API is unavailable.
+    // ================================================================
+
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    private string DefaultDisplayName =>
+        $"{Site.SiteName} User";
+
 
     // ================================================================
     // PAGE STATE
@@ -1030,7 +1058,7 @@
     // USER DISPLAY INFORMATION
     // ================================================================
 
-    private string displayName = "AdMind User";
+    private string displayName = string.Empty;
 
     private string email = string.Empty;
 
@@ -1115,6 +1143,11 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Settings first, so the fallback display name is correct.
+        Site = await SiteSettingsService.GetAsync();
+
+        displayName = DefaultDisplayName;
+
         await LoadProfile();
     }
 
@@ -1160,7 +1193,7 @@
                 user.FindFirst(ClaimTypes.Name)?.Value
                 ?? user.FindFirst("name")?.Value
                 ?? user.FindFirst("unique_name")?.Value
-                ?? "AdMind User";
+                ?? DefaultDisplayName;
 
 
             // --------------------------------------------------------
@@ -1240,10 +1273,12 @@
         }
         catch (HttpRequestException ex)
         {
+            // Log details on the server; show a safe message to the user.
+            Console.WriteLine(
+                $"PROFILE LOAD ERROR: {ex.Message}");
+
             errorMessage =
-                string.IsNullOrWhiteSpace(ex.Message)
-                    ? "Unable to load your profile."
-                    : ex.Message;
+                "Unable to load your profile. Please try again.";
         }
         catch (Exception ex)
         {
@@ -1669,7 +1704,7 @@
             if (string.IsNullOrWhiteSpace(displayName))
             {
                 displayName =
-                    "AdMind User";
+                    DefaultDisplayName;
             }
 
             BuildProfileInitials();
@@ -1680,10 +1715,11 @@
         }
         catch (HttpRequestException ex)
         {
+            Console.WriteLine(
+                $"PROFILE SAVE ERROR: {ex.Message}");
+
             profileErrorMessage =
-                string.IsNullOrWhiteSpace(ex.Message)
-                    ? "Unable to save your profile."
-                    : ex.Message;
+                "Unable to save your profile. Please try again.";
         }
         catch (Exception ex)
         {
@@ -1716,8 +1752,10 @@
         passwordErrorMessage = null;
 
 
+        // Passwords are NOT trimmed: leading/trailing spaces
+        // may be part of a valid password.
         currentPassword =
-            currentPassword?.Trim() ?? string.Empty;
+            currentPassword ?? string.Empty;
 
         newPassword =
             newPassword ?? string.Empty;
@@ -1854,26 +1892,27 @@
 
             PublicAuthStateProvider.SignOut();
 
-isAuthenticated = false;
+            isAuthenticated = false;
 
-successMessage =
-    "Your password was changed successfully. " +
-    "Please sign in again using your new password.";
+            successMessage =
+                "Your password was changed successfully. " +
+                "Please sign in again using your new password.";
 
-authMode =
-    PublicAuthModal.AuthMode.SignIn;
+            authMode =
+                PublicAuthModal.AuthMode.SignIn;
 
-showAuthModal = true;
+            showAuthModal = true;
 
-await InvokeAsync(
-    StateHasChanged);
+            await InvokeAsync(
+                StateHasChanged);
         }
         catch (HttpRequestException ex)
         {
+            Console.WriteLine(
+                $"CHANGE PASSWORD ERROR: {ex.Message}");
+
             passwordErrorMessage =
-                string.IsNullOrWhiteSpace(ex.Message)
-                    ? "Unable to change your password."
-                    : ex.Message;
+                "Unable to change your password. Please try again.";
         }
         catch (Exception ex)
         {
@@ -2009,50 +2048,51 @@ await InvokeAsync(
     // ================================================================
 
     private async Task OpenLogin()
-{
-    authMode =
-        PublicAuthModal.AuthMode.SignIn;
+    {
+        authMode =
+            PublicAuthModal.AuthMode.SignIn;
 
-    showAuthModal = true;
+        showAuthModal = true;
 
-    await InvokeAsync(
-        StateHasChanged);
-}
-
-private async Task OnAuthModalVisibilityChanged(
-    bool isOpen)
-{
-    showAuthModal = isOpen;
-
-    await InvokeAsync(
-        StateHasChanged);
-}
+        await InvokeAsync(
+            StateHasChanged);
+    }
 
 
-private async Task OnAuthModalModeChanged(
-    PublicAuthModal.AuthMode mode)
-{
-    authMode = mode;
+    private async Task OnAuthModalVisibilityChanged(
+        bool isOpen)
+    {
+        showAuthModal = isOpen;
 
-    await InvokeAsync(
-        StateHasChanged);
-}
+        await InvokeAsync(
+            StateHasChanged);
+    }
 
 
-private async Task OnAuthenticated()
-{
-    showAuthModal = false;
+    private async Task OnAuthModalModeChanged(
+        PublicAuthModal.AuthMode mode)
+    {
+        authMode = mode;
 
-    authMode =
-        PublicAuthModal.AuthMode.SignIn;
+        await InvokeAsync(
+            StateHasChanged);
+    }
 
-    isAuthenticated = true;
 
-    await LoadProfile();
+    private async Task OnAuthenticated()
+    {
+        showAuthModal = false;
 
-    await InvokeAsync(
-        StateHasChanged);
-}
+        authMode =
+            PublicAuthModal.AuthMode.SignIn;
+
+        isAuthenticated = true;
+
+        await LoadProfile();
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
 
 
     // ================================================================

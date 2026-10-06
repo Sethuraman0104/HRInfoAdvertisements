@@ -2,11 +2,12 @@
 
 @using HRInfoAdvertisements.Application.DTOs.Favorite
 @using HRInfoAdvertisements.Admin.Services
-
+@using HRInfoAdvertisements.Application.DTOs.Settings
+@inject SystemSettingsApiService SystemSettingsApiService
 @inject FavoritesApiService FavoritesApiService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Favorites | AdMind</PageTitle>
+<PageTitle>Favorites | @SiteName</PageTitle>
 
 <div class="favorites-page">
 
@@ -370,14 +371,11 @@
                                         </span>
 
                                         @if (item.Price.HasValue)
-                                        {
-                                            <span class="advertisement-price">
-
-                                                @item.Price.Value.ToString("N3")
-                                                @item.CurrencyCode
-
-                                            </span>
-                                        }
+{
+    <span class="advertisement-price">
+        @FormatPrice(item.Price, item.CurrencyCode)
+    </span>
+}
 
                                     </div>
 
@@ -588,13 +586,57 @@
     private int uniqueAdvertisements;
 
     // ============================================================
+// SITE SETTINGS (admin API)
+// ============================================================
+
+private ApplicationSettings? settings;
+
+private string SiteName => settings?.SiteName ?? "AdMind";
+
+private static readonly HashSet<string> ThreeDecimalCurrencies =
+    new(StringComparer.OrdinalIgnoreCase)
+    { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
+
+private string FormatPrice(decimal? price, string? currencyCode)
+{
+    if (!price.HasValue)
+    {
+        return "—";
+    }
+
+    var code =
+        string.IsNullOrWhiteSpace(currencyCode)
+            ? settings?.DefaultCurrency ?? "INR"
+            : currencyCode.Trim().ToUpperInvariant();
+
+    var format =
+        ThreeDecimalCurrencies.Contains(code)
+            ? "N3"
+            : "N2";
+
+    return $"{price.Value.ToString(format)} {code}";
+}
+
+    // ============================================================
     // LIFECYCLE
     // ============================================================
 
     protected override async Task OnInitializedAsync()
+{
+    try
     {
-        await LoadFavoritesAsync();
+        settings =
+            await SystemSettingsApiService
+                .GetApplicationSettingsAsync();
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"[Admin Favorites] Settings error: {ex.Message}");
+    }
+
+    await LoadFavoritesAsync();
+}
 
     // ============================================================
     // LOAD

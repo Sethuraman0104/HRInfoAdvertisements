@@ -4,12 +4,11 @@
 
 @inject AuthApiService AuthApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject SiteSettingsService SiteSettingsService
 
 @if (IsOpen)
 {
-    <div class="auth-modal-overlay"
-         role="presentation"
-         @onclick="Close">
+    <div class="auth-modal-overlay" role="presentation" @onclick="Close">
 
         <section class="auth-modal"
                  role="dialog"
@@ -17,49 +16,28 @@
                  aria-labelledby="auth-modal-title"
                  @onclick:stopPropagation="true">
 
-            <!-- TOP ACCENT -->
             <div class="auth-modal-accent"></div>
 
-            <!-- CLOSE -->
-            <button type="button"
-                    class="auth-modal-close"
-                    aria-label="Close"
-                    title="Close"
-                    @onclick="Close">
-
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M6 6L18 18M18 6L6 18" />
-                </svg>
-
+            <button type="button" class="auth-modal-close" aria-label="Close" title="Close" @onclick="Close">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6L18 18M18 6L6 18" /></svg>
             </button>
 
             <!-- HEADER -->
             <div class="auth-modal-header">
 
                 <div class="auth-brand">
-
                     <div class="auth-brand-logo">
-                        <span>HR</span>
+                        <span>@SiteInitials</span>
                     </div>
 
                     <div class="auth-brand-text">
-
-                        <div class="auth-brand-name">
-                            AdMind <strong>ADs</strong>
-                        </div>
-
-                        <div class="auth-brand-subtitle">
-                            Advertisement Marketplace
-                        </div>
-
+                        <div class="auth-brand-name">@siteName</div>
+                        <div class="auth-brand-subtitle">@siteTagline</div>
                     </div>
-
                 </div>
 
                 <div class="auth-welcome">
-
                     <div class="auth-welcome-icon">
-
                         @if (Mode == AuthMode.SignIn)
                         {
                             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -77,13 +55,10 @@
                                 <path d="M22 11h-6" />
                             </svg>
                         }
-
                     </div>
 
                     <div>
-
                         <h2 id="auth-modal-title">
-
                             @if (Mode == AuthMode.SignIn)
                             {
                                 @:Welcome back
@@ -92,68 +67,52 @@
                             {
                                 @:Create your account
                             }
-
                         </h2>
 
                         <p>
-
                             @if (Mode == AuthMode.SignIn)
                             {
-                                @:Sign in to manage your HR advertisements.
+                                @:Sign in to manage your advertisements on @siteName.
                             }
                             else
                             {
-                                @:Join AdMind and manage your advertisements.
+                                @:Join @siteName and manage your advertisements.
                             }
-
                         </p>
-
                     </div>
-
                 </div>
-
             </div>
 
             <!-- TABS -->
             <div class="auth-tabs">
-
                 <button type="button"
                         class="auth-tab @(Mode == AuthMode.SignIn ? "active" : "")"
                         @onclick="ShowSignIn">
-
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9" />
                         <path d="M10 12h10" />
                         <path d="M17 8l4 4-4 4" />
                     </svg>
-
                     <span>Sign In</span>
-
                 </button>
 
                 <button type="button"
                         class="auth-tab @(Mode == AuthMode.SignUp ? "active" : "")"
                         @onclick="ShowSignUp">
-
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
                         <path d="M19 8v6" />
                         <path d="M22 11h-6" />
                     </svg>
-
                     <span>Sign Up</span>
-
                 </button>
-
             </div>
 
             @if (Mode == AuthMode.SignIn)
             {
                 <!-- SIGN IN -->
-                <EditForm Model="@loginModel"
-                          OnValidSubmit="@HandleLogin"
-                          FormName="PublicSignInForm">
+                <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin" FormName="PublicSignInForm">
 
                     <DataAnnotationsValidator />
 
@@ -161,27 +120,14 @@
 
                         <!-- EMAIL -->
                         <div class="auth-field">
-
-                            <label for="auth-email">
-                                Email Address
-                            </label>
+                            <label for="auth-email">Email Address</label>
 
                             <div class="auth-input-box">
-
                                 <span class="auth-input-icon">
-
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
-
-                                        <rect x="3"
-                                              y="5"
-                                              width="18"
-                                              height="14"
-                                              rx="2" />
-
+                                        <rect x="3" y="5" width="18" height="14" rx="2" />
                                         <path d="M3 7l9 6 9-6" />
-
                                     </svg>
-
                                 </span>
 
                                 <InputText id="auth-email"
@@ -189,48 +135,28 @@
                                            @bind-Value="loginModel.Email"
                                            autocomplete="username"
                                            placeholder="Enter your email address" />
-
                             </div>
 
                             <ValidationMessage For="@(() => loginModel.Email)" />
-
                         </div>
 
                         <!-- PASSWORD -->
                         <div class="auth-field">
 
                             <div class="auth-label-row">
+                                <label for="auth-password">Password</label>
 
-                                <label for="auth-password">
-                                    Password
-                                </label>
-
-                                <button type="button"
-                                        class="auth-forgot"
-                                        @onclick="ForgotPassword">
-
+                                <button type="button" class="auth-forgot" @onclick="ForgotPassword">
                                     Forgot password?
-
                                 </button>
-
                             </div>
 
                             <div class="auth-input-box">
-
                                 <span class="auth-input-icon">
-
                                     <svg viewBox="0 0 24 24" aria-hidden="true">
-
-                                        <rect x="4"
-                                              y="10"
-                                              width="16"
-                                              height="11"
-                                              rx="2" />
-
+                                        <rect x="4" y="10" width="16" height="11" rx="2" />
                                         <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-
                                     </svg>
-
                                 </span>
 
                                 <InputText id="auth-password"
@@ -245,143 +171,80 @@
                                         title="Show / hide password"
                                         aria-label="Show / hide password"
                                         @onclick="TogglePassword">
-
                                     @if (showPassword)
                                     {
                                         <svg viewBox="0 0 24 24" aria-hidden="true">
-
                                             <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
-
-                                            <circle cx="12"
-                                                    cy="12"
-                                                    r="3" />
-
+                                            <circle cx="12" cy="12" r="3" />
                                         </svg>
                                     }
                                     else
                                     {
                                         <svg viewBox="0 0 24 24" aria-hidden="true">
-
                                             <path d="M3 3l18 18" />
-
                                             <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-
                                             <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
-
                                             <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
-
                                         </svg>
                                     }
-
                                 </button>
-
                             </div>
 
                             <ValidationMessage For="@(() => loginModel.Password)" />
-
                         </div>
 
                         <!-- ERROR -->
                         @if (!string.IsNullOrWhiteSpace(errorMessage))
                         {
-                            <div class="auth-error"
-                                 role="alert">
-
-                                <div class="auth-error-icon">
-                                    !
-                                </div>
+                            <div class="auth-error" role="alert">
+                                <div class="auth-error-icon">!</div>
 
                                 <div class="auth-error-content">
-
-                                    <strong>
-                                        Sign in failed
-                                    </strong>
-
-                                    <span>
-                                        @errorMessage
-                                    </span>
-
+                                    <strong>Sign in failed</strong>
+                                    <span>@errorMessage</span>
                                 </div>
 
                                 <button type="button"
                                         class="auth-error-close"
                                         @onclick="ClearError"
-                                        aria-label="Close error">
-
-                                    ×
-
-                                </button>
-
+                                        aria-label="Close error">×</button>
                             </div>
                         }
 
                         <!-- SUBMIT -->
-                        <button type="submit"
-                                class="auth-submit"
-                                disabled="@isLoading">
-
+                        <button type="submit" class="auth-submit" disabled="@isLoading">
                             @if (isLoading)
                             {
                                 <span class="auth-spinner"></span>
-
-                                <span>
-                                    Signing in...
-                                </span>
+                                <span>Signing in...</span>
                             }
                             else
                             {
-                                <span>
-                                    Sign In
-                                </span>
-
+                                <span>Sign In</span>
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
                                     <path d="M5 12h13" />
                                     <path d="M13 6l6 6-6 6" />
                                 </svg>
                             }
-
                         </button>
 
-                        <!-- DIVIDER -->
-                        <div class="auth-divider">
+                        <div class="auth-divider"><span>Secure access</span></div>
 
-                            <span>
-                                Secure access
-                            </span>
-
-                        </div>
-
-                        <!-- SECURITY -->
                         <div class="auth-security">
-
                             <div class="auth-security-icon">
-
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-
                                     <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3z" />
-
                                     <path d="M9 12l2 2 4-4" />
-
                                 </svg>
-
                             </div>
 
                             <div>
-
-                                <strong>
-                                    Your information is protected
-                                </strong>
-
-                                <span>
-                                    Secure authentication for your account.
-                                </span>
-
+                                <strong>Your information is protected</strong>
+                                <span>Secure authentication for your account.</span>
                             </div>
-
                         </div>
 
                     </div>
-
                 </EditForm>
             }
             else
@@ -390,134 +253,70 @@
                 <div class="auth-form">
 
                     <div class="auth-signup-message">
-
                         <div class="auth-signup-message-icon">
-
                             <svg viewBox="0 0 24 24" aria-hidden="true">
-
                                 <path d="M12 2l9 4v6c0 5-3.8 9.3-9 10-5.2-.7-9-5-9-10V6l9-4z" />
-
                                 <path d="M12 8v5" />
-
-                                <circle cx="12"
-                                        cy="16.5"
-                                        r=".8" />
-
+                                <circle cx="12" cy="16.5" r=".8" />
                             </svg>
-
                         </div>
 
                         <div>
-
-                            <strong>
-                                Advertiser registration
-                            </strong>
-
+                            <strong>Advertiser registration</strong>
                             <p>
                                 Account registration is handled by the
-                                AdMind administration team.
+                                @siteName administration team.
+                                @if (!string.IsNullOrWhiteSpace(supportEmail))
+                                {
+                                    <text> Contact <a href="mailto:@supportEmail">@supportEmail</a>.</text>
+                                }
                             </p>
-
                         </div>
-
                     </div>
 
                     <!-- NAME -->
                     <div class="auth-field">
-
-                        <label for="signup-name">
-                            Full Name
-                        </label>
+                        <label for="signup-name">Full Name</label>
 
                         <div class="auth-input-box">
-
                             <span class="auth-input-icon">
-
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-
-                                    <circle cx="12"
-                                            cy="8"
-                                            r="4" />
-
+                                    <circle cx="12" cy="8" r="4" />
                                     <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
-
                                 </svg>
-
                             </span>
 
-                            <input id="signup-name"
-                                   class="auth-input"
-                                   type="text"
-                                   placeholder="Enter your full name" />
-
+                            <input id="signup-name" class="auth-input" type="text" placeholder="Enter your full name" />
                         </div>
-
                     </div>
 
                     <!-- EMAIL -->
                     <div class="auth-field">
-
-                        <label for="signup-email">
-                            Email Address
-                        </label>
+                        <label for="signup-email">Email Address</label>
 
                         <div class="auth-input-box">
-
                             <span class="auth-input-icon">
-
                                 <svg viewBox="0 0 24 24" aria-hidden="true">
-
-                                    <rect x="3"
-                                          y="5"
-                                          width="18"
-                                          height="14"
-                                          rx="2" />
-
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
                                     <path d="M3 7l9 6 9-6" />
-
                                 </svg>
-
                             </span>
 
-                            <input id="signup-email"
-                                   class="auth-input"
-                                   type="email"
-                                   placeholder="Enter your email address" />
-
+                            <input id="signup-email" class="auth-input" type="email" placeholder="Enter your email address" />
                         </div>
-
                     </div>
 
-                    <!-- SIGN UP BUTTON -->
-                    <button type="button"
-                            class="auth-submit"
-                            @onclick="RequestRegistration">
-
-                        <span>
-                            Request an Account
-                        </span>
-
+                    <button type="button" class="auth-submit" @onclick="RequestRegistration">
+                        <span>Request an Account</span>
                         <svg viewBox="0 0 24 24" aria-hidden="true">
-
                             <path d="M5 12h13" />
-
                             <path d="M13 6l6 6-6 6" />
-
                         </svg>
-
                     </button>
 
                     <div class="auth-signup-note">
-
                         Already have an account?
-
-                        <button type="button"
-                                @onclick="ShowSignIn">
-
-                            Sign In
-
-                        </button>
-
+                        <button type="button" @onclick="ShowSignIn">Sign In</button>
                     </div>
 
                 </div>
@@ -525,26 +324,12 @@
 
             <!-- FOOTER -->
             <div class="auth-modal-footer">
-
-                <span>
-                    © @DateTime.Now.Year AdMind
-                </span>
-
-                <span class="auth-footer-dot">
-                    •
-                </span>
-
-                <button type="button"
-                        @onclick="Close">
-
-                    Return to marketplace
-
-                </button>
-
+                <span>© @DateTime.Now.Year @siteName</span>
+                <span class="auth-footer-dot">•</span>
+                <button type="button" @onclick="Close">Return to marketplace</button>
             </div>
 
         </section>
-
     </div>
 }
 
@@ -557,8 +342,7 @@
     public EventCallback<bool> IsOpenChanged { get; set; }
 
     [Parameter]
-    public AuthMode Mode { get; set; } =
-        AuthMode.SignIn;
+    public AuthMode Mode { get; set; } = AuthMode.SignIn;
 
     [Parameter]
     public EventCallback<AuthMode> ModeChanged { get; set; }
@@ -566,44 +350,85 @@
     private readonly LoginModel loginModel = new();
 
     private bool isLoading;
-
     private bool showPassword;
-
     private string? errorMessage;
 
+    // ========================================================
+    // SITE SETTINGS (loaded from the public settings endpoint)
+    // Defaults are used if the API is unavailable.
+    // ========================================================
+
+    private string siteName = "AdMind";
+    private string siteTagline = "Your marketplace for everything";
+    private string supportEmail = string.Empty;
+
     private string PasswordInputType =>
-        showPassword
-            ? "text"
-            : "password";
+        showPassword ? "text" : "password";
+
+    // Two-letter badge for the logo, e.g. "AdMind" -> "AD".
+    private string SiteInitials
+    {
+        get
+        {
+            var name = siteName.Trim();
+
+            if (name.Length == 0)
+            {
+                return "AD";
+            }
+
+            var words = name.Split(
+                ' ',
+                StringSplitOptions.RemoveEmptyEntries);
+
+            return words.Length >= 2
+                ? $"{words[0][0]}{words[1][0]}".ToUpperInvariant()
+                : name[..Math.Min(2, name.Length)].ToUpperInvariant();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Cached inside SiteSettingsService.
+            var settings = await SiteSettingsService.GetAsync();
+
+            if (settings is not null)
+            {
+                siteName = settings.SiteName;
+                siteTagline = settings.SiteTagline;
+                supportEmail = settings.SupportEmail;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"AUTH MODAL SETTINGS ERROR: {ex.Message}");
+        }
+    }
 
     private async Task ShowSignIn()
     {
         errorMessage = null;
-
         Mode = AuthMode.SignIn;
-
         await ModeChanged.InvokeAsync(Mode);
     }
 
     private async Task ShowSignUp()
     {
         errorMessage = null;
-
         Mode = AuthMode.SignUp;
-
         await ModeChanged.InvokeAsync(Mode);
     }
 
     private void TogglePassword()
     {
-        showPassword =
-            !showPassword;
+        showPassword = !showPassword;
     }
 
     private async Task HandleLogin()
     {
         errorMessage = null;
-
         isLoading = true;
 
         try
@@ -615,9 +440,7 @@
 
             if (result is null)
             {
-                errorMessage =
-                    "Invalid email address or password.";
-
+                errorMessage = "Invalid email address or password.";
                 return;
             }
 
@@ -631,10 +454,6 @@
                 return;
             }
 
-            // ====================================================
-            // PUBLIC USER AUTHENTICATION
-            // ====================================================
-
             AuthenticationStateProvider.SignIn(
                 result.UserID,
                 result.UserName,
@@ -645,10 +464,6 @@
                 result.RefreshToken,
                 result.ExpiresAt);
 
-            // ====================================================
-            // VERIFY TOKEN IS NOW AVAILABLE
-            // ====================================================
-
             Console.WriteLine(
                 $"AUTH MODAL PUBLIC TOKEN AVAILABLE: " +
                 $"{!string.IsNullOrWhiteSpace(AuthenticationStateProvider.AccessToken)}");
@@ -656,10 +471,6 @@
             Console.WriteLine(
                 $"AUTH MODAL PUBLIC TOKEN LENGTH: " +
                 $"{AuthenticationStateProvider.AccessToken?.Length ?? 0}");
-
-            // ====================================================
-            // CLOSE MODAL
-            // ====================================================
 
             await Close();
         }
@@ -670,8 +481,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine(
-                $"PUBLIC LOGIN ERROR: {ex}");
+            Console.WriteLine($"PUBLIC LOGIN ERROR: {ex}");
 
             errorMessage =
                 "An unexpected error occurred while signing in.";
@@ -690,22 +500,24 @@
     private async Task Close()
     {
         errorMessage = null;
-
         showPassword = false;
-
         await IsOpenChanged.InvokeAsync(false);
     }
 
     private void ForgotPassword()
     {
         errorMessage =
-            "Please contact the AdMind administrator to reset your password.";
+            string.IsNullOrWhiteSpace(supportEmail)
+                ? $"Please contact the {siteName} administrator to reset your password."
+                : $"Please contact {supportEmail} to reset your password.";
     }
 
     private void RequestRegistration()
     {
         errorMessage =
-            "Account registration is currently handled by the AdMind administration team.";
+            string.IsNullOrWhiteSpace(supportEmail)
+                ? $"Account registration is currently handled by the {siteName} administration team."
+                : $"Account registration is handled by the {siteName} administration team. Please contact {supportEmail}.";
     }
 
     public enum AuthMode
@@ -716,19 +528,11 @@
 
     private sealed class LoginModel
     {
-        [Required(
-            ErrorMessage =
-                "Email address is required.")]
-        [EmailAddress(
-            ErrorMessage =
-                "Please enter a valid email address.")]
-        public string Email { get; set; } =
-            string.Empty;
+        [Required(ErrorMessage = "Email address is required.")]
+        [EmailAddress(ErrorMessage = "Please enter a valid email address.")]
+        public string Email { get; set; } = string.Empty;
 
-        [Required(
-            ErrorMessage =
-                "Password is required.")]
-        public string Password { get; set; } =
-            string.Empty;
+        [Required(ErrorMessage = "Password is required.")]
+        public string Password { get; set; } = string.Empty;
     }
 }

@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+@using HRInfoAdvertisements.Admin.Services
+
+@inject SiteSettingsService SiteSettingsService
+
+<!DOCTYPE html>
 
 <html lang="en">
 
@@ -10,6 +15,19 @@
           content="width=device-width, initial-scale=1.0" />
 
     <base href="/" />
+
+
+    <!-- =====================================================
+         SITE METADATA (SITE_NAME / SITE_TAGLINE)
+         ===================================================== -->
+
+    <title>@Site.SiteName</title>
+
+    <meta name="description"
+          content="@Site.SiteTagline" />
+
+    <meta property="og:site_name"
+          content="@Site.SiteName" />
 
 
     <!-- =====================================================
@@ -61,3 +79,16 @@
 </body>
 
 </html>
+
+@code
+{
+    // Defaults are used if the API is unavailable.
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Site =
+            await SiteSettingsService
+                .GetAsync();
+    }
+}

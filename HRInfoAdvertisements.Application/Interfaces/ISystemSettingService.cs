@@ -27,4 +27,7 @@ public interface ISystemSettingService
 
     Task<ApplicationSettings> GetApplicationSettingsAsync(
         CancellationToken cancellationToken = default);
+
+        Task<PublicSiteSettingsResponse> GetPublicSettingsAsync(
+    CancellationToken cancellationToken = default);
 }

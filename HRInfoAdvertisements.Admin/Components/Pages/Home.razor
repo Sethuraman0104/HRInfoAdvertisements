@@ -5,6 +5,7 @@
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.WebUtilities
@@ -13,9 +14,10 @@
 @inject AuthApiService AuthApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject PublicFavoritesApiService PublicFavoritesApiService
+@inject SiteSettingsService SiteSettingsService
 @inject NavigationManager Navigation
 
-<PageTitle>AdMind - Find What You Need</PageTitle>
+<PageTitle>@Site.SiteName - @Site.SiteTagline</PageTitle>
 
 <div class="marketplace">
 
@@ -120,7 +122,7 @@
 
             <div class="hero-eyebrow">
                 <span class="hero-brand-dot"></span>
-                <span><strong>A</strong>d<strong>M</strong>ind</span>
+                <span>@BrandMarkup()</span>
             </div>
 
             <h1>
@@ -616,33 +618,33 @@
 
                         </div>
 
-                        <!-- MINIMUM PRICE -->
+                        <!-- MINIMUM PRICE (DEFAULT_CURRENCY) -->
                         <div class="field">
 
                             <label for="minimum-price">
-                                Minimum Price
+                                Minimum Price (@Site.DefaultCurrency)
                             </label>
 
                             <input id="minimum-price"
                                    type="number"
                                    step="0.001"
                                    @bind="minPrice"
-                                   placeholder="Min price" />
+                                   placeholder="@($"Min price ({Site.DefaultCurrency})")" />
 
                         </div>
 
-                        <!-- MAXIMUM PRICE -->
+                        <!-- MAXIMUM PRICE (DEFAULT_CURRENCY) -->
                         <div class="field">
 
                             <label for="maximum-price">
-                                Maximum Price
+                                Maximum Price (@Site.DefaultCurrency)
                             </label>
 
                             <input id="maximum-price"
                                    type="number"
                                    step="0.001"
                                    @bind="maxPrice"
-                                   placeholder="Max price" />
+                                   placeholder="@($"Max price ({Site.DefaultCurrency})")" />
 
                         </div>
 
@@ -1123,7 +1125,7 @@
                                             else
                                             {
                                                 <div class="placeholder">
-                                                    <span>HR</span>
+                                                    <span>@BrandInitials()</span>
                                                 </div>
                                             }
 
@@ -1280,12 +1282,9 @@
                                                             @advertisement.Price.Value.ToString("N0")
                                                         </span>
 
-                                                        @if (!string.IsNullOrWhiteSpace(advertisement.CurrencyCode))
-                                                        {
-                                                            <span class="price-currency">
-                                                                @advertisement.CurrencyCode
-                                                            </span>
-                                                        }
+                                                        <span class="price-currency">
+                                                            @CurrencyFor(advertisement)
+                                                        </span>
                                                     }
                                                     else
                                                     {
@@ -1504,7 +1503,7 @@
                     </span>
 
                     <h2>
-                        How AdMind works
+                        How @Site.SiteName works
                     </h2>
 
                     <p>
@@ -1558,8 +1557,9 @@
                             Advertise
                         </h3>
 
+                        <!-- REQUIRE_ADMIN_APPROVAL + ADVERTISEMENT_EXPIRY_DAYS -->
                         <p>
-                            Create your own advertisement and reach interested buyers.
+                            @AdvertiseStepText
                         </p>
 
                     </div>
@@ -1602,17 +1602,17 @@
             <div class="footer-brand">
 
                 <div class="brand-logo">
-                    HR
+                    @BrandInitials()
                 </div>
 
                 <div>
 
                     <strong>
-                        AdMind
+                        @Site.SiteName
                     </strong>
 
                     <p>
-                        A simple marketplace for buyers, sellers and service providers.
+                        @Site.SiteTagline
                     </p>
 
                 </div>
@@ -1696,11 +1696,20 @@
         <div class="footer-bottom">
 
             <span>
-                © @DateTime.Now.Year AdMind. All rights reserved.
+                © @DateTime.Now.Year @Site.SiteName. All rights reserved.
             </span>
 
+            <!-- SUPPORT_EMAIL -->
             <span>
-                Terms · Privacy · Contact
+                Terms · Privacy ·
+                @if (!string.IsNullOrWhiteSpace(Site.SupportEmail))
+                {
+                    <a href="@($"mailto:{Site.SupportEmail}")">Contact</a>
+                }
+                else
+                {
+                    <text>Contact</text>
+                }
             </span>
 
         </div>
@@ -1727,24 +1736,22 @@
 
                 <div class="auth-aside-glow"></div>
 
-                <!-- ============================================================
-     ADMIND LOGO
-     ============================================================ -->
-<div class="auth-aside-brand">
+                <!-- LOGO -->
+                <div class="auth-aside-brand">
 
-    <div class="auth-logo-glow"></div>
+                    <div class="auth-logo-glow"></div>
 
-    <div class="auth-logo-glow-secondary"></div>
+                    <div class="auth-logo-glow-secondary"></div>
 
-    <div class="auth-logo-stage">
+                    <div class="auth-logo-stage">
 
-        <img src="/images/logo/admind_logo_transparent.png"
-             alt="AdMind"
-             class="auth-aside-logo" />
+                        <img src="/images/logo/admind_logo_transparent.png"
+                             alt="@Site.SiteName"
+                             class="auth-aside-logo" />
 
-    </div>
+                    </div>
 
-</div>
+                </div>
 
 
                 <!-- BRAND MESSAGE -->
@@ -1813,11 +1820,11 @@
                      ==================================================== -->
                 <div class="auth-header">
 
-                    <!-- ADMIND BRAND - MOBILE / TABLET -->
+                    <!-- BRAND - MOBILE / TABLET -->
                     <div class="auth-brand">
 
                         <img src="/images/logo/admind_logo_transparent.png"
-                             alt="AdMind"
+                             alt="@Site.SiteName"
                              class="auth-brand-logo-image" />
 
                     </div>
@@ -1895,7 +1902,7 @@
                                 }
                                 else
                                 {
-                                    @:Join AdMind and start managing your advertisements.
+                                    @($"Join {Site.SiteName} and start managing your advertisements.")
                                 }
 
                             </p>
@@ -2406,7 +2413,7 @@
 
                                                     <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
 
-                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1 3.1 4.1" />
+                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
 
                                                     <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
 
@@ -2483,9 +2490,9 @@
 
                                                     <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
 
-                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1 3.1 4.1" />
+                                                    <path d="M9.9 5.2A10.9 10.9 0 0 1 12 5c6.5 0 10 7 10 7a18.3 18.3 0 0 1-3.1 4.1" />
 
-                                                    <path d="M6.2 6.2C3.6 6.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
+                                                    <path d="M6.2 6.2C3.6 8.2 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.1-.8" />
 
                                                 </svg>
                                             }
@@ -2562,34 +2569,38 @@
                                 </button>
 
 
-                                <div class="auth-security">
+                                <!-- REQUIRE_EMAIL_VERIFICATION -->
+                                @if (Site.RequireEmailVerification)
+                                {
+                                    <div class="auth-security">
 
-                                    <div class="auth-security-icon">
+                                        <div class="auth-security-icon">
 
-                                        <svg viewBox="0 0 24 24"
-                                             aria-hidden="true">
+                                            <svg viewBox="0 0 24 24"
+                                                 aria-hidden="true">
 
-                                            <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
+                                                <path d="M12 3l8 3v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V6l8-3Z" />
 
-                                            <path d="m9 12 2 2 4-4" />
+                                                <path d="m9 12 2 2 4-4" />
 
-                                        </svg>
+                                            </svg>
+
+                                        </div>
+
+                                        <div>
+
+                                            <strong>
+                                                Email verification required
+                                            </strong>
+
+                                            <span>
+                                                We will send a verification code to your email.
+                                            </span>
+
+                                        </div>
 
                                     </div>
-
-                                    <div>
-
-                                        <strong>
-                                            Email verification required
-                                        </strong>
-
-                                        <span>
-                                            We will send a verification code to your email.
-                                        </span>
-
-                                    </div>
-
-                                </div>
+                                }
 
 
                                 <div class="auth-signup-note">
@@ -2775,29 +2786,33 @@
                             </button>
 
 
-                            <div class="auth-otp-actions">
+                            <!-- EMAIL_ENABLED -->
+                            @if (Site.EmailEnabled)
+                            {
+                                <div class="auth-otp-actions">
 
-                                <button type="button"
-                                        class="auth-forgot"
-                                        @onclick="HandleResendEmailOtp"
-                                        disabled="@isResendOtpLoading">
+                                    <button type="button"
+                                            class="auth-forgot"
+                                            @onclick="HandleResendEmailOtp"
+                                            disabled="@isResendOtpLoading">
 
-                                    @if (isResendOtpLoading)
-                                    {
-                                        <span>
-                                            Sending...
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span>
-                                            Resend verification code
-                                        </span>
-                                    }
+                                        @if (isResendOtpLoading)
+                                        {
+                                            <span>
+                                                Sending...
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span>
+                                                Resend verification code
+                                            </span>
+                                        }
 
-                                </button>
+                                    </button>
 
-                            </div>
+                                </div>
+                            }
 
 
                             <div class="auth-security">
@@ -2819,8 +2834,9 @@
 
                                 <div>
 
+                                    <!-- EMAIL_OTP_EXPIRY_MINUTES -->
                                     <strong>
-                                        Verification code expires soon
+                                        Verification code expires in @Site.EmailOtpExpiryMinutes minutes
                                     </strong>
 
                                     <span>
@@ -2856,7 +2872,7 @@
                 <div class="auth-footer">
 
                     <span>
-                        © @DateTime.Now.Year AdMind
+                        © @DateTime.Now.Year @Site.SiteName
                     </span>
 
                     <span class="dot-sep">
@@ -2883,6 +2899,74 @@
 
 
 @code {
+
+    // ============================================================
+    // SITE SETTINGS
+    // ============================================================
+    //
+    // Loaded from /api/v1/system-settings/public (cached 5 min).
+    // Defaults are used if the API is unavailable.
+    // ============================================================
+
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    // Bolds the first letter and the first capital after it
+    // (A + M in "AdMind").
+    private MarkupString BrandMarkup()
+    {
+        var name = Site.SiteName ?? string.Empty;
+        var sb = new System.Text.StringBuilder();
+        var boldedSecond = false;
+
+        for (var i = 0; i < name.Length; i++)
+        {
+            var ch = System.Net.WebUtility.HtmlEncode(name[i].ToString());
+            var bold = i == 0 || (!boldedSecond && char.IsUpper(name[i]));
+
+            if (i > 0 && bold)
+            {
+                boldedSecond = true;
+            }
+
+            sb.Append(bold ? $"<strong>{ch}</strong>" : ch);
+        }
+
+        return new MarkupString(sb.ToString());
+    }
+
+    // Initials used by the footer logo and the image placeholder.
+    // "AdMind" -> "AM"
+    private string BrandInitials()
+    {
+        var name = Site.SiteName ?? string.Empty;
+
+        var capitals =
+            new string(name.Where(char.IsUpper).Take(2).ToArray());
+
+        if (capitals.Length >= 2)
+        {
+            return capitals;
+        }
+
+        return name.Length >= 2
+            ? name[..2].ToUpperInvariant()
+            : name.ToUpperInvariant();
+    }
+
+    // DEFAULT_CURRENCY fallback when an ad has no currency code.
+    private string CurrencyFor(AdvertisementResponse ad) =>
+        string.IsNullOrWhiteSpace(ad.CurrencyCode)
+            ? Site.DefaultCurrency
+            : ad.CurrencyCode;
+
+    // REQUIRE_ADMIN_APPROVAL + ADVERTISEMENT_EXPIRY_DAYS
+    private string AdvertiseStepText =>
+        "Create your own advertisement and reach interested buyers." +
+        (Site.RequireAdminApproval
+            ? " Listings are reviewed before they go live."
+            : string.Empty) +
+        $" Each listing stays active for {Site.AdvertisementExpiryDays} days.";
+
 
     // ============================================================
     // CONFIG
@@ -3133,6 +3217,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Settings first, so every section renders with the right values.
+        Site = await SiteSettingsService.GetAsync();
+
         await LoadAuthenticationStateAsync();
 
         await LoadCountriesAsync();
@@ -3889,38 +3976,8 @@
         await LoadAdvertisementsAsync();
     }
 
-    private async Task ClearFilters()
-    {
-        searchText = string.Empty;
-
-        categoryId = null;
-        typeId = null;
-
-        countryId = null;
-        stateId = null;
-        cityId = null;
-        areaId = null;
-
-        States.Clear();
-        Cities.Clear();
-        Areas.Clear();
-
-        minPrice = null;
-        maxPrice = null;
-
-        minBedrooms = null;
-        minBathrooms = null;
-
-        negotiableFilterEnabled = false;
-        featuredFilterEnabled = false;
-
-        sortBy = "createddate";
-        sortDirection = "desc";
-
-        currentPage = 1;
-
-        await LoadAdvertisementsAsync();
-    }
+    // "Clear All" and "Reset" currently do the same thing.
+    private Task ClearFilters() => ResetFilters();
 
     private async Task SelectCategory(
         int? selectedCategoryId,
@@ -4003,294 +4060,61 @@
 
 
     // ============================================================
-// AUTH MODAL
-// ============================================================
+    // AUTH MODAL
+    // ============================================================
 
-private async Task OpenLogin()
-{
-    // ------------------------------------------------------------
-    // Clear previous authentication messages
-    // ------------------------------------------------------------
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    // ------------------------------------------------------------
-    // Reset password visibility
-    // ------------------------------------------------------------
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    // ------------------------------------------------------------
-    // Reset authentication state
-    // ------------------------------------------------------------
-
-    authMode = AuthMode.SignIn;
-    authStep = AuthStep.SignIn;
-
-    // ------------------------------------------------------------
-    // Open modal
-    // ------------------------------------------------------------
-
-    showAuthModal = true;
-
-    // ------------------------------------------------------------
-    // Explicitly refresh the component.
-    //
-    // This is important because OpenLogin is invoked through the
-    // PublicTopBar EventCallback.
-    // ------------------------------------------------------------
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task OpenSignup()
-{
-    // ------------------------------------------------------------
-    // Clear previous authentication messages
-    // ------------------------------------------------------------
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    // ------------------------------------------------------------
-    // Reset password visibility
-    // ------------------------------------------------------------
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    // ------------------------------------------------------------
-    // Reset authentication state
-    // ------------------------------------------------------------
-
-    authMode = AuthMode.SignUp;
-    authStep = AuthStep.SignIn;
-
-    // ------------------------------------------------------------
-    // Open modal
-    // ------------------------------------------------------------
-
-    showAuthModal = true;
-
-    // ------------------------------------------------------------
-    // Explicitly refresh the component.
-    // ------------------------------------------------------------
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task CloseAuthModal()
-{
-    // ------------------------------------------------------------
-    // Do not allow the modal to close while an operation is active
-    // ------------------------------------------------------------
-
-    if (isLoginLoading ||
-        isSignupLoading ||
-        isOtpLoading ||
-        isResendOtpLoading)
+    private async Task OpenLogin()
     {
-        return;
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        authMode = AuthMode.SignIn;
+        authStep = AuthStep.SignIn;
+
+        showAuthModal = true;
+
+        // Explicit refresh: OpenLogin is invoked through the
+        // PublicTopBar EventCallback.
+        await InvokeAsync(StateHasChanged);
     }
 
-    // ------------------------------------------------------------
-    // Close modal
-    // ------------------------------------------------------------
 
-    showAuthModal = false;
-
-    // ------------------------------------------------------------
-    // Reset authentication step
-    // ------------------------------------------------------------
-
-    authStep = AuthStep.SignIn;
-
-    // ------------------------------------------------------------
-    // Clear messages
-    // ------------------------------------------------------------
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    // ------------------------------------------------------------
-    // Reset password visibility
-    // ------------------------------------------------------------
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    // ------------------------------------------------------------
-    // Reset OTP state
-    // ------------------------------------------------------------
-
-    otpCode = string.Empty;
-    verificationEmail = string.Empty;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ShowSignIn()
-{
-    authMode = AuthMode.SignIn;
-    authStep = AuthStep.SignIn;
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ShowSignUp()
-{
-    authMode = AuthMode.SignUp;
-    authStep = AuthStep.SignIn;
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task TogglePassword()
-{
-    showPassword = !showPassword;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ToggleSignupPassword()
-{
-    showSignupPassword = !showSignupPassword;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ToggleConfirmPassword()
-{
-    showConfirmPassword = !showConfirmPassword;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-// ============================================================
-// LOGIN
-// ============================================================
-
-private async Task HandleLogin()
-{
-    errorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    isLoginLoading = true;
-
-    try
+    private async Task OpenSignup()
     {
-        var result =
-            await AuthApiService.LoginAsync(
-                loginModel.Email,
-                loginModel.Password);
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
 
-        if (result is null)
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        authMode = AuthMode.SignUp;
+        authStep = AuthStep.SignIn;
+
+        showAuthModal = true;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task CloseAuthModal()
+    {
+        // Do not allow the modal to close while an operation is active.
+        if (isLoginLoading ||
+            isSignupLoading ||
+            isOtpLoading ||
+            isResendOtpLoading)
         {
-            errorMessage =
-                "Invalid email address or password.";
-
             return;
         }
-
-        // --------------------------------------------------------
-        // Existing account but email has not yet been verified.
-        // AuthService generates/sends the OTP during LoginAsync.
-        // --------------------------------------------------------
-
-        if (result.RequiresEmailVerification)
-        {
-            verificationEmail =
-                string.IsNullOrWhiteSpace(result.Email)
-                    ? loginModel.Email
-                    : result.Email;
-
-            otpCode = string.Empty;
-            otpErrorMessage = null;
-            otpInfoMessage = null;
-
-            authStep = AuthStep.VerifyEmail;
-
-            await InvokeAsync(StateHasChanged);
-
-            return;
-        }
-
-        // --------------------------------------------------------
-        // Login failed
-        // --------------------------------------------------------
-
-        if (!result.Success)
-        {
-            errorMessage =
-                string.IsNullOrWhiteSpace(result.Message)
-                    ? "Login failed. Please check your credentials."
-                    : result.Message;
-
-            return;
-        }
-
-        // --------------------------------------------------------
-        // Successful authentication
-        // --------------------------------------------------------
-
-        AuthenticationStateProvider.SignIn(
-            result.UserID,
-            result.UserName,
-            result.Email,
-            result.Roles,
-            result.Permissions,
-            result.AccessToken,
-            result.RefreshToken,
-            result.ExpiresAt);
-
-        isAuthenticated = true;
-
-        currentUserName =
-            result.UserName;
-
-        await LoadMyFavoritesAsync();
-
-        // --------------------------------------------------------
-        // Close modal
-        // --------------------------------------------------------
 
         showAuthModal = false;
 
@@ -4304,245 +4128,19 @@ private async Task HandleLogin()
         showPassword = false;
         showSignupPassword = false;
         showConfirmPassword = false;
-
-        await InvokeAsync(StateHasChanged);
-    }
-    catch (HttpRequestException)
-    {
-        errorMessage =
-            "Unable to connect to the authentication service. Please try again.";
-    }
-    catch
-    {
-        errorMessage =
-            "An unexpected error occurred while signing in.";
-    }
-    finally
-    {
-        isLoginLoading = false;
-
-        await InvokeAsync(StateHasChanged);
-    }
-}
-
-
-// ============================================================
-// REGISTRATION
-// ============================================================
-
-private async Task HandleRegistration()
-{
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    isSignupLoading = true;
-
-    try
-    {
-        var fullName =
-            (signupModel.FullName ?? string.Empty)
-                .Trim();
-
-        var nameParts =
-            fullName.Split(
-                ' ',
-                StringSplitOptions.RemoveEmptyEntries);
-
-        var firstName =
-            nameParts.Length > 0
-                ? nameParts[0]
-                : string.Empty;
-
-        var lastName =
-            nameParts.Length > 1
-                ? string.Join(
-                    " ",
-                    nameParts.Skip(1))
-                : string.Empty;
-
-        // --------------------------------------------------------
-        // Register user
-        // --------------------------------------------------------
-
-        var result =
-            await AuthApiService.RegisterAsync(
-                new HRInfoAdvertisements.Application.DTOs.Authentication.RegisterRequest
-                {
-                    UserName = fullName,
-                    Email = signupModel.Email.Trim(),
-                    MobileNo = signupModel.MobileNo?.Trim(),
-                    Password = signupModel.Password,
-                    FirstName = firstName,
-                    LastName = lastName
-                });
-
-        if (result is null)
-        {
-            signupErrorMessage =
-                "Unable to create your account. Please try again.";
-
-            return;
-        }
-
-        if (!result.Success)
-        {
-            signupErrorMessage =
-                string.IsNullOrWhiteSpace(result.Message)
-                    ? "Registration failed. Please check your information and try again."
-                    : result.Message;
-
-            return;
-        }
-
-        // --------------------------------------------------------
-        // Registration does not authenticate the user.
-        // User must verify email through OTP.
-        // --------------------------------------------------------
-
-        verificationEmail =
-            string.IsNullOrWhiteSpace(result.Email)
-                ? signupModel.Email.Trim()
-                : result.Email;
-
-        otpCode = string.Empty;
-
-        otpErrorMessage = null;
-        otpInfoMessage = null;
-        signupErrorMessage = null;
-
-        authStep = AuthStep.VerifyEmail;
-
-        await InvokeAsync(StateHasChanged);
-    }
-    catch (HttpRequestException)
-    {
-        signupErrorMessage =
-            "Unable to connect to the authentication service. Please try again.";
-    }
-    catch
-    {
-        signupErrorMessage =
-            "An unexpected error occurred while creating your account.";
-    }
-    finally
-    {
-        isSignupLoading = false;
-
-        await InvokeAsync(StateHasChanged);
-    }
-}
-
-
-// ============================================================
-// VERIFY EMAIL OTP
-// ============================================================
-
-private async Task HandleVerifyEmailOtp()
-{
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    var email =
-        (verificationEmail ?? string.Empty)
-            .Trim();
-
-    var otp =
-        (otpCode ?? string.Empty)
-            .Trim();
-
-    // ------------------------------------------------------------
-    // Validate email
-    // ------------------------------------------------------------
-
-    if (string.IsNullOrWhiteSpace(email))
-    {
-        otpErrorMessage =
-            "Email address is missing. Please return to Sign Up and try again.";
-
-        return;
-    }
-
-    // ------------------------------------------------------------
-    // Validate OTP
-    // ------------------------------------------------------------
-
-    if (string.IsNullOrWhiteSpace(otp))
-    {
-        otpErrorMessage =
-            "Please enter the 6-digit verification code.";
-
-        return;
-    }
-
-    if (otp.Length != 6 ||
-        !otp.All(char.IsDigit))
-    {
-        otpErrorMessage =
-            "Please enter a valid 6-digit verification code.";
-
-        return;
-    }
-
-    isOtpLoading = true;
-
-    try
-    {
-        var result =
-            await AuthApiService.VerifyEmailOtpAsync(
-                email,
-                otp);
-
-        if (result is null)
-        {
-            otpErrorMessage =
-                "Unable to verify the email address. Please try again.";
-
-            return;
-        }
-
-        if (!result.Success)
-        {
-            otpErrorMessage =
-                string.IsNullOrWhiteSpace(result.Message)
-                    ? "The verification code is invalid or has expired."
-                    : result.Message;
-
-            return;
-        }
-
-        // --------------------------------------------------------
-        // Successful email verification also authenticates user
-        // --------------------------------------------------------
-
-        AuthenticationStateProvider.SignIn(
-            result.UserID,
-            result.UserName,
-            result.Email,
-            result.Roles,
-            result.Permissions,
-            result.AccessToken,
-            result.RefreshToken,
-            result.ExpiresAt);
-
-        isAuthenticated = true;
-
-        currentUserName =
-            result.UserName;
-
-        await LoadMyFavoritesAsync();
-
-        // --------------------------------------------------------
-        // Close modal
-        // --------------------------------------------------------
-
-        showAuthModal = false;
-
-        authStep = AuthStep.SignIn;
 
         otpCode = string.Empty;
         verificationEmail = string.Empty;
 
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task ShowSignIn()
+    {
+        authMode = AuthMode.SignIn;
+        authStep = AuthStep.SignIn;
+
         errorMessage = null;
         signupErrorMessage = null;
         otpErrorMessage = null;
@@ -4554,292 +4152,650 @@ private async Task HandleVerifyEmailOtp()
 
         await InvokeAsync(StateHasChanged);
     }
-    catch (HttpRequestException)
+
+
+    private async Task ShowSignUp()
     {
-        otpErrorMessage =
-            "Unable to connect to the authentication service. Please try again.";
-    }
-    catch
-    {
-        otpErrorMessage =
-            "An unexpected error occurred while verifying your email.";
-    }
-    finally
-    {
-        isOtpLoading = false;
+        authMode = AuthMode.SignUp;
+        authStep = AuthStep.SignIn;
+
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
 
         await InvokeAsync(StateHasChanged);
     }
-}
 
 
-// ============================================================
-// RESEND EMAIL OTP
-// ============================================================
-
-private async Task HandleResendEmailOtp()
-{
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    var email =
-        (verificationEmail ?? string.Empty)
-            .Trim();
-
-    if (string.IsNullOrWhiteSpace(email))
+    private async Task TogglePassword()
     {
-        otpErrorMessage =
-            "Email address is missing. Please return to Sign Up and try again.";
+        showPassword = !showPassword;
 
-        return;
+        await InvokeAsync(StateHasChanged);
     }
 
-    isResendOtpLoading = true;
 
-    try
+    private async Task ToggleSignupPassword()
     {
-        var sent =
-            await AuthApiService.ResendEmailVerificationAsync(
-                email);
+        showSignupPassword = !showSignupPassword;
 
-        if (!sent)
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task ToggleConfirmPassword()
+    {
+        showConfirmPassword = !showConfirmPassword;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    private async Task HandleLogin()
+    {
+        errorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        isLoginLoading = true;
+
+        try
+        {
+            var result =
+                await AuthApiService.LoginAsync(
+                    loginModel.Email,
+                    loginModel.Password);
+
+            if (result is null)
+            {
+                errorMessage =
+                    "Invalid email address or password.";
+
+                return;
+            }
+
+            // Existing account but email has not yet been verified.
+            // AuthService generates/sends the OTP during LoginAsync.
+            if (result.RequiresEmailVerification)
+            {
+                verificationEmail =
+                    string.IsNullOrWhiteSpace(result.Email)
+                        ? loginModel.Email
+                        : result.Email;
+
+                otpCode = string.Empty;
+                otpErrorMessage = null;
+                otpInfoMessage = null;
+
+                authStep = AuthStep.VerifyEmail;
+
+                await InvokeAsync(StateHasChanged);
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                errorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Login failed. Please check your credentials."
+                        : result.Message;
+
+                return;
+            }
+
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+            isAuthenticated = true;
+
+            currentUserName =
+                result.UserName;
+
+            await LoadMyFavoritesAsync();
+
+            showAuthModal = false;
+
+            authStep = AuthStep.SignIn;
+
+            errorMessage = null;
+            signupErrorMessage = null;
+            otpErrorMessage = null;
+            otpInfoMessage = null;
+
+            showPassword = false;
+            showSignupPassword = false;
+            showConfirmPassword = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (HttpRequestException)
+        {
+            errorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            errorMessage =
+                "An unexpected error occurred while signing in.";
+        }
+        finally
+        {
+            isLoginLoading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // ============================================================
+    // REGISTRATION
+    // ============================================================
+
+    private async Task HandleRegistration()
+    {
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        isSignupLoading = true;
+
+        try
+        {
+            var fullName =
+                (signupModel.FullName ?? string.Empty)
+                    .Trim();
+
+            var nameParts =
+                fullName.Split(
+                    ' ',
+                    StringSplitOptions.RemoveEmptyEntries);
+
+            var firstName =
+                nameParts.Length > 0
+                    ? nameParts[0]
+                    : string.Empty;
+
+            var lastName =
+                nameParts.Length > 1
+                    ? string.Join(
+                        " ",
+                        nameParts.Skip(1))
+                    : string.Empty;
+
+            var result =
+                await AuthApiService.RegisterAsync(
+                    new HRInfoAdvertisements.Application.DTOs.Authentication.RegisterRequest
+                    {
+                        UserName = fullName,
+                        Email = signupModel.Email.Trim(),
+                        MobileNo = signupModel.MobileNo?.Trim(),
+                        Password = signupModel.Password,
+                        FirstName = firstName,
+                        LastName = lastName
+                    });
+
+            if (result is null)
+            {
+                signupErrorMessage =
+                    "Unable to create your account. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                signupErrorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "Registration failed. Please check your information and try again."
+                        : result.Message;
+
+                return;
+            }
+
+            // Registration does not authenticate the user.
+            // User must verify email through OTP.
+            verificationEmail =
+                string.IsNullOrWhiteSpace(result.Email)
+                    ? signupModel.Email.Trim()
+                    : result.Email;
+
+            otpCode = string.Empty;
+
+            otpErrorMessage = null;
+            otpInfoMessage = null;
+            signupErrorMessage = null;
+
+            authStep = AuthStep.VerifyEmail;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (HttpRequestException)
+        {
+            signupErrorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            signupErrorMessage =
+                "An unexpected error occurred while creating your account.";
+        }
+        finally
+        {
+            isSignupLoading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // ============================================================
+    // VERIFY EMAIL OTP
+    // ============================================================
+
+    private async Task HandleVerifyEmailOtp()
+    {
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        var email =
+            (verificationEmail ?? string.Empty)
+                .Trim();
+
+        var otp =
+            (otpCode ?? string.Empty)
+                .Trim();
+
+        if (string.IsNullOrWhiteSpace(email))
         {
             otpErrorMessage =
-                "Unable to resend the verification code. Please try again.";
+                "Email address is missing. Please return to Sign Up and try again.";
 
             return;
         }
 
+        if (string.IsNullOrWhiteSpace(otp))
+        {
+            otpErrorMessage =
+                "Please enter the 6-digit verification code.";
+
+            return;
+        }
+
+        if (otp.Length != 6 ||
+            !otp.All(char.IsDigit))
+        {
+            otpErrorMessage =
+                "Please enter a valid 6-digit verification code.";
+
+            return;
+        }
+
+        isOtpLoading = true;
+
+        try
+        {
+            var result =
+                await AuthApiService.VerifyEmailOtpAsync(
+                    email,
+                    otp);
+
+            if (result is null)
+            {
+                otpErrorMessage =
+                    "Unable to verify the email address. Please try again.";
+
+                return;
+            }
+
+            if (!result.Success)
+            {
+                otpErrorMessage =
+                    string.IsNullOrWhiteSpace(result.Message)
+                        ? "The verification code is invalid or has expired."
+                        : result.Message;
+
+                return;
+            }
+
+            // Successful email verification also authenticates the user.
+            AuthenticationStateProvider.SignIn(
+                result.UserID,
+                result.UserName,
+                result.Email,
+                result.Roles,
+                result.Permissions,
+                result.AccessToken,
+                result.RefreshToken,
+                result.ExpiresAt);
+
+            isAuthenticated = true;
+
+            currentUserName =
+                result.UserName;
+
+            await LoadMyFavoritesAsync();
+
+            showAuthModal = false;
+
+            authStep = AuthStep.SignIn;
+
+            otpCode = string.Empty;
+            verificationEmail = string.Empty;
+
+            errorMessage = null;
+            signupErrorMessage = null;
+            otpErrorMessage = null;
+            otpInfoMessage = null;
+
+            showPassword = false;
+            showSignupPassword = false;
+            showConfirmPassword = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (HttpRequestException)
+        {
+            otpErrorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            otpErrorMessage =
+                "An unexpected error occurred while verifying your email.";
+        }
+        finally
+        {
+            isOtpLoading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // ============================================================
+    // RESEND EMAIL OTP
+    // ============================================================
+
+    private async Task HandleResendEmailOtp()
+    {
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        var email =
+            (verificationEmail ?? string.Empty)
+                .Trim();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            otpErrorMessage =
+                "Email address is missing. Please return to Sign Up and try again.";
+
+            return;
+        }
+
+        isResendOtpLoading = true;
+
+        try
+        {
+            var sent =
+                await AuthApiService.ResendEmailVerificationAsync(
+                    email);
+
+            if (!sent)
+            {
+                otpErrorMessage =
+                    "Unable to resend the verification code. Please try again.";
+
+                return;
+            }
+
+            otpCode = string.Empty;
+
+            otpInfoMessage =
+                "A new verification code has been sent to your email.";
+
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (HttpRequestException)
+        {
+            otpErrorMessage =
+                "Unable to connect to the authentication service. Please try again.";
+        }
+        catch
+        {
+            otpErrorMessage =
+                "An unexpected error occurred while resending the verification code.";
+        }
+        finally
+        {
+            isResendOtpLoading = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // ============================================================
+    // AUTH ERROR / NAVIGATION
+    // ============================================================
+
+    private async Task ClearError()
+    {
+        errorMessage = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task ClearSignupError()
+    {
+        signupErrorMessage = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task ClearOtpError()
+    {
+        otpErrorMessage = null;
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+
+    private async Task BackFromVerification()
+    {
         otpCode = string.Empty;
 
-        otpInfoMessage =
-            "A new verification code has been sent to your email.";
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        authStep = AuthStep.SignIn;
+
+        // Registration verification returns to Sign Up.
+        // Login verification returns to Sign In.
+        if (!string.IsNullOrWhiteSpace(signupModel.Email) &&
+            string.Equals(
+                verificationEmail,
+                signupModel.Email,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            authMode = AuthMode.SignUp;
+        }
+        else
+        {
+            authMode = AuthMode.SignIn;
+        }
 
         await InvokeAsync(StateHasChanged);
     }
-    catch (HttpRequestException)
+
+
+    // SUPPORT_EMAIL
+    private async Task ForgotPassword()
     {
-        otpErrorMessage =
-            "Unable to connect to the authentication service. Please try again.";
-    }
-    catch
-    {
-        otpErrorMessage =
-            "An unexpected error occurred while resending the verification code.";
-    }
-    finally
-    {
-        isResendOtpLoading = false;
+        errorMessage =
+            string.IsNullOrWhiteSpace(Site.SupportEmail)
+                ? $"Please contact the {Site.SiteName} administrator to reset your password."
+                : $"Please contact {Site.SupportEmail} to reset your password.";
 
         await InvokeAsync(StateHasChanged);
     }
-}
 
 
-// ============================================================
-// AUTH ERROR / NAVIGATION
-// ============================================================
-
-private async Task ClearError()
-{
-    errorMessage = null;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ClearSignupError()
-{
-    signupErrorMessage = null;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task ClearOtpError()
-{
-    otpErrorMessage = null;
-
-    await InvokeAsync(StateHasChanged);
-}
-
-
-private async Task BackFromVerification()
-{
-    otpCode = string.Empty;
-
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    authStep = AuthStep.SignIn;
-
-    // ------------------------------------------------------------
-    // Registration verification returns to Sign Up.
-    // Login verification returns to Sign In.
-    // ------------------------------------------------------------
-
-    if (!string.IsNullOrWhiteSpace(signupModel.Email) &&
-        string.Equals(
-            verificationEmail,
-            signupModel.Email,
-            StringComparison.OrdinalIgnoreCase))
+    private async Task HandleSignOut()
     {
-        authMode = AuthMode.SignUp;
-    }
-    else
-    {
-        authMode = AuthMode.SignIn;
+        AuthenticationStateProvider.SignOut();
+
+        isAuthenticated = false;
+
+        currentUserName = string.Empty;
+
+        favoriteAdvertisementIds.Clear();
+        favoriteLoadingIds.Clear();
+
+        showAuthModal = false;
+
+        authStep = AuthStep.SignIn;
+
+        errorMessage = null;
+        signupErrorMessage = null;
+        otpErrorMessage = null;
+        otpInfoMessage = null;
+
+        showPassword = false;
+        showSignupPassword = false;
+        showConfirmPassword = false;
+
+        otpCode = string.Empty;
+        verificationEmail = string.Empty;
+
+        await InvokeAsync(StateHasChanged);
     }
 
-    await InvokeAsync(StateHasChanged);
-}
+
+    // ============================================================
+    // MODELS
+    // ============================================================
+
+    private enum AuthMode
+    {
+        SignIn,
+        SignUp
+    }
 
 
-private async Task ForgotPassword()
-{
-    errorMessage =
-        "Please contact the AdMind administrator to reset your password.";
-
-    await InvokeAsync(StateHasChanged);
-}
+    private enum AuthStep
+    {
+        SignIn,
+        VerifyEmail
+    }
 
 
-private async Task HandleSignOut()
-{
-    AuthenticationStateProvider.SignOut();
+    private sealed class LoginModel
+    {
+        [Required(
+            ErrorMessage =
+                "Email address is required.")]
+        [EmailAddress(
+            ErrorMessage =
+                "Please enter a valid email address.")]
+        public string Email { get; set; } =
+            string.Empty;
 
-    isAuthenticated = false;
-
-    currentUserName = string.Empty;
-
-    favoriteAdvertisementIds.Clear();
-    favoriteLoadingIds.Clear();
-
-    showAuthModal = false;
-
-    authStep = AuthStep.SignIn;
-
-    errorMessage = null;
-    signupErrorMessage = null;
-    otpErrorMessage = null;
-    otpInfoMessage = null;
-
-    showPassword = false;
-    showSignupPassword = false;
-    showConfirmPassword = false;
-
-    otpCode = string.Empty;
-    verificationEmail = string.Empty;
-
-    await InvokeAsync(StateHasChanged);
-}
+        [Required(
+            ErrorMessage =
+                "Password is required.")]
+        public string Password { get; set; } =
+            string.Empty;
+    }
 
 
-// ============================================================
-// MODELS
-// ============================================================
-
-private enum AuthMode
-{
-    SignIn,
-    SignUp
-}
-
-
-private enum AuthStep
-{
-    SignIn,
-    VerifyEmail
-}
+    private sealed class SignupModel
+    {
+        [Required(
+            ErrorMessage =
+                "Full name is required.")]
+        [MinLength(
+            2,
+            ErrorMessage =
+                "Please enter your full name.")]
+        public string FullName { get; set; } =
+            string.Empty;
 
 
-private sealed class LoginModel
-{
-    [Required(
-        ErrorMessage =
-            "Email address is required.")]
-    [EmailAddress(
-        ErrorMessage =
-            "Please enter a valid email address.")]
-    public string Email { get; set; } =
-        string.Empty;
-
-    [Required(
-        ErrorMessage =
-            "Password is required.")]
-    public string Password { get; set; } =
-        string.Empty;
-}
+        [Required(
+            ErrorMessage =
+                "Email address is required.")]
+        [EmailAddress(
+            ErrorMessage =
+                "Please enter a valid email address.")]
+        public string Email { get; set; } =
+            string.Empty;
 
 
-private sealed class SignupModel
-{
-    [Required(
-        ErrorMessage =
-            "Full name is required.")]
-    [MinLength(
-        2,
-        ErrorMessage =
-            "Please enter your full name.")]
-    public string FullName { get; set; } =
-        string.Empty;
+        [Required(
+            ErrorMessage =
+                "Mobile number is required.")]
+        public string MobileNo { get; set; } =
+            string.Empty;
 
 
-    [Required(
-        ErrorMessage =
-            "Email address is required.")]
-    [EmailAddress(
-        ErrorMessage =
-            "Please enter a valid email address.")]
-    public string Email { get; set; } =
-        string.Empty;
+        [Required(
+            ErrorMessage =
+                "Password is required.")]
+        [MinLength(
+            6,
+            ErrorMessage =
+                "Password must be at least 6 characters.")]
+        public string Password { get; set; } =
+            string.Empty;
 
 
-    [Required(
-        ErrorMessage =
-            "Mobile number is required.")]
-    public string MobileNo { get; set; } =
-        string.Empty;
+        [Required(
+            ErrorMessage =
+                "Please confirm your password.")]
+        [Compare(
+            nameof(Password),
+            ErrorMessage =
+                "Passwords do not match.")]
+        public string ConfirmPassword { get; set; } =
+            string.Empty;
+    }
 
 
-    [Required(
-        ErrorMessage =
-            "Password is required.")]
-    [MinLength(
-        6,
-        ErrorMessage =
-            "Password must be at least 6 characters.")]
-    public string Password { get; set; } =
-        string.Empty;
+    private sealed class CategoryOption
+    {
+        public int CategoryID { get; set; }
+
+        public string CategoryName { get; set; } =
+            string.Empty;
+    }
 
 
-    [Required(
-        ErrorMessage =
-            "Please confirm your password.")]
-    [Compare(
-        nameof(Password),
-        ErrorMessage =
-            "Passwords do not match.")]
-    public string ConfirmPassword { get; set; } =
-        string.Empty;
-}
+    private sealed class AdvertisementTypeOption
+    {
+        public int AdvertisementTypeID { get; set; }
 
-
-private sealed class CategoryOption
-{
-    public int CategoryID { get; set; }
-
-    public string CategoryName { get; set; } =
-        string.Empty;
-}
-
-
-private sealed class AdvertisementTypeOption
-{
-    public int AdvertisementTypeID { get; set; }
-
-    public string TypeName { get; set; } =
-        string.Empty;
-}
+        public string TypeName { get; set; } =
+            string.Empty;
+    }
 
 }

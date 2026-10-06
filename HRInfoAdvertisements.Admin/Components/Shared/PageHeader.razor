@@ -1,3 +1,11 @@
+@using HRInfoAdvertisements.Admin.Services
+@inject SiteSettingsService SiteSettingsService
+
+@if (SetBrowserTitle)
+{
+    <PageTitle>@Title · @siteName</PageTitle>
+}
+
 <header class="hr-page-header">
 
     <div class="hr-page-header-main">
@@ -8,10 +16,10 @@
 
         <div class="hr-page-header-text">
 
-            @if (!string.IsNullOrWhiteSpace(Eyebrow))
+            @if (!string.IsNullOrWhiteSpace(EyebrowText))
             {
                 <span class="hr-page-header-eyebrow">
-                    @Eyebrow
+                    @EyebrowText
                 </span>
             }
 
@@ -53,4 +61,52 @@
 
     [Parameter]
     public RenderFragment? ActionContent { get; set; }
+
+    /// <summary>
+    /// When true and no Eyebrow is supplied, the site name
+    /// (SITE_NAME) is shown above the title.
+    /// </summary>
+    [Parameter]
+    public bool UseSiteNameAsEyebrow { get; set; }
+
+    /// <summary>
+    /// When true, sets the browser tab title to "Title · SiteName".
+    /// Leave false on pages that already have their own PageTitle.
+    /// </summary>
+    [Parameter]
+    public bool SetBrowserTitle { get; set; }
+
+    private string siteName = "AdMind";
+
+    private string? EyebrowText =>
+        !string.IsNullOrWhiteSpace(Eyebrow)
+            ? Eyebrow
+            : UseSiteNameAsEyebrow
+                ? siteName
+                : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Skip the call entirely when neither feature is used.
+        if (!UseSiteNameAsEyebrow && !SetBrowserTitle)
+        {
+            return;
+        }
+
+        try
+        {
+            // Cached inside SiteSettingsService.
+            var settings = await SiteSettingsService.GetAsync();
+
+            if (settings is not null &&
+                !string.IsNullOrWhiteSpace(settings.SiteName))
+            {
+                siteName = settings.SiteName;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PAGE HEADER SETTINGS ERROR: {ex.Message}");
+        }
+    }
 }

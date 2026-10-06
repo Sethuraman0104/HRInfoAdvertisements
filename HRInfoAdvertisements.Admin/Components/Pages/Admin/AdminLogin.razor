@@ -7,12 +7,13 @@
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
 @rendermode InteractiveServer
+@inject HRInfoAdvertisements.Admin.Services.SiteSettingsService SiteSettingsService
 
 @inject HRInfoAdvertisements.Admin.Services.AuthApiService AuthApiService
 @inject HRInfoAdvertisements.Admin.Services.AdminAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Administrator Login | AdMind</PageTitle>
+<PageTitle>Administrator Login | @siteName</PageTitle>
 
 
 <div class="admin-login-page">
@@ -30,15 +31,15 @@
                 <!-- Logo -->
 
                 <div class="admin-brand-logo">
-                    <span>HR</span>
-                </div>
+    <span>@SiteInitials</span>
+</div>
 
 
                 <!-- Brand -->
 
                 <div class="admin-brand-name">
-                    AdMind <span>ADs</span>
-                </div>
+    @siteName
+</div>
 
                 <div class="admin-brand-line"></div>
 
@@ -106,14 +107,10 @@
             <!-- Brand footer -->
 
             <div class="admin-brand-footer">
-
-                AdMind
-
-                <span>•</span>
-
-                Administration Portal
-
-            </div>
+    @siteName
+    <span>•</span>
+    Administration Portal
+</div>
 
         </section>
 
@@ -132,20 +129,17 @@
                 <div class="admin-mobile-brand">
 
                     <div class="admin-mobile-logo">
-                        HR
-                    </div>
+    @SiteInitials
+</div>
 
                     <div>
-
-                        <div class="admin-mobile-title">
-                            AdMind <span>ADs</span>
-                        </div>
-
-                        <div class="admin-mobile-subtitle">
-                            Administration Portal
-                        </div>
-
-                    </div>
+    <div class="admin-mobile-title">
+        @siteName
+    </div>
+    <div class="admin-mobile-subtitle">
+        Administration Portal
+    </div>
+</div>
 
                 </div>
 
@@ -163,9 +157,9 @@
                     </h1>
 
                     <p>
-                        Sign in to access the AdMind
-                        administration portal.
-                    </p>
+    Sign in to access the @siteName
+    administration portal.
+</p>
 
                 </div>
 
@@ -345,14 +339,20 @@
 
                 <!-- Back -->
 
-                <div class="admin-login-back">
+                @if (!string.IsNullOrWhiteSpace(supportEmail))
+{
+    <div class="admin-login-back">
+        Need access? Contact
+        <a href="mailto:@supportEmail">@supportEmail</a>
+    </div>
+}
 
-                    <a href="/">
-                        <span>←</span>
-                        Return to AdMind
-                    </a>
-
-                </div>
+<div class="admin-login-back">
+    <a href="/">
+        <span>←</span>
+        Return to @siteName
+    </a>
+</div>
 
 
             </div>
@@ -393,7 +393,51 @@
             ? "text"
             : "password";
 
+// ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// ============================================================
 
+private string siteName = "AdMind";
+private string supportEmail = string.Empty;
+
+private string SiteInitials
+{
+    get
+    {
+        var name = siteName.Trim();
+
+        if (name.Length == 0)
+        {
+            return "AD";
+        }
+
+        var words =
+            name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        return words.Length >= 2
+            ? $"{words[0][0]}{words[1][0]}".ToUpperInvariant()
+            : name[..Math.Min(2, name.Length)].ToUpperInvariant();
+    }
+}
+
+protected override async Task OnInitializedAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            supportEmail = settings.SupportEmail;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"ADMIN LOGIN SETTINGS ERROR: {ex.Message}");
+    }
+}
     // ============================================================
     // TOGGLE PASSWORD
     // ============================================================

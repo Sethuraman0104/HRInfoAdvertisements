@@ -5,19 +5,21 @@
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
+@inject SiteSettingsService SiteSettingsService
 @inject CategoryManagementApiService CategoryManagementApiService
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Category Management | AdMind</PageTitle>
+<PageTitle>Category Management | @siteName</PageTitle>
 
 <div class="admin-categories">
 
     <PageHeader Icon="bi-tags-fill"
-                Eyebrow="CATEGORY MANAGEMENT"
-                Title="Categories"
-                DescriptionContent="@CategoryHeaderDescription"
-                ActionContent="@CategoryHeaderActions" />
+            Eyebrow="CATEGORY MANAGEMENT"
+            Title="Categories"
+            SetBrowserTitle="true"
+            DescriptionContent="@CategoryHeaderDescription"
+            ActionContent="@CategoryHeaderActions" />
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
@@ -945,13 +947,15 @@
 
     private CategoryListItemResponse? selectedCategory;
 
-
+    private string siteName = "AdMind"; 
     // ============================================================
     // INITIALIZATION
     // ============================================================
 
     protected override async Task OnInitializedAsync()
     {
+        var settings = await SiteSettingsService.GetAsync();
+    if (settings is not null) siteName = settings.SiteName;
         var authenticationState =
             await AdminAuthenticationStateProvider
                 .GetAuthenticationStateAsync();

@@ -22,6 +22,24 @@ public class SystemSettingsController : ControllerBase
     }
 
     // ============================================================
+    // GET PUBLIC SITE SETTINGS (no login required)
+    // ============================================================
+
+    [HttpGet("public")]
+    [AllowAnonymous]
+    [ResponseCache(Duration = 60)]
+    public async Task<IActionResult> GetPublicSettings(
+        CancellationToken cancellationToken)
+    {
+        var result =
+            await _systemSettingService
+                .GetPublicSettingsAsync(
+                    cancellationToken);
+
+        return Ok(result);
+    }
+
+    // ============================================================
     // GET SYSTEM SETTINGS
     // ============================================================
 
@@ -37,22 +55,22 @@ public class SystemSettingsController : ControllerBase
         return Ok(result);
     }
 
-// ============================================================
-// GET APPLICATION SETTINGS
-// ============================================================
+    // ============================================================
+    // GET APPLICATION SETTINGS
+    // ============================================================
 
-[HttpGet("application")]
-[Authorize(Policy = "ADVERTISEMENT_VIEW")]
-public async Task<IActionResult> GetApplicationSettings(
-    CancellationToken cancellationToken)
-{
-    var result =
-        await _systemSettingService
-            .GetApplicationSettingsAsync(
-                cancellationToken);
+    [HttpGet("application")]
+    [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+    public async Task<IActionResult> GetApplicationSettings(
+        CancellationToken cancellationToken)
+    {
+        var result =
+            await _systemSettingService
+                .GetApplicationSettingsAsync(
+                    cancellationToken);
 
-    return Ok(result);
-}
+        return Ok(result);
+    }
 
     // ============================================================
     // GET SYSTEM SETTING

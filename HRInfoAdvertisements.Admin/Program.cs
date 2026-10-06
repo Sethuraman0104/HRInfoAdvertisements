@@ -224,6 +224,26 @@ builder.Services.AddScoped<
     IAdvertisementModerationService,
     AdminAdvertisementModerationService>();
 
+// ============================================================
+// PUBLIC SITE SETTINGS
+// ============================================================
+//
+// Anonymous endpoint, so no JWT is attached to this client.
+// Cached in memory by SiteSettingsService.
+// ============================================================
+
+builder.Services.AddMemoryCache();
+
+builder.Services.AddHttpClient<SiteSettingsService>(
+    client =>
+    {
+        client.BaseAddress =
+            new Uri(apiBaseUrl);
+
+        client.Timeout =
+            TimeSpan.FromSeconds(15);
+    });
+
 
 // ============================================================
 // BUILD

@@ -1,4 +1,8 @@
 ﻿@using HRInfoAdvertisements.Admin.Components.Layout
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+
+@inject SiteSettingsService SiteSettingsService
 
 @rendermode InteractiveServer
 
@@ -18,6 +22,8 @@
 
         <LayoutView Layout="@typeof(PublicLayout)">
 
+            <PageTitle>Page not found - @Site.SiteName</PageTitle>
+
             <div class="not-found-page">
 
                 <h1>Page not found</h1>
@@ -27,7 +33,7 @@
                 </p>
 
                 <a href="/">
-                    Return to AdMind
+                    Return to @Site.SiteName
                 </a>
 
             </div>
@@ -37,3 +43,16 @@
     </NotFound>
 
 </Router>
+
+@code
+{
+    // Defaults are used until the API answers (or if it fails).
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Site =
+            await SiteSettingsService
+                .GetAsync();
+    }
+}

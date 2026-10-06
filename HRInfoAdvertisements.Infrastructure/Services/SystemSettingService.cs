@@ -398,134 +398,212 @@ public class SystemSettingService : ISystemSettingService
     }
 
     // ============================================================
-// GET APPLICATION SETTINGS
-// ============================================================
+    // GET APPLICATION SETTINGS
+    // ============================================================
 
-public async Task<ApplicationSettings>
-    GetApplicationSettingsAsync(
-        CancellationToken cancellationToken = default)
-{
-    var settings =
-        await _context.SystemSettings
-            .AsNoTracking()
-            .Where(x => x.IsActive)
-            .ToDictionaryAsync(
-                x => x.SettingKey,
-                x => x.SettingValue,
-                StringComparer.OrdinalIgnoreCase,
-                cancellationToken);
-
-    return new ApplicationSettings
+    public async Task<ApplicationSettings>
+        GetApplicationSettingsAsync(
+            CancellationToken cancellationToken = default)
     {
-        SiteName =
-            GetString(
-                settings,
-                "SITE_NAME",
-                "AdMind"),
+        var settings =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .ToDictionaryAsync(
+                    x => x.SettingKey,
+                    x => x.SettingValue,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
 
-        DefaultCurrency =
-            GetString(
-                settings,
-                "DEFAULT_CURRENCY",
-                "BHD"),
+        return new ApplicationSettings
+        {
+            SiteName =
+                GetString(
+                    settings,
+                    "SITE_NAME",
+                    "AdMind"),
 
-        AdvertisementExpiryDays =
-            GetInt(
-                settings,
-                "ADVERTISEMENT_EXPIRY_DAYS",
-                30),
+            DefaultCurrency =
+                GetString(
+                    settings,
+                    "DEFAULT_CURRENCY",
+                    "BHD"),
 
-        MaxImagesPerAdvertisement =
-            GetInt(
-                settings,
-                "MAX_IMAGES_PER_ADVERTISEMENT",
-                2),
+            AdvertisementExpiryDays =
+                GetInt(
+                    settings,
+                    "ADVERTISEMENT_EXPIRY_DAYS",
+                    30),
 
-        MaxVideoSizeMb =
-            GetInt(
-                settings,
-                "MAX_VIDEO_SIZE_MB",
-                100),
+            MaxImagesPerAdvertisement =
+                GetInt(
+                    settings,
+                    "MAX_IMAGES_PER_ADVERTISEMENT",
+                    2),
 
-        RequireAdminApproval =
-            GetBool(
-                settings,
-                "REQUIRE_ADMIN_APPROVAL",
-                true),
+            MaxVideoSizeMb =
+                GetInt(
+                    settings,
+                    "MAX_VIDEO_SIZE_MB",
+                    100),
 
-        RequireEmailVerification =
-            GetBool(
-                settings,
-                "REQUIRE_EMAIL_VERIFICATION",
-                true),
+            RequireAdminApproval =
+                GetBool(
+                    settings,
+                    "REQUIRE_ADMIN_APPROVAL",
+                    true),
 
-        RequireMobileVerification =
-            GetBool(
-                settings,
-                "REQUIRE_MOBILE_VERIFICATION",
-                true),
+            RequireEmailVerification =
+                GetBool(
+                    settings,
+                    "REQUIRE_EMAIL_VERIFICATION",
+                    true),
 
-        AdminMfaRequired =
-            GetBool(
-                settings,
-                "ADMIN_MFA_REQUIRED",
-                true),
+            RequireMobileVerification =
+                GetBool(
+                    settings,
+                    "REQUIRE_MOBILE_VERIFICATION",
+                    true),
 
-        SiteTagline =
-            GetString(
-                settings,
-                "SITE_TAGLINE",
-                "Your marketplace for everything"),
+            AdminMfaRequired =
+                GetBool(
+                    settings,
+                    "ADMIN_MFA_REQUIRED",
+                    true),
 
-        SiteUrl =
-            GetString(
-                settings,
-                "SITE_URL",
-                string.Empty),
+            SiteTagline =
+                GetString(
+                    settings,
+                    "SITE_TAGLINE",
+                    "Your marketplace for everything"),
 
-        EmailLogoUrl =
-            GetString(
-                settings,
-                "EMAIL_LOGO_URL",
-                string.Empty),
+            SiteUrl =
+                GetString(
+                    settings,
+                    "SITE_URL",
+                    string.Empty),
 
-        SupportEmail =
-            GetString(
-                settings,
-                "SUPPORT_EMAIL",
-                string.Empty),
+            EmailLogoUrl =
+                GetString(
+                    settings,
+                    "EMAIL_LOGO_URL",
+                    string.Empty),
 
-        EmailFromName =
-            GetString(
-                settings,
-                "EMAIL_FROM_NAME",
-                "AdMind"),
+            SupportEmail =
+                GetString(
+                    settings,
+                    "SUPPORT_EMAIL",
+                    string.Empty),
 
-        EmailVerificationSubject =
-            GetString(
-                settings,
-                "EMAIL_VERIFICATION_SUBJECT",
-                "Verify your AdMind account"),
+            EmailFromName =
+                GetString(
+                    settings,
+                    "EMAIL_FROM_NAME",
+                    "AdMind"),
 
-        EmailPasswordResetSubject =
-            GetString(
-                settings,
-                "EMAIL_PASSWORD_RESET_SUBJECT",
-                "Reset your AdMind password"),
+            EmailVerificationSubject =
+                GetString(
+                    settings,
+                    "EMAIL_VERIFICATION_SUBJECT",
+                    "Verify your AdMind account"),
 
-        EmailOtpExpiryMinutes =
-            GetInt(
-                settings,
-                "EMAIL_OTP_EXPIRY_MINUTES",
-                10),
+            EmailPasswordResetSubject =
+                GetString(
+                    settings,
+                    "EMAIL_PASSWORD_RESET_SUBJECT",
+                    "Reset your AdMind password"),
 
-        EmailEnabled =
-            GetBool(
-                settings,
-                "EMAIL_ENABLED",
-                true)
+            EmailOtpExpiryMinutes =
+                GetInt(
+                    settings,
+                    "EMAIL_OTP_EXPIRY_MINUTES",
+                    10),
+
+            EmailEnabled =
+                GetBool(
+                    settings,
+                    "EMAIL_ENABLED",
+                    true)
+        };
+    }
+
+    // ============================================================
+    // GET PUBLIC SITE SETTINGS (safe for anonymous visitors)
+    // ============================================================
+
+    // Only these keys may ever be returned to the public site.
+    private static readonly string[] PublicKeys =
+    {
+        "SITE_NAME",
+        "SITE_TAGLINE",
+        "DEFAULT_CURRENCY",
+        "ADVERTISEMENT_EXPIRY_DAYS",
+        "MAX_IMAGES_PER_ADVERTISEMENT",
+        "MAX_VIDEO_SIZE_MB",
+        "REQUIRE_ADMIN_APPROVAL",
+        "REQUIRE_EMAIL_VERIFICATION",
+        "EMAIL_ENABLED",
+        "EMAIL_OTP_EXPIRY_MINUTES",
+        "SUPPORT_EMAIL"
     };
-}
+
+    public async Task<PublicSiteSettingsResponse>
+        GetPublicSettingsAsync(
+            CancellationToken cancellationToken = default)
+    {
+        // Only active, non-encrypted, whitelisted rows are read.
+        var settings =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .Where(x =>
+                    x.IsActive &&
+                    !x.IsEncrypted &&
+                    PublicKeys.Contains(x.SettingKey))
+                .ToDictionaryAsync(
+                    x => x.SettingKey,
+                    x => x.SettingValue,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
+
+        // Default values come from the DTO itself.
+        var d = new PublicSiteSettingsResponse();
+
+        return new PublicSiteSettingsResponse
+        {
+            SiteName =
+                GetString(settings, "SITE_NAME", d.SiteName),
+
+            SiteTagline =
+                GetString(settings, "SITE_TAGLINE", d.SiteTagline),
+
+            DefaultCurrency =
+                GetString(settings, "DEFAULT_CURRENCY", d.DefaultCurrency),
+
+            AdvertisementExpiryDays =
+                GetInt(settings, "ADVERTISEMENT_EXPIRY_DAYS", d.AdvertisementExpiryDays),
+
+            MaxImagesPerAdvertisement =
+                GetInt(settings, "MAX_IMAGES_PER_ADVERTISEMENT", d.MaxImagesPerAdvertisement),
+
+            MaxVideoSizeMb =
+                GetInt(settings, "MAX_VIDEO_SIZE_MB", d.MaxVideoSizeMb),
+
+            RequireAdminApproval =
+                GetBool(settings, "REQUIRE_ADMIN_APPROVAL", d.RequireAdminApproval),
+
+            RequireEmailVerification =
+                GetBool(settings, "REQUIRE_EMAIL_VERIFICATION", d.RequireEmailVerification),
+
+            EmailEnabled =
+                GetBool(settings, "EMAIL_ENABLED", d.EmailEnabled),
+
+            EmailOtpExpiryMinutes =
+                GetInt(settings, "EMAIL_OTP_EXPIRY_MINUTES", d.EmailOtpExpiryMinutes),
+
+            SupportEmail =
+                GetString(settings, "SUPPORT_EMAIL", d.SupportEmail)
+        };
+    }
 
     // ============================================================
     // GET DECRYPTED VALUE
@@ -585,56 +663,56 @@ public async Task<ApplicationSettings>
     }
 
     // ============================================================
-// APPLICATION SETTINGS HELPERS
-// ============================================================
+    // APPLICATION SETTINGS HELPERS
+    // ============================================================
 
-private static string GetString(
-    IReadOnlyDictionary<string, string?> settings,
-    string key,
-    string defaultValue)
-{
-    if (!settings.TryGetValue(key, out var value) ||
-        string.IsNullOrWhiteSpace(value))
+    private static string GetString(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        string defaultValue)
     {
-        return defaultValue;
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return value.Trim();
     }
 
-    return value.Trim();
-}
-
-private static int GetInt(
-    IReadOnlyDictionary<string, string?> settings,
-    string key,
-    int defaultValue)
-{
-    if (!settings.TryGetValue(key, out var value) ||
-        string.IsNullOrWhiteSpace(value))
+    private static int GetInt(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        int defaultValue)
     {
-        return defaultValue;
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return int.TryParse(
+            value.Trim(),
+            out var result)
+                ? result
+                : defaultValue;
     }
 
-    return int.TryParse(
-        value.Trim(),
-        out var result)
-            ? result
-            : defaultValue;
-}
-
-private static bool GetBool(
-    IReadOnlyDictionary<string, string?> settings,
-    string key,
-    bool defaultValue)
-{
-    if (!settings.TryGetValue(key, out var value) ||
-        string.IsNullOrWhiteSpace(value))
+    private static bool GetBool(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        bool defaultValue)
     {
-        return defaultValue;
-    }
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
 
-    return bool.TryParse(
-        value.Trim(),
-        out var result)
-            ? result
-            : defaultValue;
-}
+        return bool.TryParse(
+            value.Trim(),
+            out var result)
+                ? result
+                : defaultValue;
+    }
 }

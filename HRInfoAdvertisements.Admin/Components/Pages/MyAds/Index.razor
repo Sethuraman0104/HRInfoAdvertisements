@@ -8,13 +8,13 @@
 @using Microsoft.JSInterop
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
-
+@inject SiteSettingsService SiteSettingsService
 @inject AdvertisementApiService AdvertisementApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
-<PageTitle>My Advertisements | AdMind Advertisements</PageTitle>
+<PageTitle>My Advertisements | @siteName</PageTitle>
 
 
 <div class="my-ads-page">
@@ -1041,9 +1041,9 @@
     {
         <i class="bi bi-send"></i>
 
-        <span>
-            Submit
-        </span>
+<span>
+    @(requireAdminApproval ? "Submit" : "Publish")
+</span>
     }
                                         }
 
@@ -1102,6 +1102,40 @@
     private string? infoMessage;
 
     private string? successMessage;
+    // ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// Defaults are used if the API is unavailable.
+// ============================================================
+
+private string siteName = "AdMind";
+private string defaultCurrency = "INR";
+private int expiryDays = 30;
+private bool requireAdminApproval = true;
+
+private async Task LoadSiteSettingsAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            defaultCurrency = settings.DefaultCurrency;
+            expiryDays = settings.AdvertisementExpiryDays;
+            requireAdminApproval = settings.RequireAdminApproval;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"MY ADS SETTINGS ERROR: {ex.Message}");
+    }
+}
+
+private static readonly HashSet<string> ThreeDecimalCurrencies =
+    new(StringComparer.OrdinalIgnoreCase)
+    { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
 
 
     // ============================================================
@@ -1123,7 +1157,7 @@
             Navigation.NavigateTo("/");
             return;
         }
-
+await LoadSiteSettingsAsync();
         await LoadAdvertisementsAsync();
     }
 
@@ -1666,20 +1700,21 @@ successMessage = null;
         // ========================================================
 
         if (!result)
-        {
-            errorMessage =
-                "The advertisement could not be submitted " +
-                "for approval. Please try again.";
+{
+    errorMessage =
+        requireAdminApproval
+            ? "The advertisement could not be submitted for approval. Please try again."
+            : "The advertisement could not be submitted. Please try again.";
 
-            return;
-        }
+    return;
+}
 
-        // ========================================================
-        // SUBMISSION SUCCESSFUL
-        // ========================================================
-
-        successMessage =
-            "Your advertisement has been submitted for approval.";
+successMessage =
+    requireAdminApproval
+        ? $"Your advertisement has been submitted for approval. " +
+          $"Once approved, it will stay live for {expiryDays} days."
+        : $"Your advertisement has been submitted. " +
+          $"It will stay live for {expiryDays} days.";
 
         await LoadAdvertisementsAsync();
     }
@@ -1817,22 +1852,29 @@ successMessage = null;
     // ============================================================
 
     private string FormatPrice(
-        AdvertisementResponse advertisement)
+    AdvertisementResponse advertisement)
+{
+    if (!advertisement.Price.HasValue)
     {
-        if (!advertisement.Price.HasValue)
-        {
-            return "Price on request";
-        }
-
-        var currency =
-            string.IsNullOrWhiteSpace(
-                advertisement.CurrencyCode)
-                ? "BHD"
-                : advertisement.CurrencyCode;
-
-        return $"{currency} " +
-               $"{advertisement.Price.Value:N0}";
+        return "Price on request";
     }
+
+    var currency =
+        string.IsNullOrWhiteSpace(advertisement.CurrencyCode)
+            ? defaultCurrency
+            : advertisement.CurrencyCode.Trim().ToUpperInvariant();
+
+    var price = advertisement.Price.Value;
+
+    var format =
+        price == decimal.Truncate(price)
+            ? "N0"
+            : ThreeDecimalCurrencies.Contains(currency)
+                ? "N3"
+                : "N2";
+
+    return $"{currency} {price.ToString(format, CultureInfo.CurrentCulture)}";
+}
 
 
     private string FormatDate(

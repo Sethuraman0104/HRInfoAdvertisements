@@ -15,7 +15,7 @@
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
-<PageTitle>Advertisements | AdMind</PageTitle>
+<PageTitle>Advertisements | @(_applicationSettings?.SiteName ?? "AdMind")</PageTitle>
 
 <div class="hr-ad-management">
 
@@ -65,6 +65,26 @@
     <!-- =========================================================
          SUMMARY
          ========================================================= -->
+@if (_applicationSettings is not null &&
+     !_applicationSettings.RequireAdminApproval)
+{
+    <div class="hr-ad-alert"
+         style="background:#fff8e8;color:#7a5a00;">
+
+        <div class="hr-ad-alert-icon">
+            <i class="bi bi-info-circle-fill"></i>
+        </div>
+
+        <div class="hr-ad-alert-content">
+            <strong>Admin approval is turned off</strong>
+            <span>
+                New advertisements may publish without review.
+                You can change this in System Settings.
+            </span>
+        </div>
+
+    </div>
+}
 
     <div class="hr-ad-summary-grid">
 
@@ -1048,12 +1068,12 @@ private async Task LoadApplicationSettingsAsync()
                 .GetApplicationSettingsAsync();
     }
     catch (Exception ex)
-    {
-        _applicationSettings = null;
+{
+    _applicationSettings = null;
 
-        _errorMessage =
-            $"Unable to load application settings: {ex.Message}";
-    }
+    Console.WriteLine(
+        $"[Admin Advertisements] Settings error: {ex.Message}");
+}
 }
 
     // =============================================================
@@ -1306,11 +1326,11 @@ private async Task LoadApplicationSettingsAsync()
     }
 
 
-    // =============================================================
-    // DISPLAY HELPERS
-    // =============================================================
+    private static readonly HashSet<string> ThreeDecimalCurrencies =
+    new(StringComparer.OrdinalIgnoreCase)
+    { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
 
-    private string FormatPrice(
+private string FormatPrice(
     decimal? price,
     string? currency)
 {
@@ -1321,10 +1341,15 @@ private async Task LoadApplicationSettingsAsync()
 
     var currencyCode =
         !string.IsNullOrWhiteSpace(currency)
-            ? currency.Trim()
-            : _applicationSettings?.DefaultCurrency ?? "BHD";
+            ? currency.Trim().ToUpperInvariant()
+            : _applicationSettings?.DefaultCurrency ?? "INR";
 
-    return $"{price.Value:N3} {currencyCode}";
+    var format =
+        ThreeDecimalCurrencies.Contains(currencyCode)
+            ? "N3"
+            : "N2";
+
+    return $"{price.Value.ToString(format)} {currencyCode}";
 }
 
     private static string GetInitials(

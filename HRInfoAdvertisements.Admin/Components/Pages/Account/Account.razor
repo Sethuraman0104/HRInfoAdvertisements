@@ -5,26 +5,25 @@
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using HRInfoAdvertisements.Admin.Components.Shared
+@using HRInfoAdvertisements.Admin.Services
 
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SiteSettingsService SiteSettingsService
 
 @implements IDisposable
 
 <PageTitle>
     @(isAuthenticated
-        ? $"Welcome {userName} | AdMind"
-        : "Find What You Need | AdMind")
+        ? $"Welcome {userName} | {siteName}"
+        : $"Find What You Need | {siteName}")
 </PageTitle>
 
 <div class="account-page">
 
-    <PublicTopBar />
+    <PublicTopBar OnSignIn="OpenLogin" OnSignUp="OpenSignup" />
 
-    <!-- ============================================================
-         ACCOUNT CONTEXT BAR
-         ============================================================ -->
-
+    <!-- ACCOUNT CONTEXT BAR -->
     <section class="account-page-context">
 
         <div class="account-context-left">
@@ -37,8 +36,8 @@
 
                 <span class="account-context-eyebrow">
                     @(isAuthenticated
-                        ? "YOUR AdMind ACCOUNT"
-                        : "AdMind ACCOUNT")
+                        ? $"YOUR {siteNameUpper} ACCOUNT"
+                        : $"{siteNameUpper} ACCOUNT")
                 </span>
 
                 <span class="account-context-description">
@@ -53,40 +52,25 @@
 
         <div class="account-context-actions">
 
-            <button type="button"
-                    class="account-context-button"
-                    @onclick="GoHome">
-
+            <button type="button" class="account-context-button" @onclick="GoHome">
                 <i class="bi bi-arrow-left"></i>
-
                 <span>Back to Home</span>
-
             </button>
 
         </div>
 
     </section>
 
-
-    <!-- ============================================================
-         AUTHENTICATED USER ACCOUNT
-         ============================================================ -->
-
     @if (isAuthenticated)
     {
+        <!-- AUTHENTICATED USER ACCOUNT -->
         <main class="account-main">
-
-            <!-- ====================================================
-                 USER WELCOME HERO
-                 ==================================================== -->
 
             <section class="account-hero authenticated-account-hero">
 
                 <div class="account-hero-content">
 
-                    <span class="account-hero-eyebrow">
-                        WELCOME BACK
-                    </span>
+                    <span class="account-hero-eyebrow">WELCOME BACK</span>
 
                     <h1>
                         Hello,
@@ -94,368 +78,159 @@
                     </h1>
 
                     <p class="account-hero-description">
-                        Your AdMind account is ready.
+                        Your @siteName account is ready.
                         Manage your advertisements, saved favorites
                         and marketplace activity from one place.
                     </p>
 
-
-                    <!-- ============================================
-                         USER INFORMATION
-                         ============================================ -->
-
                     <div class="account-user-summary">
 
                         <div class="account-user-summary-item">
-
                             <span class="account-user-summary-icon">
                                 <i class="bi bi-person"></i>
                             </span>
-
                             <div>
-
-                                <small>
-                                    USERNAME
-                                </small>
-
-                                <strong>
-                                    @userName
-                                </strong>
-
+                                <small>USERNAME</small>
+                                <strong>@userName</strong>
                             </div>
-
                         </div>
 
-
                         <div class="account-user-summary-item">
-
                             <span class="account-user-summary-icon">
                                 <i class="bi bi-envelope"></i>
                             </span>
-
                             <div>
-
-                                <small>
-                                    EMAIL
-                                </small>
-
-                                <strong>
-                                    @userEmail
-                                </strong>
-
+                                <small>EMAIL</small>
+                                <strong>@userEmail</strong>
                             </div>
-
                         </div>
 
                     </div>
 
-
-                    <!-- ============================================
-                         ACCOUNT ACTIONS
-                         ============================================ -->
-
                     <div class="account-hero-actions">
 
-                        <button type="button"
-                                class="account-primary-button"
-                                @onclick="GoToMyAds">
-
+                        <button type="button" class="account-primary-button" @onclick="GoToMyAds">
                             <span class="account-button-icon">
                                 <i class="bi bi-megaphone"></i>
                             </span>
-
-                            <span>
-                                My Advertisements
-                            </span>
-
+                            <span>My Advertisements</span>
                             <i class="bi bi-arrow-right account-button-arrow"></i>
-
                         </button>
 
-
-                        <button type="button"
-                                class="account-secondary-button"
-                                @onclick="GoToFavorites">
-
+                        <button type="button" class="account-secondary-button" @onclick="GoToFavorites">
                             <i class="bi bi-heart"></i>
-
-                            <span>
-                                My Favorites
-                            </span>
-
+                            <span>My Favorites</span>
                         </button>
 
                     </div>
 
                 </div>
 
-
-                <!-- =================================================
-                     MEMBER CARD
-                     ================================================= -->
-
+                <!-- MEMBER CARD -->
                 <div class="account-hero-card">
 
                     <div class="account-hero-card-top">
-
                         <div class="account-hero-card-icon">
                             <i class="bi bi-person-check"></i>
                         </div>
-
-                        <span class="account-hero-card-status">
-                            SIGNED IN
-                        </span>
-
+                        <span class="account-hero-card-status">SIGNED IN</span>
                     </div>
-
 
                     <div class="account-hero-card-title">
-
                         Your marketplace,
                         <strong>your way.</strong>
-
                     </div>
-
 
                     <p>
                         You are signed in and can now manage
-                        your AdMind marketplace activity.
+                        your @siteName marketplace activity.
                     </p>
-
 
                     <div class="account-hero-card-divider"></div>
 
-
-                    <!-- USER ID -->
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-person-vcard"></i>
-                        </span>
-
+                        <span><i class="bi bi-person-vcard"></i></span>
                         <div>
-
-                            <strong>
-                                Account ID
-                            </strong>
-
-                            <small>
-                                @userId
-                            </small>
-
+                            <strong>Account ID</strong>
+                            <small>@userId</small>
                         </div>
-
                     </div>
 
-
-                    <!-- EMAIL -->
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-envelope-check"></i>
-                        </span>
-
+                        <span><i class="bi bi-envelope-check"></i></span>
                         <div>
-
-                            <strong>
-                                Email
-                            </strong>
-
-                            <small>
-                                @userEmail
-                            </small>
-
+                            <strong>Email</strong>
+                            <small>@userEmail</small>
                         </div>
-
                     </div>
 
-
-                    <!-- STATUS -->
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-shield-check"></i>
-                        </span>
-
+                        <span><i class="bi bi-shield-check"></i></span>
                         <div>
-
-                            <strong>
-                                Account Status
-                            </strong>
-
-                            <small>
-                                Authenticated
-                            </small>
-
+                            <strong>Account Status</strong>
+                            <small>Authenticated</small>
                         </div>
-
                     </div>
 
                 </div>
 
             </section>
 
-
-            <!-- ====================================================
-                 AUTHENTICATED ACCOUNT FEATURES
-                 ==================================================== -->
-
+            <!-- AUTHENTICATED ACCOUNT FEATURES -->
             <section class="account-features-section">
 
                 <div class="account-section-heading">
-
-                    <span class="account-section-eyebrow">
-                        YOUR ACCOUNT
-                    </span>
-
-                    <h2>
-                        Everything you need in one place
-                    </h2>
-
+                    <span class="account-section-eyebrow">YOUR ACCOUNT</span>
+                    <h2>Everything you need in one place</h2>
                     <p>
                         Manage your advertisements, favorites and
                         marketplace activity from your account.
                     </p>
-
                 </div>
-
 
                 <div class="account-feature-grid">
 
-
-                    <!-- =================================================
-                         MY ADS
-                         ================================================= -->
-
-                    <article class="account-feature-card"
-                             @onclick="GoToMyAds">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-megaphone"></i>
-                        </div>
-
+                    <article class="account-feature-card" @onclick="GoToMyAds">
+                        <div class="account-feature-icon"><i class="bi bi-megaphone"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                My Advertisements
-                            </h3>
-
-                            <p>
-                                Create, edit and manage your
-                                advertisements.
-                            </p>
-
+                            <h3>My Advertisements</h3>
+                            <p>Create, edit and manage your advertisements.</p>
                         </div>
-
-                        <span class="account-feature-number">
-                            01
-                        </span>
-
+                        <span class="account-feature-number">01</span>
                     </article>
 
-
-                    <!-- =================================================
-                         FAVORITES
-                         ================================================= -->
-
-                    <article class="account-feature-card"
-                             @onclick="GoToFavorites">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-heart"></i>
-                        </div>
-
+                    <article class="account-feature-card" @onclick="GoToFavorites">
+                        <div class="account-feature-icon"><i class="bi bi-heart"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                My Favorites
-                            </h3>
-
-                            <p>
-                                View advertisements that you have
-                                saved for later.
-                            </p>
-
+                            <h3>My Favorites</h3>
+                            <p>View advertisements that you have saved for later.</p>
                         </div>
-
-                        <span class="account-feature-number">
-                            02
-                        </span>
-
+                        <span class="account-feature-number">02</span>
                     </article>
 
-
-                    <!-- =================================================
-                         PROFILE
-                         ================================================= -->
-
-                    <article class="account-feature-card"
-                             @onclick="GoToProfile">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-person"></i>
-                        </div>
-
+                    <article class="account-feature-card" @onclick="GoToProfile">
+                        <div class="account-feature-icon"><i class="bi bi-person"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                My Profile
-                            </h3>
-
-                            <p>
-                                View and manage your account information.
-                            </p>
-
+                            <h3>My Profile</h3>
+                            <p>View and manage your account information.</p>
                         </div>
-
-                        <span class="account-feature-number">
-                            03
-                        </span>
-
+                        <span class="account-feature-number">03</span>
                     </article>
-
-
-                    <!-- =================================================
-                         SECURITY
-                         ================================================= -->
 
                     <article class="account-feature-card">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-
+                        <div class="account-feature-icon"><i class="bi bi-shield-check"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                Account Security
-                            </h3>
-
-                            <p>
-                                Your account is protected by authenticated
-                                access.
-                            </p>
-
+                            <h3>Account Security</h3>
+                            <p>Your account is protected by authenticated access.</p>
                         </div>
-
-                        <span class="account-feature-number">
-                            04
-                        </span>
-
+                        <span class="account-feature-number">04</span>
                     </article>
 
                 </div>
 
             </section>
 
-
-            <!-- ====================================================
-                 ACCOUNT INFORMATION
-                 ==================================================== -->
-
+            <!-- ACCOUNT INFORMATION -->
             <section class="account-post-cta">
 
                 <div class="account-post-cta-icon">
@@ -463,32 +238,17 @@
                 </div>
 
                 <div class="account-post-cta-content">
-
-                    <span class="account-post-cta-eyebrow">
-                        ACCOUNT CONNECTED
-                    </span>
-
-                    <h2>
-                        You are signed in.
-                    </h2>
-
+                    <span class="account-post-cta-eyebrow">ACCOUNT CONNECTED</span>
+                    <h2>You are signed in.</h2>
                     <p>
                         You can now browse advertisements, manage your
                         listings and access your saved favorites.
                     </p>
-
                 </div>
 
-                <button type="button"
-                        class="account-post-cta-button"
-                        @onclick="GoToMyAds">
-
-                    <span>
-                        Manage My Ads
-                    </span>
-
+                <button type="button" class="account-post-cta-button" @onclick="GoToMyAds">
+                    <span>Manage My Ads</span>
                     <i class="bi bi-arrow-right"></i>
-
                 </button>
 
             </section>
@@ -497,23 +257,14 @@
     }
     else
     {
-        <!-- ============================================================
-             ANONYMOUS USER ACCOUNT
-             ============================================================ -->
-
+        <!-- ANONYMOUS USER ACCOUNT -->
         <main class="account-main">
-
-            <!-- ========================================================
-                 HERO
-                 ======================================================== -->
 
             <section class="account-hero">
 
                 <div class="account-hero-content">
 
-                    <span class="account-hero-eyebrow">
-                        YOUR MARKETPLACE ACCOUNT
-                    </span>
+                    <span class="account-hero-eyebrow">YOUR MARKETPLACE ACCOUNT</span>
 
                     <h1>
                         Find What You Need.
@@ -522,294 +273,146 @@
 
                     <p class="account-hero-description">
                         Sign in to manage your advertisements, save your
-                        favorite listings, and connect with the AdMind
+                        favorite listings, and connect with the @siteName
                         marketplace.
                     </p>
 
-
                     <div class="account-hero-actions">
 
-                        <!-- SIGN IN -->
-
-                        <button type="button"
-                                class="account-primary-button"
-                                @onclick="OpenLogin">
-
+                        <button type="button" class="account-primary-button" @onclick="OpenLogin">
                             <span class="account-button-icon">
                                 <i class="bi bi-box-arrow-in-right"></i>
                             </span>
-
-                            <span>
-                                Sign In
-                            </span>
-
+                            <span>Sign In</span>
                             <i class="bi bi-arrow-right account-button-arrow"></i>
-
                         </button>
 
-
-                        <!-- SIGN UP -->
-
-                        <button type="button"
-                                class="account-secondary-button"
-                                @onclick="OpenSignup">
-
+                        <button type="button" class="account-secondary-button" @onclick="OpenSignup">
                             <i class="bi bi-person-plus"></i>
-
-                            <span>
-                                Create Account
-                            </span>
-
+                            <span>Create Account</span>
                         </button>
 
                     </div>
 
                 </div>
 
-
-                <!-- ====================================================
-                     HERO ACCOUNT CARD
-                     ==================================================== -->
-
+                <!-- HERO ACCOUNT CARD -->
                 <div class="account-hero-card">
 
                     <div class="account-hero-card-top">
-
                         <div class="account-hero-card-icon">
                             <i class="bi bi-person-check"></i>
                         </div>
-
-                        <span class="account-hero-card-status">
-                            MEMBER ACCESS
-                        </span>
-
+                        <span class="account-hero-card-status">MEMBER ACCESS</span>
                     </div>
-
 
                     <div class="account-hero-card-title">
-
                         Your marketplace,
                         <strong>your way.</strong>
-
                     </div>
-
 
                     <p>
                         Keep your advertisements and saved items organized
                         from one convenient account.
                     </p>
 
-
                     <div class="account-hero-card-divider"></div>
 
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-check2-circle"></i>
-                        </span>
-
+                        <span><i class="bi bi-check2-circle"></i></span>
                         <div>
-
-                            <strong>
-                                Manage your ads
-                            </strong>
-
-                            <small>
-                                Create, edit and track your listings.
-                            </small>
-
+                            <strong>Manage your ads</strong>
+                            <small>Create, edit and track your listings.</small>
                         </div>
-
                     </div>
 
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-check2-circle"></i>
-                        </span>
-
+                        <span><i class="bi bi-check2-circle"></i></span>
                         <div>
-
-                            <strong>
-                                Save favorites
-                            </strong>
-
-                            <small>
-                                Keep interesting advertisements close.
-                            </small>
-
+                            <strong>Save favorites</strong>
+                            <small>Keep interesting advertisements close.</small>
                         </div>
-
                     </div>
 
-
                     <div class="account-mini-feature">
-
-                        <span>
-                            <i class="bi bi-check2-circle"></i>
-                        </span>
-
+                        <span><i class="bi bi-check2-circle"></i></span>
                         <div>
-
-                            <strong>
-                                Stay connected
-                            </strong>
-
-                            <small>
-                                Access your marketplace activity.
-                            </small>
-
+                            <strong>Stay connected</strong>
+                            <small>Access your marketplace activity.</small>
                         </div>
-
                     </div>
 
                 </div>
 
             </section>
 
-
-            <!-- ========================================================
-                 ACCOUNT FEATURES
-                 ======================================================== -->
-
+            <!-- ACCOUNT FEATURES -->
             <section class="account-features-section">
 
                 <div class="account-section-heading">
-
-                    <span class="account-section-eyebrow">
-                        ACCOUNT BENEFITS
-                    </span>
-
-                    <h2>
-                        Everything you need in one place
-                    </h2>
-
+                    <span class="account-section-eyebrow">ACCOUNT BENEFITS</span>
+                    <h2>Everything you need in one place</h2>
                     <p>
-                        Create your free AdMind account and make your
+                        Create your free @siteName account and make your
                         marketplace experience simpler.
                     </p>
-
                 </div>
-
 
                 <div class="account-feature-grid">
 
-
                     <article class="account-feature-card">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-megaphone"></i>
-                        </div>
-
+                        <div class="account-feature-icon"><i class="bi bi-megaphone"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                Manage Advertisements
-                            </h3>
-
+                            <h3>Manage Advertisements</h3>
                             <p>
                                 Create new advertisements, update existing
-                                listings and keep your marketplace posts
-                                organized.
+                                listings and keep your marketplace posts organized.
                             </p>
-
                         </div>
-
-                        <span class="account-feature-number">
-                            01
-                        </span>
-
+                        <span class="account-feature-number">01</span>
                     </article>
 
-
                     <article class="account-feature-card">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-heart"></i>
-                        </div>
-
+                        <div class="account-feature-icon"><i class="bi bi-heart"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                Save Favorites
-                            </h3>
-
+                            <h3>Save Favorites</h3>
                             <p>
                                 Save advertisements you are interested in
                                 so you can easily find them again later.
                             </p>
-
                         </div>
-
-                        <span class="account-feature-number">
-                            02
-                        </span>
-
+                        <span class="account-feature-number">02</span>
                     </article>
 
-
                     <article class="account-feature-card">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-grid-1x2"></i>
-                        </div>
-
+                        <div class="account-feature-icon"><i class="bi bi-grid-1x2"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                Your Activity
-                            </h3>
-
+                            <h3>Your Activity</h3>
                             <p>
                                 Access your marketplace activity and keep
                                 track of your advertisements from one place.
                             </p>
-
                         </div>
-
-                        <span class="account-feature-number">
-                            03
-                        </span>
-
+                        <span class="account-feature-number">03</span>
                     </article>
 
-
                     <article class="account-feature-card">
-
-                        <div class="account-feature-icon">
-                            <i class="bi bi-shield-check"></i>
-                        </div>
-
+                        <div class="account-feature-icon"><i class="bi bi-shield-check"></i></div>
                         <div class="account-feature-content">
-
-                            <h3>
-                                Secure Access
-                            </h3>
-
+                            <h3>Secure Access</h3>
                             <p>
                                 Your account provides a dedicated space for
                                 managing your marketplace information.
                             </p>
-
                         </div>
-
-                        <span class="account-feature-number">
-                            04
-                        </span>
-
+                        <span class="account-feature-number">04</span>
                     </article>
 
                 </div>
 
             </section>
 
-
-            <!-- ========================================================
-                 POST ADVERTISEMENT CTA
-                 ======================================================== -->
-
+            <!-- POST ADVERTISEMENT CTA -->
             <section class="account-post-cta">
 
                 <div class="account-post-cta-icon">
@@ -817,32 +420,17 @@
                 </div>
 
                 <div class="account-post-cta-content">
-
-                    <span class="account-post-cta-eyebrow">
-                        READY TO GET STARTED?
-                    </span>
-
-                    <h2>
-                        Have something to advertise?
-                    </h2>
-
+                    <span class="account-post-cta-eyebrow">READY TO GET STARTED?</span>
+                    <h2>Have something to advertise?</h2>
                     <p>
                         Create an account and start posting your advertisement
-                        on AdMind.
+                        on @siteName.
                     </p>
-
                 </div>
 
-                <button type="button"
-                        class="account-post-cta-button"
-                        @onclick="OpenSignup">
-
-                    <span>
-                        Get Started
-                    </span>
-
+                <button type="button" class="account-post-cta-button" @onclick="OpenSignup">
+                    <span>Get Started</span>
                     <i class="bi bi-arrow-right"></i>
-
                 </button>
 
             </section>
@@ -850,11 +438,7 @@
         </main>
     }
 
-
-    <!-- ============================================================
-         PUBLIC AUTHENTICATION MODAL
-         ============================================================ -->
-
+    <!-- PUBLIC AUTHENTICATION MODAL -->
     <PublicAuthModal @bind-IsOpen="showAuthModal"
                      @bind-Mode="authMode" />
 
@@ -864,15 +448,21 @@
 @code {
 
     // ============================================================
+    // SITE SETTINGS (cached by SiteSettingsService)
+    // ============================================================
+
+    private string siteName = "AdMind";
+
+    private string siteNameUpper => siteName.ToUpperInvariant();
+
+
+    // ============================================================
     // AUTHENTICATION
     // ============================================================
 
     private bool isAuthenticated;
-
     private string userId = string.Empty;
-
     private string userName = string.Empty;
-
     private string userEmail = string.Empty;
 
 
@@ -895,13 +485,23 @@
         AuthenticationStateProvider.AuthenticationStateChanged
             += OnAuthenticationStateChanged;
 
+        try
+        {
+            var settings = await SiteSettingsService.GetAsync();
+
+            if (settings is not null &&
+                !string.IsNullOrWhiteSpace(settings.SiteName))
+            {
+                siteName = settings.SiteName;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ACCOUNT PAGE SETTINGS ERROR: {ex.Message}");
+        }
+
         await LoadAuthenticationStateAsync();
     }
-
-
-    // ============================================================
-    // LOAD AUTHENTICATION STATE
-    // ============================================================
 
     private async Task LoadAuthenticationStateAsync()
     {
@@ -911,11 +511,6 @@
 
         SetUserFromPrincipal(authenticationState.User);
     }
-
-
-    // ============================================================
-    // AUTHENTICATION STATE CHANGED
-    // ============================================================
 
     private async void OnAuthenticationStateChanged(
         Task<AuthenticationState> authenticationStateTask)
@@ -928,7 +523,6 @@
             await InvokeAsync(() =>
             {
                 SetUserFromPrincipal(authenticationState.User);
-
                 StateHasChanged();
             });
         }
@@ -939,38 +533,28 @@
         }
     }
 
-
-    // ============================================================
-    // READ USER FROM CLAIMS
-    // ============================================================
-
     private void SetUserFromPrincipal(ClaimsPrincipal user)
     {
         isAuthenticated =
             user.Identity?.IsAuthenticated == true;
-
 
         if (!isAuthenticated)
         {
             userId = string.Empty;
             userName = string.Empty;
             userEmail = string.Empty;
-
             return;
         }
-
 
         userId =
             user.FindFirst(ClaimTypes.NameIdentifier)?.Value
             ?? user.FindFirst("sub")?.Value
             ?? string.Empty;
 
-
         userName =
             user.FindFirst(ClaimTypes.Name)?.Value
             ?? user.Identity?.Name
             ?? string.Empty;
-
 
         userEmail =
             user.FindFirst(ClaimTypes.Email)?.Value
@@ -983,52 +567,28 @@
     // NAVIGATION
     // ============================================================
 
-    private void GoHome()
-    {
-        Navigation.NavigateTo("/");
-    }
+    private void GoHome() => Navigation.NavigateTo("/");
 
+    private void GoToMyAds() => Navigation.NavigateTo("/my-ads");
 
-    private void GoToMyAds()
-    {
-        Navigation.NavigateTo("/my-ads");
-    }
+    private void GoToFavorites() => Navigation.NavigateTo("/my-favorites");
 
-
-    private void GoToFavorites()
-    {
-        Navigation.NavigateTo("/my-favorites");
-    }
-
-
-    private void GoToProfile()
-    {
-        Navigation.NavigateTo("/profile");
-    }
+    private void GoToProfile() => Navigation.NavigateTo("/profile");
 
 
     // ============================================================
-    // OPEN SIGN IN
+    // AUTH MODAL OPEN
     // ============================================================
 
     private void OpenLogin()
     {
-        authMode =
-            PublicAuthModal.AuthMode.SignIn;
-
+        authMode = PublicAuthModal.AuthMode.SignIn;
         showAuthModal = true;
     }
 
-
-    // ============================================================
-    // OPEN SIGN UP
-    // ============================================================
-
     private void OpenSignup()
     {
-        authMode =
-            PublicAuthModal.AuthMode.SignUp;
-
+        authMode = PublicAuthModal.AuthMode.SignUp;
         showAuthModal = true;
     }
 
@@ -1042,5 +602,4 @@
         AuthenticationStateProvider.AuthenticationStateChanged
             -= OnAuthenticationStateChanged;
     }
-
 }

@@ -9,19 +9,21 @@
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
+@inject SiteSettingsService SiteSettingsService
 @inject AdvertisementTypeManagementApiService AdvertisementTypeManagementApiService
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Advertisement Type Management | AdMind</PageTitle>
+<PageTitle>Advertisement Type Management | @siteName</PageTitle>
 
 <div class="admin-advertisement-types">
 
     <PageHeader Icon="bi-ui-checks-grid"
-                Eyebrow="ADVERTISEMENT TYPE MANAGEMENT"
-                Title="Advertisement Types"
-                DescriptionContent="@AdvertisementTypeHeaderDescription"
-                ActionContent="@AdvertisementTypeHeaderActions" />
+            Eyebrow="ADVERTISEMENT TYPE MANAGEMENT"
+            Title="Advertisement Types"
+            SetBrowserTitle="true"
+            DescriptionContent="@AdvertisementTypeHeaderDescription"
+            ActionContent="@AdvertisementTypeHeaderActions" />
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
@@ -976,13 +978,16 @@
         };
     }
 
-
+private string siteName = "AdMind"; 
     // ============================================================
     // INITIALIZATION
     // ============================================================
 
     protected override async Task OnInitializedAsync()
     {
+        var settings = await SiteSettingsService.GetAsync();
+    if (settings is not null) siteName = settings.SiteName;
+    
         var authenticationState =
             await AdminAuthenticationStateProvider
                 .GetAuthenticationStateAsync();

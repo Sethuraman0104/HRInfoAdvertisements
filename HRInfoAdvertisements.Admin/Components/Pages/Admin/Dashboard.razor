@@ -8,23 +8,25 @@
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
 @using HRInfoAdvertisements.Application.DTOs.Admin
 @using HRInfoAdvertisements.Application.Interfaces
+@using HRInfoAdvertisements.Application.DTOs.Settings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
-
+@inject SystemSettingsApiService SystemSettingsApiService
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject IAdvertisementModerationService AdvertisementModerationService
 @inject NavigationManager Navigation
 
-<PageTitle>Dashboard | AdMind</PageTitle>
+
    <div class="admin-dashboard">
 
-    <PageHeader Icon="bi-speedometer2"
+<PageHeader Icon="bi-speedometer2"
             Eyebrow="ADMINISTRATION"
-            Title="Dashboard">
+            Title="Dashboard"
+            SetBrowserTitle="true">
 
     <DescriptionContent>
         Welcome back, <strong>@userName</strong>.
-        Here is an overview of the AdMind platform.
+        Here is an overview of the @SiteName platform.
     </DescriptionContent>
 
     <ActionContent>
@@ -99,6 +101,26 @@
 
         </div>
     }
+
+    @if (settings is not null && !settings.RequireAdminApproval)
+{
+    <div class="dashboard-error"
+         style="background:#fff8e8;color:#7a5a00;">
+
+        <div class="dashboard-error-icon">
+            <i class="bi bi-info-circle"></i>
+        </div>
+
+        <div class="dashboard-error-content">
+            <strong>Admin approval is turned off</strong>
+            <span>
+                New advertisements may publish without review,
+                so the approval queue may stay empty.
+            </span>
+        </div>
+
+    </div>
+}
 
 
     <!-- =========================================================
@@ -305,8 +327,9 @@
                     </strong>
 
                     <small>
-                        Past expiry date
-                    </small>
+    Past expiry date
+    @(settings is null ? "" : $"· {settings.AdvertisementExpiryDays}-day listings")
+</small>
 
                 </div>
 
@@ -998,6 +1021,29 @@
 
     private string? errorMessage;
 
+    // ============================================================
+// SITE SETTINGS (admin API)
+// ============================================================
+
+private ApplicationSettings? settings;
+
+private string SiteName => settings?.SiteName ?? "AdMind";
+
+private async Task LoadSettingsAsync()
+{
+    try
+    {
+        settings =
+            await SystemSettingsApiService
+                .GetApplicationSettingsAsync();
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"[Admin Dashboard] Settings error: {ex.Message}");
+    }
+}
+
 
     // ============================================================
     // INITIALIZATION
@@ -1027,6 +1073,8 @@
 
     Console.WriteLine(
         "ADMIN DASHBOARD: Authentication passed.");
+
+    await LoadSettingsAsync();
 
     await LoadDashboardAsync();
 
@@ -1124,11 +1172,6 @@
 
         return true;
     }
-
-private string GetDashboardDescription()
-{
-    return $"Welcome back, {userName}. Here is an overview of the AdMind platform.";
-}
 
     // ============================================================
     // LOAD DASHBOARD

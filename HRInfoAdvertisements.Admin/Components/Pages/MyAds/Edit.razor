@@ -5,13 +5,12 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
-
+@inject SiteSettingsService SiteSettingsService
 @inject AdvertisementApiService AdvertisementApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Edit Advertisement | AdMind</PageTitle>
-
+<PageTitle>Edit Advertisement | @siteName</PageTitle>
 <div class="my-ad-edit-page">
 
     <!-- =========================================================
@@ -826,6 +825,10 @@
 
                             </div>
 
+                            <small class="edit-help">
+    New advertisements stay live for @expiryDays days by default.
+</small>
+
                         </div>
 
                     </div>
@@ -1073,10 +1076,10 @@
                         <i class="bi bi-info-circle-fill"></i>
 
                         <span>
-                            At least one contact method must be provided and at least
-                            one contact method must be visible to visitors before the
-                            advertisement can be submitted for approval.
-                        </span>
+    At least one contact method must be provided and at least
+    one contact method must be visible to visitors before the
+    advertisement can be @(requireAdminApproval ? "submitted for approval" : "published").
+</span>
 
                     </div>
 
@@ -1521,8 +1524,8 @@
                                 <i class="bi bi-send"></i>
 
                                 <span>
-                                    Save & Submit
-                                </span>
+    @(requireAdminApproval ? "Save & Submit" : "Save & Publish")
+</span>
                             }
 
                         </button>
@@ -1569,11 +1572,7 @@
     // FORM MODEL
     // ============================================================
 
-    private readonly UpdateAdvertisementRequest model =
-        new()
-        {
-            CurrencyCode = "BHD"
-        };
+    private readonly UpdateAdvertisementRequest model = new();
 
 
     // ============================================================
@@ -1660,8 +1659,38 @@
     private const long MaxImageSize =
         10 * 1024 * 1024;
 
-    private const int MaxImages =
-        20;
+    // ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// Defaults are used if the API is unavailable.
+// ============================================================
+
+private string siteName = "AdMind";
+private string defaultCurrency = "INR";
+private int MaxImages = 5;
+private int expiryDays = 30;
+private bool requireAdminApproval = true;
+
+private async Task LoadSiteSettingsAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            defaultCurrency = settings.DefaultCurrency;
+            MaxImages = Math.Max(1, settings.MaxImagesPerAdvertisement);
+            expiryDays = settings.AdvertisementExpiryDays;
+            requireAdminApproval = settings.RequireAdminApproval;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"EDIT AD SETTINGS ERROR: {ex.Message}");
+    }
+}
 
 
     // ============================================================
@@ -1749,6 +1778,8 @@
                 Navigation.NavigateTo("/");
                 return;
             }
+
+            await LoadSiteSettingsAsync();
 
             await LoadLookupsAsync();
 
@@ -1838,10 +1869,10 @@
                 advertisement.Price;
 
             model.CurrencyCode =
-                string.IsNullOrWhiteSpace(
-                    advertisement.CurrencyCode)
-                    ? "BHD"
-                    : advertisement.CurrencyCode;
+    string.IsNullOrWhiteSpace(
+        advertisement.CurrencyCode)
+        ? defaultCurrency
+        : advertisement.CurrencyCode;
 
             model.IsNegotiable =
                 advertisement.IsNegotiable;
@@ -2641,13 +2672,17 @@
                 if (string.IsNullOrWhiteSpace(errorMessage))
                 {
                     successMessage =
-                        "Your advertisement has been updated successfully.";
+    requireAdminApproval
+        ? "Your advertisement has been updated and submitted for approval."
+        : "Your advertisement has been updated and submitted.";
                 }
             }
             else
             {
                 successMessage =
-                    "Your advertisement has been updated successfully.";
+    requireAdminApproval
+        ? "Your advertisement has been updated and submitted for approval."
+        : "Your advertisement has been updated and submitted.";
             }
 
             return true;
