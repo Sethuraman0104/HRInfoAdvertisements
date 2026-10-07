@@ -7,10 +7,11 @@
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
 @inject SystemSettingsApiService SystemSettingsApiService
+@inject SiteSettingsService SiteSettingsService
 @inject NavigationManager Navigation
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 
-<PageTitle>System Settings | AdMind</PageTitle>
+<PageTitle>System Settings | @Site.SiteName</PageTitle>
 
 <div class="admin-settings">
 
@@ -57,6 +58,32 @@
 
 
     <!-- =========================================================
+         NOTICE (after saving a setting used by the public site)
+         ========================================================= -->
+
+    @if (!string.IsNullOrWhiteSpace(noticeMessage))
+    {
+        <div class="settings-notice" role="status">
+
+            <i class="bi bi-check-circle-fill"></i>
+
+            <span>
+                @noticeMessage
+            </span>
+
+            <button type="button"
+                    aria-label="Close"
+                    @onclick="ClearNotice">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    <!-- =========================================================
          SETTINGS INTRODUCTION
          ========================================================= -->
 
@@ -81,7 +108,7 @@
             <p>
                 Manage configuration values, marketplace behaviour,
                 account policies, notifications and platform-level
-                preferences for the AdMind application.
+                preferences for the @Site.SiteName application.
             </p>
 
         </div>
@@ -599,16 +626,16 @@
 
 
                             @foreach (var page in GetPaginationPages())
-{
-    <button type="button"
-            class="settings-page-button @(page == currentPage ? "selected" : "")"
-            @onclick="() => GoToPage(page)"
-            disabled="@isLoading">
+                            {
+                                <button type="button"
+                                        class="settings-page-button @(page == currentPage ? "selected" : "")"
+                                        @onclick="() => GoToPage(page)"
+                                        disabled="@isLoading">
 
-        @(page)
+                                    @(page)
 
-    </button>
-}
+                                </button>
+                            }
 
 
                             <button type="button"
@@ -1271,7 +1298,7 @@
 @if (showEditor)
 {
     <div class="settings-modal-backdrop"
-         @onclick="CloseEditor">
+         @onclick="RequestCloseEditor">
 
         <div class="settings-modal"
              @onclick:stopPropagation="true">
@@ -1311,7 +1338,7 @@
 
                 <button type="button"
                         class="settings-modal-close"
-                        @onclick="CloseEditor">
+                        @onclick="RequestCloseEditor">
 
                     <i class="bi bi-x-lg"></i>
 
@@ -1354,13 +1381,23 @@
                                class="settings-form-input"
                                @bind="editorModel.SettingKey"
                                maxlength="150"
-                               placeholder="Example: Marketplace.DefaultCurrency" />
+                               placeholder="Example: DEFAULT_CURRENCY" />
 
                         <ValidationMessage For="@(() => editorModel.SettingKey)" />
 
                         <small>
                             Use a unique, descriptive key for the configuration value.
                         </small>
+
+                        @if (isEditMode && IsKnownKey(editingOriginalKey))
+                        {
+                            <small>
+                                <strong>Warning:</strong>
+                                this key is read by the application. If you
+                                rename it, the application will stop finding
+                                this setting and use its default value.
+                            </small>
+                        }
 
                     </div>
 
@@ -1406,6 +1443,7 @@
 
                         <small>
                             Maximum 4,000 characters.
+                            @ValueHint(editorModel.SettingKey)
                         </small>
 
                     </div>
@@ -1489,7 +1527,7 @@
 
                     <button type="button"
                             class="settings-secondary-button"
-                            @onclick="CloseEditor"
+                            @onclick="RequestCloseEditor"
                             disabled="@isSaving">
 
                         Cancel
@@ -1532,6 +1570,153 @@
 @code {
 
     // ============================================================
+    // SITE SETTINGS
+    // ============================================================
+    //
+    // Used for the page title and overview text. After an admin
+    // changes a setting used by the public site, the shared cache
+    // is invalidated so visitors see the new value immediately.
+    // ============================================================
+
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    // Keys the public site reads (must match the API whitelist).
+    private static readonly HashSet<string> PublicKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "SITE_NAME", "SITE_TAGLINE", "DEFAULT_CURRENCY",
+            "ADVERTISEMENT_EXPIRY_DAYS", "MAX_IMAGES_PER_ADVERTISEMENT",
+            "MAX_VIDEO_SIZE_MB", "REQUIRE_ADMIN_APPROVAL",
+            "REQUIRE_EMAIL_VERIFICATION", "EMAIL_ENABLED",
+            "EMAIL_OTP_EXPIRY_MINUTES", "SUPPORT_EMAIL"
+        };
+
+    private static readonly HashSet<string> BoolKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "REQUIRE_ADMIN_APPROVAL", "REQUIRE_EMAIL_VERIFICATION",
+            "REQUIRE_MOBILE_VERIFICATION", "ADMIN_MFA_REQUIRED",
+            "EMAIL_ENABLED"
+        };
+
+    private static readonly HashSet<string> IntKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "ADVERTISEMENT_EXPIRY_DAYS", "MAX_IMAGES_PER_ADVERTISEMENT",
+            "MAX_VIDEO_SIZE_MB", "EMAIL_OTP_EXPIRY_MINUTES"
+        };
+
+    private static readonly HashSet<string> TextKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            "SITE_NAME", "SITE_TAGLINE", "SITE_URL", "DEFAULT_CURRENCY",
+            "EMAIL_FROM_NAME", "SUPPORT_EMAIL", "EMAIL_LOGO_URL",
+            "EMAIL_VERIFICATION_SUBJECT", "EMAIL_PASSWORD_RESET_SUBJECT"
+        };
+
+    private static bool IsKnownKey(string? key) =>
+        !string.IsNullOrWhiteSpace(key) &&
+        (BoolKeys.Contains(key) ||
+         IntKeys.Contains(key) ||
+         TextKeys.Contains(key));
+
+    private static bool AffectsPublicSettings(string? key) =>
+        !string.IsNullOrWhiteSpace(key) &&
+        PublicKeys.Contains(key);
+
+    // Short hint under the value box for keys the app understands.
+    private static string ValueHint(string? key)
+    {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return string.Empty;
+        }
+
+        if (BoolKeys.Contains(key.Trim()))
+        {
+            return "Allowed values: true or false.";
+        }
+
+        if (IntKeys.Contains(key.Trim()))
+        {
+            return "Enter a whole number greater than 0.";
+        }
+
+        if (string.Equals(key.Trim(), "DEFAULT_CURRENCY",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return "Use a 3-letter currency code, for example INR or BHD.";
+        }
+
+        return string.Empty;
+    }
+
+    // Returns an error message, or null when the value is acceptable.
+    private static string? ValidateKnownSetting(
+        string key,
+        string? value,
+        bool isEncrypted,
+        bool keepingExistingSecret)
+    {
+        if (!IsKnownKey(key))
+        {
+            return null;
+        }
+
+        if (isEncrypted && PublicKeys.Contains(key))
+        {
+            return $"{key} is read by the public site and cannot be " +
+                   "encrypted. Untick \"Encrypted Setting\".";
+        }
+
+        if (keepingExistingSecret)
+        {
+            return null;
+        }
+
+        var text = (value ?? string.Empty).Trim();
+
+        if (text.Length == 0)
+        {
+            return string.Equals(key, "SUPPORT_EMAIL",
+                       StringComparison.OrdinalIgnoreCase)
+                ? null
+                : "A value is required. To use the built-in default, " +
+                  "deactivate the setting instead.";
+        }
+
+        if (BoolKeys.Contains(key) &&
+            !bool.TryParse(text, out _))
+        {
+            return $"{key} must be either true or false.";
+        }
+
+        if (IntKeys.Contains(key) &&
+            (!int.TryParse(text, out var number) || number <= 0))
+        {
+            return $"{key} must be a whole number greater than 0.";
+        }
+
+        if (string.Equals(key, "DEFAULT_CURRENCY",
+                StringComparison.OrdinalIgnoreCase) &&
+            (text.Length != 3 || !text.All(char.IsLetter)))
+        {
+            return "DEFAULT_CURRENCY must be a 3-letter currency code, " +
+                   "for example INR or BHD.";
+        }
+
+        if (string.Equals(key, "SUPPORT_EMAIL",
+                StringComparison.OrdinalIgnoreCase) &&
+            !new EmailAddressAttribute().IsValid(text))
+        {
+            return "SUPPORT_EMAIL must be a valid email address.";
+        }
+
+        return null;
+    }
+
+
+    // ============================================================
     // PAGE STATE
     // ============================================================
 
@@ -1543,6 +1728,7 @@
 
     private string? errorMessage;
     private string? editorErrorMessage;
+    private string? noticeMessage;
 
     private string searchText = string.Empty;
     private string appliedSearch = string.Empty;
@@ -1560,6 +1746,9 @@
 
     private int editingSystemSettingId;
 
+    // Key as it was when the editor was opened (to detect renames).
+    private string? editingOriginalKey;
+
     private SystemSettingEditorModel editorModel = new();
 
 
@@ -1569,6 +1758,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        Site = await SiteSettingsService.GetAsync();
+
         var authenticationState =
             await AdminAuthenticationStateProvider
                 .GetAuthenticationStateAsync();
@@ -1583,6 +1774,34 @@
         }
 
         await RefreshAsync();
+    }
+
+
+    // ============================================================
+    // PUBLIC SETTINGS CACHE
+    // ============================================================
+
+    // Called after a successful save / status change.
+    private async Task AfterSettingChangedAsync(
+        params string?[] keys)
+    {
+        // Shared cache: the next visitor/page load gets fresh values.
+        SiteSettingsService.Invalidate();
+
+        Site = await SiteSettingsService.GetAsync();
+
+        if (keys.Any(AffectsPublicSettings))
+        {
+            noticeMessage =
+                "Saved. The public site now uses the new value. " +
+                "The header and sidebar of this admin session update " +
+                "the next time you sign in.";
+        }
+    }
+
+    private void ClearNotice()
+    {
+        noticeMessage = null;
     }
 
 
@@ -1798,6 +2017,7 @@
         isEditMode = false;
         editingSystemSettingId = 0;
         editingEncryptedSetting = false;
+        editingOriginalKey = null;
         editorErrorMessage = null;
 
         editorModel = new SystemSettingEditorModel
@@ -1820,6 +2040,7 @@
         isEditMode = true;
         editingSystemSettingId = setting.SystemSettingID;
         editingEncryptedSetting = setting.IsEncrypted;
+        editingOriginalKey = setting.SettingKey;
         editorErrorMessage = null;
 
         editorModel = new SystemSettingEditorModel
@@ -1848,11 +2069,36 @@
 
         try
         {
+            var key = editorModel.SettingKey.Trim();
+
+            // An empty value on an already-encrypted setting means
+            // "keep the existing secret".
+            var keepingExistingSecret =
+                isEditMode &&
+                editingEncryptedSetting &&
+                editorModel.IsEncrypted &&
+                string.IsNullOrWhiteSpace(editorModel.SettingValue);
+
+            var validationError =
+                ValidateKnownSetting(
+                    key,
+                    editorModel.SettingValue,
+                    editorModel.IsEncrypted,
+                    keepingExistingSecret);
+
+            if (validationError is not null)
+            {
+                editorErrorMessage = validationError;
+                return;
+            }
+
+            var originalKey = editingOriginalKey;
+
             if (isEditMode)
             {
                 var request = new UpdateSystemSettingRequest
                 {
-                    SettingKey = editorModel.SettingKey.Trim(),
+                    SettingKey = key,
                     SettingValue = editorModel.SettingValue,
                     Description = editorModel.Description,
                     IsEncrypted = editorModel.IsEncrypted,
@@ -1868,7 +2114,7 @@
             {
                 var request = new CreateSystemSettingRequest
                 {
-                    SettingKey = editorModel.SettingKey.Trim(),
+                    SettingKey = key,
                     SettingValue = editorModel.SettingValue,
                     Description = editorModel.Description,
                     IsEncrypted = editorModel.IsEncrypted,
@@ -1880,6 +2126,10 @@
             }
 
             CloseEditor();
+
+            await AfterSettingChangedAsync(
+                originalKey,
+                key);
 
             await RefreshAsync();
         }
@@ -1930,6 +2180,9 @@
                     setting.SystemSettingID,
                     !setting.IsActive);
 
+            await AfterSettingChangedAsync(
+                setting.SettingKey);
+
             await RefreshAsync();
         }
         catch (UnauthorizedAccessException)
@@ -1957,17 +2210,28 @@
     // MODAL
     // ============================================================
 
-    private void CloseEditor()
+    // Used by the backdrop, the X button and Cancel:
+    // do not close while a save is running.
+    private void RequestCloseEditor()
     {
         if (isSaving)
         {
             return;
         }
 
+        CloseEditor();
+    }
+
+
+    // Closes unconditionally. Also called by SaveSettingAsync after
+    // a successful save (isSaving is still true at that point).
+    private void CloseEditor()
+    {
         showEditor = false;
         editorErrorMessage = null;
         editingSystemSettingId = 0;
         editingEncryptedSetting = false;
+        editingOriginalKey = null;
         editorModel = new SystemSettingEditorModel();
     }
 

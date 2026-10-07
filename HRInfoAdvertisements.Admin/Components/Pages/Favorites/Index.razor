@@ -435,19 +435,22 @@
 
                                 <td>
 
-                                    <div class="date-cell">
+@{
+    var localFavoriteDate = item.FavoritedDate.ToLocalTime();
+}
 
-                                        <span class="favorite-date">
-                                            @item.FavoritedDate.ToLocalTime()
-                                                .ToString("dd MMM yyyy")
-                                        </span>
+<div class="date-cell">
 
-                                        <span class="favorite-time">
-                                            @item.FavoritedDate.ToLocalTime()
-                                                .ToString("hh:mm tt")
-                                        </span>
+    <span class="favorite-date">
+        @localFavoriteDate.ToString("dd MMM yyyy")
+    </span>
 
-                                    </div>
+    <span class="favorite-time">
+        @localFavoriteDate.ToString("hh:mm tt")
+    </span>
+
+</div>
+
 
                                 </td>
 

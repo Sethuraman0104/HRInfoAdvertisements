@@ -4,6 +4,7 @@ using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
+using HRInfoAdvertisements.Application.Services;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -13,12 +14,15 @@ public class AdvertisementModerationService
     : IAdvertisementModerationService
 {
     private readonly ApplicationDbContext _context;
+private readonly IApplicationSettingsService _applicationSettingsService;
 
-    public AdvertisementModerationService(
-        ApplicationDbContext context)
-    {
-        _context = context;
-    }
+public AdvertisementModerationService(
+    ApplicationDbContext context,
+    IApplicationSettingsService applicationSettingsService)
+{
+    _context = context;
+    _applicationSettingsService = applicationSettingsService;
+}
 
     // ============================================================
     // ADMIN ADVERTISEMENT LIST
@@ -618,87 +622,111 @@ FileSize =
             advertisementId);
     }
 
-    // ============================================================
-    // APPROVE
-    // ============================================================
-
     public async Task<bool> ApproveAdvertisementAsync(
-        long adminUserId,
-        long advertisementId,
-        ApproveAdvertisementRequest request)
+    long adminUserId,
+    long advertisementId,
+    ApproveAdvertisementRequest request)
+{
+    var advertisement =
+        await GetAdvertisementForModerationAsync(
+            advertisementId);
+
+    if (advertisement == null)
     {
-        var advertisement =
-            await GetAdvertisementForModerationAsync(
-                advertisementId);
-
-        if (advertisement == null)
-        {
-            return false;
-        }
-
-        if (advertisement.Status.StatusCode !=
-            "PENDING_REVIEW")
-        {
-            throw new InvalidOperationException(
-                "Only advertisements pending review can be approved.");
-        }
-
-        var approvalRequest =
-            await GetOrCreateApprovalRequestAsync(
-                advertisement,
-                adminUserId);
-
-        var publishedStatus =
-            await GetStatusAsync(
-                "PUBLISHED");
-
-        var now =
-            DateTime.UtcNow;
-
-        advertisement.StatusID =
-            publishedStatus.StatusID;
-
-        advertisement.PublishedDate =
-            now;
-
-        advertisement.ModifiedDate =
-            now;
-
-        advertisement.ModifiedBy =
-            adminUserId;
-
-        approvalRequest.Status =
-            "Approved";
-
-        approvalRequest.AssignedToUserID =
-            adminUserId;
-
-        approvalRequest.Comments =
-            request.Comments;
-
-        approvalRequest.CompletedDate =
-            now;
-
-        approvalRequest.ApprovalHistory.Add(
-            new ApprovalHistory
-            {
-                Action =
-                    "APPROVED",
-
-                Comments =
-                    request.Comments,
-
-                ActionedByUserID =
-                    adminUserId,
-
-                ActionDate =
-                    now
-            });
-
-        await _context.SaveChangesAsync();
-
-        return true;
+        return false;
     }
+
+    if (advertisement.Status.StatusCode !=
+        "PENDING_REVIEW")
+    {
+        throw new InvalidOperationException(
+            "Only advertisements pending review can be approved.");
+    }
+
+    var approvalRequest =
+        await GetOrCreateApprovalRequestAsync(
+            advertisement,
+            adminUserId);
+
+    var publishedStatus =
+        await GetStatusAsync(
+            "PUBLISHED");
+
+    /*
+     * Publication duration is controlled by the
+     * application/system setting:
+     *
+     * ADVERTISEMENT_EXPIRY_DAYS
+     *
+     * Example:
+     *   PublishedDate = 07-Oct-2026
+     *   Setting       = 30
+     *   ExpiryDate    = 06-Nov-2026
+     */
+    var expiryDays =
+        await _applicationSettingsService.GetIntAsync(
+            "ADVERTISEMENT_EXPIRY_DAYS");
+
+    if (!expiryDays.HasValue ||
+        expiryDays.Value <= 0)
+    {
+        throw new InvalidOperationException(
+            "The ADVERTISEMENT_EXPIRY_DAYS setting is missing or invalid.");
+    }
+
+    var now =
+        DateTime.UtcNow;
+
+    advertisement.StatusID =
+        publishedStatus.StatusID;
+
+    advertisement.PublishedDate =
+        now;
+
+    advertisement.ExpiryDate =
+        now.AddDays(expiryDays.Value);
+
+    advertisement.IsFeatured =
+        request.IsFeatured;
+
+    advertisement.ModifiedDate =
+        now;
+
+    advertisement.ModifiedBy =
+        adminUserId;
+
+    approvalRequest.Status =
+        "Approved";
+
+    approvalRequest.AssignedToUserID =
+        adminUserId;
+
+    approvalRequest.Comments =
+        request.Comments;
+
+    approvalRequest.CompletedDate =
+        now;
+
+    approvalRequest.ApprovalHistory.Add(
+        new ApprovalHistory
+        {
+            Action =
+                "APPROVED",
+
+            Comments =
+                request.Comments,
+
+            ActionedByUserID =
+                adminUserId,
+
+            ActionDate =
+                now
+        });
+
+    await _context.SaveChangesAsync();
+
+    return true;
+}
 
     // ============================================================
     // REJECT

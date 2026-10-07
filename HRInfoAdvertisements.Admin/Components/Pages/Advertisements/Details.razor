@@ -1296,16 +1296,20 @@ protected override async Task OnInitializedAsync()
     }
 }
 
-private void OpenLogin()
+private async Task OpenLogin()
 {
     authMode = PublicAuthModal.AuthMode.SignIn;
     showAuthModal = true;
+
+    await InvokeAsync(StateHasChanged);
 }
 
-private void OpenSignup()
+private async Task OpenSignup()
 {
     authMode = PublicAuthModal.AuthMode.SignUp;
     showAuthModal = true;
+
+    await InvokeAsync(StateHasChanged);
 }
 
 private string GetReportUrl()

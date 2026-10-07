@@ -2,14 +2,16 @@
 
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Favorite
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
 @inject PublicFavoritesApiService PublicFavoritesApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject SiteSettingsService SiteSettingsService
 @inject NavigationManager Navigation
 
-<PageTitle>My Favorites | AdMind</PageTitle>
+<PageTitle>My Favorites | @Site.SiteName</PageTitle>
 
 <div class="my-favorites-page">
 
@@ -533,7 +535,7 @@
                                 }
 
 
-                                <!-- PRICE -->
+                                <!-- PRICE (DEFAULT_CURRENCY fallback) -->
 
                                 <div class="favorite-card-price-section">
 
@@ -550,7 +552,7 @@
                                             </strong>
 
                                             <span>
-                                                @favorite.CurrencyCode
+                                                @CurrencyFor(favorite)
                                             </span>
                                         }
                                         else
@@ -660,6 +662,23 @@
 @code {
 
     // ============================================================
+    // SITE SETTINGS
+    // ============================================================
+    //
+    // Loaded from /api/v1/system-settings/public (cached).
+    // Defaults are used if the API is unavailable.
+    // ============================================================
+
+    private PublicSiteSettingsResponse Site { get; set; } = new();
+
+    // DEFAULT_CURRENCY fallback when a favorite has no currency code.
+    private string CurrencyFor(FavoriteResponse favorite) =>
+        string.IsNullOrWhiteSpace(favorite.CurrencyCode)
+            ? Site.DefaultCurrency
+            : favorite.CurrencyCode;
+
+
+    // ============================================================
     // STATE
     // ============================================================
 
@@ -682,6 +701,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Settings first, so the title and currency are correct.
+        Site = await SiteSettingsService.GetAsync();
+
         var authenticationState =
             await AuthenticationStateProvider
                 .GetAuthenticationStateAsync();
@@ -907,10 +929,14 @@
     }
 
 
-   private void ViewAdvertisement(long advertisementId)
-{
-    Navigation.NavigateTo($"/my-ads/{advertisementId}");
-}
+    // Favorites are usually OTHER people's advertisements, so they
+    // open the public details page (same route as the home page).
+    // "/my-ads/{id}" only finds advertisements owned by the user.
+    private void ViewAdvertisement(long advertisementId)
+    {
+        Navigation.NavigateTo(
+            $"/advertisements/{advertisementId}");
+    }
 
 
     // ============================================================

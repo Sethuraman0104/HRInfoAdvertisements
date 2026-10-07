@@ -1,5 +1,6 @@
 @page "/admin/advertisements"
 
+@using System.Linq
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.AspNetCore.Components.Authorization
@@ -44,9 +45,7 @@
 
         <div class="hr-ad-page-actions">
 
-            <button type="button"
-                    class="hr-ad-refresh-button"
-                    @onclick="LoadAdvertisementsAsync"
+            <button type="button" class="hr-ad-refresh-button" @onclick="RefreshAdvertisementsAsync"
                     disabled="@_isLoading">
 
                 <i class="bi @(_isLoading
@@ -65,34 +64,31 @@
     <!-- =========================================================
          SUMMARY
          ========================================================= -->
-@if (_applicationSettings is not null &&
-     !_applicationSettings.RequireAdminApproval)
-{
-    <div class="hr-ad-alert"
-         style="background:#fff8e8;color:#7a5a00;">
+    @if (_applicationSettings is not null &&
+         !_applicationSettings.RequireAdminApproval)
+    {
+        <div class="hr-ad-alert" style="background:#fff8e8;color:#7a5a00;">
 
-        <div class="hr-ad-alert-icon">
-            <i class="bi bi-info-circle-fill"></i>
+            <div class="hr-ad-alert-icon">
+                <i class="bi bi-info-circle-fill"></i>
+            </div>
+
+            <div class="hr-ad-alert-content">
+                <strong>Admin approval is turned off</strong>
+                <span>
+                    New advertisements may publish without review.
+                    You can change this in System Settings.
+                </span>
+            </div>
+
         </div>
-
-        <div class="hr-ad-alert-content">
-            <strong>Admin approval is turned off</strong>
-            <span>
-                New advertisements may publish without review.
-                You can change this in System Settings.
-            </span>
-        </div>
-
-    </div>
-}
+    }
 
     <div class="hr-ad-summary-grid">
 
         <!-- ALL -->
 
-        <button type="button"
-                class="hr-ad-summary-card @GetSummaryClass(null)"
-                @onclick='() => SetStatusFilter(null)'>
+        <button type="button" class="hr-ad-summary-card @GetSummaryClass(null)" @onclick='() => SetStatusFilter(null)'>
 
             <div class="hr-ad-summary-icon all">
                 <i class="bi bi-grid-fill"></i>
@@ -115,8 +111,7 @@
 
         <!-- PENDING REVIEW -->
 
-        <button type="button"
-                class="hr-ad-summary-card @GetSummaryClass("PENDING_REVIEW")"
+        <button type="button" class="hr-ad-summary-card @GetSummaryClass("PENDING_REVIEW")"
                 @onclick='() => SetStatusFilter("PENDING_REVIEW")'>
 
             <div class="hr-ad-summary-icon pending">
@@ -140,8 +135,7 @@
 
         <!-- PUBLISHED -->
 
-        <button type="button"
-                class="hr-ad-summary-card @GetSummaryClass("PUBLISHED")"
+        <button type="button" class="hr-ad-summary-card @GetSummaryClass("PUBLISHED")"
                 @onclick='() => SetStatusFilter("PUBLISHED")'>
 
             <div class="hr-ad-summary-icon approved">
@@ -165,8 +159,7 @@
 
         <!-- REJECTED -->
 
-        <button type="button"
-                class="hr-ad-summary-card @GetSummaryClass("REJECTED")"
+        <button type="button" class="hr-ad-summary-card @GetSummaryClass("REJECTED")"
                 @onclick='() => SetStatusFilter("REJECTED")'>
 
             <div class="hr-ad-summary-icon rejected">
@@ -190,8 +183,7 @@
 
         <!-- SUSPENDED -->
 
-        <button type="button"
-                class="hr-ad-summary-card @GetSummaryClass("SUSPENDED")"
+        <button type="button" class="hr-ad-summary-card @GetSummaryClass("SUSPENDED")"
                 @onclick='() => SetStatusFilter("SUSPENDED")'>
 
             <div class="hr-ad-summary-icon suspended">
@@ -225,17 +217,12 @@
 
             <i class="bi bi-search"></i>
 
-            <input @bind="_searchText"
-                   @bind:event="oninput"
-                   @onkeydown="HandleSearchKeyDown"
-                   placeholder="Search by advertisement number, title or user..."
-                   type="text" />
+            <input @bind="_searchText" @bind:event="oninput" @onkeydown="HandleSearchKeyDown"
+                   placeholder="Search by advertisement number, title or user..." type="text" />
 
             @if (!string.IsNullOrWhiteSpace(_searchText))
             {
-                <button type="button"
-                        class="hr-ad-search-clear"
-                        @onclick="ClearSearch">
+                <button type="button" class="hr-ad-search-clear" @onclick="ClearSearch">
 
                     <i class="bi bi-x"></i>
 
@@ -280,10 +267,7 @@
         </div>
 
 
-        <button type="button"
-                class="hr-ad-filter-button"
-                @onclick="ApplyFiltersAsync"
-                disabled="@_isLoading">
+        <button type="button" class="hr-ad-filter-button" @onclick="ApplyFiltersAsync" disabled="@_isLoading">
 
             <i class="bi bi-funnel-fill"></i>
 
@@ -292,10 +276,7 @@
         </button>
 
 
-        <button type="button"
-                class="hr-ad-reset-button"
-                @onclick="ResetFilters"
-                disabled="@_isLoading">
+        <button type="button" class="hr-ad-reset-button" @onclick="ResetFilters" disabled="@_isLoading">
 
             <i class="bi bi-arrow-counterclockwise"></i>
 
@@ -330,9 +311,7 @@
 
             </div>
 
-            <button type="button"
-                    @onclick="ClearMessages"
-                    aria-label="Close">
+            <button type="button" @onclick="ClearMessages" aria-label="Close">
 
                 <i class="bi bi-x-lg"></i>
 
@@ -366,9 +345,7 @@
 
             </div>
 
-            <button type="button"
-                    @onclick="ClearMessages"
-                    aria-label="Close">
+            <button type="button" @onclick="ClearMessages" aria-label="Close">
 
                 <i class="bi bi-x-lg"></i>
 
@@ -436,8 +413,7 @@
                     current search and filter criteria.
                 </p>
 
-                <button type="button"
-                        @onclick="ResetFilters">
+                <button type="button" @onclick="ResetFilters">
 
                     <i class="bi bi-arrow-counterclockwise"></i>
 
@@ -495,7 +471,7 @@
 
                     <tbody>
 
-                        @foreach (var advertisement in _advertisements)
+                        @foreach (var advertisement in PagedAdvertisements)
                         {
                             <tr @key="advertisement.AdvertisementID">
 
@@ -605,7 +581,7 @@
                                 <td>
 
                                     <span class="@GetStatusBadgeClass(
-                                        advertisement.StatusCode)">
+                                          advertisement.StatusCode)">
 
                                         <span class="hr-ad-status-dot"></span>
 
@@ -621,14 +597,14 @@
                                 <td>
 
                                     <div class="hr-ad-date">
-    <strong>
-        @(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))
-    </strong>
+                                        <strong>
+                                            @(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))
+                                        </strong>
 
-    <small>
-        @(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))
-    </small>
-</div>
+                                        <small>
+                                            @(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))
+                                        </small>
+                                    </div>
 
                                 </td>
 
@@ -641,45 +617,35 @@
 
                                         <!-- VIEW -->
 
-                                        <button type="button"
-                                                class="hr-ad-action view"
-                                                title="View advertisement"
-                                                @onclick="() => ViewAdvertisement(
+                                        <button type="button" class="hr-ad-action view" title="View advertisement" @onclick="() => ViewAdvertisement(
                                                     advertisement.AdvertisementID)">
 
-                                            <i class="bi bi-eye-fill"></i>
+<i class="bi bi-eye-fill"></i>
 
-                                        </button>
+</button>
 
 
                                         <!-- PENDING ACTIONS -->
 
                                         @if (IsPending(advertisement))
                                         {
-                                            <button type="button"
-                                                    class="hr-ad-action approve"
-                                                    title="Approve advertisement"
+                                            <button type="button" class="hr-ad-action approve" title="Approve advertisement"
                                                     disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)"
-                                                    @onclick="() => OpenApproveModal(
+                                                        advertisement.AdvertisementID)" @onclick="() => OpenApproveModal(
                                                         advertisement)">
 
-                                                <i class="bi bi-check-lg"></i>
+<i class="bi bi-check-lg"></i>
 
-                                            </button>
+</button>
 
 
-                                            <button type="button"
-                                                    class="hr-ad-action reject"
-                                                    title="Reject advertisement"
-                                                    disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)"
-                                                    @onclick="() => OpenRejectModal(
+                                            <button type="button" class="hr-ad-action reject" title="Reject advertisement" disabled="@IsAdvertisementProcessing(
+                                                        advertisement.AdvertisementID)" @onclick="() => OpenRejectModal(
                                                         advertisement)">
 
-                                                <i class="bi bi-x-lg"></i>
+<i class="bi bi-x-lg"></i>
 
-                                            </button>
+</button>
                                         }
 
 
@@ -687,17 +653,14 @@
 
                                         @if (IsApproved(advertisement))
                                         {
-                                            <button type="button"
-                                                    class="hr-ad-action suspend"
-                                                    title="Suspend advertisement"
+                                            <button type="button" class="hr-ad-action suspend" title="Suspend advertisement"
                                                     disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)"
-                                                    @onclick="() => OpenSuspendModal(
+                                                        advertisement.AdvertisementID)" @onclick="() => OpenSuspendModal(
                                                         advertisement)">
 
-                                                <i class="bi bi-pause-fill"></i>
+<i class="bi bi-pause-fill"></i>
 
-                                            </button>
+</button>
                                         }
 
 
@@ -705,17 +668,14 @@
 
                                         @if (IsSuspended(advertisement))
                                         {
-                                            <button type="button"
-                                                    class="hr-ad-action reactivate"
-                                                    title="Reactivate advertisement"
+                                            <button type="button" class="hr-ad-action reactivate" title="Reactivate advertisement"
                                                     disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)"
-                                                    @onclick="() => OpenReactivateModal(
+                                                        advertisement.AdvertisementID)" @onclick="() => OpenReactivateModal(
                                                         advertisement)">
 
-                                                <i class="bi bi-play-fill"></i>
+<i class="bi bi-play-fill"></i>
 
-                                            </button>
+</button>
                                         }
 
                                     </div>
@@ -726,8 +686,107 @@
                         }
 
                     </tbody>
-
                 </table>
+
+                @if (_advertisements.Count > 0 && TotalPages > 1)
+                {
+                    <div class="hr-ad-pagination">
+
+                        <!-- PAGINATION SUMMARY -->
+
+                        <div class="hr-ad-pagination-info">
+
+                            Showing
+                            <strong>@FirstDisplayedRecord</strong>
+                            –
+                            <strong>@LastDisplayedRecord</strong>
+                            of
+                            <strong>@_advertisements.Count</strong>
+
+                        </div>
+
+
+                        <!-- PAGINATION CONTROLS -->
+
+                        <div class="hr-ad-pagination-controls">
+
+                            <!-- FIRST -->
+
+                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
+                                    @onclick="GoToFirstPage" title="First page">
+
+                                <i class="bi bi-chevron-double-left"></i>
+
+                            </button>
+
+
+                            <!-- PREVIOUS -->
+
+                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
+                                    @onclick="GoToPreviousPage" title="Previous page">
+
+                                <i class="bi bi-chevron-left"></i>
+
+                            </button>
+
+
+                            <!-- PAGE NUMBERS -->
+
+                            @foreach (var pageNumber in GetPageNumbers())
+                            {
+                                <button type="button" class="hr-ad-pagination-button @(pageNumber == _currentPage ? "active" : "")"
+                                        @onclick="() => GoToPage(pageNumber)">
+                                    @pageNumber
+                                </button>
+                            }
+
+
+                            <!-- NEXT -->
+
+                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
+                                    @onclick="GoToNextPage" title="Next page">
+
+                                <i class="bi bi-chevron-right"></i>
+
+                            </button>
+
+
+                            <!-- LAST -->
+
+                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
+                                    @onclick="GoToLastPage" title="Last page">
+
+                                <i class="bi bi-chevron-double-right"></i>
+
+                            </button>
+
+                        </div>
+
+
+                        <!-- PAGE SIZE -->
+
+                        <div class="hr-ad-pagination-size">
+
+                            <label for="advertisementPageSize">
+                                Show
+                            </label>
+
+                            <select id="advertisementPageSize" value="@_pageSize" @onchange="HandlePageSizeChanged">
+
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+
+                            </select>
+
+                            <span>
+                                per page
+                            </span>
+
+                        </div>
+
+                    </div>
+                }
 
             </div>
         }
@@ -743,11 +802,9 @@
 
 @if (_showModerationModal)
 {
-    <div class="hr-ad-modal-backdrop"
-         @onclick="HandleModalBackdropClick">
+    <div class="hr-ad-modal-backdrop" @onclick="HandleModalBackdropClick">
 
-        <div class="hr-ad-modal"
-             @onclick:stopPropagation="true">
+        <div class="hr-ad-modal" @onclick:stopPropagation="true">
 
             <!-- MODAL HEADER -->
 
@@ -774,9 +831,7 @@
                 </div>
 
 
-                <button type="button"
-                        class="hr-ad-modal-close"
-                        disabled="@_isModerationProcessing"
+                <button type="button" class="hr-ad-modal-close" disabled="@_isModerationProcessing"
                         @onclick="CloseModerationModal">
 
                     <i class="bi bi-x-lg"></i>
@@ -825,8 +880,7 @@
                             <span>*</span>
                         </label>
 
-                        <select @bind="_selectedRejectionReasonId"
-                                disabled="@_isModerationProcessing">
+                        <select @bind="_selectedRejectionReasonId" disabled="@_isModerationProcessing">
 
                             <option value="">
                                 Select a rejection reason
@@ -855,6 +909,43 @@
                     </div>
                 }
 
+                @if (_moderationAction == ModerationAction.Approve)
+{
+    <!-- FEATURED ADVERTISEMENT -->
+
+    <div class="hr-ad-modal-field">
+
+        <label>
+            Advertisement Promotion
+        </label>
+
+        <label class="hr-ad-featured-option">
+
+            <input type="checkbox"
+                   @bind="_isFeaturedOnApproval"
+                   disabled="@_isModerationProcessing" />
+
+            <span class="hr-ad-featured-check">
+                <i class="bi bi-star-fill"></i>
+            </span>
+
+            <span class="hr-ad-featured-content">
+
+                <strong>
+                    Feature this advertisement
+                </strong>
+
+                <small>
+                    Display this advertisement as a featured listing
+                    until its normal expiry date.
+                </small>
+
+            </span>
+
+        </label>
+
+    </div>
+}
 
                 <!-- COMMENTS -->
 
@@ -873,10 +964,7 @@
 
                     </label>
 
-                    <textarea @bind="_moderationComments"
-                              disabled="@_isModerationProcessing"
-                              rows="4"
-                              maxlength="1000"
+                    <textarea @bind="_moderationComments" disabled="@_isModerationProcessing" rows="4" maxlength="1000"
                               placeholder="@GetCommentsPlaceholder()"></textarea>
 
                     <div class="hr-ad-character-count">
@@ -949,9 +1037,7 @@
 
             <div class="hr-ad-modal-footer">
 
-                <button type="button"
-                        class="hr-ad-modal-cancel"
-                        disabled="@_isModerationProcessing"
+                <button type="button" class="hr-ad-modal-cancel" disabled="@_isModerationProcessing"
                         @onclick="CloseModerationModal">
 
                     Cancel
@@ -959,10 +1045,8 @@
                 </button>
 
 
-                <button type="button"
-                        class="hr-ad-modal-confirm @GetModalConfirmClass()"
-                        disabled="@_isModerationProcessing"
-                        @onclick="ExecuteModerationAsync">
+                <button type="button" class="hr-ad-modal-confirm @GetModalConfirmClass()"
+                        disabled="@_isModerationProcessing" @onclick="ExecuteModerationAsync">
 
                     @if (_isModerationProcessing)
                     {
@@ -1045,8 +1129,40 @@
 
     private bool _showValidationMessage;
 
+    private bool _isFeaturedOnApproval;
+
     private ApplicationSettings? _applicationSettings;
 
+    // =============================================================
+    // PAGINATION
+    // =============================================================
+
+    private int _currentPage = 1;
+
+    private int _pageSize = 10;
+
+    private int TotalPages =>
+        _advertisements.Count == 0
+            ? 1
+            : (int)Math.Ceiling(
+                _advertisements.Count /
+                (double)_pageSize);
+
+    private IEnumerable<AdminAdvertisementListResponse>
+        PagedAdvertisements =>
+            _advertisements
+                .Skip((_currentPage - 1) * _pageSize)
+                .Take(_pageSize);
+
+    private int FirstDisplayedRecord =>
+        _advertisements.Count == 0
+            ? 0
+            : ((_currentPage - 1) * _pageSize) + 1;
+
+    private int LastDisplayedRecord =>
+        Math.Min(
+            _currentPage * _pageSize,
+            _advertisements.Count);
 
     // =============================================================
     // INITIALIZATION
@@ -1059,22 +1175,22 @@
         await LoadAdvertisementsAsync();
     }
 
-private async Task LoadApplicationSettingsAsync()
-{
-    try
+    private async Task LoadApplicationSettingsAsync()
     {
-        _applicationSettings =
-            await SystemSettingsApiService
-                .GetApplicationSettingsAsync();
-    }
-    catch (Exception ex)
-{
-    _applicationSettings = null;
+        try
+        {
+            _applicationSettings =
+                await SystemSettingsApiService
+                    .GetApplicationSettingsAsync();
+        }
+        catch (Exception ex)
+        {
+            _applicationSettings = null;
 
-    Console.WriteLine(
-        $"[Admin Advertisements] Settings error: {ex.Message}");
-}
-}
+            Console.WriteLine(
+                $"[Admin Advertisements] Settings error: {ex.Message}");
+        }
+    }
 
     // =============================================================
     // LOAD
@@ -1136,6 +1252,7 @@ private async Task LoadApplicationSettingsAsync()
 
     private async Task ApplyFiltersAsync()
     {
+        _currentPage = 1;
         await LoadAdvertisementsAsync();
     }
 
@@ -1146,6 +1263,8 @@ private async Task LoadApplicationSettingsAsync()
 
         _statusFilter = null;
 
+        _currentPage = 1;
+
         await LoadAdvertisementsAsync();
     }
 
@@ -1153,6 +1272,8 @@ private async Task LoadApplicationSettingsAsync()
     private async Task ClearSearch()
     {
         _searchText = string.Empty;
+
+        _currentPage = 1;
 
         await LoadAdvertisementsAsync();
     }
@@ -1163,6 +1284,8 @@ private async Task LoadApplicationSettingsAsync()
     {
         if (e.Key == "Enter")
         {
+            _currentPage = 1;
+
             await LoadAdvertisementsAsync();
         }
     }
@@ -1172,6 +1295,15 @@ private async Task LoadApplicationSettingsAsync()
         string? status)
     {
         _statusFilter = status;
+
+        _currentPage = 1;
+
+        await LoadAdvertisementsAsync();
+    }
+
+    private async Task RefreshAdvertisementsAsync()
+    {
+        _currentPage = 1;
 
         await LoadAdvertisementsAsync();
     }
@@ -1203,6 +1335,123 @@ private async Task LoadApplicationSettingsAsync()
                 StringComparison.OrdinalIgnoreCase));
     }
 
+    // =============================================================
+    // PAGINATION
+    // =============================================================
+
+    private void GoToFirstPage()
+    {
+        if (_currentPage == 1)
+        {
+            return;
+        }
+
+        _currentPage = 1;
+    }
+
+
+    private void GoToPreviousPage()
+    {
+        if (_currentPage <= 1)
+        {
+            return;
+        }
+
+        _currentPage--;
+    }
+
+
+    private void GoToNextPage()
+    {
+        if (_currentPage >= TotalPages)
+        {
+            return;
+        }
+
+        _currentPage++;
+    }
+
+
+    private void GoToLastPage()
+    {
+        if (_currentPage >= TotalPages)
+        {
+            return;
+        }
+
+        _currentPage = TotalPages;
+    }
+
+
+    private void GoToPage(int page)
+    {
+        if (page < 1)
+        {
+            page = 1;
+        }
+
+        if (page > TotalPages)
+        {
+            page = TotalPages;
+        }
+
+        _currentPage = page;
+    }
+
+
+    private IEnumerable<int> GetPageNumbers()
+    {
+        const int visiblePages = 5;
+
+        if (TotalPages <= visiblePages)
+        {
+            return Enumerable.Range(
+                1,
+                TotalPages);
+        }
+
+        var startPage =
+            Math.Max(
+                1,
+                _currentPage - 2);
+
+        var endPage =
+            Math.Min(
+                TotalPages,
+                startPage + visiblePages - 1);
+
+        if (endPage - startPage + 1 < visiblePages)
+        {
+            startPage =
+                Math.Max(
+                    1,
+                    endPage - visiblePages + 1);
+        }
+
+        return Enumerable.Range(
+            startPage,
+            endPage - startPage + 1);
+    }
+
+
+    private async Task HandlePageSizeChanged(
+        ChangeEventArgs e)
+    {
+        if (int.TryParse(
+            e.Value?.ToString(),
+            out var pageSize))
+        {
+            _pageSize = pageSize;
+        }
+        else
+        {
+            _pageSize = 10;
+        }
+
+        _currentPage = 1;
+
+        await InvokeAsync(StateHasChanged);
+    }
 
     // =============================================================
     // STATUS HELPERS
@@ -1330,27 +1579,27 @@ private async Task LoadApplicationSettingsAsync()
     new(StringComparer.OrdinalIgnoreCase)
     { "BHD", "KWD", "OMR", "JOD", "TND", "LYD" };
 
-private string FormatPrice(
-    decimal? price,
-    string? currency)
-{
-    if (!price.HasValue)
+    private string FormatPrice(
+        decimal? price,
+        string? currency)
     {
-        return "—";
+        if (!price.HasValue)
+        {
+            return "—";
+        }
+
+        var currencyCode =
+            !string.IsNullOrWhiteSpace(currency)
+                ? currency.Trim().ToUpperInvariant()
+                : _applicationSettings?.DefaultCurrency ?? "INR";
+
+        var format =
+            ThreeDecimalCurrencies.Contains(currencyCode)
+                ? "N3"
+                : "N2";
+
+        return $"{price.Value.ToString(format)} {currencyCode}";
     }
-
-    var currencyCode =
-        !string.IsNullOrWhiteSpace(currency)
-            ? currency.Trim().ToUpperInvariant()
-            : _applicationSettings?.DefaultCurrency ?? "INR";
-
-    var format =
-        ThreeDecimalCurrencies.Contains(currencyCode)
-            ? "N3"
-            : "N2";
-
-    return $"{price.Value.ToString(format)} {currencyCode}";
-}
 
     private static string GetInitials(
         string? name)
@@ -1386,19 +1635,25 @@ private string FormatPrice(
 
     private string GetResultDescription()
     {
-        if (!string.IsNullOrWhiteSpace(
-            _searchText))
+        if (_advertisements.Count == 0)
         {
-            return $"{_advertisements.Count} result(s) for \"{_searchText}\"";
+            return "0 advertisements";
         }
 
-        if (!string.IsNullOrWhiteSpace(
-            _statusFilter))
+        var description =
+            !string.IsNullOrWhiteSpace(_searchText)
+                ? $"{_advertisements.Count} result(s) for \"{_searchText}\""
+                : !string.IsNullOrWhiteSpace(_statusFilter)
+                    ? $"{_advertisements.Count} {GetFriendlyStatusName(_statusFilter)} advertisement(s)"
+                    : $"{_advertisements.Count} advertisement(s)";
+
+        if (TotalPages > 1)
         {
-            return $"{_advertisements.Count} {GetFriendlyStatusName(_statusFilter)} advertisement(s)";
+            description +=
+                $" · Page {_currentPage} of {TotalPages}";
         }
 
-        return $"{_advertisements.Count} advertisement(s)";
+        return description;
     }
 
 
@@ -1463,33 +1718,36 @@ private string FormatPrice(
 
 
     private void OpenModerationModal(
-        AdminAdvertisementListResponse advertisement,
-        ModerationAction action)
-    {
-        _selectedAdvertisement =
-            advertisement;
+    AdminAdvertisementListResponse advertisement,
+    ModerationAction action)
+{
+    _selectedAdvertisement =
+        advertisement;
 
-        _moderationAction =
-            action;
+    _moderationAction =
+        action;
 
-        _selectedRejectionReasonId =
-            null;
+    _selectedRejectionReasonId =
+        null;
 
-        _moderationComments =
-            string.Empty;
+    _moderationComments =
+        string.Empty;
 
-        _showValidationMessage =
-            false;
+    _isFeaturedOnApproval =
+        false;
 
-        _errorMessage =
-            null;
+    _showValidationMessage =
+        false;
 
-        _successMessage =
-            null;
+    _errorMessage =
+        null;
 
-        _showModerationModal =
-            true;
-    }
+    _successMessage =
+        null;
+
+    _showModerationModal =
+        true;
+}
 
 
     private void CloseModerationModal()
@@ -1501,12 +1759,17 @@ private string FormatPrice(
     _moderationAction =
         ModerationAction.None;
 
-    _selectedRejectionReasonId = null;
+    _selectedRejectionReasonId =
+        null;
 
     _moderationComments =
         string.Empty;
 
-    _showValidationMessage = false;
+    _isFeaturedOnApproval =
+        false;
+
+    _showValidationMessage =
+        false;
 }
 
     // =============================================================
@@ -1607,16 +1870,19 @@ private string FormatPrice(
                 case ModerationAction.Approve:
 
                     success =
-                        await AdvertisementModerationService
-                            .ApproveAdvertisementAsync(
-                                adminUserId.Value,
-                                advertisementId,
-                                new ApproveAdvertisementRequest
-                                {
-                                    Comments =
-                                        NormalizeComments(
-                                            _moderationComments)
-                                });
+    await AdvertisementModerationService
+        .ApproveAdvertisementAsync(
+            adminUserId.Value,
+            advertisementId,
+            new ApproveAdvertisementRequest
+            {
+                IsFeatured =
+                    _isFeaturedOnApproval,
+
+                Comments =
+                    NormalizeComments(
+                        _moderationComments)
+            });
 
                     break;
 

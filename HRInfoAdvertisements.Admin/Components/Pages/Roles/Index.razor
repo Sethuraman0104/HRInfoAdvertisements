@@ -5,12 +5,15 @@
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.AdminManagement
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
-
+@inject SiteSettingsService SiteSettingsService
 @inject RoleManagementApiService RoleManagementApiService
 @inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
 @inject NavigationManager Navigation
+
+<PageTitle>Roles | @Site.SiteName Administration</PageTitle>
 
 <div class="admin-roles">
 
@@ -1150,27 +1153,25 @@
     private int InactiveRoleCount =>
         FilteredRoles.Count(x => !x.IsActive);
 
+private PublicSiteSettingsResponse Site { get; set; } = new();
 
-    // ============================================================
-    // INITIALIZATION
-    // ============================================================
+protected override async Task OnInitializedAsync()
+{
+    Site = await SiteSettingsService.GetAsync();
 
-    protected override async Task OnInitializedAsync()
+    var authState =
+        await AdminAuthenticationStateProvider
+            .GetAuthenticationStateAsync();
+
+    if (!(authState.User.Identity?.IsAuthenticated ?? false))
     {
-        var authState =
-            await AdminAuthenticationStateProvider
-                .GetAuthenticationStateAsync();
-
-        if (!(authState.User.Identity?.IsAuthenticated ?? false))
-        {
-            Navigation.NavigateTo("/admin");
-            return;
-        }
-
-        await LoadRolesAsync();
+        Navigation.NavigateTo("/admin");
+        return;
     }
 
-
+    await LoadRolesAsync();
+}
+    
     // ============================================================
     // LOAD ROLES
     // ============================================================
@@ -1196,6 +1197,7 @@
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"ROLES ERROR: {ex}");
             ErrorMessage =
                 string.IsNullOrWhiteSpace(ex.Message)
                     ? "Unable to load roles."
@@ -1483,6 +1485,7 @@
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"ROLES ERROR: {ex}");
             ModalError =
                 string.IsNullOrWhiteSpace(ex.Message)
                     ? "Unable to save the role."
@@ -1577,6 +1580,7 @@
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"ROLES ERROR: {ex}");
             ErrorMessage =
                 string.IsNullOrWhiteSpace(ex.Message)
                     ? "Unable to update role status."

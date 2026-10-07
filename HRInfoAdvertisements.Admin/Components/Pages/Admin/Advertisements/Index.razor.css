@@ -2410,3 +2410,140 @@
     }
 
 }
+
+/* ============================================================
+   PAGINATION
+   ============================================================ */
+
+.hr-ad-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 18px 20px;
+    border-top: 1px solid #eeeeee;
+    background: #ffffff;
+    flex-wrap: wrap;
+}
+
+.hr-ad-pagination-info {
+    color: #666666;
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+.hr-ad-pagination-info strong {
+    color: #333333;
+    font-weight: 600;
+}
+
+.hr-ad-pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.hr-ad-pagination-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid #dddddd;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #555555;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.15s ease;
+}
+
+.hr-ad-pagination-button:hover:not(:disabled) {
+    border-color: #663333;
+    color: #663333;
+    background: #faf7f7;
+}
+
+.hr-ad-pagination-button.active {
+    border-color: #663333;
+    background: #663333;
+    color: #ffffff;
+}
+
+.hr-ad-pagination-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.hr-ad-pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: #666666;
+    font-size: 0.875rem;
+}
+
+.hr-ad-pagination-size select {
+    min-width: 65px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #dddddd;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #333333;
+}
+
+.hr-ad-featured-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #e3e3e3;
+    border-radius: 8px;
+    background: #fffdf5;
+    cursor: pointer;
+}
+
+.hr-ad-featured-option:hover {
+    border-color: #ffbf00;
+    background: #fffaf0;
+}
+
+.hr-ad-featured-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    accent-color: #663333;
+    cursor: pointer;
+}
+
+.hr-ad-featured-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    background: #ffbf00;
+    color: #663333;
+    flex-shrink: 0;
+}
+
+.hr-ad-featured-content {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.hr-ad-featured-content strong {
+    color: #333333;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.hr-ad-featured-content small {
+    color: #777777;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
