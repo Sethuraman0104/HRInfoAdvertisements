@@ -44,8 +44,14 @@ public class ApplicationDbContext : DbContext
     public DbSet<AdvertisementView> AdvertisementViews => Set<AdvertisementView>();
     public DbSet<AdvertisementEnquiry> AdvertisementEnquiries => Set<AdvertisementEnquiry>();
     public DbSet<AdvertisementEnquiryMessage> AdvertisementEnquiryMessages
-    => Set<AdvertisementEnquiryMessage>();
+        => Set<AdvertisementEnquiryMessage>();
     public DbSet<Message> Messages => Set<Message>();
+    public DbSet<AdvertisementFavorite> AdvertisementFavorites
+    => Set<AdvertisementFavorite>();
+
+    // Removal Requests
+    public DbSet<AdvertisementRemovalRequest> AdvertisementRemovalRequests
+        => Set<AdvertisementRemovalRequest>();
 
     // Approval
     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
@@ -69,9 +75,6 @@ public class ApplicationDbContext : DbContext
     // System
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
-
-    public DbSet<AdvertisementFavorite>
-    AdvertisementFavorites { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

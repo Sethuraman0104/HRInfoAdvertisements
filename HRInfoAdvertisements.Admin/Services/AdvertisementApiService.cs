@@ -2,10 +2,12 @@ using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Net;
 
 using HRInfoAdvertisements.Application.DTOs.Advertisement;
 using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.DTOs.Common;
+using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval;
 
 namespace HRInfoAdvertisements.Admin.Services;
 
@@ -1459,5 +1461,88 @@ public async Task<List<AdvertisementResponse>>
 
         throw;
     }
+}
+public async Task<AdvertisementRemovalRequestResponse?> GetRemovalRequestAsync(
+    long advertisementId)
+{
+    var response =
+        await CreateAuthenticatedPublicClient()
+            .GetAsync(
+                $"api/v1/advertisements/{advertisementId}/removal-request");
+
+    if (response.StatusCode == HttpStatusCode.NoContent ||
+        response.StatusCode == HttpStatusCode.NotFound)
+    {
+        return null;
+    }
+
+    response.EnsureSuccessStatusCode();
+
+    return await response.Content
+        .ReadFromJsonAsync<AdvertisementRemovalRequestResponse>();
+}
+
+public async Task<AdvertisementRemovalRequestResponse?> CreateRemovalRequestAsync(
+    long advertisementId,
+    CreateAdvertisementRemovalRequest request)
+{
+    var response =
+        await CreateAuthenticatedPublicClient()
+            .PostAsJsonAsync(
+                $"api/v1/advertisements/{advertisementId}/removal-request",
+                request);
+
+    if (!response.IsSuccessStatusCode)
+    {
+        // The API sends { "message": "..." } for rule violations.
+        throw new InvalidOperationException(
+            await ReadRemovalErrorAsync(response));
+    }
+
+    return await response.Content
+        .ReadFromJsonAsync<AdvertisementRemovalRequestResponse>();
+}
+
+public async Task<bool> CancelRemovalRequestAsync(
+    long advertisementId)
+{
+    var response =
+        await CreateAuthenticatedPublicClient()
+            .DeleteAsync(
+                $"api/v1/advertisements/{advertisementId}/removal-request");
+
+    return response.IsSuccessStatusCode;
+}
+private static async Task<string> ReadRemovalErrorAsync(
+    HttpResponseMessage response)
+{
+    const string fallback =
+        "The request could not be completed. Please try again.";
+
+    try
+    {
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return fallback;
+        }
+
+        using var document = JsonDocument.Parse(body);
+
+        if (document.RootElement.ValueKind == JsonValueKind.Object &&
+            document.RootElement.TryGetProperty("message", out var message) &&
+            message.ValueKind == JsonValueKind.String &&
+            !string.IsNullOrWhiteSpace(message.GetString()))
+        {
+            return message.GetString()!;
+        }
+    }
+    catch
+    {
+        // fall through
+    }
+
+    return fallback;
 }
 }

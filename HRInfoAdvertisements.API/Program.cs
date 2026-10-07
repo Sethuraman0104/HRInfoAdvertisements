@@ -268,6 +268,9 @@ builder.Services.AddScoped<
     IAdminProfileService,
     AdminProfileService>();
 
+builder.Services.AddScoped<
+    IAdvertisementRemovalRequestService,
+    AdvertisementRemovalRequestService>();
 
 // ============================================================
 // EMAIL

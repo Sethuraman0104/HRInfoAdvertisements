@@ -4,6 +4,7 @@
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
 @using HRInfoAdvertisements.Application.DTOs.SystemSettings
+@using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
@@ -965,6 +966,102 @@
                             </button>
                         }
 
+                        @if (IsPublished)
+{
+    <div class="removal-actions">
+
+        @if (!string.IsNullOrWhiteSpace(removalSuccess))
+        {
+            <div class="removal-note success">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>@removalSuccess</span>
+            </div>
+        }
+
+        @if (HasPendingRemoval)
+        {
+            <div class="removal-note pending">
+
+                <i class="bi bi-hourglass-split"></i>
+
+                <div>
+                    <strong>
+                        @(removalRequest!.RequestType == "DELETE"
+                            ? "Deletion requested"
+                            : "Removal from public listing requested")
+                    </strong>
+
+                    <span>
+                        Sent on @FormatDate(removalRequest.CreatedDate).
+                        Your advertisement stays published until the
+                        request is reviewed.
+                    </span>
+                </div>
+
+            </div>
+
+            <button type="button"
+                    class="view-page-action secondary-action"
+                    @onclick="CancelRemovalRequestAsync"
+                    disabled="@isSubmittingRemoval">
+
+                @if (isSubmittingRemoval)
+                {
+                    <span class="small-spinner"></span>
+                    <span>Cancelling...</span>
+                }
+                else
+                {
+                    <i class="bi bi-x-circle"></i>
+                    <span>Cancel Request</span>
+                }
+
+            </button>
+        }
+        else
+        {
+            @if (LastRemovalRejected)
+            {
+                <div class="removal-note rejected">
+
+                    <i class="bi bi-exclamation-circle-fill"></i>
+
+                    <div>
+                        <strong>Your last request was not approved</strong>
+
+                        @if (!string.IsNullOrWhiteSpace(removalRequest!.ReviewComments))
+                        {
+                            <span>@removalRequest.ReviewComments</span>
+                        }
+                    </div>
+
+                </div>
+            }
+
+            <button type="button"
+                    class="view-page-action secondary-action"
+                    @onclick='() => OpenRemovalModal("UNPUBLISH")'>
+
+                <i class="bi bi-eye-slash"></i>
+                <span>Remove from Public Listing</span>
+                <i class="bi bi-arrow-right"></i>
+
+            </button>
+
+            <button type="button"
+                    class="view-page-action removal-danger-action"
+                    @onclick='() => OpenRemovalModal("DELETE")'>
+
+                <i class="bi bi-trash3"></i>
+                <span>Request Deletion</span>
+                <i class="bi bi-arrow-right"></i>
+
+            </button>
+        }
+
+    </div>
+}
+
                     </section>
 
 
@@ -1054,6 +1151,125 @@
 
 </div>
 
+@if (showRemovalModal)
+{
+    <div class="removal-backdrop" @onclick="CloseRemovalModal">
+
+        <div class="removal-modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="removal-modal-title"
+             @onclick:stopPropagation="true">
+
+            <div class="removal-modal-header">
+
+                <div class="removal-modal-icon @(removalType == "DELETE" ? "danger" : "warning")">
+                    <i class="bi @(removalType == "DELETE" ? "bi-trash3" : "bi-eye-slash")"></i>
+                </div>
+
+                <div class="removal-modal-title">
+                    <h2 id="removal-modal-title">
+                        @(removalType == "DELETE"
+                            ? "Request Deletion"
+                            : "Remove from Public Listing")
+                    </h2>
+
+                    <span>@GetAdvertisementNumber()</span>
+                </div>
+
+                <button type="button"
+                        class="removal-modal-close"
+                        aria-label="Close"
+                        @onclick="CloseRemovalModal"
+                        disabled="@isSubmittingRemoval">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+
+            </div>
+
+            <div class="removal-modal-body">
+
+                <p>
+                    @if (removalType == "DELETE")
+                    {
+                        <text>
+                            You are asking for this advertisement to be
+                            <strong>deleted</strong>. An administrator will
+                            review your request. Until then, the
+                            advertisement stays published.
+                        </text>
+                    }
+                    else
+                    {
+                        <text>
+                            You are telling us this advertisement is
+                            <strong>no longer required</strong> in the public
+                            listing. An administrator will review your request.
+                            Until then, the advertisement stays visible.
+                        </text>
+                    }
+                </p>
+
+                <label for="removal-reason">
+                    Reason <span class="optional">(optional)</span>
+                </label>
+
+                <textarea id="removal-reason"
+                          rows="4"
+                          maxlength="500"
+                          placeholder="For example: item sold, no longer available..."
+                          @bind="removalReason"
+                          @bind:event="oninput"></textarea>
+
+                <div class="removal-counter">
+                    @removalReason.Length / 500
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(removalError))
+                {
+                    <div class="removal-note rejected">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                        <span>@removalError</span>
+                    </div>
+                }
+
+            </div>
+
+            <div class="removal-modal-footer">
+
+                <button type="button"
+                        class="removal-btn cancel"
+                        @onclick="CloseRemovalModal"
+                        disabled="@isSubmittingRemoval">
+                    Cancel
+                </button>
+
+                <button type="button"
+                        class="removal-btn confirm @(removalType == "DELETE" ? "danger" : "warning")"
+                        @onclick="SubmitRemovalRequestAsync"
+                        disabled="@isSubmittingRemoval">
+
+                    @if (isSubmittingRemoval)
+                    {
+                        <span class="small-spinner"></span>
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-send"></i>
+                        <span>Send Request</span>
+                    }
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
 
 @code {
 
@@ -1112,6 +1328,40 @@
 
     private int selectedImageIndex;
 
+    // ============================================================
+    // REMOVAL / DELETION REQUESTS
+    // ============================================================
+
+    private AdvertisementRemovalRequestResponse? removalRequest;
+
+    private bool showRemovalModal;
+
+    private string removalType = "UNPUBLISH";
+
+    private string removalReason = string.Empty;
+
+    private bool isSubmittingRemoval;
+
+    private string? removalError;
+
+    private string? removalSuccess;
+
+    private bool IsPublished =>
+        NormalizedStatus == "PUBLISHED";
+
+    private bool HasPendingRemoval =>
+        string.Equals(
+            removalRequest?.RequestStatus,
+            "PENDING",
+            StringComparison.OrdinalIgnoreCase);
+
+    private bool LastRemovalRejected =>
+        string.Equals(
+            removalRequest?.RequestStatus,
+            "REJECTED",
+            StringComparison.OrdinalIgnoreCase);
+
+
 
     // ============================================================
     // INITIALIZATION
@@ -1139,7 +1389,155 @@
         await LoadAdvertisementAsync();
     }
 
+private async Task LoadRemovalRequestAsync()
+    {
+        removalRequest = null;
 
+        if (advertisement is null || !IsPublished)
+        {
+            return;
+        }
+
+        try
+        {
+            removalRequest =
+                await AdvertisementApiService
+                    .GetRemovalRequestAsync(
+                        advertisement.AdvertisementID);
+        }
+        catch (Exception ex)
+        {
+            // Not critical: the page still works without it.
+            Console.WriteLine(
+                $"LOAD REMOVAL REQUEST ERROR: {ex.Message}");
+        }
+    }
+
+    private void OpenRemovalModal(string type)
+    {
+        if (isSubmittingRemoval)
+        {
+            return;
+        }
+
+        removalType = type;
+        removalReason = string.Empty;
+        removalError = null;
+        removalSuccess = null;
+
+        showRemovalModal = true;
+    }
+private void CloseRemovalModal()
+    {
+        if (isSubmittingRemoval)
+        {
+            return;
+        }
+
+        showRemovalModal = false;
+        removalError = null;
+    }
+
+
+    private async Task SubmitRemovalRequestAsync()
+    {
+        if (advertisement is null || isSubmittingRemoval)
+        {
+            return;
+        }
+
+        isSubmittingRemoval = true;
+        removalError = null;
+
+        try
+        {
+            var result =
+                await AdvertisementApiService
+                    .CreateRemovalRequestAsync(
+                        advertisement.AdvertisementID,
+                        new CreateAdvertisementRemovalRequest
+                        {
+                            RequestType = removalType,
+                            Reason = string.IsNullOrWhiteSpace(removalReason)
+                                ? null
+                                : removalReason.Trim()
+                        });
+
+            removalRequest = result;
+
+            showRemovalModal = false;
+
+            removalSuccess =
+                removalType == "DELETE"
+                    ? "Your deletion request has been sent for review."
+                    : "Your request to remove this advertisement from the public listing has been sent for review.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Friendly rule messages from the API.
+            removalError = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CREATE REMOVAL REQUEST ERROR: {ex}");
+
+            removalError =
+                "We couldn't send your request right now. Please try again.";
+        }
+        finally
+        {
+            isSubmittingRemoval = false;
+        }
+    }
+
+
+    private async Task CancelRemovalRequestAsync()
+    {
+        if (advertisement is null ||
+            isSubmittingRemoval ||
+            !HasPendingRemoval)
+        {
+            return;
+        }
+
+        isSubmittingRemoval = true;
+        removalError = null;
+        removalSuccess = null;
+
+        try
+        {
+            var cancelled =
+                await AdvertisementApiService
+                    .CancelRemovalRequestAsync(
+                        advertisement.AdvertisementID);
+
+            if (cancelled)
+            {
+                removalRequest = null;
+                removalSuccess = "Your request has been cancelled.";
+            }
+            else
+            {
+                removalError =
+                    "The request could not be cancelled. It may already have been reviewed.";
+
+                await LoadRemovalRequestAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"CANCEL REMOVAL REQUEST ERROR: {ex}");
+
+            removalError =
+                "We couldn't cancel the request right now. Please try again.";
+        }
+        finally
+        {
+            isSubmittingRemoval = false;
+        }
+    }
     // ============================================================
     // LOAD
     // ============================================================
@@ -1173,6 +1571,8 @@
             }
 
             selectedImageIndex = 0;
+
+            await LoadRemovalRequestAsync();
         }
         catch (Exception ex)
         {

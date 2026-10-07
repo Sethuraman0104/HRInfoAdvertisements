@@ -2251,3 +2251,247 @@
         gap: 7px;
     }
 }
+
+/* ============================================================
+   STEP 5 - APPEND TO THE VIEW PAGE CSS
+   (plain elements only, so no ::deep is needed)
+   ============================================================ */
+
+.removal-actions {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee7e2;
+}
+
+.removal-danger-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    box-sizing: border-box;
+
+    border: 1px solid #efc6c2;
+    border-radius: 10px;
+
+    background: #fff6f5;
+    color: #a12821;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.removal-danger-action:hover:not(:disabled) {
+    background: #ffecea;
+}
+
+.removal-danger-action span {
+    flex: 1;
+    text-align: left;
+}
+
+.removal-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+
+    padding: 10px 12px;
+    box-sizing: border-box;
+
+    border-radius: 10px;
+    border: 1px solid transparent;
+
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.removal-note > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.removal-note.pending  { background: #fffbf0; border-color: #f0e2b8; color: #7a5a00; }
+.removal-note.success  { background: #f4faf2; border-color: #cfe5c6; color: #2f6b1f; }
+.removal-note.rejected { background: #fff6f5; border-color: #efc6c2; color: #9d2d25; }
+
+/* ---------------- MODAL ---------------- */
+
+.removal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+    box-sizing: border-box;
+
+    background: rgba(20, 14, 14, 0.65);
+    backdrop-filter: blur(4px);
+}
+
+.removal-modal {
+    width: min(520px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+
+    background: #ffffff;
+    border-radius: 18px;
+
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+}
+
+.removal-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    padding: 18px 20px;
+    border-bottom: 1px solid #eee7e2;
+}
+
+.removal-modal-icon {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 12px;
+    font-size: 18px;
+}
+
+.removal-modal-icon.danger  { background: #fff0f0; color: #b42318; }
+.removal-modal-icon.warning { background: #fff5df; color: #9a6b00; }
+
+.removal-modal-title { flex: 1; min-width: 0; }
+
+.removal-modal-title h2 {
+    margin: 0;
+    color: #3a1d1d;
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.removal-modal-title span {
+    color: #8a7d76;
+    font-size: 11px;
+}
+
+.removal-modal-close {
+    width: 34px;
+    height: 34px;
+
+    border: 0;
+    border-radius: 9px;
+
+    background: #f7f3f0;
+    color: #663333;
+
+    cursor: pointer;
+}
+
+.removal-modal-body {
+    padding: 18px 20px;
+}
+
+.removal-modal-body p {
+    margin: 0 0 14px;
+    color: #5a4a44;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+.removal-modal-body label {
+    display: block;
+    margin-bottom: 6px;
+    color: #4a3838;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.removal-modal-body .optional {
+    color: #9a8d86;
+    font-weight: 500;
+}
+
+.removal-modal-body textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    box-sizing: border-box;
+
+    padding: 10px 12px;
+
+    border: 1px solid #d8d0cc;
+    border-radius: 10px;
+
+    color: #302727;
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+}
+
+.removal-modal-body textarea:focus {
+    border-color: #9b5656;
+    box-shadow: 0 0 0 3px rgba(102, 51, 51, 0.09);
+}
+
+.removal-counter {
+    margin: 4px 0 12px;
+    text-align: right;
+    color: #9a8d86;
+    font-size: 10.5px;
+}
+
+.removal-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    padding: 14px 20px;
+    border-top: 1px solid #eee7e2;
+}
+
+.removal-btn {
+    min-height: 40px;
+    padding: 0 16px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border: 0;
+    border-radius: 10px;
+
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.removal-btn.cancel  { background: #f2f3f4; color: #555; }
+.removal-btn.confirm { color: #ffffff; }
+.removal-btn.confirm.danger  { background: #b42318; }
+.removal-btn.confirm.warning { background: #9a6b00; }
+
+.removal-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
