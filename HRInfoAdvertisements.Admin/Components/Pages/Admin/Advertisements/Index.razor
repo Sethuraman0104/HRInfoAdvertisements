@@ -7,9 +7,11 @@
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Admin
 @using HRInfoAdvertisements.Application.DTOs.Settings
+@using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval
 @using HRInfoAdvertisements.Application.Interfaces
 
 @inject IAdvertisementModerationService AdvertisementModerationService
+@inject AdvertisementApiService AdvertisementApiService
 @inject SystemSettingsApiService SystemSettingsApiService
 @inject AdminAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
@@ -18,780 +20,603 @@
 
 <PageTitle>Advertisements | @(_applicationSettings?.SiteName ?? "AdMind")</PageTitle>
 
+@{
+    // Summary card definitions (status code, label, icon, colour class)
+    var summaryCards = new (string? Status, string Label, string Icon, string Css)[]
+    {
+        (null,             "All Advertisements", "bi-grid-fill",           "all"),
+        ("PENDING_REVIEW", "Pending Approval",   "bi-hourglass-split",     "pending"),
+        ("PUBLISHED",      "Approved",           "bi-check-circle-fill",   "approved"),
+        ("REJECTED",       "Rejected",           "bi-x-circle-fill",       "rejected"),
+        ("SUSPENDED",      "Suspended",          "bi-pause-circle-fill",   "suspended")
+    };
+}
+
 <div class="hr-ad-management">
 
-    <!-- =========================================================
-         PAGE HEADER
-         ========================================================= -->
-
-    <div class="hr-ad-page-header">
-
+    <!-- ========================= PAGE HEADER ========================= -->
+    <header class="hr-ad-page-header">
         <div class="hr-ad-page-heading">
-
-            <div class="hr-ad-page-icon">
-                <i class="bi bi-megaphone-fill"></i>
-            </div>
-
-            <div>
+            <div class="hr-ad-page-icon"><i class="bi bi-megaphone-fill"></i></div>
+            <div class="hr-ad-page-heading-text">
                 <h1>Advertisements</h1>
-
-                <p>
-                    Review, manage and moderate advertisements
-                    submitted by users.
-                </p>
+                <p>Review, manage and moderate advertisements submitted by users.</p>
             </div>
-
         </div>
 
         <div class="hr-ad-page-actions">
-
-            <button type="button" class="hr-ad-refresh-button" @onclick="RefreshAdvertisementsAsync"
-                    disabled="@_isLoading">
-
-                <i class="bi @(_isLoading
-                    ? "bi-arrow-repeat hr-spin"
-                    : "bi-arrow-clockwise")"></i>
-
+            <button type="button" class="hr-ad-refresh-button"
+                    @onclick="RefreshAdvertisementsAsync" disabled="@_isLoading">
+                <i class="bi @(_isLoading ? "bi-arrow-repeat hr-spin" : "bi-arrow-clockwise")"></i>
                 <span>Refresh</span>
-
             </button>
-
         </div>
+    </header>
 
-    </div>
-
-
-    <!-- =========================================================
-         SUMMARY
-         ========================================================= -->
-    @if (_applicationSettings is not null &&
-         !_applicationSettings.RequireAdminApproval)
+    <!-- ========================= APPROVAL NOTICE ========================= -->
+    @if (_applicationSettings is not null && !_applicationSettings.RequireAdminApproval)
     {
-        <div class="hr-ad-alert" style="background:#fff8e8;color:#7a5a00;">
-
-            <div class="hr-ad-alert-icon">
-                <i class="bi bi-info-circle-fill"></i>
-            </div>
-
+        <div class="hr-ad-alert hr-ad-alert-warning">
+            <div class="hr-ad-alert-icon"><i class="bi bi-info-circle-fill"></i></div>
             <div class="hr-ad-alert-content">
                 <strong>Admin approval is turned off</strong>
-                <span>
-                    New advertisements may publish without review.
-                    You can change this in System Settings.
-                </span>
+                <span>New advertisements may publish without review. You can change this in System Settings.</span>
             </div>
-
         </div>
     }
 
+    <!-- ========================= SUMMARY ========================= -->
     <div class="hr-ad-summary-grid">
-
-        <!-- ALL -->
-
-        <button type="button" class="hr-ad-summary-card @GetSummaryClass(null)" @onclick='() => SetStatusFilter(null)'>
-
-            <div class="hr-ad-summary-icon all">
-                <i class="bi bi-grid-fill"></i>
-            </div>
-
-            <div class="hr-ad-summary-content">
-
-                <span class="hr-ad-summary-label">
-                    All Advertisements
-                </span>
-
-                <strong>
-                    @_advertisements.Count
-                </strong>
-
-            </div>
-
-        </button>
-
-
-        <!-- PENDING REVIEW -->
-
-        <button type="button" class="hr-ad-summary-card @GetSummaryClass("PENDING_REVIEW")"
-                @onclick='() => SetStatusFilter("PENDING_REVIEW")'>
-
-            <div class="hr-ad-summary-icon pending">
-                <i class="bi bi-hourglass-split"></i>
-            </div>
-
-            <div class="hr-ad-summary-content">
-
-                <span class="hr-ad-summary-label">
-                    Pending Approval
-                </span>
-
-                <strong>
-                    @GetStatusCount("PENDING_REVIEW")
-                </strong>
-
-            </div>
-
-        </button>
-
-
-        <!-- PUBLISHED -->
-
-        <button type="button" class="hr-ad-summary-card @GetSummaryClass("PUBLISHED")"
-                @onclick='() => SetStatusFilter("PUBLISHED")'>
-
-            <div class="hr-ad-summary-icon approved">
-                <i class="bi bi-check-circle-fill"></i>
-            </div>
-
-            <div class="hr-ad-summary-content">
-
-                <span class="hr-ad-summary-label">
-                    Approved
-                </span>
-
-                <strong>
-                    @GetStatusCount("PUBLISHED")
-                </strong>
-
-            </div>
-
-        </button>
-
-
-        <!-- REJECTED -->
-
-        <button type="button" class="hr-ad-summary-card @GetSummaryClass("REJECTED")"
-                @onclick='() => SetStatusFilter("REJECTED")'>
-
-            <div class="hr-ad-summary-icon rejected">
-                <i class="bi bi-x-circle-fill"></i>
-            </div>
-
-            <div class="hr-ad-summary-content">
-
-                <span class="hr-ad-summary-label">
-                    Rejected
-                </span>
-
-                <strong>
-                    @GetStatusCount("REJECTED")
-                </strong>
-
-            </div>
-
-        </button>
-
-
-        <!-- SUSPENDED -->
-
-        <button type="button" class="hr-ad-summary-card @GetSummaryClass("SUSPENDED")"
-                @onclick='() => SetStatusFilter("SUSPENDED")'>
-
-            <div class="hr-ad-summary-icon suspended">
-                <i class="bi bi-pause-circle-fill"></i>
-            </div>
-
-            <div class="hr-ad-summary-content">
-
-                <span class="hr-ad-summary-label">
-                    Suspended
-                </span>
-
-                <strong>
-                    @GetStatusCount("SUSPENDED")
-                </strong>
-
-            </div>
-
-        </button>
-
+        @foreach (var card in summaryCards)
+        {
+            <button type="button" class="hr-ad-summary-card @GetSummaryClass(card.Status)"
+                    @onclick="() => SetStatusFilter(card.Status)">
+                <div class="hr-ad-summary-icon @card.Css"><i class="bi @card.Icon"></i></div>
+                <div class="hr-ad-summary-content">
+                    <span class="hr-ad-summary-label">@card.Label</span>
+                    <strong>@(card.Status is null ? _advertisements.Count : GetStatusCount(card.Status))</strong>
+                </div>
+            </button>
+        }
     </div>
 
+    <!-- ========================= PENDING REMOVAL REQUESTS ========================= -->
+    @if (_pendingRemovalRequests.Count > 0)
+    {
+        <section class="hr-ad-removal-card">
 
-    <!-- =========================================================
-         FILTER BAR
-         ========================================================= -->
+            <div class="hr-ad-removal-header">
+                <div class="hr-ad-removal-heading">
+                    <div class="hr-ad-removal-icon"><i class="bi bi-person-dash-fill"></i></div>
+                    <div class="hr-ad-removal-heading-text">
+                        <h2>Pending Removal Requests</h2>
+                        <p>Advertisers have requested that their advertisements be removed from public listings.</p>
+                    </div>
+                </div>
+                <span class="hr-ad-removal-count">@_pendingRemovalRequests.Count</span>
+            </div>
 
+            <div class="hr-ad-removal-notice">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>
+                    These advertisements remain <strong>published</strong> until the request is reviewed.
+                    Approving a request will remove the advertisement from public listings without deleting it.
+                </span>
+            </div>
+
+            <div class="hr-ad-table-wrapper">
+                <table class="hr-ad-table hr-ad-removal-table">
+                    <thead>
+                        <tr>
+                            <th>Advertisement</th>
+                            <th>Advertiser</th>
+                            <th>Reason</th>
+                            <th>Requested</th>
+                            <th>Status</th>
+                            <th class="col-actions">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in PagedRemovalRequests)
+                        {
+                            <tr @key="request.RemovalRequestID">
+
+                                <td data-label="Advertisement" class="cell-primary">
+                                    <div class="hr-ad-title-cell">
+                                        <strong title="@request.AdvertisementNumber">@request.AdvertisementNumber</strong>
+                                        <span title="@request.AdvertisementTitle">@request.AdvertisementTitle</span>
+                                    </div>
+                                </td>
+
+                                <td data-label="Advertiser">
+                                    <div class="hr-ad-user-cell">
+                                        <div class="hr-ad-user-avatar">@GetInitials(request.UserName)</div>
+                                        <div>
+                                            <strong>@request.UserName</strong>
+                                            @if (!string.IsNullOrWhiteSpace(request.Email))
+                                            {
+                                                <small>@request.Email</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Reason">
+                                    @if (string.IsNullOrWhiteSpace(request.Reason))
+                                    {
+                                        <span class="hr-ad-removal-reason empty">No reason provided</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="hr-ad-removal-reason" title="@request.Reason">@request.Reason</span>
+                                    }
+                                </td>
+
+                                <td data-label="Requested">
+                                    <div class="hr-ad-date">
+                                        <strong>@(request.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))</strong>
+                                        <small>@(request.CreatedDate.ToLocalTime().ToString("hh:mm tt"))</small>
+                                    </div>
+                                </td>
+
+                                <td data-label="Status">
+                                    <span class="hr-ad-status pending">
+                                        <span class="hr-ad-status-dot"></span>
+                                        Pending Review
+                                    </span>
+                                </td>
+
+                                <td data-label="Action" class="cell-actions">
+                                    <div class="hr-ad-row-actions">
+                                        <button type="button" class="hr-ad-removal-review-button"
+                                                disabled="@IsRemovalRequestProcessing(request.RemovalRequestID)"
+                                                @onclick="() => OpenRemovalRequestModal(request)">
+                                            @if (IsRemovalRequestProcessing(request.RemovalRequestID))
+                                            {
+                                                <i class="bi bi-arrow-repeat hr-spin"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-eye-fill"></i>
+                                            }
+                                            <span>Review</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <Pager @bind-CurrentPage="_removalPage"
+                   @bind-PageSize="_removalPageSize"
+                   TotalCount="_pendingRemovalRequests.Count"
+                   PageSizeOptions="@(new[] { 5, 10, 20 })"
+                   Id="removalPageSize" />
+        </section>
+    }
+
+    <!-- ========================= FILTER BAR ========================= -->
     <div class="hr-ad-filter-card">
 
         <div class="hr-ad-search-box">
-
             <i class="bi bi-search"></i>
-
             <input @bind="_searchText" @bind:event="oninput" @onkeydown="HandleSearchKeyDown"
                    placeholder="Search by advertisement number, title or user..." type="text" />
-
             @if (!string.IsNullOrWhiteSpace(_searchText))
             {
-                <button type="button" class="hr-ad-search-clear" @onclick="ClearSearch">
-
+                <button type="button" class="hr-ad-search-clear" @onclick="ClearSearch" aria-label="Clear search">
                     <i class="bi bi-x"></i>
-
                 </button>
             }
-
         </div>
-
 
         <div class="hr-ad-filter-group">
-
-            <label>Status</label>
-
-            <select @bind="_statusFilter">
-
-                <option value="">
-                    All Statuses
-                </option>
-
-                <option value="PENDING_REVIEW">
-                    Pending Approval
-                </option>
-
-                <option value="PUBLISHED">
-                    Approved
-                </option>
-
-                <option value="REJECTED">
-                    Rejected
-                </option>
-
-                <option value="SUSPENDED">
-                    Suspended
-                </option>
-
-                <option value="DRAFT">
-                    Draft
-                </option>
-
+            <label for="advertisementStatusFilter">Status</label>
+            <select id="advertisementStatusFilter" @bind="_statusFilter">
+                <option value="">All Statuses</option>
+                <option value="PENDING_REVIEW">Pending Approval</option>
+                <option value="PUBLISHED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="SUSPENDED">Suspended</option>
+                <option value="DRAFT">Draft</option>
+                <option value="UNPUBLISHED">Unpublished</option>
             </select>
-
         </div>
 
+        <div class="hr-ad-filter-buttons">
+            <button type="button" class="hr-ad-filter-button" @onclick="ApplyFiltersAsync" disabled="@_isLoading">
+                <i class="bi bi-funnel-fill"></i>
+                <span>Apply Filters</span>
+            </button>
 
-        <button type="button" class="hr-ad-filter-button" @onclick="ApplyFiltersAsync" disabled="@_isLoading">
-
-            <i class="bi bi-funnel-fill"></i>
-
-            Apply Filters
-
-        </button>
-
-
-        <button type="button" class="hr-ad-reset-button" @onclick="ResetFilters" disabled="@_isLoading">
-
-            <i class="bi bi-arrow-counterclockwise"></i>
-
-            Reset
-
-        </button>
+            <button type="button" class="hr-ad-reset-button" @onclick="ResetFilters" disabled="@_isLoading">
+                <i class="bi bi-arrow-counterclockwise"></i>
+                <span>Reset</span>
+            </button>
+        </div>
 
     </div>
 
-
-    <!-- =========================================================
-         SUCCESS MESSAGE
-         ========================================================= -->
-
+    <!-- ========================= MESSAGES ========================= -->
     @if (!string.IsNullOrWhiteSpace(_successMessage))
     {
-        <div class="hr-ad-alert hr-ad-alert-success">
-
-            <div class="hr-ad-alert-icon">
-                <i class="bi bi-check-circle-fill"></i>
-            </div>
-
+        <div class="hr-ad-alert hr-ad-alert-success" role="status">
+            <div class="hr-ad-alert-icon"><i class="bi bi-check-circle-fill"></i></div>
             <div class="hr-ad-alert-content">
-
-                <strong>
-                    Action completed
-                </strong>
-
-                <span>
-                    @_successMessage
-                </span>
-
+                <strong>Action completed</strong>
+                <span>@_successMessage</span>
             </div>
-
-            <button type="button" @onclick="ClearMessages" aria-label="Close">
-
-                <i class="bi bi-x-lg"></i>
-
-            </button>
-
+            <button type="button" @onclick="ClearMessages" aria-label="Close"><i class="bi bi-x-lg"></i></button>
         </div>
     }
-
-
-    <!-- =========================================================
-         ERROR MESSAGE
-         ========================================================= -->
 
     @if (!string.IsNullOrWhiteSpace(_errorMessage))
     {
-        <div class="hr-ad-alert hr-ad-alert-error">
-
-            <div class="hr-ad-alert-icon">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-
+        <div class="hr-ad-alert hr-ad-alert-error" role="alert">
+            <div class="hr-ad-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
             <div class="hr-ad-alert-content">
-
-                <strong>
-                    Unable to process request
-                </strong>
-
-                <span>
-                    @_errorMessage
-                </span>
-
+                <strong>Unable to process request</strong>
+                <span>@_errorMessage</span>
             </div>
-
-            <button type="button" @onclick="ClearMessages" aria-label="Close">
-
-                <i class="bi bi-x-lg"></i>
-
-            </button>
-
+            <button type="button" @onclick="ClearMessages" aria-label="Close"><i class="bi bi-x-lg"></i></button>
         </div>
     }
 
-
-    <!-- =========================================================
-         TABLE
-         ========================================================= -->
-
-    <div class="hr-ad-table-card">
+    <!-- ========================= ADVERTISEMENT TABLE ========================= -->
+    <section class="hr-ad-table-card">
 
         <div class="hr-ad-table-header">
-
             <div>
-
-                <h2>
-                    Advertisement List
-                </h2>
-
-                <span>
-                    @GetResultDescription()
-                </span>
-
+                <h2>Advertisement List</h2>
+                <span>@GetResultDescription()</span>
             </div>
-
         </div>
-
 
         @if (_isLoading)
         {
             <div class="hr-ad-loading">
-
-                <div class="hr-ad-loading-spinner">
-                    <i class="bi bi-arrow-repeat hr-spin"></i>
-                </div>
-
-                <strong>
-                    Loading advertisements...
-                </strong>
-
-                <span>
-                    Please wait while the latest records are retrieved.
-                </span>
-
+                <div class="hr-ad-loading-spinner"><i class="bi bi-arrow-repeat hr-spin"></i></div>
+                <strong>Loading advertisements...</strong>
+                <span>Please wait while the latest records are retrieved.</span>
             </div>
         }
         else if (_advertisements.Count == 0)
         {
             <div class="hr-ad-empty">
-
-                <div class="hr-ad-empty-icon">
-                    <i class="bi bi-megaphone"></i>
-                </div>
-
-                <h3>
-                    No advertisements found
-                </h3>
-
-                <p>
-                    There are no advertisements matching the
-                    current search and filter criteria.
-                </p>
-
+                <div class="hr-ad-empty-icon"><i class="bi bi-megaphone"></i></div>
+                <h3>No advertisements found</h3>
+                <p>There are no advertisements matching the current search and filter criteria.</p>
                 <button type="button" @onclick="ResetFilters">
-
                     <i class="bi bi-arrow-counterclockwise"></i>
-
                     Clear Filters
-
                 </button>
-
             </div>
         }
         else
         {
             <div class="hr-ad-table-wrapper">
-
-                <table class="hr-ad-table">
-
+                <table class="hr-ad-table hr-ad-main-table">
                     <thead>
-
                         <tr>
-
-                            <th class="col-number">
-                                Advertisement
-                            </th>
-
-                            <th class="col-title">
-                                Details
-                            </th>
-
-                            <th>
-                                User
-                            </th>
-
-                            <th>
-                                Category
-                            </th>
-
-                            <th>
-                                Price
-                            </th>
-
-                            <th>
-                                Status
-                            </th>
-
-                            <th>
-                                Created
-                            </th>
-
-                            <th class="col-actions">
-                                Actions
-                            </th>
-
+                            <th class="col-number">Advertisement</th>
+                            <th class="col-title">Details</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="col-actions">Actions</th>
                         </tr>
-
                     </thead>
-
                     <tbody>
-
                         @foreach (var advertisement in PagedAdvertisements)
                         {
                             <tr @key="advertisement.AdvertisementID">
 
-                                <!-- ADVERTISEMENT -->
-
-                                <td>
-
+                                <td data-label="Advertisement" class="cell-primary">
                                     <div class="hr-ad-number">
-
-                                        <span class="hr-ad-number-icon">
-                                            <i class="bi bi-megaphone-fill"></i>
-                                        </span>
-
+                                        <span class="hr-ad-number-icon"><i class="bi bi-megaphone-fill"></i></span>
                                         <div>
-
-                                            <strong>
-                                                @advertisement.AdvertisementNumber
-                                            </strong>
-
-                                            <small>
-                                                ID @advertisement.AdvertisementID
-                                            </small>
-
+                                            <strong title="@advertisement.AdvertisementNumber">@advertisement.AdvertisementNumber</strong>
+                                            <small>ID @advertisement.AdvertisementID</small>
                                         </div>
-
                                     </div>
-
                                 </td>
 
-
-                                <!-- DETAILS -->
-
-                                <td>
-
+                                <td data-label="Details">
                                     <div class="hr-ad-title-cell">
-
-                                        <strong title="@advertisement.Title">
-                                            @advertisement.Title
-                                        </strong>
-
-                                        <span>
-                                            @advertisement.AdvertisementTypeName
-                                        </span>
-
+                                        <strong title="@advertisement.Title">@advertisement.Title</strong>
+                                        <span>@advertisement.AdvertisementTypeName</span>
                                     </div>
-
                                 </td>
 
-
-                                <!-- USER -->
-
-                                <td>
-
+                                <td data-label="User">
                                     <div class="hr-ad-user-cell">
-
-                                        <div class="hr-ad-user-avatar">
-                                            @GetInitials(advertisement.UserName)
-                                        </div>
-
+                                        <div class="hr-ad-user-avatar">@GetInitials(advertisement.UserName)</div>
                                         <div>
-
-                                            <strong>
-                                                @advertisement.UserName
-                                            </strong>
-
-                                            @if (!string.IsNullOrWhiteSpace(
-                                                advertisement.Email))
+                                            <strong>@advertisement.UserName</strong>
+                                            @if (!string.IsNullOrWhiteSpace(advertisement.Email))
                                             {
-                                                <small>
-                                                    @advertisement.Email
-                                                </small>
+                                                <small>@advertisement.Email</small>
                                             }
-
                                         </div>
-
                                     </div>
-
                                 </td>
 
-
-                                <!-- CATEGORY -->
-
-                                <td>
-
-                                    <span class="hr-ad-category">
-                                        @advertisement.CategoryName
-                                    </span>
-
+                                <td data-label="Category">
+                                    <span class="hr-ad-category">@advertisement.CategoryName</span>
                                 </td>
 
-
-                                <!-- PRICE -->
-
-                                <td>
-
-                                    <span class="hr-ad-price">
-                                        @FormatPrice(
-                                            advertisement.Price,
-                                            advertisement.CurrencyCode)
-                                    </span>
-
+                                <td data-label="Price">
+                                    <span class="hr-ad-price">@FormatPrice(advertisement.Price, advertisement.CurrencyCode)</span>
                                 </td>
 
-
-                                <!-- STATUS -->
-
-                                <td>
-
-                                    <span class="@GetStatusBadgeClass(
-                                          advertisement.StatusCode)">
-
+                                <td data-label="Status">
+                                    <span class="@GetStatusBadgeClass(advertisement.StatusCode)">
                                         <span class="hr-ad-status-dot"></span>
-
                                         @GetStatusDisplayName(advertisement)
-
                                     </span>
-
                                 </td>
 
-
-                                <!-- CREATED -->
-
-                                <td>
-
+                                <td data-label="Created">
                                     <div class="hr-ad-date">
-                                        <strong>
-                                            @(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))
-                                        </strong>
-
-                                        <small>
-                                            @(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))
-                                        </small>
+                                        <strong>@(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))</strong>
+                                        <small>@(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))</small>
                                     </div>
-
                                 </td>
 
-
-                                <!-- ACTIONS -->
-
-                                <td>
-
+                                <td data-label="Actions" class="cell-actions">
                                     <div class="hr-ad-row-actions">
 
-                                        <!-- VIEW -->
-
-                                        <button type="button" class="hr-ad-action view" title="View advertisement" @onclick="() => ViewAdvertisement(
-                                                    advertisement.AdvertisementID)">
-
-<i class="bi bi-eye-fill"></i>
-
-</button>
-
-
-                                        <!-- PENDING ACTIONS -->
+                                        <button type="button" class="hr-ad-action view" title="View advertisement"
+                                                aria-label="View advertisement"
+                                                @onclick="() => ViewAdvertisement(advertisement.AdvertisementID)">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
 
                                         @if (IsPending(advertisement))
                                         {
                                             <button type="button" class="hr-ad-action approve" title="Approve advertisement"
-                                                    disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)" @onclick="() => OpenApproveModal(
-                                                        advertisement)">
+                                                    aria-label="Approve advertisement"
+                                                    disabled="@IsAdvertisementProcessing(advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenApproveModal(advertisement)">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
 
-<i class="bi bi-check-lg"></i>
-
-</button>
-
-
-                                            <button type="button" class="hr-ad-action reject" title="Reject advertisement" disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)" @onclick="() => OpenRejectModal(
-                                                        advertisement)">
-
-<i class="bi bi-x-lg"></i>
-
-</button>
+                                            <button type="button" class="hr-ad-action reject" title="Reject advertisement"
+                                                    aria-label="Reject advertisement"
+                                                    disabled="@IsAdvertisementProcessing(advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenRejectModal(advertisement)">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
                                         }
-
-
-                                        <!-- PUBLISHED ACTION -->
 
                                         @if (IsApproved(advertisement))
                                         {
                                             <button type="button" class="hr-ad-action suspend" title="Suspend advertisement"
-                                                    disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)" @onclick="() => OpenSuspendModal(
-                                                        advertisement)">
-
-<i class="bi bi-pause-fill"></i>
-
-</button>
+                                                    aria-label="Suspend advertisement"
+                                                    disabled="@IsAdvertisementProcessing(advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenSuspendModal(advertisement)">
+                                                <i class="bi bi-pause-fill"></i>
+                                            </button>
                                         }
-
-
-                                        <!-- SUSPENDED ACTION -->
 
                                         @if (IsSuspended(advertisement))
                                         {
                                             <button type="button" class="hr-ad-action reactivate" title="Reactivate advertisement"
-                                                    disabled="@IsAdvertisementProcessing(
-                                                        advertisement.AdvertisementID)" @onclick="() => OpenReactivateModal(
-                                                        advertisement)">
-
-<i class="bi bi-play-fill"></i>
-
-</button>
+                                                    aria-label="Reactivate advertisement"
+                                                    disabled="@IsAdvertisementProcessing(advertisement.AdvertisementID)"
+                                                    @onclick="() => OpenReactivateModal(advertisement)">
+                                                <i class="bi bi-play-fill"></i>
+                                            </button>
                                         }
 
                                     </div>
-
                                 </td>
 
                             </tr>
                         }
-
                     </tbody>
                 </table>
+            </div>
 
-                @if (_advertisements.Count > 0 && TotalPages > 1)
-                {
-                    <div class="hr-ad-pagination">
+            @if (TotalPages > 1)
+            {
+                <div class="hr-ad-pagination">
 
-                        <!-- PAGINATION SUMMARY -->
-
-                        <div class="hr-ad-pagination-info">
-
-                            Showing
-                            <strong>@FirstDisplayedRecord</strong>
-                            –
-                            <strong>@LastDisplayedRecord</strong>
-                            of
-                            <strong>@_advertisements.Count</strong>
-
-                        </div>
-
-
-                        <!-- PAGINATION CONTROLS -->
-
-                        <div class="hr-ad-pagination-controls">
-
-                            <!-- FIRST -->
-
-                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
-                                    @onclick="GoToFirstPage" title="First page">
-
-                                <i class="bi bi-chevron-double-left"></i>
-
-                            </button>
-
-
-                            <!-- PREVIOUS -->
-
-                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
-                                    @onclick="GoToPreviousPage" title="Previous page">
-
-                                <i class="bi bi-chevron-left"></i>
-
-                            </button>
-
-
-                            <!-- PAGE NUMBERS -->
-
-                            @foreach (var pageNumber in GetPageNumbers())
-                            {
-                                <button type="button" class="hr-ad-pagination-button @(pageNumber == _currentPage ? "active" : "")"
-                                        @onclick="() => GoToPage(pageNumber)">
-                                    @pageNumber
-                                </button>
-                            }
-
-
-                            <!-- NEXT -->
-
-                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
-                                    @onclick="GoToNextPage" title="Next page">
-
-                                <i class="bi bi-chevron-right"></i>
-
-                            </button>
-
-
-                            <!-- LAST -->
-
-                            <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
-                                    @onclick="GoToLastPage" title="Last page">
-
-                                <i class="bi bi-chevron-double-right"></i>
-
-                            </button>
-
-                        </div>
-
-
-                        <!-- PAGE SIZE -->
-
-                        <div class="hr-ad-pagination-size">
-
-                            <label for="advertisementPageSize">
-                                Show
-                            </label>
-
-                            <select id="advertisementPageSize" value="@_pageSize" @onchange="HandlePageSizeChanged">
-
-                                <option value="10">10</option>
-                                <option value="20">20</option>
-                                <option value="50">50</option>
-
-                            </select>
-
-                            <span>
-                                per page
-                            </span>
-
-                        </div>
-
+                    <div class="hr-ad-pagination-info">
+                        Showing
+                        <strong>@FirstDisplayedRecord</strong> –
+                        <strong>@LastDisplayedRecord</strong>
+                        of
+                        <strong>@_advertisements.Count</strong>
                     </div>
-                }
 
+                    <div class="hr-ad-pagination-controls">
+                        <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
+                                @onclick="GoToFirstPage" title="First page" aria-label="First page">
+                            <i class="bi bi-chevron-double-left"></i>
+                        </button>
+
+                        <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == 1)"
+                                @onclick="GoToPreviousPage" title="Previous page" aria-label="Previous page">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+
+                        @foreach (var pageNumber in GetPageNumbers())
+                        {
+                            <button type="button"
+                                    class="hr-ad-pagination-button @(pageNumber == _currentPage ? "active" : "")"
+                                    @onclick="() => GoToPage(pageNumber)">
+                                @pageNumber
+                            </button>
+                        }
+
+                        <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
+                                @onclick="GoToNextPage" title="Next page" aria-label="Next page">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+
+                        <button type="button" class="hr-ad-pagination-button" disabled="@(_currentPage == TotalPages)"
+                                @onclick="GoToLastPage" title="Last page" aria-label="Last page">
+                            <i class="bi bi-chevron-double-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="hr-ad-pagination-size">
+                        <label for="advertisementPageSize">Show</label>
+                        <select id="advertisementPageSize" value="@_pageSize" @onchange="HandlePageSizeChanged">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span>per page</span>
+                    </div>
+
+                </div>
+            }
+        }
+
+    </section>
+
+    <!-- ========================= UNPUBLISHED ADVERTISEMENTS ========================= -->
+    <section class="hr-ad-table-card hr-ad-section-gap">
+
+        <div class="hr-ad-table-header">
+            <div class="hr-ad-table-heading">
+                <div class="hr-ad-section-icon unpublished"><i class="bi bi-eye-slash-fill"></i></div>
+                <div>
+                    <h2>Unpublished Advertisements</h2>
+                    <span>Advertisements removed from public listings. They remain in the system with full history.</span>
+                </div>
+            </div>
+            <span class="hr-ad-removal-count neutral">@_unpublishedAdvertisements.Count</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(_unpublishedError))
+        {
+            <div class="hr-ad-alert hr-ad-alert-error hr-ad-inline-alert" role="alert">
+                <div class="hr-ad-alert-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                <div class="hr-ad-alert-content">
+                    <strong>Unable to load unpublished advertisements</strong>
+                    <span>@_unpublishedError</span>
+                </div>
             </div>
         }
 
-    </div>
+        @if (_isUnpublishedLoading)
+        {
+            <div class="hr-ad-loading">
+                <div class="hr-ad-loading-spinner"><i class="bi bi-arrow-repeat hr-spin"></i></div>
+                <strong>Loading unpublished advertisements...</strong>
+            </div>
+        }
+        else if (_unpublishedAdvertisements.Count == 0)
+        {
+            <div class="hr-ad-empty compact">
+                <div class="hr-ad-empty-icon"><i class="bi bi-eye-slash"></i></div>
+                <h3>No unpublished advertisements</h3>
+                <p>Advertisements whose removal requests are approved will appear here.</p>
+            </div>
+        }
+        else
+        {
+            <div class="hr-ad-table-wrapper">
+                <table class="hr-ad-table hr-ad-main-table">
+                    <thead>
+                        <tr>
+                            <th class="col-number">Advertisement</th>
+                            <th class="col-title">Details</th>
+                            <th>User</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th class="col-actions">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var advertisement in PagedUnpublishedAdvertisements)
+                        {
+                            <tr @key="advertisement.AdvertisementID">
+
+                                <td data-label="Advertisement" class="cell-primary">
+                                    <div class="hr-ad-number">
+                                        <span class="hr-ad-number-icon"><i class="bi bi-megaphone-fill"></i></span>
+                                        <div>
+                                            <strong title="@advertisement.AdvertisementNumber">@advertisement.AdvertisementNumber</strong>
+                                            <small>ID @advertisement.AdvertisementID</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Details">
+                                    <div class="hr-ad-title-cell">
+                                        <strong title="@advertisement.Title">@advertisement.Title</strong>
+                                        <span>@advertisement.AdvertisementTypeName</span>
+                                    </div>
+                                </td>
+
+                                <td data-label="User">
+                                    <div class="hr-ad-user-cell">
+                                        <div class="hr-ad-user-avatar">@GetInitials(advertisement.UserName)</div>
+                                        <div>
+                                            <strong>@advertisement.UserName</strong>
+                                            @if (!string.IsNullOrWhiteSpace(advertisement.Email))
+                                            {
+                                                <small>@advertisement.Email</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td data-label="Category">
+                                    <span class="hr-ad-category">@advertisement.CategoryName</span>
+                                </td>
+
+                                <td data-label="Price">
+                                    <span class="hr-ad-price">@FormatPrice(advertisement.Price, advertisement.CurrencyCode)</span>
+                                </td>
+
+                                <td data-label="Status">
+                                    <span class="hr-ad-status unpublished">
+                                        <span class="hr-ad-status-dot"></span>
+                                        Unpublished
+                                    </span>
+                                </td>
+
+                                <td data-label="Created">
+                                    <div class="hr-ad-date">
+                                        <strong>@(advertisement.CreatedDate.ToLocalTime().ToString("dd MMM yyyy"))</strong>
+                                        <small>@(advertisement.CreatedDate.ToLocalTime().ToString("hh:mm tt"))</small>
+                                    </div>
+                                </td>
+
+                                <td data-label="Actions" class="cell-actions">
+                                    <div class="hr-ad-row-actions">
+                                        <button type="button" class="hr-ad-action view" title="View advertisement"
+                                                aria-label="View advertisement"
+                                                @onclick="() => ViewAdvertisement(advertisement.AdvertisementID)">
+                                            <i class="bi bi-eye-fill"></i>
+                                        </button>
+                                    </div>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <Pager @bind-CurrentPage="_unpublishedPage"
+                   @bind-PageSize="_unpublishedPageSize"
+                   TotalCount="_unpublishedAdvertisements.Count"
+                   Id="unpublishedPageSize" />
+        }
+
+    </section>
 
 </div>
 
@@ -804,276 +629,272 @@
 {
     <div class="hr-ad-modal-backdrop" @onclick="HandleModalBackdropClick">
 
-        <div class="hr-ad-modal" @onclick:stopPropagation="true">
-
-            <!-- MODAL HEADER -->
+        <div class="hr-ad-modal" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
 
             <div class="hr-ad-modal-header">
-
                 <div class="hr-ad-modal-title">
-
-                    <div class="hr-ad-modal-icon @GetModalIconClass()">
-                        <i class="@GetModalIcon()"></i>
-                    </div>
-
+                    <div class="hr-ad-modal-icon @GetModalIconClass()"><i class="@GetModalIcon()"></i></div>
                     <div>
-
-                        <h3>
-                            @GetModalTitle()
-                        </h3>
-
-                        <span>
-                            @_selectedAdvertisement?.AdvertisementNumber
-                        </span>
-
+                        <h3>@GetModalTitle()</h3>
+                        <span>@_selectedAdvertisement?.AdvertisementNumber</span>
                     </div>
-
                 </div>
 
-
                 <button type="button" class="hr-ad-modal-close" disabled="@_isModerationProcessing"
-                        @onclick="CloseModerationModal">
-
+                        @onclick="CloseModerationModal" aria-label="Close">
                     <i class="bi bi-x-lg"></i>
-
                 </button>
-
             </div>
-
-
-            <!-- MODAL BODY -->
 
             <div class="hr-ad-modal-body">
 
                 @if (_selectedAdvertisement is not null)
                 {
                     <div class="hr-ad-modal-advertisement">
-
-                        <div class="hr-ad-modal-ad-icon">
-                            <i class="bi bi-megaphone-fill"></i>
-                        </div>
-
+                        <div class="hr-ad-modal-ad-icon"><i class="bi bi-megaphone-fill"></i></div>
                         <div>
-
-                            <strong>
-                                @_selectedAdvertisement.Title
-                            </strong>
-
-                            <span>
-                                @_selectedAdvertisement.UserName
-                            </span>
-
+                            <strong>@_selectedAdvertisement.Title</strong>
+                            <span>@_selectedAdvertisement.UserName</span>
                         </div>
-
                     </div>
                 }
-
-
-                <!-- REJECTION REASON -->
 
                 @if (_moderationAction == ModerationAction.Reject)
                 {
                     <div class="hr-ad-modal-field">
-
-                        <label>
-                            Rejection Reason
-                            <span>*</span>
+                        <label for="rejectionReason">
+                            Rejection Reason <span class="hr-ad-required">*</span>
                         </label>
 
-                        <select @bind="_selectedRejectionReasonId" disabled="@_isModerationProcessing">
-
-                            <option value="">
-                                Select a rejection reason
-                            </option>
-
+                        <select id="rejectionReason" @bind="_selectedRejectionReasonId" disabled="@_isModerationProcessing">
+                            <option value="">Select a rejection reason</option>
                             @foreach (var reason in _rejectionReasons)
                             {
                                 if (reason.IsActive)
                                 {
-                                    <option value="@reason.RejectionReasonID">
-                                        @reason.ReasonName
-                                    </option>
+                                    <option value="@reason.RejectionReasonID">@reason.ReasonName</option>
                                 }
                             }
-
                         </select>
 
-                        @if (_showValidationMessage &&
-                             !_selectedRejectionReasonId.HasValue)
+                        @if (_showValidationMessage && !_selectedRejectionReasonId.HasValue)
                         {
-                            <small class="hr-ad-modal-validation">
-                                Please select a rejection reason.
-                            </small>
+                            <small class="hr-ad-modal-validation">Please select a rejection reason.</small>
                         }
-
                     </div>
                 }
 
                 @if (_moderationAction == ModerationAction.Approve)
-{
-    <!-- FEATURED ADVERTISEMENT -->
+                {
+                    <div class="hr-ad-modal-field">
+                        <label class="hr-ad-field-title">Advertisement Promotion</label>
 
-    <div class="hr-ad-modal-field">
-
-        <label>
-            Advertisement Promotion
-        </label>
-
-        <label class="hr-ad-featured-option">
-
-            <input type="checkbox"
-                   @bind="_isFeaturedOnApproval"
-                   disabled="@_isModerationProcessing" />
-
-            <span class="hr-ad-featured-check">
-                <i class="bi bi-star-fill"></i>
-            </span>
-
-            <span class="hr-ad-featured-content">
-
-                <strong>
-                    Feature this advertisement
-                </strong>
-
-                <small>
-                    Display this advertisement as a featured listing
-                    until its normal expiry date.
-                </small>
-
-            </span>
-
-        </label>
-
-    </div>
-}
-
-                <!-- COMMENTS -->
+                        <label class="hr-ad-featured-option">
+                            <input type="checkbox" @bind="_isFeaturedOnApproval" disabled="@_isModerationProcessing" />
+                            <span class="hr-ad-featured-check"><i class="bi bi-star-fill"></i></span>
+                            <span class="hr-ad-featured-content">
+                                <strong>Feature this advertisement</strong>
+                                <small>Display this advertisement as a featured listing until its normal expiry date.</small>
+                            </span>
+                        </label>
+                    </div>
+                }
 
                 <div class="hr-ad-modal-field">
-
-                    <label>
-
+                    <label for="moderationComments">
                         Comments
-
                         @if (_moderationAction == ModerationAction.Reject)
                         {
-                            <span class="hr-ad-optional">
-                                Optional
-                            </span>
+                            <span class="hr-ad-optional">Optional</span>
                         }
-
                     </label>
 
-                    <textarea @bind="_moderationComments" disabled="@_isModerationProcessing" rows="4" maxlength="1000"
-                              placeholder="@GetCommentsPlaceholder()"></textarea>
+                    <textarea id="moderationComments" @bind="_moderationComments" disabled="@_isModerationProcessing"
+                              rows="4" maxlength="1000" placeholder="@GetCommentsPlaceholder()"></textarea>
 
-                    <div class="hr-ad-character-count">
-                        @_moderationComments.Length / 1000
-                    </div>
-
+                    <div class="hr-ad-character-count">@_moderationComments.Length / 1000</div>
                 </div>
-
-
-                <!-- INFORMATION -->
 
                 @if (_moderationAction == ModerationAction.Approve)
                 {
                     <div class="hr-ad-modal-information approve">
-
                         <i class="bi bi-info-circle-fill"></i>
-
-                        <span>
-                            This advertisement will be approved and made
-                            available according to its configured publishing
-                            rules.
-                        </span>
-
+                        <span>This advertisement will be approved and made available according to its configured publishing rules.</span>
                     </div>
                 }
                 else if (_moderationAction == ModerationAction.Reject)
                 {
                     <div class="hr-ad-modal-information reject">
-
                         <i class="bi bi-exclamation-circle-fill"></i>
-
-                        <span>
-                            The advertisement will be marked as rejected.
-                            The selected reason will be recorded in the
-                            moderation history.
-                        </span>
-
+                        <span>The advertisement will be marked as rejected. The selected reason will be recorded in the moderation history.</span>
                     </div>
                 }
                 else if (_moderationAction == ModerationAction.Suspend)
                 {
                     <div class="hr-ad-modal-information suspend">
-
                         <i class="bi bi-pause-circle-fill"></i>
-
-                        <span>
-                            The advertisement will be suspended and will no
-                            longer be available as an active advertisement.
-                        </span>
-
+                        <span>The advertisement will be suspended and will no longer be available as an active advertisement.</span>
                     </div>
                 }
                 else if (_moderationAction == ModerationAction.Reactivate)
                 {
                     <div class="hr-ad-modal-information reactivate">
-
                         <i class="bi bi-play-circle-fill"></i>
-
-                        <span>
-                            The advertisement will be reactivated.
-                        </span>
-
+                        <span>The advertisement will be reactivated.</span>
                     </div>
                 }
 
             </div>
 
-
-            <!-- MODAL FOOTER -->
-
             <div class="hr-ad-modal-footer">
-
                 <button type="button" class="hr-ad-modal-cancel" disabled="@_isModerationProcessing"
                         @onclick="CloseModerationModal">
-
                     Cancel
-
                 </button>
-
 
                 <button type="button" class="hr-ad-modal-confirm @GetModalConfirmClass()"
                         disabled="@_isModerationProcessing" @onclick="ExecuteModerationAsync">
-
                     @if (_isModerationProcessing)
                     {
                         <i class="bi bi-arrow-repeat hr-spin"></i>
-
-                        <span>
-                            Processing...
-                        </span>
+                        <span>Processing...</span>
                     }
                     else
                     {
                         <i class="@GetModalIcon()"></i>
-
-                        <span>
-                            @GetModalConfirmText()
-                        </span>
+                        <span>@GetModalConfirmText()</span>
                     }
-
                 </button>
-
             </div>
 
         </div>
-
     </div>
 }
 
+
+<!-- =============================================================
+     REMOVAL REQUEST MODAL
+     ============================================================= -->
+
+@if (_showRemovalRequestModal && _selectedRemovalRequest is not null)
+{
+    <div class="hr-ad-modal-backdrop" @onclick="HandleRemovalModalBackdropClick">
+
+        <div class="hr-ad-modal hr-ad-modal-wide" role="dialog" aria-modal="true" @onclick:stopPropagation="true">
+
+            <div class="hr-ad-modal-header">
+                <div class="hr-ad-modal-title">
+                    <div class="hr-ad-modal-icon removal"><i class="bi bi-person-dash-fill"></i></div>
+                    <div>
+                        <h3>Review Removal Request</h3>
+                        <span>@_selectedRemovalRequest.AdvertisementNumber</span>
+                    </div>
+                </div>
+
+                <button type="button" class="hr-ad-modal-close" disabled="@_isRemovalRequestProcessing"
+                        @onclick="CloseRemovalRequestModal" aria-label="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="hr-ad-modal-body">
+
+                <div class="hr-ad-modal-advertisement">
+                    <div class="hr-ad-modal-ad-icon"><i class="bi bi-megaphone-fill"></i></div>
+                    <div>
+                        <strong>@_selectedRemovalRequest.AdvertisementTitle</strong>
+                        <span>@_selectedRemovalRequest.UserName</span>
+                    </div>
+                </div>
+
+                <div class="hr-ad-removal-review-grid">
+                    <div class="hr-ad-removal-review-item">
+                        <span>Advertisement</span>
+                        <strong>@_selectedRemovalRequest.AdvertisementNumber</strong>
+                    </div>
+                    <div class="hr-ad-removal-review-item">
+                        <span>Current Status</span>
+                        <strong>@_selectedRemovalRequest.AdvertisementStatusName</strong>
+                    </div>
+                    <div class="hr-ad-removal-review-item">
+                        <span>Advertiser</span>
+                        <strong>@_selectedRemovalRequest.UserName</strong>
+                    </div>
+                    <div class="hr-ad-removal-review-item">
+                        <span>Requested</span>
+                        <strong>@(_selectedRemovalRequest.CreatedDate.ToLocalTime().ToString("dd MMM yyyy hh:mm tt"))</strong>
+                    </div>
+                </div>
+
+                <div class="hr-ad-modal-field">
+                    <label class="hr-ad-field-title">Advertiser's Reason</label>
+                    <div class="hr-ad-removal-reason-box @(string.IsNullOrWhiteSpace(_selectedRemovalRequest.Reason) ? "empty" : "")">
+                        @(string.IsNullOrWhiteSpace(_selectedRemovalRequest.Reason)
+                            ? "No reason was provided by the advertiser."
+                            : _selectedRemovalRequest.Reason)
+                    </div>
+                </div>
+
+                <div class="hr-ad-modal-information removal">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>
+                        If approved, this advertisement will be changed from <strong>PUBLISHED</strong> to
+                        <strong>UNPUBLISHED</strong> and will no longer appear in public listings.
+                        The advertisement and its history will remain in the system.
+                    </span>
+                </div>
+
+                <div class="hr-ad-modal-field hr-ad-field-spaced">
+                    <label for="removalComments">
+                        Review Comments <span class="hr-ad-optional">Optional</span>
+                    </label>
+
+                    <textarea id="removalComments" @bind="_removalRequestComments" disabled="@_isRemovalRequestProcessing"
+                              rows="4" maxlength="500" placeholder="Optional comments about your decision..."></textarea>
+
+                    <div class="hr-ad-character-count">@_removalRequestComments.Length / 500</div>
+                </div>
+
+            </div>
+
+            <div class="hr-ad-modal-footer">
+                <button type="button" class="hr-ad-modal-cancel" disabled="@_isRemovalRequestProcessing"
+                        @onclick="CloseRemovalRequestModal">
+                    Cancel
+                </button>
+
+                <button type="button" class="hr-ad-modal-confirm reject" disabled="@_isRemovalRequestProcessing"
+                        @onclick="RejectRemovalRequestAsync">
+                    @if (_removalRequestDecision == RemovalRequestDecision.Reject)
+                    {
+                        <i class="bi bi-arrow-repeat hr-spin"></i>
+                        <span>Rejecting...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-x-lg"></i>
+                        <span>Reject Request</span>
+                    }
+                </button>
+
+                <button type="button" class="hr-ad-modal-confirm approve" disabled="@_isRemovalRequestProcessing"
+                        @onclick="ApproveRemovalRequestAsync">
+                    @if (_removalRequestDecision == RemovalRequestDecision.Approve)
+                    {
+                        <i class="bi bi-arrow-repeat hr-spin"></i>
+                        <span>Approving...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check-lg"></i>
+                        <span>Approve &amp; Unpublish</span>
+                    }
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
 
 @code {
 
@@ -1087,6 +908,8 @@
     private List<RejectionReasonResponse>
         _rejectionReasons = new();
 
+    private List<AdminAdvertisementRemovalRequestResponse>
+        _pendingRemovalRequests = new();
 
     // =============================================================
     // FILTERS
@@ -1133,6 +956,20 @@
 
     private ApplicationSettings? _applicationSettings;
 
+    private AdminAdvertisementRemovalRequestResponse?
+    _selectedRemovalRequest;
+
+    private bool _showRemovalRequestModal;
+
+    private bool _isRemovalRequestProcessing;
+
+    private string _removalRequestComments =
+        string.Empty;
+
+    private RemovalRequestDecision
+        _removalRequestDecision =
+            RemovalRequestDecision.None;
+
     // =============================================================
     // PAGINATION
     // =============================================================
@@ -1164,6 +1001,32 @@
             _currentPage * _pageSize,
             _advertisements.Count);
 
+
+    // --- Removal requests pagination ---
+private int _removalPage = 1;
+private int _removalPageSize = 5;
+ 
+private IEnumerable<AdminAdvertisementRemovalRequestResponse> PagedRemovalRequests =>
+    _pendingRemovalRequests
+        .Skip((_removalPage - 1) * _removalPageSize)
+        .Take(_removalPageSize);
+
+    
+// --- Unpublished advertisements list ---
+private const string UnpublishedStatusCode = "UNPUBLISHED";   // <- change if your status code differs
+ 
+private List<AdminAdvertisementListResponse> _unpublishedAdvertisements = new();
+private bool _isUnpublishedLoading;
+private string? _unpublishedError;
+ 
+private int _unpublishedPage = 1;
+private int _unpublishedPageSize = 10;
+ 
+private IEnumerable<AdminAdvertisementListResponse> PagedUnpublishedAdvertisements =>
+    _unpublishedAdvertisements
+        .Skip((_unpublishedPage - 1) * _unpublishedPageSize)
+        .Take(_unpublishedPageSize);
+
     // =============================================================
     // INITIALIZATION
     // =============================================================
@@ -1171,6 +1034,8 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadApplicationSettingsAsync();
+
+        await LoadSecondaryListsAsync();
 
         await LoadAdvertisementsAsync();
     }
@@ -1192,6 +1057,75 @@
         }
     }
 
+    private async Task LoadPendingRemovalRequestsAsync()
+{
+    try
+    {
+        _pendingRemovalRequests =
+            await AdvertisementApiService
+                .GetPendingAdvertisementRemovalRequestsAsync()
+            ?? new List<AdminAdvertisementRemovalRequestResponse>();
+    }
+    catch (Exception ex)
+    {
+        _pendingRemovalRequests.Clear();
+ 
+        Console.WriteLine(
+            $"[Admin Advertisements] Removal request error: {ex.Message}");
+    }
+ 
+    var totalPages = Math.Max(1,
+        (int)Math.Ceiling(_pendingRemovalRequests.Count / (double)_removalPageSize));
+ 
+    if (_removalPage > totalPages)
+    {
+        _removalPage = totalPages;
+    }
+}
+
+private async Task LoadUnpublishedAdvertisementsAsync()
+{
+    try
+    {
+        _isUnpublishedLoading = true;
+        _unpublishedError = null;
+ 
+        var result =
+            await AdvertisementModerationService
+                .GetAdvertisementsAsync(
+                    statusCode: UnpublishedStatusCode,
+                    search: null,
+                    pageNumber: 1,
+                    pageSize: 500);
+ 
+        _unpublishedAdvertisements =
+            result ?? new List<AdminAdvertisementListResponse>();
+ 
+        var totalPages = Math.Max(1,
+            (int)Math.Ceiling(_unpublishedAdvertisements.Count / (double)_unpublishedPageSize));
+ 
+        if (_unpublishedPage > totalPages)
+        {
+            _unpublishedPage = totalPages;
+        }
+    }
+    catch (Exception ex)
+    {
+        _unpublishedAdvertisements.Clear();
+        _unpublishedError = ex.Message;
+    }
+    finally
+    {
+        _isUnpublishedLoading = false;
+    }
+}
+ 
+// Loads both secondary lists (removal requests + unpublished ads)
+private async Task LoadSecondaryListsAsync()
+{
+    await LoadPendingRemovalRequestsAsync();
+    await LoadUnpublishedAdvertisementsAsync();
+}
     // =============================================================
     // LOAD
     // =============================================================
@@ -1305,6 +1239,7 @@
     {
         _currentPage = 1;
 
+        await LoadSecondaryListsAsync();
         await LoadAdvertisementsAsync();
     }
 
@@ -1508,6 +1443,7 @@
 
             "DRAFT" =>
                 "hr-ad-status draft",
+            "UNPUBLISHED" => "hr-ad-status unpublished",
 
             _ =>
                 "hr-ad-status"
@@ -1540,6 +1476,7 @@
 
             "DRAFT" =>
                 "Draft",
+            "UNPUBLISHED" => "Unpublished",
 
             _ =>
                 advertisement.StatusCode
@@ -1568,6 +1505,7 @@
 
             "DRAFT" =>
                 "draft",
+            "UNPUBLISHED" => "unpublished",
 
             _ =>
                 "advertisement"
@@ -1720,57 +1658,57 @@
     private void OpenModerationModal(
     AdminAdvertisementListResponse advertisement,
     ModerationAction action)
-{
-    _selectedAdvertisement =
-        advertisement;
+    {
+        _selectedAdvertisement =
+            advertisement;
 
-    _moderationAction =
-        action;
+        _moderationAction =
+            action;
 
-    _selectedRejectionReasonId =
-        null;
+        _selectedRejectionReasonId =
+            null;
 
-    _moderationComments =
-        string.Empty;
+        _moderationComments =
+            string.Empty;
 
-    _isFeaturedOnApproval =
-        false;
+        _isFeaturedOnApproval =
+            false;
 
-    _showValidationMessage =
-        false;
+        _showValidationMessage =
+            false;
 
-    _errorMessage =
-        null;
+        _errorMessage =
+            null;
 
-    _successMessage =
-        null;
+        _successMessage =
+            null;
 
-    _showModerationModal =
-        true;
-}
+        _showModerationModal =
+            true;
+    }
 
 
     private void CloseModerationModal()
-{
-    _showModerationModal = false;
+    {
+        _showModerationModal = false;
 
-    _selectedAdvertisement = null;
+        _selectedAdvertisement = null;
 
-    _moderationAction =
-        ModerationAction.None;
+        _moderationAction =
+            ModerationAction.None;
 
-    _selectedRejectionReasonId =
-        null;
+        _selectedRejectionReasonId =
+            null;
 
-    _moderationComments =
-        string.Empty;
+        _moderationComments =
+            string.Empty;
 
-    _isFeaturedOnApproval =
-        false;
+        _isFeaturedOnApproval =
+            false;
 
-    _showValidationMessage =
-        false;
-}
+        _showValidationMessage =
+            false;
+    }
 
     // =============================================================
     // REJECTION REASONS
@@ -1961,7 +1899,7 @@
             _successMessage =
                 $"{actionName} completed successfully for advertisement {advertisementNumber}.";
 
-
+            await LoadSecondaryListsAsync();
             await LoadAdvertisementsAsync();
         }
         catch (Exception ex)
@@ -1973,6 +1911,184 @@
         {
             _isModerationProcessing =
                 false;
+        }
+    }
+
+    private void OpenRemovalRequestModal(
+        AdminAdvertisementRemovalRequestResponse request)
+    {
+        _selectedRemovalRequest = request;
+
+        _removalRequestComments =
+            string.Empty;
+
+        _removalRequestDecision =
+            RemovalRequestDecision.None;
+
+        _isRemovalRequestProcessing =
+            false;
+
+        _errorMessage = null;
+        _successMessage = null;
+
+        _showRemovalRequestModal = true;
+    }
+
+    private void CloseRemovalRequestModal()
+    {
+        if (_isRemovalRequestProcessing)
+        {
+            return;
+        }
+
+        _showRemovalRequestModal = false;
+
+        _selectedRemovalRequest = null;
+
+        _removalRequestComments =
+            string.Empty;
+
+        _removalRequestDecision =
+            RemovalRequestDecision.None;
+    }
+
+    private async Task ApproveRemovalRequestAsync()
+    {
+        if (_selectedRemovalRequest is null ||
+            _isRemovalRequestProcessing)
+        {
+            return;
+        }
+
+        var request =
+            _selectedRemovalRequest;
+
+        try
+        {
+            _isRemovalRequestProcessing = true;
+            _removalRequestDecision =
+                RemovalRequestDecision.Approve;
+
+            _errorMessage = null;
+            _successMessage = null;
+
+            var success =
+                await AdvertisementApiService
+                    .ApproveAdvertisementRemovalRequestAsync(
+                        request.RemovalRequestID,
+                        NormalizeRemovalComments(
+                            _removalRequestComments));
+
+            if (!success)
+            {
+                _errorMessage =
+                    "The removal request could not be approved.";
+
+                return;
+            }
+
+            CloseRemovalRequestModal();
+
+            _successMessage =
+                $"Removal request approved successfully for advertisement {request.AdvertisementNumber}. " +
+                "The advertisement has been removed from public listings.";
+
+            await LoadSecondaryListsAsync();
+            await LoadAdvertisementsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage =
+                ex.Message;
+        }
+        finally
+        {
+            _isRemovalRequestProcessing = false;
+            _removalRequestDecision =
+                RemovalRequestDecision.None;
+        }
+    }
+
+    private async Task RejectRemovalRequestAsync()
+    {
+        if (_selectedRemovalRequest is null ||
+            _isRemovalRequestProcessing)
+        {
+            return;
+        }
+
+        var request =
+            _selectedRemovalRequest;
+
+        try
+        {
+            _isRemovalRequestProcessing = true;
+            _removalRequestDecision =
+                RemovalRequestDecision.Reject;
+
+            _errorMessage = null;
+            _successMessage = null;
+
+            var success =
+                await AdvertisementApiService
+                    .RejectAdvertisementRemovalRequestAsync(
+                        request.RemovalRequestID,
+                        NormalizeRemovalComments(
+                            _removalRequestComments));
+
+            if (!success)
+            {
+                _errorMessage =
+                    "The removal request could not be rejected.";
+
+                return;
+            }
+
+            CloseRemovalRequestModal();
+
+            _successMessage =
+                $"Removal request rejected successfully for advertisement {request.AdvertisementNumber}. " +
+                "The advertisement remains published.";
+
+            await LoadSecondaryListsAsync();
+            await LoadAdvertisementsAsync();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage =
+                ex.Message;
+        }
+        finally
+        {
+            _isRemovalRequestProcessing = false;
+            _removalRequestDecision =
+                RemovalRequestDecision.None;
+        }
+    }
+
+    private static string NormalizeRemovalComments(
+        string? comments)
+    {
+        return string.IsNullOrWhiteSpace(comments)
+            ? string.Empty
+            : comments.Trim();
+    }
+
+    private bool IsRemovalRequestProcessing(
+        long removalRequestId)
+    {
+        return _isRemovalRequestProcessing &&
+               _selectedRemovalRequest?
+                   .RemovalRequestID ==
+               removalRequestId;
+    }
+
+    private void HandleRemovalModalBackdropClick(
+        MouseEventArgs _)
+    {
+        if (!_isRemovalRequestProcessing)
+        {
+            CloseRemovalRequestModal();
         }
     }
 
@@ -2225,5 +2341,12 @@
         Suspend,
 
         Reactivate
+    }
+
+    private enum RemovalRequestDecision
+    {
+        None,
+        Approve,
+        Reject
     }
 }

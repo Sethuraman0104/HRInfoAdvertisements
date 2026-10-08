@@ -660,7 +660,19 @@ public static class DatabaseSeeder
                 DisplayOrder = 8,
                 IsActive = true,
                 IsPublicStatus = true
-            }
+            },
+
+            new AdvertisementStatus
+{
+    StatusCode = "UNPUBLISHED",
+    StatusName = "Unpublished",
+    StatusNameAr = "غير منشور",
+    Description =
+        "Advertisement has been removed from public listings at the advertiser's request.",
+    IsPublicStatus = false,
+    IsActive = true,
+    DisplayOrder = 9
+},
         };
 
         foreach (var status in statuses)

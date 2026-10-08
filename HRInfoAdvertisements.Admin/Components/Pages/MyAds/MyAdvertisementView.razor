@@ -986,13 +986,11 @@
 
                 <div>
                     <strong>
-                        @(removalRequest!.RequestType == "DELETE"
-                            ? "Deletion requested"
-                            : "Removal from public listing requested")
+                        Removal from public listing requested
                     </strong>
 
                     <span>
-                        Sent on @FormatDate(removalRequest.CreatedDate).
+                        Sent on @FormatDate(removalRequest!.CreatedDate).
                         Your advertisement stays published until the
                         request is reviewed.
                     </span>
@@ -1027,11 +1025,16 @@
                     <i class="bi bi-exclamation-circle-fill"></i>
 
                     <div>
-                        <strong>Your last request was not approved</strong>
+                        <strong>
+                            Your last request was not approved
+                        </strong>
 
-                        @if (!string.IsNullOrWhiteSpace(removalRequest!.ReviewComments))
+                        @if (!string.IsNullOrWhiteSpace(
+                            removalRequest!.ReviewComments))
                         {
-                            <span>@removalRequest.ReviewComments</span>
+                            <span>
+                                @removalRequest.ReviewComments
+                            </span>
                         }
                     </div>
 
@@ -1040,20 +1043,10 @@
 
             <button type="button"
                     class="view-page-action secondary-action"
-                    @onclick='() => OpenRemovalModal("UNPUBLISH")'>
+                    @onclick="OpenRemovalModal">
 
                 <i class="bi bi-eye-slash"></i>
                 <span>Remove from Public Listing</span>
-                <i class="bi bi-arrow-right"></i>
-
-            </button>
-
-            <button type="button"
-                    class="view-page-action removal-danger-action"
-                    @onclick='() => OpenRemovalModal("DELETE")'>
-
-                <i class="bi bi-trash3"></i>
-                <span>Request Deletion</span>
                 <i class="bi bi-arrow-right"></i>
 
             </button>
@@ -1163,19 +1156,17 @@
 
             <div class="removal-modal-header">
 
-                <div class="removal-modal-icon @(removalType == "DELETE" ? "danger" : "warning")">
-                    <i class="bi @(removalType == "DELETE" ? "bi-trash3" : "bi-eye-slash")"></i>
-                </div>
+                <div class="removal-modal-icon warning">
+    <i class="bi bi-eye-slash"></i>
+</div>
 
                 <div class="removal-modal-title">
-                    <h2 id="removal-modal-title">
-                        @(removalType == "DELETE"
-                            ? "Request Deletion"
-                            : "Remove from Public Listing")
-                    </h2>
+    <h2 id="removal-modal-title">
+        Remove from Public Listing
+    </h2>
 
-                    <span>@GetAdvertisementNumber()</span>
-                </div>
+    <span>@GetAdvertisementNumber()</span>
+</div>
 
                 <button type="button"
                         class="removal-modal-close"
@@ -1190,24 +1181,12 @@
             <div class="removal-modal-body">
 
                 <p>
-                    @if (removalType == "DELETE")
-                    {
-                        <text>
-                            You are asking for this advertisement to be
-                            <strong>deleted</strong>. An administrator will
-                            review your request. Until then, the
-                            advertisement stays published.
-                        </text>
-                    }
-                    else
-                    {
-                        <text>
-                            You are telling us this advertisement is
-                            <strong>no longer required</strong> in the public
-                            listing. An administrator will review your request.
-                            Until then, the advertisement stays visible.
-                        </text>
-                    }
+                    <text>
+    You are asking us to remove this advertisement from the
+    <strong>public listing</strong>. An administrator will
+    review your request. Until then, the advertisement will
+    remain published and visible.
+</text>
                 </p>
 
                 <label for="removal-reason">
@@ -1237,32 +1216,32 @@
 
             <div class="removal-modal-footer">
 
-                <button type="button"
-                        class="removal-btn cancel"
-                        @onclick="CloseRemovalModal"
-                        disabled="@isSubmittingRemoval">
-                    Cancel
-                </button>
+    <button type="button"
+            class="removal-modal-cancel"
+            @onclick="CloseRemovalModal"
+            disabled="@isSubmittingRemoval">
+        Cancel
+    </button>
 
-                <button type="button"
-                        class="removal-btn confirm @(removalType == "DELETE" ? "danger" : "warning")"
-                        @onclick="SubmitRemovalRequestAsync"
-                        disabled="@isSubmittingRemoval">
+    <button type="button"
+            class="removal-modal-submit"
+            @onclick="SubmitRemovalRequestAsync"
+            disabled="@isSubmittingRemoval">
 
-                    @if (isSubmittingRemoval)
-                    {
-                        <span class="small-spinner"></span>
-                        <span>Sending...</span>
-                    }
-                    else
-                    {
-                        <i class="bi bi-send"></i>
-                        <span>Send Request</span>
-                    }
+        @if (isSubmittingRemoval)
+        {
+            <span class="small-spinner"></span>
+            <span>Sending...</span>
+        }
+        else
+        {
+            <i class="bi bi-send"></i>
+            <span>Send Request</span>
+        }
 
-                </button>
+    </button>
 
-            </div>
+</div>
 
         </div>
 
@@ -1413,20 +1392,20 @@ private async Task LoadRemovalRequestAsync()
         }
     }
 
-    private void OpenRemovalModal(string type)
+    private void OpenRemovalModal()
+{
+    if (isSubmittingRemoval)
     {
-        if (isSubmittingRemoval)
-        {
-            return;
-        }
-
-        removalType = type;
-        removalReason = string.Empty;
-        removalError = null;
-        removalSuccess = null;
-
-        showRemovalModal = true;
+        return;
     }
+
+    removalType = "UNPUBLISH";
+    removalReason = string.Empty;
+    removalError = null;
+    removalSuccess = null;
+
+    showRemovalModal = true;
+}
 private void CloseRemovalModal()
     {
         if (isSubmittingRemoval)
@@ -1468,9 +1447,7 @@ private void CloseRemovalModal()
             showRemovalModal = false;
 
             removalSuccess =
-                removalType == "DELETE"
-                    ? "Your deletion request has been sent for review."
-                    : "Your request to remove this advertisement from the public listing has been sent for review.";
+    "Your request to remove this advertisement from the public listing has been sent for review.";
         }
         catch (InvalidOperationException ex)
         {

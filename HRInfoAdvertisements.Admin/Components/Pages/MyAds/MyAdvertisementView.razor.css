@@ -2253,57 +2253,223 @@
 }
 
 /* ============================================================
-   STEP 5 - APPEND TO THE VIEW PAGE CSS
-   (plain elements only, so no ::deep is needed)
+   ACTIONS
    ============================================================ */
 
-.removal-actions {
-    display: grid;
-    gap: 10px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #eee7e2;
+.my-ad-view-actions-card {
+    overflow: hidden;
+    padding-bottom: 16px;
 }
 
-.removal-danger-action {
+/* ------------------------------------------------------------
+   ACTION LIST
+   ------------------------------------------------------------ */
+
+.removal-actions {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 10px;
 
     width: 100%;
-    min-height: 44px;
-    padding: 0 14px;
+    margin: 0;
+    padding: 14px 16px 0;
+
+    box-sizing: border-box;
+}
+
+/* ------------------------------------------------------------
+   ACTION BUTTON
+   ------------------------------------------------------------ */
+
+.removal-actions .view-page-action {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-height: 48px;
+
+    margin: 0;
+    padding: 0 13px;
+
     box-sizing: border-box;
 
-    border: 1px solid #efc6c2;
+    gap: 11px;
+
     border-radius: 10px;
 
-    background: #fff6f5;
-    color: #a12821;
-
     font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1;
 
     cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
 }
 
-.removal-danger-action:hover:not(:disabled) {
-    background: #ffecea;
+/* ------------------------------------------------------------
+   LEFT ICON
+   ------------------------------------------------------------ */
+
+.removal-actions .view-page-action > i:first-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 30px;
+    height: 30px;
+
+    flex: 0 0 30px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+    line-height: 1;
 }
 
-.removal-danger-action span {
+/* ------------------------------------------------------------
+   TEXT
+   ------------------------------------------------------------ */
+
+.removal-actions .view-page-action > span {
+    display: block;
+
     flex: 1;
+    min-width: 0;
+
+    padding: 0;
+
     text-align: left;
+
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1.3;
 }
+
+/* ------------------------------------------------------------
+   RIGHT ARROW
+   ------------------------------------------------------------ */
+
+.removal-actions .view-page-action > i:last-child {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 18px;
+    height: 18px;
+
+    flex: 0 0 18px;
+
+    font-size: 11px;
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease,
+        color 0.2s ease;
+}
+
+/* ============================================================
+   REMOVE FROM PUBLIC LISTING
+   ============================================================ */
+
+.removal-actions .secondary-action {
+    border: 1px solid #e4dede;
+    background: #faf8f8;
+    color: #663333;
+
+    box-shadow: none;
+}
+
+.removal-actions .secondary-action > i:first-child {
+    background: #f0e9e9;
+    color: #663333;
+}
+
+.removal-actions .secondary-action > i:last-child {
+    color: #9a8585;
+}
+
+.removal-actions .secondary-action:hover:not(:disabled) {
+    background: #fff4f2;
+    border-color: #d9c1c1;
+
+    box-shadow:
+        0 4px 12px rgba(102, 51, 51, 0.07);
+
+    transform: translateY(-1px);
+}
+
+.removal-actions .secondary-action:hover:not(:disabled)
+> i:last-child {
+    color: #663333;
+    transform: translateX(3px);
+}
+
+/* ============================================================
+   REQUEST DELETION
+   ============================================================ */
+
+.removal-actions .removal-danger-action {
+    border: 1px solid #edd0cd;
+    background: #fff9f8;
+    color: #a12821;
+
+    box-shadow: none;
+}
+
+.removal-actions .removal-danger-action > i:first-child {
+    background: #fdebea;
+    color: #b42318;
+}
+
+.removal-actions .removal-danger-action > i:last-child {
+    color: #c08a85;
+}
+
+.removal-actions .removal-danger-action:hover:not(:disabled) {
+    background: #fff1ef;
+    border-color: #e3bbb7;
+
+    box-shadow:
+        0 4px 12px rgba(180, 35, 24, 0.07);
+
+    transform: translateY(-1px);
+}
+
+.removal-actions .removal-danger-action:hover:not(:disabled)
+> i:last-child {
+    color: #b42318;
+    transform: translateX(3px);
+}
+
+/* ------------------------------------------------------------
+   DISABLED
+   ------------------------------------------------------------ */
+
+.removal-actions .view-page-action:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   REMOVAL STATUS / NOTE
+   ============================================================ */
 
 .removal-note {
     display: flex;
     align-items: flex-start;
     gap: 9px;
 
+    margin: 10px 16px 0;
     padding: 10px 12px;
+
     box-sizing: border-box;
 
     border-radius: 10px;
@@ -2317,52 +2483,563 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
+
     min-width: 0;
 }
 
-.removal-note.pending  { background: #fffbf0; border-color: #f0e2b8; color: #7a5a00; }
-.removal-note.success  { background: #f4faf2; border-color: #cfe5c6; color: #2f6b1f; }
-.removal-note.rejected { background: #fff6f5; border-color: #efc6c2; color: #9d2d25; }
+.removal-note.pending {
+    background: #fffbf0;
+    border-color: #f0e2b8;
+    color: #7a5a00;
+}
 
-/* ---------------- MODAL ---------------- */
+.removal-note.success {
+    background: #f4faf2;
+    border-color: #cfe5c6;
+    color: #2f6b1f;
+}
+
+.removal-note.rejected {
+    background: #fff6f5;
+    border-color: #efc6c2;
+    color: #9d2d25;
+}
+
+/* ============================================================
+   REMOVAL REQUEST MODAL
+   ============================================================ */
 
 .removal-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 2147483000;
+    position: fixed !important;
+    inset: 0 !important;
+
+    width: 100vw !important;
+    height: 100vh !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+
+    padding: 20px !important;
+    margin: 0 !important;
+
+    box-sizing: border-box;
+
+    background: rgba(20, 14, 14, 0.65);
+
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    z-index: 2147483000 !important;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL
+   ------------------------------------------------------------ */
+
+.removal-modal {
+    position: relative !important;
+
+    width: min(520px, calc(100vw - 40px)) !important;
+    max-width: 520px !important;
+    max-height: calc(100vh - 40px) !important;
+
+    margin: 0 !important;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+
+    background: #ffffff;
+
+    border: 1px solid #eadede;
+    border-radius: 18px;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.35);
+
+    color: #342b2b;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL HEADER
+   ------------------------------------------------------------ */
+
+.removal-modal-header {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding: 18px 20px;
+
+    border-bottom: 1px solid #eee5e5;
+}
+
+
+.removal-modal-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    flex: 0 0 42px;
+
+    border-radius: 11px;
+
+    font-size: 17px;
+}
+
+
+.removal-modal-icon.warning {
+    background: #fff4dc;
+    color: #a06a00;
+}
+
+
+.removal-modal-icon.danger {
+    background: #fff0ee;
+    color: #b42318;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL TITLE
+   ------------------------------------------------------------ */
+
+.removal-modal-title {
+    display: flex;
+    flex-direction: column;
+
+    gap: 4px;
+
+    min-width: 0;
+
+    flex: 1;
+}
+
+
+.removal-modal-title h2 {
+    margin: 0;
+
+    color: #342b2b;
+
+    font-size: 16px;
+    font-weight: 800;
+
+    line-height: 1.3;
+}
+
+
+.removal-modal-title span {
+    color: #917f7f;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    line-height: 1.3;
+}
+
+
+/* ------------------------------------------------------------
+   CLOSE BUTTON
+   ------------------------------------------------------------ */
+
+.removal-modal-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 34px;
+    height: 34px;
+
+    flex: 0 0 34px;
+
+    padding: 0;
+
+    border: 1px solid #e8dddd;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #806f6f;
+
+    font-size: 13px;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+
+.removal-modal-close:hover:not(:disabled) {
+    background: #fff4f2;
+    border-color: #ddc7c7;
+    color: #663333;
+}
+
+
+.removal-modal-close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL BODY
+   ------------------------------------------------------------ */
+
+.removal-modal-body {
+    padding: 20px;
+}
+
+
+.removal-modal-body p {
+    margin: 0 0 18px;
+
+    color: #665858;
+
+    font-size: 12px;
+    line-height: 1.65;
+}
+
+
+.removal-modal-body p strong {
+    color: #663333;
+    font-weight: 750;
+}
+
+
+/* ------------------------------------------------------------
+   REASON LABEL
+   ------------------------------------------------------------ */
+
+.removal-modal-body label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #493b3b;
+
+    font-size: 11px;
+    font-weight: 750;
+}
+
+
+.removal-modal-body label .optional {
+    color: #a29393;
+    font-weight: 500;
+}
+
+
+/* ------------------------------------------------------------
+   REASON TEXTAREA
+   ------------------------------------------------------------ */
+
+.removal-modal-body textarea {
+    display: block;
+
+    width: 100%;
+    min-height: 120px;
+
+    padding: 11px 12px;
+
+    box-sizing: border-box;
+
+    resize: vertical;
+
+    border: 1px solid #e3d8d8;
+    border-radius: 10px;
+
+    background: #fffafa;
+
+    color: #342b2b;
+
+    font-family: inherit;
+    font-size: 12px;
+    line-height: 1.5;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+
+.removal-modal-body textarea::placeholder {
+    color: #aaa0a0;
+}
+
+
+.removal-modal-body textarea:focus {
+    background: #ffffff;
+
+    border-color: #b88989;
+
+    box-shadow:
+        0 0 0 3px rgba(102, 51, 51, 0.08);
+}
+
+
+/* ------------------------------------------------------------
+   CHARACTER COUNT
+   ------------------------------------------------------------ */
+
+.removal-modal-character-count {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 5px;
+
+    color: #9b8d8d;
+
+    font-size: 9px;
+    line-height: 1.2;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL FOOTER / ACTIONS
+   ------------------------------------------------------------ */
+
+.removal-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 9px;
+
+    padding: 14px 20px 18px;
+
+    border-top: 1px solid #f0e9e9;
+}
+
+
+/* ------------------------------------------------------------
+   MODAL BUTTONS
+   ------------------------------------------------------------ */
+
+.removal-modal-footer button {
+    min-height: 40px;
+
+    padding: 0 15px;
+
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 750;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.removal-modal-cancel {
+    border: 1px solid #e2d8d8;
+
+    background: #ffffff;
+
+    color: #746666;
+}
+
+
+.removal-modal-cancel:hover:not(:disabled) {
+    background: #faf7f7;
+
+    border-color: #d4c7c7;
+
+    color: #663333;
+}
+
+
+.removal-modal-submit {
+    border: 0;
+
+    background:
+        linear-gradient(
+            135deg,
+            #663333,
+            #cc3333
+        );
+
+    color: #ffffff;
+
+    box-shadow:
+        0 5px 13px rgba(102, 51, 51, 0.17);
+}
+
+
+.removal-modal-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 7px 17px rgba(102, 51, 51, 0.23);
+}
+
+
+.removal-modal-submit:disabled,
+.removal-modal-cancel:disabled {
+    opacity: 0.55;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+
+/* ============================================================
+   REMOVAL MODAL - MOBILE
+   ============================================================ */
+
+@media (max-width: 600px) {
+
+    .removal-backdrop {
+        padding: 12px !important;
+    }
+
+    .removal-modal {
+        width: calc(100vw - 24px) !important;
+        max-height: calc(100vh - 24px) !important;
+
+        border-radius: 15px;
+    }
+
+    .removal-modal-header {
+        padding: 15px;
+    }
+
+    .removal-modal-body {
+        padding: 16px;
+    }
+
+    .removal-modal-footer {
+        flex-direction: column-reverse;
+
+        align-items: stretch;
+
+        padding: 12px 16px 16px;
+    }
+
+    .removal-modal-footer button {
+        width: 100%;
+    }
+}
+
+/* ============================================================
+   CONTACT INFORMATION CARD
+   ============================================================ */
+
+.my-ad-view-contact-card {
+    overflow: hidden;
+}
+
+/* Section heading */
+
+.my-ad-view-contact-card .my-ad-view-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px 22px;
+    margin: 0;
+    border-bottom: 1px solid #eee5df;
+}
+
+.my-ad-view-contact-card .section-heading-icon {
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
 
     display: flex;
     align-items: center;
     justify-content: center;
 
-    padding: 20px;
-    box-sizing: border-box;
+    border-radius: 12px;
 
-    background: rgba(20, 14, 14, 0.65);
-    backdrop-filter: blur(4px);
+    background: #fff5e5;
+    color: #a06a00;
+
+    font-size: 20px;
 }
 
-.removal-modal {
-    width: min(520px, 100%);
-    max-height: calc(100vh - 40px);
-    overflow: auto;
+.my-ad-view-contact-card .my-ad-view-section-heading > div:last-child {
+    min-width: 0;
 
-    background: #ffffff;
-    border-radius: 18px;
-
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
-.removal-modal-header {
+.my-ad-view-contact-card .my-ad-view-section-heading h2 {
+    margin: 0;
+
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.3;
+
+    color: #332929;
+}
+
+.my-ad-view-contact-card .my-ad-view-section-heading span {
+    margin: 0;
+
+    font-size: 13px;
+    line-height: 1.4;
+
+    color: #8a7b75;
+}
+
+
+/* Contact list */
+
+.my-ad-view-contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+
+    padding: 16px 22px 18px;
+}
+
+
+/* Individual contact */
+
+.my-ad-view-contact-item {
     display: flex;
     align-items: center;
-    gap: 12px;
 
-    padding: 18px 20px;
-    border-bottom: 1px solid #eee7e2;
+    min-height: 70px;
+
+    padding: 12px 14px;
+
+    border: 1px solid #eee5df;
+    border-radius: 12px;
+
+    background: #fff;
+
+    box-sizing: border-box;
 }
 
-.removal-modal-icon {
+
+/* Contact icon */
+
+.my-ad-view-contact-icon {
     flex: 0 0 42px;
     width: 42px;
     height: 42px;
@@ -2371,127 +3048,187 @@
     align-items: center;
     justify-content: center;
 
-    border-radius: 12px;
-    font-size: 18px;
-}
+    margin-right: 13px;
 
-.removal-modal-icon.danger  { background: #fff0f0; color: #b42318; }
-.removal-modal-icon.warning { background: #fff5df; color: #9a6b00; }
-
-.removal-modal-title { flex: 1; min-width: 0; }
-
-.removal-modal-title h2 {
-    margin: 0;
-    color: #3a1d1d;
-    font-size: 17px;
-    font-weight: 800;
-}
-
-.removal-modal-title span {
-    color: #8a7d76;
-    font-size: 11px;
-}
-
-.removal-modal-close {
-    width: 34px;
-    height: 34px;
-
-    border: 0;
-    border-radius: 9px;
-
-    background: #f7f3f0;
-    color: #663333;
-
-    cursor: pointer;
-}
-
-.removal-modal-body {
-    padding: 18px 20px;
-}
-
-.removal-modal-body p {
-    margin: 0 0 14px;
-    color: #5a4a44;
-    font-size: 13px;
-    line-height: 1.55;
-}
-
-.removal-modal-body label {
-    display: block;
-    margin-bottom: 6px;
-    color: #4a3838;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.removal-modal-body .optional {
-    color: #9a8d86;
-    font-weight: 500;
-}
-
-.removal-modal-body textarea {
-    width: 100%;
-    min-height: 100px;
-    resize: vertical;
-    box-sizing: border-box;
-
-    padding: 10px 12px;
-
-    border: 1px solid #d8d0cc;
     border-radius: 10px;
 
-    color: #302727;
-    font-family: inherit;
-    font-size: 13px;
-    outline: none;
+    font-size: 19px;
 }
 
-.removal-modal-body textarea:focus {
-    border-color: #9b5656;
-    box-shadow: 0 0 0 3px rgba(102, 51, 51, 0.09);
+.my-ad-view-contact-icon.whatsapp-contact {
+    background: #eef8ef;
+    color: #328b45;
 }
 
-.removal-counter {
-    margin: 4px 0 12px;
-    text-align: right;
-    color: #9a8d86;
-    font-size: 10.5px;
-}
 
-.removal-modal-footer {
+/* Contact content */
+
+.my-ad-view-contact-content {
+    flex: 1 1 auto;
+    min-width: 0;
+
     display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+    flex-direction: column;
+    justify-content: center;
 
-    padding: 14px 20px;
-    border-top: 1px solid #eee7e2;
+    gap: 3px;
 }
 
-.removal-btn {
-    min-height: 40px;
-    padding: 0 16px;
+.my-ad-view-contact-content span {
+    display: block;
+
+    margin: 0;
+
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+
+    color: #8a7b75;
+}
+
+.my-ad-view-contact-content strong {
+    display: block;
+
+    margin: 0;
+
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+
+    color: #3b3030;
+
+    word-break: break-word;
+}
+
+
+/* Visibility badge */
+
+.my-ad-view-contact-visibility {
+    flex: 0 0 auto;
 
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
 
-    border: 0;
-    border-radius: 10px;
+    min-height: 30px;
 
-    font-family: inherit;
-    font-size: 13px;
+    margin-left: 16px;
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    font-size: 11px;
     font-weight: 700;
+    line-height: 1;
 
-    cursor: pointer;
+    white-space: nowrap;
 }
 
-.removal-btn.cancel  { background: #f2f3f4; color: #555; }
-.removal-btn.confirm { color: #ffffff; }
-.removal-btn.confirm.danger  { background: #b42318; }
-.removal-btn.confirm.warning { background: #9a6b00; }
+.my-ad-view-contact-visibility.public {
+    background: #eef7ef;
+    color: #32723d;
+    border: 1px solid #d5e9d7;
+}
 
-.removal-btn:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+.my-ad-view-contact-visibility i {
+    font-size: 12px;
+}
+
+
+/* Privacy note */
+
+.my-ad-view-contact-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    margin: 0 22px 20px;
+    padding: 12px 14px;
+
+    border: 1px solid #e8dfd5;
+    border-radius: 10px;
+
+    background: #faf8f5;
+
+    color: #756961;
+
+    font-size: 12px;
+    line-height: 1.55;
+
+    box-sizing: border-box;
+}
+
+.my-ad-view-contact-note > i {
+    flex: 0 0 auto;
+
+    margin-top: 2px;
+
+    font-size: 15px;
+
+    color: #8b7350;
+}
+
+.my-ad-view-contact-note span {
+    min-width: 0;
+}
+
+
+/* ============================================================
+   CONTACT CARD - RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 640px) {
+
+    .my-ad-view-contact-card .my-ad-view-section-heading {
+        padding: 16px;
+    }
+
+    .my-ad-view-contact-list {
+        padding: 14px 16px 16px;
+    }
+
+    .my-ad-view-contact-item {
+        align-items: flex-start;
+
+        padding: 12px;
+    }
+
+    .my-ad-view-contact-icon {
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+
+        margin-right: 10px;
+
+        font-size: 17px;
+    }
+
+    .my-ad-view-contact-visibility {
+        align-self: center;
+
+        margin-left: 10px;
+        padding: 5px 8px;
+    }
+
+    .my-ad-view-contact-note {
+        margin: 0 16px 16px;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .my-ad-view-contact-item {
+        flex-wrap: wrap;
+    }
+
+    .my-ad-view-contact-content {
+        flex: 1 1 calc(100% - 50px);
+    }
+
+    .my-ad-view-contact-visibility {
+        margin-left: 50px;
+        margin-top: 8px;
+    }
 }

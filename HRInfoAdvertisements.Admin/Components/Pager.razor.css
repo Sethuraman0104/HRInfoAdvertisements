@@ -1,0 +1,98 @@
+/* Scoped styles for Pager.razor */
+
+.hr-pager {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    padding: 16px 22px;
+    border-top: 1px solid #eeeeee;
+    background: #ffffff;
+    color: #666666;
+    font-size: 13px;
+}
+
+.hr-pager-info strong {
+    color: #333333;
+    font-weight: 650;
+}
+
+.hr-pager-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+}
+
+.hr-pager-button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #555555;
+    font-family: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.hr-pager-button:hover:not(:disabled) {
+    border-color: #790000;
+    color: #790000;
+    background: #fffafa;
+}
+
+.hr-pager-button.active {
+    border-color: #790000;
+    background: #790000;
+    color: #ffffff;
+}
+
+.hr-pager-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.hr-pager-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hr-pager-size select {
+    min-width: 66px;
+    height: 36px;
+    padding: 0 8px;
+    border: 1px solid #dddddd;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #333333;
+    font-family: inherit;
+}
+
+@media (max-width: 850px) {
+    .hr-pager {
+        justify-content: center;
+        padding: 14px 18px;
+    }
+}
+
+@media (max-width: 700px) {
+    .hr-pager-info {
+        width: 100%;
+        text-align: center;
+    }
+
+    .hr-pager-button {
+        min-width: 34px;
+        height: 34px;
+        padding: 0 8px;
+    }
+}

@@ -16,31 +16,89 @@ public class AdvertisementApiService
     private readonly IHttpClientFactory _httpClientFactory;
 
     private readonly PublicAuthenticationStateProvider
-        _authenticationStateProvider;
+    _authenticationStateProvider;
+
+private readonly AdminAuthenticationStateProvider
+    _adminAuthenticationStateProvider;
 
 
     public AdvertisementApiService(
-        IHttpClientFactory httpClientFactory,
-        PublicAuthenticationStateProvider authenticationStateProvider)
-    {
-        _httpClientFactory =
-            httpClientFactory;
+    IHttpClientFactory httpClientFactory,
+    PublicAuthenticationStateProvider authenticationStateProvider,
+    AdminAuthenticationStateProvider adminAuthenticationStateProvider)
+{
+    _httpClientFactory =
+        httpClientFactory;
 
-        _authenticationStateProvider =
-            authenticationStateProvider;
-    }
+    _authenticationStateProvider =
+        authenticationStateProvider;
 
+    _adminAuthenticationStateProvider =
+        adminAuthenticationStateProvider;
+}
 
-    // ============================================================
-    // HTTP CLIENT - ADMIN
-    // ============================================================
 
     private HttpClient CreateClient()
+{
+    return _httpClientFactory
+        .CreateClient(
+            "HRInfoAdvertisementsAPI");
+}
+
+
+// ============================================================
+// HTTP CLIENT - ADMIN AUTHENTICATED
+//
+// The Admin API client does not automatically attach the
+// administrator JWT.
+//
+// PublicAuthenticationStateProvider and
+// AdminAuthenticationStateProvider are intentionally separate.
+//
+// This method MUST use AdminAuthenticationStateProvider.
+// ============================================================
+
+private HttpClient CreateAuthenticatedAdminClient()
+{
+    var client =
+        CreateClient();
+
+    var accessToken =
+        _adminAuthenticationStateProvider.AccessToken;
+
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "ADVERTISEMENT SERVICE ADMIN AUTHENTICATION CHECK");
+
+    Console.WriteLine(
+        $"ADMIN TOKEN AVAILABLE: " +
+        $"{!string.IsNullOrWhiteSpace(accessToken)}");
+
+    Console.WriteLine(
+        $"ADMIN TOKEN LENGTH: " +
+        $"{accessToken?.Length ?? 0}");
+
+    Console.WriteLine(
+        "================================================");
+
+    if (string.IsNullOrWhiteSpace(accessToken))
     {
-        return _httpClientFactory
-            .CreateClient(
-                "HRInfoAdvertisementsAPI");
+        throw new InvalidOperationException(
+            "The administrator is not authenticated or the admin access token is unavailable.");
     }
+
+    client.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue(
+            "Bearer",
+            accessToken);
+
+    Console.WriteLine(
+        "ADVERTISEMENT SERVICE ADMIN JWT ATTACHED.");
+
+    return client;
+}
 
 
     // ============================================================
@@ -1512,6 +1570,174 @@ public async Task<bool> CancelRemovalRequestAsync(
                 $"api/v1/advertisements/{advertisementId}/removal-request");
 
     return response.IsSuccessStatusCode;
+}
+// ============================================================
+// ADMIN - GET PENDING ADVERTISEMENT REMOVAL REQUESTS
+// ============================================================
+
+public async Task<List<AdminAdvertisementRemovalRequestResponse>>
+    GetPendingAdvertisementRemovalRequestsAsync()
+{
+    var client =
+        CreateAuthenticatedAdminClient();
+
+    var response =
+        await client.GetAsync(
+            "api/v1/admin/advertisement-removal-requests");
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "GET PENDING ADVERTISEMENT REMOVAL REQUESTS");
+
+    Console.WriteLine(
+        $"STATUS: " +
+        $"{(int)response.StatusCode} " +
+        $"{response.StatusCode}");
+
+    Console.WriteLine(
+        $"RESPONSE: {responseBody}");
+
+    Console.WriteLine(
+        "================================================");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(
+            string.IsNullOrWhiteSpace(responseBody)
+                ? "Unable to load advertisement removal requests."
+                : responseBody);
+    }
+
+    if (string.IsNullOrWhiteSpace(responseBody))
+    {
+        return new List<AdminAdvertisementRemovalRequestResponse>();
+    }
+
+    return JsonSerializer.Deserialize<
+        List<AdminAdvertisementRemovalRequestResponse>>(
+            responseBody,
+            new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            })
+        ?? new List<AdminAdvertisementRemovalRequestResponse>();
+}
+
+
+// ============================================================
+// ADMIN - APPROVE ADVERTISEMENT REMOVAL REQUEST
+// ============================================================
+
+public async Task<bool>
+    ApproveAdvertisementRemovalRequestAsync(
+        long removalRequestId,
+        string? comments = null)
+{
+    if (removalRequestId <= 0)
+    {
+        return false;
+    }
+
+    var client =
+        CreateAuthenticatedAdminClient();
+
+    var response =
+        await client.PostAsJsonAsync(
+            $"api/v1/admin/advertisement-removal-requests/" +
+            $"{removalRequestId}/approve",
+            comments);
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "APPROVE ADVERTISEMENT REMOVAL REQUEST");
+
+    Console.WriteLine(
+        $"REMOVAL REQUEST ID: {removalRequestId}");
+
+    Console.WriteLine(
+        $"STATUS: " +
+        $"{(int)response.StatusCode} " +
+        $"{response.StatusCode}");
+
+    Console.WriteLine(
+        $"RESPONSE: {responseBody}");
+
+    Console.WriteLine(
+        "================================================");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(
+            await ReadRemovalErrorAsync(response));
+    }
+
+    return true;
+}
+
+
+// ============================================================
+// ADMIN - REJECT ADVERTISEMENT REMOVAL REQUEST
+// ============================================================
+
+public async Task<bool>
+    RejectAdvertisementRemovalRequestAsync(
+        long removalRequestId,
+        string? comments = null)
+{
+    if (removalRequestId <= 0)
+    {
+        return false;
+    }
+
+    var client =
+        CreateAuthenticatedAdminClient();
+
+    var response =
+        await client.PostAsJsonAsync(
+            $"api/v1/admin/advertisement-removal-requests/" +
+            $"{removalRequestId}/reject",
+            comments);
+
+    var responseBody =
+        await response.Content.ReadAsStringAsync();
+
+    Console.WriteLine(
+        "================================================");
+
+    Console.WriteLine(
+        "REJECT ADVERTISEMENT REMOVAL REQUEST");
+
+    Console.WriteLine(
+        $"REMOVAL REQUEST ID: {removalRequestId}");
+
+    Console.WriteLine(
+        $"STATUS: " +
+        $"{(int)response.StatusCode} " +
+        $"{response.StatusCode}");
+
+    Console.WriteLine(
+        $"RESPONSE: {responseBody}");
+
+    Console.WriteLine(
+        "================================================");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(
+            await ReadRemovalErrorAsync(response));
+    }
+
+    return true;
 }
 private static async Task<string> ReadRemovalErrorAsync(
     HttpResponseMessage response)

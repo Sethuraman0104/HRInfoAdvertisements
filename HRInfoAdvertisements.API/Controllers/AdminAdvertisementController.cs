@@ -3,6 +3,7 @@ using System.Security.Claims;
 using HRInfoAdvertisements.Application.DTOs.Admin;
 using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.Interfaces;
+using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,15 @@ namespace HRInfoAdvertisements.API.Controllers;
 public class AdminAdvertisementController : ControllerBase
 {
     private readonly IAdvertisementModerationService _service;
+private readonly IAdvertisementRemovalRequestService _removalRequestService;
 
-    public AdminAdvertisementController(
-        IAdvertisementModerationService service)
-    {
-        _service = service;
-    }
+public AdminAdvertisementController(
+    IAdvertisementModerationService service,
+    IAdvertisementRemovalRequestService removalRequestService)
+{
+    _service = service;
+    _removalRequestService = removalRequestService;
+}
 
     // ============================================================
     // GET LIST
@@ -438,4 +442,138 @@ public async Task<IActionResult> UpdateAdvertisement(
             value,
             out userId);
     }
+
+    // ============================================================
+// PENDING REMOVAL REQUESTS
+// ============================================================
+
+[HttpGet("removal-requests")]
+public async Task<IActionResult> GetPendingRemovalRequests(
+    CancellationToken cancellationToken)
+{
+    try
+    {
+        var result =
+            await _removalRequestService.GetPendingForAdminAsync(
+                cancellationToken);
+
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
+// ============================================================
+// APPROVE REMOVAL REQUEST
+// ============================================================
+
+[HttpPost("removal-requests/{removalRequestId:long}/approve")]
+public async Task<IActionResult> ApproveRemovalRequest(
+    long removalRequestId,
+    [FromBody] string? comments,
+    CancellationToken cancellationToken)
+{
+    if (!TryGetUserId(out var adminUserId))
+    {
+        return Unauthorized(new
+        {
+            Success = false,
+            Message = "Invalid administrator identity."
+        });
+    }
+
+    try
+    {
+        var result =
+            await _removalRequestService.ApproveAsync(
+                adminUserId,
+                removalRequestId,
+                comments,
+                cancellationToken);
+
+        if (!result)
+        {
+            return NotFound(new
+            {
+                Success = false,
+                Message =
+                    "Removal request not found or could not be approved."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message =
+                "Advertisement removed from the public listing successfully."
+        });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
+// ============================================================
+// REJECT REMOVAL REQUEST
+// ============================================================
+
+[HttpPost("removal-requests/{removalRequestId:long}/reject")]
+public async Task<IActionResult> RejectRemovalRequest(
+    long removalRequestId,
+    [FromBody] string? comments,
+    CancellationToken cancellationToken)
+{
+    if (!TryGetUserId(out var adminUserId))
+    {
+        return Unauthorized(new
+        {
+            Success = false,
+            Message = "Invalid administrator identity."
+        });
+    }
+
+    try
+    {
+        var result =
+            await _removalRequestService.RejectAsync(
+                adminUserId,
+                removalRequestId,
+                comments,
+                cancellationToken);
+
+        if (!result)
+        {
+            return NotFound(new
+            {
+                Success = false,
+                Message =
+                    "Removal request not found or could not be rejected."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message =
+                "Advertisement removal request rejected successfully."
+        });
+    }
+    catch (InvalidOperationException ex)
+    {
+        return BadRequest(new
+        {
+            Success = false,
+            Message = ex.Message
+        });
+    }
+}
 }

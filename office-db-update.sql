@@ -2258,3 +2258,12 @@ END;
 COMMIT;
 GO
 
+https://www.works.gov.bh/English/WhoWeAre/ministryawards/Pages/*
+
+https://www.works.gov.bh/English/WhoWeAre/ministryawards/Pages/default.aspx
+
+
+implicitWaitInSeconds: 10 is a suggested starting value if the awards load through JavaScript after the page opens. AWS documents this setting specifically for delayed dynamic content. It belongs to the managed connector and should not be added to the standard crawler configuration.
+
+
+dotnet user-secrets set "Brevo:ApiKey" "<BREVO_API_KEY>-53fd1d49a9d495995a283c2ff235b98826d1d53b542266955bbb57325d94f13c-L2NCVgXQCR0Ae0oZ" --project .\HRInfoAdvertisements.API\HRInfoAdvertisements.API.csproj

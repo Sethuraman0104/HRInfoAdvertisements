@@ -1,6 +1,8 @@
 using System.Security.Claims;
+
 using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval;
 using HRInfoAdvertisements.Application.Interfaces;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +11,8 @@ namespace HRInfoAdvertisements.Api.Controllers;
 [ApiController]
 [Authorize]
 [Route("api/v1/advertisements/{advertisementId:long}/removal-request")]
-public class AdvertisementRemovalRequestsController : ControllerBase
+public class AdvertisementRemovalRequestsController
+    : ControllerBase
 {
     private readonly IAdvertisementRemovalRequestService _service;
 
@@ -21,12 +24,18 @@ public class AdvertisementRemovalRequestsController : ControllerBase
 
     private long? CurrentUserId =>
         long.TryParse(
-            User.FindFirstValue(ClaimTypes.NameIdentifier),
+            User.FindFirstValue(
+                ClaimTypes.NameIdentifier),
             out var id)
             ? id
             : null;
 
-    // GET  -> latest request, or 204 when there is none
+    // ------------------------------------------------------------
+    // GET
+    // Get the latest removal request for the current advertiser.
+    // Returns 204 when there is no request.
+    // ------------------------------------------------------------
+
     [HttpGet]
     public async Task<IActionResult> Get(
         long advertisementId,
@@ -48,11 +57,16 @@ public class AdvertisementRemovalRequestsController : ControllerBase
             : Ok(result);
     }
 
-    // POST -> create a request
+    // ------------------------------------------------------------
+    // POST
+    // Create a removal / unpublish request.
+    // ------------------------------------------------------------
+
     [HttpPost]
     public async Task<IActionResult> Create(
         long advertisementId,
-        [FromBody] CreateAdvertisementRemovalRequest request,
+        [FromBody]
+        CreateAdvertisementRemovalRequest request,
         CancellationToken cancellationToken)
     {
         if (CurrentUserId is not long userId)
@@ -73,11 +87,19 @@ public class AdvertisementRemovalRequestsController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(
+                new
+                {
+                    message = ex.Message
+                });
         }
     }
 
-    // DELETE -> cancel the pending request
+    // ------------------------------------------------------------
+    // DELETE
+    // Cancel a pending removal request.
+    // ------------------------------------------------------------
+
     [HttpDelete]
     public async Task<IActionResult> Cancel(
         long advertisementId,
@@ -96,6 +118,11 @@ public class AdvertisementRemovalRequestsController : ControllerBase
 
         return cancelled
             ? NoContent()
-            : NotFound(new { message = "There is no pending request to cancel." });
+            : NotFound(
+                new
+                {
+                    message =
+                        "There is no pending request to cancel."
+                });
     }
 }
