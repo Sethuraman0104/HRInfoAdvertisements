@@ -440,10 +440,14 @@ public class AdminAdvertisementModerationService
             $"{response.StatusCode}");
 
         Console.WriteLine(
-            $"APPROVE RESPONSE LENGTH: " +
-            $"{responseBody.Length}");
+    $"APPROVE RESPONSE LENGTH: " +
+    $"{responseBody.Length}");
 
-        return response.IsSuccessStatusCode;
+Console.WriteLine(
+    $"APPROVE RESPONSE BODY: " +
+    $"{responseBody}");
+
+return response.IsSuccessStatusCode;
     }
 
     // ============================================================
@@ -608,9 +612,14 @@ public class AdminAdvertisementModerationService
             $"{(int)response.StatusCode} " +
             $"{response.StatusCode}");
 
-        Console.WriteLine(
-            $"REACTIVATE RESPONSE LENGTH: " +
-            $"{responseBody.Length}");
+        
+Console.WriteLine(
+    $"REACTIVATE RESPONSE LENGTH: " +
+    $"{responseBody.Length}");
+
+Console.WriteLine(
+    $"REACTIVATE RESPONSE BODY: " +
+    $"{responseBody}");
 
         return response.IsSuccessStatusCode;
     }

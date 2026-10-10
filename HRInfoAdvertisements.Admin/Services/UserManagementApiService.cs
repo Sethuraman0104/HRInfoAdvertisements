@@ -4,6 +4,7 @@ using System.Text.Json;
 
 using HRInfoAdvertisements.Application.DTOs.UserManagement;
 using HRInfoAdvertisements.Application.Profile.DTOs;
+using HRInfoAdvertisements.Application.NotificationPreferences.DTOs;
 
 namespace HRInfoAdvertisements.Admin.Services;
 
@@ -360,6 +361,105 @@ public async Task<
         return JsonSerializer.Deserialize<UserDetailResponse>(
             responseBody,
             JsonOptions);
+    }
+
+    
+    // ============================================================
+    // GET USER NOTIFICATION PREFERENCES
+    // ============================================================
+
+    public async Task<NotificationPreferenceResponse>
+        GetNotificationPreferencesAsync(long userId)
+    {
+        if (userId <= 0)
+        {
+            throw new ArgumentException(
+                "Invalid user ID.",
+                nameof(userId));
+        }
+
+        var client = CreateClient();
+
+        var url =
+            $"api/v1/users/{userId}/notification-preferences";
+
+        var response = await client.GetAsync(url);
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                "Unable to retrieve notification preferences. " +
+                $"HTTP {(int)response.StatusCode} " +
+                $"({response.StatusCode}). Response: {responseBody}");
+        }
+
+        var result =
+            JsonSerializer.Deserialize<NotificationPreferenceResponse>(
+                responseBody,
+                JsonOptions);
+
+        return result
+            ?? throw new InvalidOperationException(
+                "The API returned an empty notification preference response.");
+    }
+
+
+    // ============================================================
+    // UPDATE USER NOTIFICATION PREFERENCES
+    // ============================================================
+
+    public async Task<NotificationPreferenceResponse>
+        UpdateNotificationPreferencesAsync(
+            long userId,
+            UpdateNotificationPreferenceRequest request)
+    {
+        if (userId <= 0)
+        {
+            throw new ArgumentException(
+                "Invalid user ID.",
+                nameof(userId));
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+
+        var client = CreateClient();
+
+        var url =
+            $"api/v1/users/{userId}/notification-preferences";
+
+        var response =
+            await client.PutAsJsonAsync(url, request);
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                "Unable to update notification preferences. " +
+                $"HTTP {(int)response.StatusCode} " +
+                $"({response.StatusCode}). Response: {responseBody}");
+        }
+
+        // The API returns { success, message, preferences }.
+        // Extract the preferences object from that response.
+        using var document =
+            JsonDocument.Parse(responseBody);
+
+        if (!document.RootElement.TryGetProperty(
+                "preferences",
+                out var preferencesElement))
+        {
+            throw new InvalidOperationException(
+                "The API response does not contain notification preferences.");
+        }
+
+        return preferencesElement.Deserialize<NotificationPreferenceResponse>(
+                   JsonOptions)
+               ?? throw new InvalidOperationException(
+                   "The API returned an empty notification preference response.");
     }
 
     // ============================================================

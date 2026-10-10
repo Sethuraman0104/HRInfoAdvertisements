@@ -440,8 +440,10 @@ public async Task<AdvertisementResponse?>
         .Include(x => x.City)
         .Include(x => x.Area)
         .Where(x =>
-            x.Status.StatusCode == "PUBLISHED" &&
-            x.Status.IsActive);
+    x.Status.StatusCode == "PUBLISHED" &&
+    x.Status.IsActive &&
+    (!x.ExpiryDate.HasValue ||
+     x.ExpiryDate.Value.Date >= DateTime.Today));
 
         // --------------------------------------------------------
         // Search

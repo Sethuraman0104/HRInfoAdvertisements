@@ -1,0 +1,426 @@
+
+@page "/admin/user-notification-preferences"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.UserManagement
+@using HRInfoAdvertisements.Application.NotificationPreferences.DTOs
+@using Microsoft.AspNetCore.Components.Web
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject UserManagementApiService UserManagementApiService
+
+<PageTitle>User Notification Preferences</PageTitle>
+
+<div class="notification-preferences-page">
+
+    <PageHeader Icon="bi-envelope-check-fill"
+            Eyebrow="USER MANAGEMENT"
+            Title="Notification Preferences"
+            SetBrowserTitle="true">
+    <DescriptionContent>
+        Manage optional email notification preferences for individual user accounts.
+    </DescriptionContent>
+</PageHeader>
+    <section class="np-search-card">
+        <div class="np-section-heading">
+            <div class="np-heading-icon">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <h2>Find a User</h2>
+                <p>Search by username, name, email address or mobile number.</p>
+            </div>
+        </div>
+
+        <div class="np-search-row">
+            <div class="np-search-input-wrap">
+                <i class="bi bi-search"></i>
+                <input class="np-input"
+                       placeholder="Enter a name, username or email..."
+                       @bind="searchText"
+                       @bind:event="oninput"
+                       @onkeydown="HandleSearchKeyDown" />
+            </div>
+
+            <button type="button"
+                    class="np-primary-button"
+                    @onclick="SearchUsersAsync"
+                    disabled="@isSearching">
+                @if (isSearching)
+                {
+                    <span class="np-spinner"></span>
+                    <span>Searching...</span>
+                }
+                else
+                {
+                    <i class="bi bi-search"></i>
+                    <span>Search Users</span>
+                }
+            </button>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(searchError))
+        {
+            <div class="np-alert np-alert-error">
+                <i class="bi bi-exclamation-circle-fill"></i>
+                <span>@searchError</span>
+            </div>
+        }
+
+        @if (hasSearched && !isSearching && searchError is null)
+        {
+            <div class="np-results">
+                <div class="np-results-heading">
+                    <span>Search Results</span>
+                    <span class="np-count">@users.Count user(s)</span>
+                </div>
+
+                @if (users.Count == 0)
+                {
+                    <div class="np-empty">
+                        <i class="bi bi-person-x"></i>
+                        <span>No users found. Try another search.</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var user in users)
+                    {
+                        <button type="button"
+                                class="np-user-row @(selectedUser?.UserID == user.UserID ? "np-user-selected" : "")"
+                                @onclick="() => SelectUserAsync(user)">
+                            <span class="np-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </span>
+
+                            <span class="np-user-info">
+                                <strong>@GetDisplayName(user)</strong>
+                                <span>@user.UserName · @user.Email</span>
+                                <small>User ID: @user.UserID</small>
+                            </span>
+
+                            @if (selectedUser?.UserID == user.UserID)
+                            {
+                                <i class="bi bi-check-circle-fill np-selected-icon"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-chevron-right np-chevron"></i>
+                            }
+                        </button>
+                    }
+                }
+            </div>
+        }
+    </section>
+
+    @if (isLoadingPreferences)
+    {
+        <section class="np-preferences-card np-loading-card">
+            <span class="np-spinner np-spinner-dark"></span>
+            <span>Loading notification preferences...</span>
+        </section>
+    }
+    else if (selectedUser is not null && preferences is not null)
+    {
+        <section class="np-preferences-card">
+            <div class="np-section-heading np-preferences-heading">
+                <div class="np-heading-icon">
+                    <i class="bi bi-sliders"></i>
+                </div>
+                <div>
+                    <h2>Notification Settings</h2>
+                    <p>Configure optional email notifications for this user.</p>
+                </div>
+            </div>
+
+            <div class="np-selected-user">
+                <div class="np-avatar np-avatar-large">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="np-selected-user-details">
+                    <strong>@GetDisplayName(selectedUser)</strong>
+                    <span>@selectedUser.Email</span>
+                    <small>Account ID: @selectedUser.UserID</small>
+                </div>
+                <span class="np-account-status">@selectedUser.AccountStatus</span>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(saveError))
+            {
+                <div class="np-alert np-alert-error">
+                    <i class="bi bi-exclamation-circle-fill"></i>
+                    <span>@saveError</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <div class="np-alert np-alert-success">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>@successMessage</span>
+                </div>
+            }
+
+            <div class="np-setting-list">
+                <div class="np-setting-row">
+                    <div class="np-setting-icon np-icon-email">
+                        <i class="bi bi-envelope-fill"></i>
+                    </div>
+                    <div class="np-setting-copy">
+                        <strong>Email Notifications</strong>
+                        <p>Allow this user to receive optional email notifications.</p>
+                        <small>Disabling this setting does not disable essential account verification, password-reset or security emails.</small>
+                    </div>
+                    <button type="button"
+                            class="np-toggle @(preferences.EmailNotificationsEnabled ? "is-on" : "")"
+                            role="switch"
+                            aria-checked="@preferences.EmailNotificationsEnabled"
+                            aria-label="Email Notifications"
+                            disabled="@isSaving"
+                            @onclick="() => TogglePreference(0)">
+                        <span class="np-toggle-track">
+                            <span class="np-toggle-thumb"></span>
+                        </span>
+                        <span class="np-toggle-state">@(preferences.EmailNotificationsEnabled ? "On" : "Off")</span>
+                    </button>
+                </div>
+
+                <div class="np-setting-row">
+                    <div class="np-setting-icon np-icon-ad">
+                        <i class="bi bi-megaphone-fill"></i>
+                    </div>
+                    <div class="np-setting-copy">
+                        <strong>Advertisement Updates</strong>
+                        <p>Allow optional emails about advertisement-related updates.</p>
+                    </div>
+                    <button type="button"
+                            class="np-toggle @(preferences.AdvertisementUpdatesEnabled ? "is-on" : "")"
+                            role="switch"
+                            aria-checked="@preferences.AdvertisementUpdatesEnabled"
+                            aria-label="Advertisement Updates"
+                            disabled="@isSaving"
+                            @onclick="() => TogglePreference(1)">
+                        <span class="np-toggle-track">
+                            <span class="np-toggle-thumb"></span>
+                        </span>
+                        <span class="np-toggle-state">@(preferences.AdvertisementUpdatesEnabled ? "On" : "Off")</span>
+                    </button>
+                </div>
+
+                <div class="np-setting-row">
+                    <div class="np-setting-icon np-icon-favorite">
+                        <i class="bi bi-heart-fill"></i>
+                    </div>
+                    <div class="np-setting-copy">
+                        <strong>Favorite Advertisement Updates</strong>
+                        <p>Allow optional emails about advertisements saved as favorites.</p>
+                    </div>
+                    <button type="button"
+                            class="np-toggle @(preferences.FavoriteAdvertisementUpdatesEnabled ? "is-on" : "")"
+                            role="switch"
+                            aria-checked="@preferences.FavoriteAdvertisementUpdatesEnabled"
+                            aria-label="Favorite Advertisement Updates"
+                            disabled="@isSaving"
+                            @onclick="() => TogglePreference(2)">
+                        <span class="np-toggle-track">
+                            <span class="np-toggle-thumb"></span>
+                        </span>
+                        <span class="np-toggle-state">@(preferences.FavoriteAdvertisementUpdatesEnabled ? "On" : "Off")</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="np-footer">
+                <span class="np-unsaved-note">
+                    <i class="bi bi-info-circle"></i>
+                    Changes take effect after you save.
+                </span>
+
+                <button type="button"
+                        class="np-save-button"
+                        @onclick="SavePreferencesAsync"
+                        disabled="@isSaving">
+                    @if (isSaving)
+                    {
+                        <span class="np-spinner"></span>
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-check2-circle"></i>
+                        <span>Save Preferences</span>
+                    }
+                </button>
+            </div>
+        </section>
+    }
+    else
+    {
+        <section class="np-empty-state">
+            <div class="np-empty-state-icon">
+                <i class="bi bi-toggles"></i>
+            </div>
+            <h2>Select a user to continue</h2>
+            <p>Search for a user above, then select an account to view and update its notification preferences.</p>
+        </section>
+    }
+</div>
+
+@code {
+    private string searchText = string.Empty;
+    private List<UserListItemResponse> users = new();
+    private UserListItemResponse? selectedUser;
+    private NotificationPreferenceResponse? preferences;
+
+    private bool isSearching;
+    private bool isLoadingPreferences;
+    private bool isSaving;
+    private bool hasSearched;
+
+    private string? searchError;
+    private string? saveError;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+{
+    await SearchUsersAsync();
+}
+
+    private async Task SearchUsersAsync()
+    {
+        isSearching = true;
+        hasSearched = true;
+        searchError = null;
+        saveError = null;
+        successMessage = null;
+
+        try
+        {
+            var result = await UserManagementApiService.GetUsersAsync(
+                search: string.IsNullOrWhiteSpace(searchText)
+                    ? null
+                    : searchText.Trim(),
+                pageNumber: 1,
+                pageSize: 50);
+
+            users = result.Items ?? new List<UserListItemResponse>();
+        }
+        catch (Exception ex)
+        {
+            users.Clear();
+            searchError = ex.Message;
+        }
+        finally
+        {
+            isSearching = false;
+        }
+    }
+
+    private async Task HandleSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await SearchUsersAsync();
+        }
+    }
+
+    private async Task SelectUserAsync(UserListItemResponse user)
+    {
+        selectedUser = user;
+        preferences = null;
+        isLoadingPreferences = true;
+        saveError = null;
+        successMessage = null;
+
+        try
+        {
+            preferences =
+                await UserManagementApiService.GetNotificationPreferencesAsync(
+                    user.UserID);
+        }
+        catch (Exception ex)
+        {
+            saveError = ex.Message;
+        }
+        finally
+        {
+            isLoadingPreferences = false;
+        }
+    }
+
+    private void TogglePreference(int preference)
+    {
+        if (preferences is null || isSaving)
+            return;
+
+        successMessage = null;
+        saveError = null;
+
+        switch (preference)
+        {
+            case 0:
+                preferences.EmailNotificationsEnabled =
+                    !preferences.EmailNotificationsEnabled;
+                break;
+
+            case 1:
+                preferences.AdvertisementUpdatesEnabled =
+                    !preferences.AdvertisementUpdatesEnabled;
+                break;
+
+            case 2:
+                preferences.FavoriteAdvertisementUpdatesEnabled =
+                    !preferences.FavoriteAdvertisementUpdatesEnabled;
+                break;
+        }
+    }
+
+    private async Task SavePreferencesAsync()
+    {
+        if (selectedUser is null || preferences is null || isSaving)
+            return;
+
+        isSaving = true;
+        saveError = null;
+        successMessage = null;
+
+        try
+        {
+            var request = new UpdateNotificationPreferenceRequest
+            {
+                EmailNotificationsEnabled =
+                    preferences.EmailNotificationsEnabled,
+                AdvertisementUpdatesEnabled =
+                    preferences.AdvertisementUpdatesEnabled,
+                FavoriteAdvertisementUpdatesEnabled =
+                    preferences.FavoriteAdvertisementUpdatesEnabled
+            };
+
+            preferences =
+                await UserManagementApiService.UpdateNotificationPreferencesAsync(
+                    selectedUser.UserID,
+                    request);
+
+            successMessage =
+                $"Notification preferences saved for {GetDisplayName(selectedUser)}.";
+        }
+        catch (Exception ex)
+        {
+            saveError = ex.Message;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private static string GetDisplayName(UserListItemResponse user)
+    {
+        var fullName = $"{user.FirstName} {user.LastName}".Trim();
+
+        return string.IsNullOrWhiteSpace(fullName)
+            ? user.UserName
+            : fullName;
+    }
+}

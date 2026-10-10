@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using HRInfoAdvertisements.Application.NotificationPreferences;
+using HRInfoAdvertisements.Application.NotificationPreferences.DTOs;
 using HRInfoAdvertisements.Application.Profile;
 using HRInfoAdvertisements.Application.Profile.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -12,11 +14,15 @@ namespace HRInfoAdvertisements.API.Controllers;
 public class ProfileController : ControllerBase
 {
     private readonly IProfileService _profileService;
+private readonly INotificationPreferenceService _notificationPreferenceService;
 
-    public ProfileController(IProfileService profileService)
-    {
-        _profileService = profileService;
-    }
+public ProfileController(
+    IProfileService profileService,
+    INotificationPreferenceService notificationPreferenceService)
+{
+    _profileService = profileService;
+    _notificationPreferenceService = notificationPreferenceService;
+}
 
     // ------------------------------------------------------------
     // Current User
@@ -79,6 +85,52 @@ public class ProfileController : ControllerBase
             });
         }
     }
+
+    // ------------------------------------------------------------
+// Notification Preferences
+// ------------------------------------------------------------
+
+[HttpGet("profile/notification-preferences")]
+public async Task<IActionResult> GetNotificationPreferences()
+{
+    var userId = GetCurrentUserId();
+
+    if (userId == null)
+        return Unauthorized();
+
+    var result =
+        await _notificationPreferenceService.GetAsync(
+            userId.Value);
+
+    return Ok(result);
+}
+
+[HttpPut("profile/notification-preferences")]
+public async Task<IActionResult> UpdateNotificationPreferences(
+    [FromBody] UpdateNotificationPreferenceRequest request)
+{
+    var userId = GetCurrentUserId();
+
+    if (userId == null)
+        return Unauthorized();
+
+    try
+    {
+        var result =
+            await _notificationPreferenceService.UpdateAsync(
+                userId.Value,
+                request);
+
+        return Ok(result);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new
+        {
+            message = ex.Message
+        });
+    }
+}
     
     // ------------------------------------------------------------
     // Addresses

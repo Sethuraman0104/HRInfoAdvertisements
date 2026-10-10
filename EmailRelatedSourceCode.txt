@@ -1,0 +1,3599 @@
+﻿HRInfoAdvertisements - EMAIL SOURCE REVIEW
+
+================================================================================
+FILE: HRInfoAdvertisements.Application\Interfaces\IEmailService.cs
+================================================================================
+namespace HRInfoAdvertisements.Application.Interfaces;
+
+public interface IEmailService
+{
+    Task SendAsync(string to, string subject, string htmlBody);
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Email\BrevoEmailService.cs
+================================================================================
+using System.Net.Http.Json;
+using HRInfoAdvertisements.Application.Interfaces;
+using Microsoft.Extensions.Options;
+
+namespace HRInfoAdvertisements.Infrastructure.Email;
+
+public sealed class BrevoEmailService : IEmailService
+{
+    private readonly HttpClient _http;
+    private readonly EmailOptions _o;
+
+    public BrevoEmailService(HttpClient http, IOptions<EmailOptions> options)
+    {
+        _http = http;
+        _o = options.Value;
+    }
+
+    public async Task SendAsync(string to, string subject, string htmlBody)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", _o.Brevo.ApiKey);
+        request.Content = JsonContent.Create(new
+        {
+            sender = new { name = _o.FromName, email = _o.FromAddress },
+            to = new[] { new { email = to } },
+            subject,
+            htmlContent = htmlBody
+        });
+
+        using var response = await _http.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Brevo error {(int)response.StatusCode}: {detail}");
+        }
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Email\SmtpEmailService.cs
+================================================================================
+using HRInfoAdvertisements.Application.Interfaces;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using Microsoft.Extensions.Options;
+using MimeKit;
+
+namespace HRInfoAdvertisements.Infrastructure.Email;
+
+public sealed class SmtpEmailService : IEmailService
+{
+    private readonly EmailOptions _o;
+    public SmtpEmailService(IOptions<EmailOptions> options) => _o = options.Value;
+
+    public async Task SendAsync(string to, string subject, string htmlBody)
+    {
+        var msg = new MimeMessage();
+        msg.From.Add(new MailboxAddress(_o.FromName, _o.FromAddress));
+        msg.To.Add(MailboxAddress.Parse(to));
+        msg.Subject = subject;
+        msg.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
+
+        var s = _o.Smtp;
+        var mode = s.Port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
+
+        using var client = new SmtpClient();
+        await client.ConnectAsync(s.Host, s.Port, mode);
+        if (!string.IsNullOrEmpty(s.User))
+            await client.AuthenticateAsync(s.User, s.Password);
+        await client.SendAsync(msg);
+        await client.DisconnectAsync(true);
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Services\AuthService.cs
+================================================================================
+using HRInfoAdvertisements.Application.DTOs.Authentication;
+using HRInfoAdvertisements.Application.DTOs.Email;
+using HRInfoAdvertisements.Application.Interfaces;
+using HRInfoAdvertisements.Application.Services;
+using HRInfoAdvertisements.Application.Settings;
+using HRInfoAdvertisements.Domain.Entities;
+using HRInfoAdvertisements.Infrastructure.Data;
+using HRInfoAdvertisements.Infrastructure.Security;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+namespace HRInfoAdvertisements.Infrastructure.Services;
+
+public class AuthService : IAuthService
+{
+    private const string EmailVerificationPurpose = "EmailVerification";
+    private const string ForgotPasswordPurpose = "ForgotPassword";
+
+    private const int OtpExpiryMinutes = 10;
+    private const int OtpMaxAttempts = 5;
+    private const int ResendCooldownSeconds = 60;
+
+    private readonly ApplicationDbContext _context;
+    private readonly IPasswordService _passwordService;
+    private readonly IJwtService _jwtService;
+    private readonly IEmailService _emailService;
+    private readonly JwtSettings _jwtSettings;
+
+    private readonly IApplicationSettingsService _applicationSettingsService;
+
+    public AuthService(
+    ApplicationDbContext context,
+    IPasswordService passwordService,
+    IJwtService jwtService,
+    IEmailService emailService,
+    IApplicationSettingsService applicationSettingsService,
+    IOptions<JwtSettings> jwtOptions)
+{
+    _context = context;
+    _passwordService = passwordService;
+    _jwtService = jwtService;
+    _emailService = emailService;
+    _applicationSettingsService = applicationSettingsService;
+    _jwtSettings = jwtOptions.Value;
+}
+
+    // ============================================================
+    // REGISTER
+    // ============================================================
+
+    public async Task<AuthResponse> RegisterAsync(
+        RegisterRequest request)
+    {
+        if (request == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Registration request is required."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Normalize input
+        // --------------------------------------------------------
+
+        var userName = request.UserName.Trim();
+        var email = request.Email.Trim().ToLowerInvariant();
+        var mobileNo = request.MobileNo.Trim();
+
+        // --------------------------------------------------------
+        // Check duplicate username
+        // --------------------------------------------------------
+
+        // var usernameExists = await _context.Users
+        //     .AnyAsync(x => x.UserName == userName);
+
+        // if (usernameExists)
+        // {
+        //     return new AuthResponse
+        //     {
+        //         Success = false,
+        //         Message = "Username already exists."
+        //     };
+        // }
+
+        // --------------------------------------------------------
+        // Check duplicate email
+        // --------------------------------------------------------
+
+        var emailExists = await _context.Users
+            .AnyAsync(x => x.Email.ToLower() == email);
+
+        if (emailExists)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Email address already exists."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check duplicate mobile
+        // --------------------------------------------------------
+
+        var mobileExists = await _context.Users
+            .AnyAsync(x => x.MobileNo == mobileNo);
+
+        if (mobileExists)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Mobile number already exists."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Begin transaction
+        // --------------------------------------------------------
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // ----------------------------------------------------
+            // Create User
+            // ----------------------------------------------------
+
+            var now = DateTime.UtcNow;
+
+            var user = new User
+            {
+                UserName = userName,
+                Email = email,
+                MobileNo = mobileNo,
+
+                IsEmailVerified = false,
+                IsMobileVerified = false,
+                IsMFAEnabled = false,
+
+                AccountStatus = "Active",
+
+                CreatedDate = now
+            };
+
+            // ----------------------------------------------------
+            // Hash Password
+            // ----------------------------------------------------
+
+            user.PasswordHash =
+                _passwordService.HashPassword(
+                    user,
+                    request.Password);
+
+            _context.Users.Add(user);
+
+            await _context.SaveChangesAsync();
+
+            // ----------------------------------------------------
+            // Create User Profile
+            // ----------------------------------------------------
+
+            var profile = new UserProfile
+            {
+                UserID = user.UserID,
+
+                FirstName = request.FirstName.Trim(),
+                LastName = request.LastName.Trim(),
+
+                PreferredLanguage = "en",
+                IsBusinessAccount = false,
+
+                CreatedDate = now
+            };
+
+            _context.UserProfiles.Add(profile);
+
+            // ----------------------------------------------------
+            // Assign Default User Role
+            // ----------------------------------------------------
+
+            var userRole = await _context.Roles
+                .FirstOrDefaultAsync(x =>
+                    x.RoleName == "User" &&
+                    x.IsActive);
+
+            if (userRole == null)
+            {
+                throw new InvalidOperationException(
+                    "Default User role was not found.");
+            }
+
+            var userRoleMapping = new UserRole
+            {
+                UserID = user.UserID,
+                RoleID = userRole.RoleID,
+                CreatedDate = now
+            };
+
+            _context.UserRoles.Add(userRoleMapping);
+
+            // ----------------------------------------------------
+            // Generate Email Verification OTP
+            // ----------------------------------------------------
+
+            var otp = GenerateOtp();
+
+            var otpRequest = new OTPRequest
+            {
+                UserID = user.UserID,
+
+                Destination = user.Email,
+
+                Purpose = EmailVerificationPurpose,
+
+                OTPHash =
+                    TokenHelper.HashToken(otp),
+
+                ExpiresAt =
+                    now.AddMinutes(OtpExpiryMinutes),
+
+                AttemptCount = 0,
+
+                MaxAttempts = OtpMaxAttempts,
+
+                IsConsumed = false,
+
+                ConsumedDate = null,
+
+                CreatedDate = now
+            };
+
+            _context.OTPRequests.Add(otpRequest);
+
+            await _context.SaveChangesAsync();
+
+            // ----------------------------------------------------
+            // Send Verification Email
+            // ----------------------------------------------------
+
+            await SendEmailVerificationOtpAsync(
+                user,
+                otp);
+
+            // ----------------------------------------------------
+            // Commit
+            // ----------------------------------------------------
+
+            await transaction.CommitAsync();
+
+            // ----------------------------------------------------
+            // IMPORTANT:
+            //
+            // Do NOT generate JWT tokens here.
+            //
+            // The user must verify the email OTP first.
+            // ----------------------------------------------------
+
+            return new AuthResponse
+            {
+                Success = true,
+
+                Message =
+                    "Registration successful. A verification code has been sent to your email address.",
+
+                UserID = user.UserID,
+                UserName = user.UserName,
+                Email = user.Email,
+
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty,
+
+                ExpiresAt = default,
+
+                Roles = new List<string>
+                {
+                    userRole.RoleName
+                },
+
+                Permissions = new List<string>(),
+
+                RequiresEmailVerification = true
+            };
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    public async Task<AuthResponse> LoginAsync(
+        LoginRequest request)
+    {
+        if (request == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Login request is required."
+            };
+        }
+
+        var email =
+            request.Email.Trim().ToLowerInvariant();
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x =>
+                x.Email.ToLower() == email);
+
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Invalid email or password."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User account is not active."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Verify Password
+        // --------------------------------------------------------
+
+        var passwordValid =
+            _passwordService.VerifyPassword(
+                user,
+                user.PasswordHash,
+                request.Password);
+
+        if (!passwordValid)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Invalid email or password."
+            };
+        }
+
+        // --------------------------------------------------------
+        // EMAIL VERIFICATION CHECK
+        //
+        // Correct password + unverified email:
+        // generate a new OTP and require verification.
+        // --------------------------------------------------------
+
+        if (!user.IsEmailVerified)
+        {
+            var otp = await CreateEmailVerificationOtpAsync(user);
+
+            await SendEmailVerificationOtpAsync(
+                user,
+                otp);
+
+            return new AuthResponse
+            {
+                Success = true,
+
+                Message =
+                    "Your email address has not been verified. A verification code has been sent to your email address.",
+
+                UserID = user.UserID,
+                UserName = user.UserName,
+                Email = user.Email,
+
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty,
+
+                ExpiresAt = default,
+
+                RequiresEmailVerification = true,
+
+                Roles = user.UserRoles
+                    .Where(x =>
+                        x.Role != null &&
+                        x.Role.IsActive)
+                    .Select(x => x.Role!.RoleName)
+                    .Distinct()
+                    .ToList(),
+
+                Permissions = new List<string>()
+            };
+        }
+
+        // --------------------------------------------------------
+        // Load Active Roles
+        // --------------------------------------------------------
+
+        var activeRoles = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.Role!.RoleName)
+            .Distinct()
+            .ToList();
+
+        var roleIds = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.RoleID)
+            .Distinct()
+            .ToList();
+
+        // --------------------------------------------------------
+        // Load Permissions
+        // --------------------------------------------------------
+
+        var permissions =
+            await _context.RolePermissions
+                .Where(x =>
+                    roleIds.Contains(x.RoleID) &&
+                    x.Permission.IsActive)
+                .Select(x =>
+                    x.Permission.PermissionCode)
+                .Distinct()
+                .ToListAsync();
+
+        // --------------------------------------------------------
+        // Generate Access Token
+        // --------------------------------------------------------
+
+        var accessToken =
+            _jwtService.GenerateAccessToken(
+                user,
+                activeRoles,
+                permissions);
+
+        // --------------------------------------------------------
+        // Generate Refresh Token
+        // --------------------------------------------------------
+
+        var refreshToken =
+            TokenHelper.GenerateRefreshToken();
+
+        var refreshTokenEntity = new RefreshToken
+        {
+            UserID = user.UserID,
+
+            TokenHash =
+                TokenHelper.HashToken(
+                    refreshToken),
+
+            ExpiresAt =
+                DateTime.UtcNow.AddDays(
+                    _jwtSettings.RefreshTokenDays),
+
+            CreatedDate = DateTime.UtcNow
+        };
+
+        _context.RefreshTokens.Add(
+            refreshTokenEntity);
+
+        // --------------------------------------------------------
+        // Update Login Information
+        // --------------------------------------------------------
+
+        user.LastLoginDate = DateTime.UtcNow;
+        user.ModifiedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Return Response
+        // --------------------------------------------------------
+
+        return new AuthResponse
+        {
+            Success = true,
+
+            Message = "Login successful.",
+
+            UserID = user.UserID,
+            UserName = user.UserName,
+            Email = user.Email,
+
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+
+            ExpiresAt =
+                _jwtService.GetAccessTokenExpiration(),
+
+            Roles = activeRoles,
+            Permissions = permissions,
+
+            RequiresEmailVerification = false
+        };
+    }
+
+    // ============================================================
+    // VERIFY EMAIL OTP
+    // ============================================================
+
+    public async Task<AuthResponse> VerifyEmailOtpAsync(
+        VerifyEmailOtpRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate Request
+        // --------------------------------------------------------
+
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.OTP))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Email address and verification code are required."
+            };
+        }
+
+        var email =
+            request.Email.Trim().ToLowerInvariant();
+
+        var otp =
+            request.OTP.Trim();
+
+        if (otp.Length != 6 ||
+            !otp.All(char.IsDigit))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Please enter a valid 6-digit verification code."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x =>
+                x.Email.ToLower() == email);
+
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Invalid verification request."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User account is not active."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Already Verified
+        // --------------------------------------------------------
+
+        if (user.IsEmailVerified)
+        {
+            return await CreateAuthenticatedResponseAsync(
+                user,
+                "Email address is already verified.");
+        }
+
+        // --------------------------------------------------------
+        // Hash Supplied OTP
+        // --------------------------------------------------------
+
+        var otpHash =
+            TokenHelper.HashToken(otp);
+
+        // --------------------------------------------------------
+        // Find Latest Matching OTP
+        // --------------------------------------------------------
+
+        var otpRequest =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Destination == user.Email &&
+                    x.Purpose == EmailVerificationPurpose &&
+                    x.OTPHash == otpHash &&
+                    !x.IsConsumed)
+                .OrderByDescending(x =>
+                    x.CreatedDate)
+                .FirstOrDefaultAsync();
+
+        // --------------------------------------------------------
+        // Invalid OTP
+        // --------------------------------------------------------
+
+        if (otpRequest == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "The verification code is invalid."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Maximum Attempts
+        // --------------------------------------------------------
+
+        if (otpRequest.AttemptCount >=
+            otpRequest.MaxAttempts)
+        {
+            otpRequest.IsConsumed = true;
+            otpRequest.ConsumedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Success = false,
+                Message =
+                    "This verification code has expired because the maximum number of attempts was reached."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Expiration
+        // --------------------------------------------------------
+
+        if (otpRequest.ExpiresAt <= DateTime.UtcNow)
+        {
+            otpRequest.IsConsumed = true;
+            otpRequest.ConsumedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new AuthResponse
+            {
+                Success = false,
+                Message =
+                    "This verification code has expired. Please request a new code."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Consume OTP
+        // --------------------------------------------------------
+
+        otpRequest.IsConsumed = true;
+        otpRequest.ConsumedDate = DateTime.UtcNow;
+        otpRequest.AttemptCount++;
+
+        // --------------------------------------------------------
+        // Verify Email
+        // --------------------------------------------------------
+
+        user.IsEmailVerified = true;
+        user.ModifiedDate = DateTime.UtcNow;
+
+        // --------------------------------------------------------
+        // Invalidate Other Email Verification OTPs
+        // --------------------------------------------------------
+
+        var otherOtps =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == EmailVerificationPurpose &&
+                    !x.IsConsumed &&
+                    x.OTPRequestID != otpRequest.OTPRequestID)
+                .ToListAsync();
+
+        foreach (var otherOtp in otherOtps)
+        {
+            otherOtp.IsConsumed = true;
+            otherOtp.ConsumedDate = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Issue Authentication Tokens
+        // --------------------------------------------------------
+
+        return await CreateAuthenticatedResponseAsync(
+            user,
+            "Email address verified successfully. You are now signed in.");
+    }
+
+    // ============================================================
+    // RESEND EMAIL VERIFICATION OTP
+    // ============================================================
+
+    public async Task<bool> ResendEmailVerificationAsync(
+        ResendEmailVerificationRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate Request
+        // --------------------------------------------------------
+
+        if (request == null ||
+            string.IsNullOrWhiteSpace(request.Email))
+        {
+            return false;
+        }
+
+        var email =
+            request.Email.Trim().ToLowerInvariant();
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(x =>
+                x.Email.ToLower() == email);
+
+        // --------------------------------------------------------
+        // Do Not Reveal Account Information
+        // --------------------------------------------------------
+
+        if (user == null)
+        {
+            return true;
+        }
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // --------------------------------------------------------
+        // Already Verified
+        // --------------------------------------------------------
+
+        if (user.IsEmailVerified)
+        {
+            return true;
+        }
+
+        // --------------------------------------------------------
+        // Resend Cooldown
+        // --------------------------------------------------------
+
+        var latestOtp =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == EmailVerificationPurpose)
+                .OrderByDescending(x =>
+                    x.CreatedDate)
+                .FirstOrDefaultAsync();
+
+        if (latestOtp != null &&
+            latestOtp.CreatedDate.AddSeconds(
+                ResendCooldownSeconds) > DateTime.UtcNow)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Invalidate Existing Email Verification OTPs
+        // --------------------------------------------------------
+
+        var existingOtps =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == EmailVerificationPurpose &&
+                    !x.IsConsumed)
+                .ToListAsync();
+
+        foreach (var existingOtp in existingOtps)
+        {
+            existingOtp.IsConsumed = true;
+            existingOtp.ConsumedDate = DateTime.UtcNow;
+        }
+
+        // --------------------------------------------------------
+        // Generate New OTP
+        // --------------------------------------------------------
+
+        var otp = GenerateOtp();
+
+        var now = DateTime.UtcNow;
+
+        var otpRequest = new OTPRequest
+        {
+            UserID = user.UserID,
+
+            Destination = user.Email,
+
+            Purpose = EmailVerificationPurpose,
+
+            OTPHash =
+                TokenHelper.HashToken(otp),
+
+            ExpiresAt =
+                now.AddMinutes(OtpExpiryMinutes),
+
+            AttemptCount = 0,
+
+            MaxAttempts = OtpMaxAttempts,
+
+            IsConsumed = false,
+
+            ConsumedDate = null,
+
+            CreatedDate = now
+        };
+
+        _context.OTPRequests.Add(otpRequest);
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Send Email
+        // --------------------------------------------------------
+
+        await SendEmailVerificationOtpAsync(
+            user,
+            otp);
+
+        return true;
+    }
+
+    // ============================================================
+    // REFRESH TOKEN
+    // ============================================================
+
+    public async Task<AuthResponse> RefreshTokenAsync(
+        RefreshTokenRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate Request
+        // --------------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(
+                request.RefreshToken))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Refresh token is required."
+            };
+        }
+
+        var rawRefreshToken =
+            request.RefreshToken.Trim();
+
+        // --------------------------------------------------------
+        // Hash Supplied Token
+        // --------------------------------------------------------
+
+        var tokenHash =
+            TokenHelper.HashToken(
+                rawRefreshToken);
+
+        // --------------------------------------------------------
+        // Find Existing Refresh Token
+        // --------------------------------------------------------
+
+        var existingToken =
+            await _context.RefreshTokens
+                .Include(x => x.User)
+                    .ThenInclude(x => x.UserRoles)
+                        .ThenInclude(x => x.Role)
+                .FirstOrDefaultAsync(x =>
+                    x.TokenHash == tokenHash);
+
+        if (existingToken == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Invalid refresh token."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Revoked
+        // --------------------------------------------------------
+
+        if (existingToken.RevokedAt.HasValue)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message =
+                    "Refresh token has already been revoked."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Expiration
+        // --------------------------------------------------------
+
+        if (existingToken.ExpiresAt <= DateTime.UtcNow)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "Refresh token has expired."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Get User
+        // --------------------------------------------------------
+
+        var user = existingToken.User;
+
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message =
+                    "User associated with refresh token was not found."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User account is not active."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Defense-in-Depth:
+        // Do not refresh tokens for an unverified email.
+        // --------------------------------------------------------
+
+        if (!user.IsEmailVerified)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message =
+                    "Email verification is required before authentication can continue.",
+                RequiresEmailVerification = true,
+                UserID = user.UserID,
+                UserName = user.UserName,
+                Email = user.Email
+            };
+        }
+
+        // --------------------------------------------------------
+        // Load Active Roles
+        // --------------------------------------------------------
+
+        var activeRoles = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.Role!.RoleName)
+            .Distinct()
+            .ToList();
+
+        var roleIds = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.RoleID)
+            .Distinct()
+            .ToList();
+
+        // --------------------------------------------------------
+        // Load Permissions
+        // --------------------------------------------------------
+
+        var permissions =
+            await _context.RolePermissions
+                .Where(x =>
+                    roleIds.Contains(x.RoleID) &&
+                    x.Permission.IsActive)
+                .Select(x =>
+                    x.Permission.PermissionCode)
+                .Distinct()
+                .ToListAsync();
+
+        // --------------------------------------------------------
+        // Generate New Access Token
+        // --------------------------------------------------------
+
+        var accessToken =
+            _jwtService.GenerateAccessToken(
+                user,
+                activeRoles,
+                permissions);
+
+        // --------------------------------------------------------
+        // Generate New Refresh Token
+        // --------------------------------------------------------
+
+        var newRefreshToken =
+            TokenHelper.GenerateRefreshToken();
+
+        var newRefreshTokenHash =
+            TokenHelper.HashToken(
+                newRefreshToken);
+
+        var newRefreshTokenEntity =
+            new RefreshToken
+            {
+                UserID = user.UserID,
+
+                TokenHash =
+                    newRefreshTokenHash,
+
+                ExpiresAt =
+                    DateTime.UtcNow.AddDays(
+                        _jwtSettings.RefreshTokenDays),
+
+                CreatedDate = DateTime.UtcNow
+            };
+
+        // --------------------------------------------------------
+        // Revoke Old Refresh Token
+        // --------------------------------------------------------
+
+        existingToken.RevokedAt =
+            DateTime.UtcNow;
+
+        existingToken.ReplacedByTokenHash =
+            newRefreshTokenHash;
+
+        _context.RefreshTokens.Add(
+            newRefreshTokenEntity);
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Return New Tokens
+        // --------------------------------------------------------
+
+        return new AuthResponse
+        {
+            Success = true,
+
+            Message = "Token refreshed successfully.",
+
+            UserID = user.UserID,
+            UserName = user.UserName,
+            Email = user.Email,
+
+            AccessToken = accessToken,
+            RefreshToken = newRefreshToken,
+
+            ExpiresAt =
+                _jwtService.GetAccessTokenExpiration(),
+
+            Roles = activeRoles,
+            Permissions = permissions,
+
+            RequiresEmailVerification = false
+        };
+    }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+
+    public async Task<bool> LogoutAsync(
+        long userId,
+        string refreshToken)
+    {
+        // --------------------------------------------------------
+        // Validate Refresh Token
+        // --------------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return false;
+        }
+
+        var tokenHash =
+            TokenHelper.HashToken(
+                refreshToken.Trim());
+
+        // --------------------------------------------------------
+        // Find User's Refresh Token
+        // --------------------------------------------------------
+
+        var existingToken =
+            await _context.RefreshTokens
+                .FirstOrDefaultAsync(x =>
+                    x.UserID == userId &&
+                    x.TokenHash == tokenHash);
+
+        if (existingToken == null)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Check Already Revoked
+        // --------------------------------------------------------
+
+        if (existingToken.RevokedAt.HasValue)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Revoke Token
+        // --------------------------------------------------------
+
+        existingToken.RevokedAt =
+            DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+
+    public async Task<bool> ForgotPasswordAsync(
+        ForgotPasswordRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate Request
+        // --------------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            return false;
+        }
+
+        var email =
+            request.Email.Trim().ToLowerInvariant();
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(x =>
+                x.Email.ToLower() == email);
+
+        // --------------------------------------------------------
+        // Do not reveal whether email exists.
+        // --------------------------------------------------------
+
+        if (user == null)
+        {
+            return true;
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        // --------------------------------------------------------
+        // Invalidate Previous Password Reset OTPs
+        // --------------------------------------------------------
+
+        var existingOtps =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == ForgotPasswordPurpose &&
+                    !x.IsConsumed)
+                .ToListAsync();
+
+        foreach (var existingOtp in existingOtps)
+        {
+            existingOtp.IsConsumed = true;
+            existingOtp.ConsumedDate = DateTime.UtcNow;
+        }
+
+        // --------------------------------------------------------
+        // Generate 6-Digit OTP
+        // --------------------------------------------------------
+
+        var otp = GenerateOtp();
+
+        // --------------------------------------------------------
+        // Hash OTP
+        // --------------------------------------------------------
+
+        var otpHash =
+            TokenHelper.HashToken(otp);
+
+        // --------------------------------------------------------
+        // Create OTP Request
+        // --------------------------------------------------------
+
+        var otpRequest = new OTPRequest
+        {
+            UserID = user.UserID,
+
+            Destination = user.Email,
+
+            Purpose = ForgotPasswordPurpose,
+
+            OTPHash = otpHash,
+
+            ExpiresAt =
+                DateTime.UtcNow.AddMinutes(OtpExpiryMinutes),
+
+            AttemptCount = 0,
+
+            MaxAttempts = OtpMaxAttempts,
+
+            IsConsumed = false,
+
+            ConsumedDate = null,
+
+            CreatedDate = DateTime.UtcNow
+        };
+
+        _context.OTPRequests.Add(
+            otpRequest);
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Send Password Reset Email
+        //
+        // Never log the OTP.
+        // --------------------------------------------------------
+
+        await SendPasswordResetOtpAsync(
+            user,
+            otp);
+
+        return true;
+    }
+
+    // ============================================================
+    // RESET PASSWORD
+    // ============================================================
+
+    public async Task<bool> ResetPasswordAsync(
+        ResetPasswordRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate Request
+        // --------------------------------------------------------
+
+        if (string.IsNullOrWhiteSpace(request.Email) ||
+            string.IsNullOrWhiteSpace(request.OTP) ||
+            string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return false;
+        }
+
+        var email =
+            request.Email.Trim().ToLowerInvariant();
+
+        var otp =
+            request.OTP.Trim();
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .FirstOrDefaultAsync(x =>
+                x.Email.ToLower() == email);
+
+        if (user == null)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Hash Supplied OTP
+        // --------------------------------------------------------
+
+        var otpHash =
+            TokenHelper.HashToken(otp);
+
+        // --------------------------------------------------------
+        // Find Latest Matching OTP
+        // --------------------------------------------------------
+
+        var otpRequest =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == ForgotPasswordPurpose &&
+                    x.OTPHash == otpHash &&
+                    !x.IsConsumed)
+                .OrderByDescending(x =>
+                    x.CreatedDate)
+                .FirstOrDefaultAsync();
+
+        // --------------------------------------------------------
+        // Invalid OTP
+        // --------------------------------------------------------
+
+        if (otpRequest == null)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Check Maximum Attempts
+        // --------------------------------------------------------
+
+        if (otpRequest.AttemptCount >=
+            otpRequest.MaxAttempts)
+        {
+            otpRequest.IsConsumed = true;
+            otpRequest.ConsumedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Check OTP Expiration
+        // --------------------------------------------------------
+
+        if (otpRequest.ExpiresAt <= DateTime.UtcNow)
+        {
+            otpRequest.IsConsumed = true;
+            otpRequest.ConsumedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Mark OTP as Consumed
+        // --------------------------------------------------------
+
+        otpRequest.IsConsumed = true;
+        otpRequest.ConsumedDate = DateTime.UtcNow;
+
+        // --------------------------------------------------------
+        // Hash New Password
+        // --------------------------------------------------------
+
+        user.PasswordHash =
+            _passwordService.HashPassword(
+                user,
+                request.NewPassword);
+
+        user.ModifiedDate =
+            DateTime.UtcNow;
+
+        // --------------------------------------------------------
+        // Revoke Existing Refresh Tokens
+        // --------------------------------------------------------
+
+        var activeRefreshTokens =
+            await _context.RefreshTokens
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    !x.RevokedAt.HasValue &&
+                    x.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+        foreach (var token in activeRefreshTokens)
+        {
+            token.RevokedAt =
+                DateTime.UtcNow;
+        }
+
+        // --------------------------------------------------------
+        // Save Changes
+        // --------------------------------------------------------
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    // ============================================================
+    // CHANGE PASSWORD
+    // ============================================================
+
+    public async Task<bool> ChangePasswordAsync(
+        long userId,
+        ChangePasswordRequest request)
+    {
+        // --------------------------------------------------------
+        // Validate request
+        // --------------------------------------------------------
+
+        if (userId <= 0)
+        {
+            return false;
+        }
+
+        if (request == null)
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                request.CurrentPassword))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                request.NewPassword))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                request.ConfirmPassword))
+        {
+            return false;
+        }
+
+        if (!string.Equals(
+                request.NewPassword,
+                request.ConfirmPassword,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return false;
+        }
+
+        if (string.Equals(
+                request.CurrentPassword,
+                request.NewPassword,
+                StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user =
+            await _context.Users
+                .FirstOrDefaultAsync(x =>
+                    x.UserID == userId);
+
+        if (user == null)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Check Account Status
+        // --------------------------------------------------------
+
+        if (!string.Equals(
+                user.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Verify Current Password
+        // --------------------------------------------------------
+
+        var currentPasswordValid =
+            _passwordService.VerifyPassword(
+                user,
+                user.PasswordHash,
+                request.CurrentPassword);
+
+        if (!currentPasswordValid)
+        {
+            return false;
+        }
+
+        // --------------------------------------------------------
+        // Hash New Password
+        // --------------------------------------------------------
+
+        user.PasswordHash =
+            _passwordService.HashPassword(
+                user,
+                request.NewPassword);
+
+        user.ModifiedDate =
+            DateTime.UtcNow;
+
+        // --------------------------------------------------------
+        // Revoke Existing Refresh Tokens
+        // --------------------------------------------------------
+
+        var activeRefreshTokens =
+            await _context.RefreshTokens
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    !x.RevokedAt.HasValue &&
+                    x.ExpiresAt > DateTime.UtcNow)
+                .ToListAsync();
+
+        foreach (var token in activeRefreshTokens)
+        {
+            token.RevokedAt =
+                DateTime.UtcNow;
+        }
+
+        // --------------------------------------------------------
+        // Save Changes
+        // --------------------------------------------------------
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    // ============================================================
+    // CURRENT USER
+    // ============================================================
+
+    public async Task<AuthResponse> GetCurrentUserAsync(
+        long userId)
+    {
+        // --------------------------------------------------------
+        // Find User
+        // --------------------------------------------------------
+
+        var user = await _context.Users
+            .Include(x => x.UserProfile)
+            .Include(x => x.UserRoles)
+                .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x =>
+                x.UserID == userId);
+
+        if (user == null)
+        {
+            return new AuthResponse
+            {
+                Success = false,
+                Message = "User not found."
+            };
+        }
+
+        // --------------------------------------------------------
+        // Load Active Roles
+        // --------------------------------------------------------
+
+        var roles = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x =>
+                x.Role!.RoleName)
+            .Distinct()
+            .ToList();
+
+        var roleIds = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.RoleID)
+            .Distinct()
+            .ToList();
+
+        // --------------------------------------------------------
+        // Load Permissions
+        // --------------------------------------------------------
+
+        var permissions =
+            await _context.RolePermissions
+                .Where(x =>
+                    roleIds.Contains(x.RoleID) &&
+                    x.Permission.IsActive)
+                .Select(x =>
+                    x.Permission.PermissionCode)
+                .Distinct()
+                .ToListAsync();
+
+        // --------------------------------------------------------
+        // Return Current User
+        // --------------------------------------------------------
+
+        return new AuthResponse
+        {
+            Success = true,
+
+            Message =
+                "User information retrieved successfully.",
+
+            UserID = user.UserID,
+
+            UserName = user.UserName,
+
+            Email = user.Email,
+
+            Roles = roles,
+
+            Permissions = permissions,
+
+            RequiresEmailVerification =
+                !user.IsEmailVerified
+        };
+    }
+
+    // ============================================================
+    // PRIVATE: GENERATE OTP
+    // ============================================================
+
+    private static string GenerateOtp()
+    {
+        return Random.Shared
+            .Next(100000, 1000000)
+            .ToString();
+    }
+
+    // ============================================================
+    // PRIVATE: CREATE EMAIL VERIFICATION OTP
+    // ============================================================
+
+    private async Task<string> CreateEmailVerificationOtpAsync(
+        User user)
+    {
+        // --------------------------------------------------------
+        // Invalidate Existing Email Verification OTPs
+        // --------------------------------------------------------
+
+        var existingOtps =
+            await _context.OTPRequests
+                .Where(x =>
+                    x.UserID == user.UserID &&
+                    x.Purpose == EmailVerificationPurpose &&
+                    !x.IsConsumed)
+                .ToListAsync();
+
+        var now = DateTime.UtcNow;
+
+        foreach (var existingOtp in existingOtps)
+        {
+            existingOtp.IsConsumed = true;
+            existingOtp.ConsumedDate = now;
+        }
+
+        // --------------------------------------------------------
+        // Generate OTP
+        // --------------------------------------------------------
+
+        var otp = GenerateOtp();
+
+        // --------------------------------------------------------
+        // Store Hash Only
+        // --------------------------------------------------------
+
+        var otpRequest = new OTPRequest
+        {
+            UserID = user.UserID,
+
+            Destination = user.Email,
+
+            Purpose = EmailVerificationPurpose,
+
+            OTPHash =
+                TokenHelper.HashToken(otp),
+
+            ExpiresAt =
+                now.AddMinutes(OtpExpiryMinutes),
+
+            AttemptCount = 0,
+
+            MaxAttempts = OtpMaxAttempts,
+
+            IsConsumed = false,
+
+            ConsumedDate = null,
+
+            CreatedDate = now
+        };
+
+        _context.OTPRequests.Add(otpRequest);
+
+        await _context.SaveChangesAsync();
+
+        return otp;
+    }
+
+    // ============================================================
+// PRIVATE: SEND EMAIL VERIFICATION OTP
+// ============================================================
+
+private async Task SendEmailVerificationOtpAsync(
+    User user,
+    string otp,
+    CancellationToken cancellationToken = default)
+{
+    var branding =
+        await _applicationSettingsService.GetEmailBrandingAsync(
+            cancellationToken);
+
+    if (!branding.EmailEnabled)
+    {
+        return;
+    }
+
+    var firstName =
+        user.UserProfile?.FirstName;
+
+    var displayName =
+        string.IsNullOrWhiteSpace(firstName)
+            ? user.UserName
+            : firstName;
+
+    var htmlBody = BuildVerificationEmail(
+        displayName,
+        otp,
+        branding);
+
+    await _emailService.SendAsync(
+        user.Email,
+        branding.VerificationSubject,
+        htmlBody);
+}
+// ============================================================
+// PRIVATE: SEND PASSWORD RESET OTP
+// ============================================================
+
+private async Task SendPasswordResetOtpAsync(
+    User user,
+    string otp,
+    CancellationToken cancellationToken = default)
+{
+    var branding =
+        await _applicationSettingsService.GetEmailBrandingAsync(
+            cancellationToken);
+
+    if (!branding.EmailEnabled)
+    {
+        return;
+    }
+
+    var firstName =
+        user.UserProfile?.FirstName;
+
+    var displayName =
+        string.IsNullOrWhiteSpace(firstName)
+            ? user.UserName
+            : firstName;
+
+    var htmlBody = BuildPasswordResetEmail(
+        displayName,
+        otp,
+        branding);
+
+    await _emailService.SendAsync(
+        user.Email,
+        branding.PasswordResetSubject,
+        htmlBody);
+}
+
+    // ============================================================
+    // PRIVATE: CREATE AUTHENTICATED RESPONSE
+    // ============================================================
+
+    private async Task<AuthResponse> CreateAuthenticatedResponseAsync(
+        User user,
+        string message)
+    {
+        // --------------------------------------------------------
+        // Load Active Roles
+        // --------------------------------------------------------
+
+        var activeRoles = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x =>
+                x.Role!.RoleName)
+            .Distinct()
+            .ToList();
+
+        var roleIds = user.UserRoles
+            .Where(x =>
+                x.Role != null &&
+                x.Role.IsActive)
+            .Select(x => x.RoleID)
+            .Distinct()
+            .ToList();
+
+        // --------------------------------------------------------
+        // Load Permissions
+        // --------------------------------------------------------
+
+        var permissions =
+            await _context.RolePermissions
+                .Where(x =>
+                    roleIds.Contains(x.RoleID) &&
+                    x.Permission.IsActive)
+                .Select(x =>
+                    x.Permission.PermissionCode)
+                .Distinct()
+                .ToListAsync();
+
+        // --------------------------------------------------------
+        // Generate Access Token
+        // --------------------------------------------------------
+
+        var accessToken =
+            _jwtService.GenerateAccessToken(
+                user,
+                activeRoles,
+                permissions);
+
+        // --------------------------------------------------------
+        // Generate Refresh Token
+        // --------------------------------------------------------
+
+        var refreshToken =
+            TokenHelper.GenerateRefreshToken();
+
+        var refreshTokenEntity =
+            new RefreshToken
+            {
+                UserID = user.UserID,
+
+                TokenHash =
+                    TokenHelper.HashToken(
+                        refreshToken),
+
+                ExpiresAt =
+                    DateTime.UtcNow.AddDays(
+                        _jwtSettings.RefreshTokenDays),
+
+                CreatedDate = DateTime.UtcNow
+            };
+
+        _context.RefreshTokens.Add(
+            refreshTokenEntity);
+
+        // --------------------------------------------------------
+        // Update Login Information
+        // --------------------------------------------------------
+
+        user.LastLoginDate = DateTime.UtcNow;
+        user.ModifiedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        // --------------------------------------------------------
+        // Return
+        // --------------------------------------------------------
+
+        return new AuthResponse
+        {
+            Success = true,
+
+            Message = message,
+
+            UserID = user.UserID,
+            UserName = user.UserName,
+            Email = user.Email,
+
+            AccessToken = accessToken,
+            RefreshToken = refreshToken,
+
+            ExpiresAt =
+                _jwtService.GetAccessTokenExpiration(),
+
+            Roles = activeRoles,
+            Permissions = permissions,
+
+            RequiresEmailVerification = false
+        };
+    }
+
+   // ============================================================
+// PRIVATE: VERIFICATION EMAIL HTML
+// ============================================================
+
+private static string BuildVerificationEmail(
+    string displayName,
+    string otp,
+    AdMindEmailBranding branding)
+{
+    var safeName =
+        System.Net.WebUtility.HtmlEncode(displayName);
+
+    var safeSiteName =
+        System.Net.WebUtility.HtmlEncode(branding.SiteName);
+
+    var safeTagline =
+        System.Net.WebUtility.HtmlEncode(branding.SiteTagline);
+
+    var safeLogoUrl =
+        System.Net.WebUtility.HtmlEncode(branding.LogoUrl);
+
+    var safeSiteUrl =
+        System.Net.WebUtility.HtmlEncode(branding.SiteUrl);
+
+    var safeSupportEmail =
+        System.Net.WebUtility.HtmlEncode(branding.SupportEmail);
+
+    var siteName = string.IsNullOrWhiteSpace(safeSiteName)
+        ? "AdMind"
+        : safeSiteName;
+
+    var tagline = string.IsNullOrWhiteSpace(safeTagline)
+        ? "Your marketplace for everything"
+        : safeTagline;
+
+    var otpExpiryMinutes = branding.OtpExpiryMinutes > 0
+        ? branding.OtpExpiryMinutes
+        : 10;
+
+    var logoHtml = string.IsNullOrWhiteSpace(branding.LogoUrl)
+        ? $"""
+            <div style="
+                font-size:30px;
+                line-height:36px;
+                font-weight:700;
+                color:#ffffff;
+                letter-spacing:-0.5px;">
+                {siteName}
+            </div>
+            """
+        : $"""
+            <img
+                src="{safeLogoUrl}"
+                alt="{siteName}"
+                width="240"
+                style="
+                    display:block;
+                    width:240px;
+                    max-width:100%;
+                    height:auto;
+                    margin:0 auto;
+                    border:0;
+                    outline:none;
+                    text-decoration:none;" />
+            """;
+
+    var websiteHtml = string.IsNullOrWhiteSpace(branding.SiteUrl)
+        ? string.Empty
+        : $"""
+            <a
+                href="{safeSiteUrl}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Visit {siteName}
+            </a>
+            """;
+
+    var supportHtml = string.IsNullOrWhiteSpace(branding.SupportEmail)
+        ? string.Empty
+        : $"""
+            <span style="color:#999999;">&nbsp;&bull;&nbsp;</span>
+            <a
+                href="mailto:{safeSupportEmail}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Contact Support
+            </a>
+            """;
+
+    return $"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0" />
+
+    <title>Verify your {siteName} account</title>
+</head>
+
+<body style="
+    margin:0;
+    padding:0;
+    background:#f3f6fb;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#263238;">
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="
+        width:100%;
+        margin:0;
+        padding:0;
+        background:#f3f6fb;">
+
+    <tr>
+        <td
+            align="center"
+            style="padding:40px 15px;">
+
+            <table
+                role="presentation"
+                width="600"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    width:100%;
+                    max-width:600px;
+                    background:#ffffff;
+                    border-radius:16px;
+                    overflow:hidden;">
+
+                <!-- BRAND HEADER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:32px 30px 28px;
+                            background:#153a7c;">
+
+                        {logoHtml}
+
+                        <div style="
+                            margin-top:12px;
+                            font-size:14px;
+                            line-height:20px;
+                            color:#dbe7ff;">
+                            {tagline}
+                        </div>
+
+                    </td>
+                </tr>
+
+                <!-- CONTENT -->
+
+                <tr>
+                    <td
+                        style="
+                            padding:38px 35px 30px;">
+
+                        <h1 style="
+                            margin:0 0 18px;
+                            font-size:26px;
+                            line-height:34px;
+                            font-weight:700;
+                            color:#153a7c;">
+                            Verify your email address
+                        </h1>
+
+                        <p style="
+                            margin:0 0 16px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#374151;">
+                            Hello {safeName},
+                        </p>
+
+                        <p style="
+                            margin:0 0 26px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#4b5563;">
+                            Thank you for creating your
+                            <strong style="color:#153a7c;">
+                                {siteName}
+                            </strong>
+                            account.
+                            Please use the verification code below
+                            to verify your email address.
+                        </p>
+
+                        <!-- OTP -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0">
+
+                            <tr>
+                                <td align="center">
+
+                                    <div style="
+                                        display:inline-block;
+                                        padding:18px 32px;
+                                        background:#eef4ff;
+                                        border:2px solid #2868d7;
+                                        border-radius:12px;">
+
+                                        <span style="
+                                            font-size:32px;
+                                            line-height:38px;
+                                            font-weight:700;
+                                            letter-spacing:8px;
+                                            color:#153a7c;">
+                                            {otp}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:18px 0 0;
+                            text-align:center;
+                            font-size:13px;
+                            line-height:20px;
+                            color:#6b7280;">
+
+                            This verification code is valid for
+
+                            <strong style="color:#153a7c;">
+                                {otpExpiryMinutes} minutes
+                            </strong>.
+
+                        </p>
+
+                        <!-- SECURITY NOTICE -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0"
+                            style="margin-top:30px;">
+
+                            <tr>
+                                <td style="
+                                    padding:16px 18px;
+                                    background:#f8fafc;
+                                    border-left:4px solid #2868d7;
+                                    border-radius:6px;">
+
+                                    <p style="
+                                        margin:0;
+                                        font-size:13px;
+                                        line-height:21px;
+                                        color:#64748b;">
+
+                                        For your security, never share this
+                                        verification code with anyone.
+                                        {siteName} will never ask you to
+                                        provide your OTP by phone or email.
+
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:28px 0 0;
+                            font-size:13px;
+                            line-height:21px;
+                            color:#7b8491;">
+
+                            If you did not create this account, you can
+                            safely ignore this email.
+
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:24px 30px;
+                            background:#f8fafc;
+                            border-top:1px solid #e5e7eb;">
+
+                        <p style="
+                            margin:0 0 10px;
+                            font-size:12px;
+                            line-height:18px;
+                            color:#8a94a3;">
+
+                            &copy; {DateTime.UtcNow.Year}
+                            {siteName}.
+                            All rights reserved.
+
+                        </p>
+
+                        <p style="
+                            margin:0;
+                            font-size:12px;
+                            line-height:18px;">
+
+                            {websiteHtml}
+                            {supportHtml}
+
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>
+""";
+}
+
+
+// ============================================================
+// PRIVATE: PASSWORD RESET EMAIL HTML
+// ============================================================
+
+private static string BuildPasswordResetEmail(
+    string displayName,
+    string otp,
+    AdMindEmailBranding branding)
+{
+    var safeName =
+        System.Net.WebUtility.HtmlEncode(displayName);
+
+    var safeSiteName =
+        System.Net.WebUtility.HtmlEncode(branding.SiteName);
+
+    var safeTagline =
+        System.Net.WebUtility.HtmlEncode(branding.SiteTagline);
+
+    var safeLogoUrl =
+        System.Net.WebUtility.HtmlEncode(branding.LogoUrl);
+
+    var safeSiteUrl =
+        System.Net.WebUtility.HtmlEncode(branding.SiteUrl);
+
+    var safeSupportEmail =
+        System.Net.WebUtility.HtmlEncode(branding.SupportEmail);
+
+    var siteName = string.IsNullOrWhiteSpace(safeSiteName)
+        ? "AdMind"
+        : safeSiteName;
+
+    var tagline = string.IsNullOrWhiteSpace(safeTagline)
+        ? "Your marketplace for everything"
+        : safeTagline;
+
+    var otpExpiryMinutes = branding.OtpExpiryMinutes > 0
+        ? branding.OtpExpiryMinutes
+        : 10;
+
+    var logoHtml = string.IsNullOrWhiteSpace(branding.LogoUrl)
+        ? $"""
+            <div style="
+                font-size:30px;
+                line-height:36px;
+                font-weight:700;
+                color:#ffffff;
+                letter-spacing:-0.5px;">
+                {siteName}
+            </div>
+            """
+        : $"""
+            <img
+                src="{safeLogoUrl}"
+                alt="{siteName}"
+                width="240"
+                style="
+                    display:block;
+                    width:240px;
+                    max-width:100%;
+                    height:auto;
+                    margin:0 auto;
+                    border:0;
+                    outline:none;
+                    text-decoration:none;" />
+            """;
+
+    var websiteHtml = string.IsNullOrWhiteSpace(branding.SiteUrl)
+        ? string.Empty
+        : $"""
+            <a
+                href="{safeSiteUrl}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Visit {siteName}
+            </a>
+            """;
+
+    var supportHtml = string.IsNullOrWhiteSpace(branding.SupportEmail)
+        ? string.Empty
+        : $"""
+            <span style="color:#999999;">&nbsp;&bull;&nbsp;</span>
+            <a
+                href="mailto:{safeSupportEmail}"
+                style="
+                    color:#2868d7;
+                    text-decoration:none;
+                    font-weight:600;">
+                Contact Support
+            </a>
+            """;
+
+    return $"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0" />
+
+    <title>Reset your {siteName} password</title>
+</head>
+
+<body style="
+    margin:0;
+    padding:0;
+    background:#f3f6fb;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#263238;">
+
+<table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    border="0"
+    style="
+        width:100%;
+        margin:0;
+        padding:0;
+        background:#f3f6fb;">
+
+    <tr>
+        <td
+            align="center"
+            style="padding:40px 15px;">
+
+            <table
+                role="presentation"
+                width="600"
+                cellpadding="0"
+                cellspacing="0"
+                border="0"
+                style="
+                    width:100%;
+                    max-width:600px;
+                    background:#ffffff;
+                    border-radius:16px;
+                    overflow:hidden;">
+
+                <!-- BRAND HEADER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:32px 30px 28px;
+                            background:#153a7c;">
+
+                        {logoHtml}
+
+                        <div style="
+                            margin-top:12px;
+                            font-size:14px;
+                            line-height:20px;
+                            color:#dbe7ff;">
+                            {tagline}
+                        </div>
+
+                    </td>
+                </tr>
+
+                <!-- CONTENT -->
+
+                <tr>
+                    <td
+                        style="
+                            padding:38px 35px 30px;">
+
+                        <h1 style="
+                            margin:0 0 18px;
+                            font-size:26px;
+                            line-height:34px;
+                            font-weight:700;
+                            color:#153a7c;">
+                            Password reset code
+                        </h1>
+
+                        <p style="
+                            margin:0 0 16px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#374151;">
+                            Hello {safeName},
+                        </p>
+
+                        <p style="
+                            margin:0 0 26px;
+                            font-size:15px;
+                            line-height:25px;
+                            color:#4b5563;">
+                            We received a request to reset the password
+                            for your
+                            <strong style="color:#153a7c;">
+                                {siteName}
+                            </strong>
+                            account.
+                            Use the code below to continue.
+                        </p>
+
+                        <!-- OTP -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0">
+
+                            <tr>
+                                <td align="center">
+
+                                    <div style="
+                                        display:inline-block;
+                                        padding:18px 32px;
+                                        background:#eef4ff;
+                                        border:2px solid #2868d7;
+                                        border-radius:12px;">
+
+                                        <span style="
+                                            font-size:32px;
+                                            line-height:38px;
+                                            font-weight:700;
+                                            letter-spacing:8px;
+                                            color:#153a7c;">
+                                            {otp}
+                                        </span>
+
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:18px 0 0;
+                            text-align:center;
+                            font-size:13px;
+                            line-height:20px;
+                            color:#6b7280;">
+
+                            This code is valid for
+
+                            <strong style="color:#153a7c;">
+                                {otpExpiryMinutes} minutes
+                            </strong>.
+
+                        </p>
+
+                        <!-- SECURITY NOTICE -->
+
+                        <table
+                            role="presentation"
+                            width="100%"
+                            cellpadding="0"
+                            cellspacing="0"
+                            border="0"
+                            style="margin-top:30px;">
+
+                            <tr>
+                                <td style="
+                                    padding:16px 18px;
+                                    background:#fff8ed;
+                                    border-left:4px solid #f59e0b;
+                                    border-radius:6px;">
+
+                                    <p style="
+                                        margin:0;
+                                        font-size:13px;
+                                        line-height:21px;
+                                        color:#6b7280;">
+
+                                        If you did not request a password
+                                        reset, you can safely ignore this
+                                        email. Your password will remain
+                                        unchanged.
+
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                        <p style="
+                            margin:28px 0 0;
+                            font-size:13px;
+                            line-height:21px;
+                            color:#7b8491;">
+
+                            For your security, never share this code with
+                            anyone.
+
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- FOOTER -->
+
+                <tr>
+                    <td
+                        align="center"
+                        style="
+                            padding:24px 30px;
+                            background:#f8fafc;
+                            border-top:1px solid #e5e7eb;">
+
+                        <p style="
+                            margin:0 0 10px;
+                            font-size:12px;
+                            line-height:18px;
+                            color:#8a94a3;">
+
+                            &copy; {DateTime.UtcNow.Year}
+                            {siteName}.
+                            All rights reserved.
+
+                        </p>
+
+                        <p style="
+                            margin:0;
+                            font-size:12px;
+                            line-height:18px;">
+
+                            {websiteHtml}
+                            {supportHtml}
+
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>
+""";
+}
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Services\NotificationPreferenceService.cs
+================================================================================
+using HRInfoAdvertisements.Application.NotificationPreferences;
+using HRInfoAdvertisements.Application.NotificationPreferences.DTOs;
+using HRInfoAdvertisements.Domain.Entities;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Infrastructure.Services;
+
+public class NotificationPreferenceService
+    : INotificationPreferenceService
+{
+    private readonly ApplicationDbContext _db;
+
+    public NotificationPreferenceService(ApplicationDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task<NotificationPreferenceResponse> GetAsync(
+        long userId)
+    {
+        var preference = await _db.NotificationPreferences
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.UserID == userId);
+
+        // Existing users may not have a preference row yet.
+        // Treat missing preferences as all enabled.
+        if (preference == null)
+        {
+            return new NotificationPreferenceResponse
+            {
+                UserID = userId,
+                EmailNotificationsEnabled = true,
+                AdvertisementUpdatesEnabled = true,
+                FavoriteAdvertisementUpdatesEnabled = true
+            };
+        }
+
+        return Map(preference);
+    }
+
+    public async Task<NotificationPreferenceResponse> UpdateAsync(
+        long userId,
+        UpdateNotificationPreferenceRequest request)
+    {
+        var userExists = await _db.Users
+            .AsNoTracking()
+            .AnyAsync(x => x.UserID == userId);
+
+        if (!userExists)
+        {
+            throw new KeyNotFoundException(
+                $"User with ID {userId} was not found.");
+        }
+
+        var preference = await _db.NotificationPreferences
+            .FirstOrDefaultAsync(x => x.UserID == userId);
+
+        if (preference == null)
+        {
+            preference = new NotificationPreference
+            {
+                UserID = userId,
+                EmailNotificationsEnabled =
+                    request.EmailNotificationsEnabled,
+                AdvertisementUpdatesEnabled =
+                    request.AdvertisementUpdatesEnabled,
+                FavoriteAdvertisementUpdatesEnabled =
+                    request.FavoriteAdvertisementUpdatesEnabled,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _db.NotificationPreferences.Add(preference);
+        }
+        else
+        {
+            preference.EmailNotificationsEnabled =
+                request.EmailNotificationsEnabled;
+
+            preference.AdvertisementUpdatesEnabled =
+                request.AdvertisementUpdatesEnabled;
+
+            preference.FavoriteAdvertisementUpdatesEnabled =
+                request.FavoriteAdvertisementUpdatesEnabled;
+
+            preference.ModifiedDate = DateTime.UtcNow;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return Map(preference);
+    }
+
+    private static NotificationPreferenceResponse Map(
+        NotificationPreference preference)
+    {
+        return new NotificationPreferenceResponse
+        {
+            UserID = preference.UserID,
+            EmailNotificationsEnabled =
+                preference.EmailNotificationsEnabled,
+            AdvertisementUpdatesEnabled =
+                preference.AdvertisementUpdatesEnabled,
+            FavoriteAdvertisementUpdatesEnabled =
+                preference.FavoriteAdvertisementUpdatesEnabled
+        };
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.API\Controllers\EmailController.cs
+================================================================================
+using HRInfoAdvertisements.Application.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
+namespace HRInfoAdvertisements.API.Controllers;
+
+[ApiController]
+[Route("api/email-test")]
+public class EmailController : ControllerBase
+{
+    private readonly IEmailService _email;
+    public EmailController(IEmailService email) => _email = email;
+
+    public sealed record TestEmailRequest(string To, string Subject, string Message);
+
+    [HttpPost]
+    public async Task<IActionResult> Send([FromBody] TestEmailRequest req)
+    {
+        try
+        {
+            var html = $"<p>{System.Net.WebUtility.HtmlEncode(req.Message)}</p>";
+            await _email.SendAsync(req.To, req.Subject, html);
+            return Ok(new { sent = true });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { sent = false, error = ex.Message });
+        }
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.API\Controllers\AuthController.cs
+================================================================================
+using HRInfoAdvertisements.Application.DTOs.Authentication;
+using HRInfoAdvertisements.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace HRInfoAdvertisements.API.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+public class AuthController : ControllerBase
+{
+    private readonly IAuthService _authService;
+
+    public AuthController(IAuthService authService)
+    {
+        _authService = authService;
+    }
+
+    // ============================================================
+    // REGISTER
+    // ============================================================
+
+    [HttpPost("register")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Register(
+        [FromBody] RegisterRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var result =
+            await _authService.RegisterAsync(request);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+
+    [HttpPost("login")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Login(
+        [FromBody] LoginRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var result =
+            await _authService.LoginAsync(request);
+
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // VERIFY EMAIL OTP
+    // ============================================================
+
+    [HttpPost("verify-email")]
+    [AllowAnonymous]
+    public async Task<IActionResult> VerifyEmail(
+        [FromBody] VerifyEmailOtpRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var result =
+            await _authService.VerifyEmailOtpAsync(request);
+
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // RESEND EMAIL VERIFICATION OTP
+    // ============================================================
+
+    [HttpPost("resend-email-verification")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResendEmailVerification(
+        [FromBody] ResendEmailVerificationRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var result =
+            await _authService.ResendEmailVerificationAsync(request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                Success = false,
+                Message =
+                    "A new verification code could not be sent yet. " +
+                    "Please wait before requesting another code."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message =
+                "If the account requires email verification, " +
+                "a verification code has been sent."
+        });
+    }
+
+    // ============================================================
+    // REFRESH TOKEN
+    // ============================================================
+
+    [HttpPost("refresh")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Refresh(
+        [FromBody] RefreshTokenRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var result =
+            await _authService.RefreshTokenAsync(request);
+
+        if (!result.Success)
+        {
+            return Unauthorized(result);
+        }
+
+        return Ok(result);
+    }
+
+    // ============================================================
+    // LOGOUT
+    // ============================================================
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutRequest request)
+    {
+        var userIdClaim =
+            User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+        if (!long.TryParse(
+                userIdClaim,
+                out var userId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid user identity."
+            });
+        }
+
+        var result =
+            await _authService.LogoutAsync(
+                userId,
+                request.RefreshToken);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                Success = false,
+                Message = "Logout failed."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Logout successful."
+        });
+    }
+
+    // ============================================================
+    // FORGOT PASSWORD
+    // ============================================================
+
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword(
+        [FromBody] ForgotPasswordRequest request)
+    {
+        var result =
+            await _authService.ForgotPasswordAsync(request);
+
+        return Ok(new
+        {
+            Success = result,
+            Message =
+                "If the email address exists, password reset instructions will be sent."
+        });
+    }
+
+    // ============================================================
+    // RESET PASSWORD
+    // ============================================================
+
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword(
+        [FromBody] ResetPasswordRequest request)
+    {
+        var result =
+            await _authService.ResetPasswordAsync(request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                Success = false,
+                Message = "Password reset failed."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Password has been reset successfully."
+        });
+    }
+
+    // ============================================================
+    // CHANGE PASSWORD
+    // ============================================================
+
+    [HttpPost("change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        var userIdClaim =
+            User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+        if (!long.TryParse(
+                userIdClaim,
+                out var userId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid user identity."
+            });
+        }
+
+        var result =
+            await _authService.ChangePasswordAsync(
+                userId,
+                request);
+
+        if (!result)
+        {
+            return BadRequest(new
+            {
+                Success = false,
+                Message =
+                    "The current password is incorrect, " +
+                    "the new password is invalid, " +
+                    "or the password could not be changed."
+            });
+        }
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Password changed successfully."
+        });
+    }
+
+    // ============================================================
+    // CURRENT USER
+    // ============================================================
+
+    [HttpGet("me")]
+    [Authorize]
+    public async Task<IActionResult> GetCurrentUser()
+    {
+        var userIdClaim =
+            User.FindFirst(
+                ClaimTypes.NameIdentifier)?.Value;
+
+        if (!long.TryParse(
+                userIdClaim,
+                out var userId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid user identity."
+            });
+        }
+
+        var result =
+            await _authService.GetCurrentUserAsync(userId);
+
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.API\Controllers\NotificationController.cs
+================================================================================
+using HRInfoAdvertisements.Application.Notifications;
+using HRInfoAdvertisements.Application.Notifications.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace HRInfoAdvertisements.API.Controllers;
+
+[ApiController]
+[Route("api/v1/notifications")]
+[Authorize]
+public class NotificationController : ControllerBase
+{
+    private readonly INotificationService _notificationService;
+
+    public NotificationController(
+        INotificationService notificationService)
+    {
+        _notificationService = notificationService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<NotificationResponse>>> GetAll()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetAllAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("unread")]
+    public async Task<ActionResult<List<NotificationResponse>>> GetUnread()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetUnreadAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("unread-count")]
+    public async Task<ActionResult<UnreadNotificationCountResponse>>
+        GetUnreadCount()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetUnreadCountAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{notificationId:long}")]
+    public async Task<ActionResult<NotificationResponse>> GetById(
+        long notificationId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetByIdAsync(
+            userId.Value,
+            notificationId);
+
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                message = "Notification not found."
+            });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("{notificationId:long}/read")]
+    public async Task<ActionResult<MarkNotificationReadResponse>>
+        MarkAsRead(long notificationId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.MarkAsReadAsync(
+            userId.Value,
+            notificationId);
+
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                message = "Notification not found."
+            });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("read-all")]
+    public async Task<ActionResult> MarkAllAsRead()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var count = await _notificationService.MarkAllAsReadAsync(
+            userId.Value);
+
+        return Ok(new
+        {
+            message = "Notifications marked as read.",
+            count
+        });
+    }
+
+    private long? GetCurrentUserId()
+    {
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("userId")?.Value
+            ?? User.FindFirst("UserID")?.Value;
+
+        if (long.TryParse(userIdClaim, out var userId))
+            return userId;
+
+        return null;
+    }
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Domain\Entities\NotificationPreference.cs
+================================================================================
+namespace HRInfoAdvertisements.Domain.Entities;
+
+public class NotificationPreference
+{
+    public long NotificationPreferenceID { get; set; }
+
+    public long UserID { get; set; }
+
+    public bool EmailNotificationsEnabled { get; set; } = true;
+
+    public bool AdvertisementUpdatesEnabled { get; set; } = true;
+
+    public bool FavoriteAdvertisementUpdatesEnabled { get; set; } = true;
+
+    public DateTime CreatedDate { get; set; }
+
+    public DateTime? ModifiedDate { get; set; }
+
+    public User User { get; set; } = null!;
+}
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Services\SystemSettingService.cs (lines 500-650)
+================================================================================
+                    settings,
+                    "EMAIL_FROM_NAME",
+                    "AdMind"),
+
+            EmailVerificationSubject =
+                GetString(
+                    settings,
+                    "EMAIL_VERIFICATION_SUBJECT",
+                    "Verify your AdMind account"),
+
+            EmailPasswordResetSubject =
+                GetString(
+                    settings,
+                    "EMAIL_PASSWORD_RESET_SUBJECT",
+                    "Reset your AdMind password"),
+
+            EmailOtpExpiryMinutes =
+                GetInt(
+                    settings,
+                    "EMAIL_OTP_EXPIRY_MINUTES",
+                    10),
+
+            EmailEnabled =
+    GetBool(
+        settings,
+        "EMAIL_ENABLED",
+        true),
+
+AutomatedEmailEnabled =
+    GetBool(
+        settings,
+        "AUTOMATED_EMAIL_ENABLED",
+        false),
+
+AccountEmailEnabled =
+    GetBool(
+        settings,
+        "ACCOUNT_EMAIL_ENABLED",
+        true),
+
+AdvertisementEmailEnabled =
+    GetBool(
+        settings,
+        "ADVERTISEMENT_EMAIL_ENABLED",
+        true),
+
+FavoriteAdvertisementEmailEnabled =
+    GetBool(
+        settings,
+        "FAVORITE_ADVERTISEMENT_EMAIL_ENABLED",
+        true)
+        };
+    }
+
+    // ============================================================
+    // GET PUBLIC SITE SETTINGS (safe for anonymous visitors)
+    // ============================================================
+
+    // Only these keys may ever be returned to the public site.
+    private static readonly string[] PublicKeys =
+    {
+        "SITE_NAME",
+        "SITE_TAGLINE",
+        "DEFAULT_CURRENCY",
+        "ADVERTISEMENT_EXPIRY_DAYS",
+        "MAX_IMAGES_PER_ADVERTISEMENT",
+        "MAX_VIDEO_SIZE_MB",
+        "REQUIRE_ADMIN_APPROVAL",
+        "REQUIRE_EMAIL_VERIFICATION",
+        "EMAIL_ENABLED",
+        "EMAIL_OTP_EXPIRY_MINUTES",
+        "SUPPORT_EMAIL"
+    };
+
+    public async Task<PublicSiteSettingsResponse>
+        GetPublicSettingsAsync(
+            CancellationToken cancellationToken = default)
+    {
+        // Only active, non-encrypted, whitelisted rows are read.
+        var settings =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .Where(x =>
+                    x.IsActive &&
+                    !x.IsEncrypted &&
+                    PublicKeys.Contains(x.SettingKey))
+                .ToDictionaryAsync(
+                    x => x.SettingKey,
+                    x => x.SettingValue,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
+
+        // Default values come from the DTO itself.
+        var d = new PublicSiteSettingsResponse();
+
+        return new PublicSiteSettingsResponse
+        {
+            SiteName =
+                GetString(settings, "SITE_NAME", d.SiteName),
+
+            SiteTagline =
+                GetString(settings, "SITE_TAGLINE", d.SiteTagline),
+
+            DefaultCurrency =
+                GetString(settings, "DEFAULT_CURRENCY", d.DefaultCurrency),
+
+            AdvertisementExpiryDays =
+                GetInt(settings, "ADVERTISEMENT_EXPIRY_DAYS", d.AdvertisementExpiryDays),
+
+            MaxImagesPerAdvertisement =
+                GetInt(settings, "MAX_IMAGES_PER_ADVERTISEMENT", d.MaxImagesPerAdvertisement),
+
+            MaxVideoSizeMb =
+                GetInt(settings, "MAX_VIDEO_SIZE_MB", d.MaxVideoSizeMb),
+
+            RequireAdminApproval =
+                GetBool(settings, "REQUIRE_ADMIN_APPROVAL", d.RequireAdminApproval),
+
+            RequireEmailVerification =
+                GetBool(settings, "REQUIRE_EMAIL_VERIFICATION", d.RequireEmailVerification),
+
+            EmailEnabled =
+                GetBool(settings, "EMAIL_ENABLED", d.EmailEnabled),
+
+            EmailOtpExpiryMinutes =
+                GetInt(settings, "EMAIL_OTP_EXPIRY_MINUTES", d.EmailOtpExpiryMinutes),
+
+            SupportEmail =
+                GetString(settings, "SUPPORT_EMAIL", d.SupportEmail)
+        };
+    }
+
+    // ============================================================
+    // GET DECRYPTED VALUE
+    // ============================================================
+    //
+    // Internal application use only.
+    //
+    // This method is intentionally NOT part of the Admin API
+    // response. It is for trusted server-side consumers such as
+    // the future email configuration resolver.
+    //
+    // ============================================================
+
+    public async Task<string?>
+        GetDecryptedSettingValueAsync(
+            string settingKey)
+    {
+        if (string.IsNullOrWhiteSpace(settingKey))
+        {
+            return null;
+
+================================================================================
+FILE: HRInfoAdvertisements.Infrastructure\Services\ApplicationSettingsService.cs (lines 200-255)
+================================================================================
+            ?? string.Empty,
+
+        EmailFromName =
+            await GetStringAsync(
+                "EMAIL_FROM_NAME",
+                cancellationToken)
+            ?? "AdMind",
+
+        EmailVerificationSubject =
+            await GetStringAsync(
+                "EMAIL_VERIFICATION_SUBJECT",
+                cancellationToken)
+            ?? "Verify your AdMind account",
+
+        EmailPasswordResetSubject =
+            await GetStringAsync(
+                "EMAIL_PASSWORD_RESET_SUBJECT",
+                cancellationToken)
+            ?? "Reset your AdMind password",
+
+        EmailOtpExpiryMinutes =
+            await GetIntAsync(
+                "EMAIL_OTP_EXPIRY_MINUTES",
+                cancellationToken)
+            ?? 10,
+
+        EmailEnabled =
+            await GetBoolAsync(
+                "EMAIL_ENABLED",
+                cancellationToken)
+            ?? true
+    };
+}
+
+    private static string GetString(
+        IDictionary<string, string?> values,
+        string key,
+        string defaultValue)
+    {
+        if (!values.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return value.Trim();
+    }
+
+    private static int GetPositiveInt(
+        IDictionary<string, string?> values,
+        string key,
+        int defaultValue)
+    {
+        if (!values.TryGetValue(key, out var value) ||
+            !int.TryParse(value, out var result) ||
+            result <= 0)

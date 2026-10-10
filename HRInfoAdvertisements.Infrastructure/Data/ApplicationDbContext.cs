@@ -65,7 +65,8 @@ public class ApplicationDbContext : DbContext
     // Notifications
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
-
+    public DbSet<NotificationPreference> NotificationPreferences
+    => Set<NotificationPreference>();
     // Authentication
     public DbSet<OTPRequest> OTPRequests => Set<OTPRequest>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();

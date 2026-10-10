@@ -16,12 +16,18 @@ public class AdvertisementModerationService
     private readonly ApplicationDbContext _context;
 private readonly IApplicationSettingsService _applicationSettingsService;
 
+private readonly IMarketplaceEmailNotificationService
+    _marketplaceEmailNotificationService;
+
 public AdvertisementModerationService(
     ApplicationDbContext context,
-    IApplicationSettingsService applicationSettingsService)
+    IApplicationSettingsService applicationSettingsService,
+    IMarketplaceEmailNotificationService marketplaceEmailNotificationService)
 {
     _context = context;
     _applicationSettingsService = applicationSettingsService;
+    _marketplaceEmailNotificationService =
+        marketplaceEmailNotificationService;
 }
 
     // ============================================================
@@ -487,6 +493,14 @@ FileSize =
             return null;
         }
 
+        
+        // Capture the status before modifying the advertisement.
+        var wasAlreadyPublished =
+            await _context.AdvertisementStatuses
+                .Where(x => x.StatusID == advertisement.StatusID)
+                .Select(x => x.StatusCode == "PUBLISHED")
+                .FirstOrDefaultAsync();
+
         // ========================================================
         // BASIC INFORMATION
         // ========================================================
@@ -614,7 +628,17 @@ FileSize =
         advertisement.ModifiedBy =
             adminUserId;
 
+        
         await _context.SaveChangesAsync();
+
+        // Notify users who favorited this advertisement only
+        // when it was already published before the admin edit.
+        if (wasAlreadyPublished)
+        {
+            await _marketplaceEmailNotificationService
+                .SendFavoriteAdvertisementUpdatedAsync(
+                    advertisementId);
+        }
 
         // Return the updated advertisement using the same
         // mapping used by the Admin detail endpoint.
@@ -725,7 +749,11 @@ FileSize =
 
     await _context.SaveChangesAsync();
 
-    return true;
+// Send the optional publication email after the database save.
+await _marketplaceEmailNotificationService
+    .SendAdvertisementPublishedAsync(advertisementId);
+
+return true;
 }
 
     // ============================================================

@@ -30,6 +30,7 @@ using HRInfoAdvertisements.Infrastructure.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using HRInfoAdvertisements.Application.NotificationPreferences;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -213,8 +214,16 @@ builder.Services.AddScoped<
     NotificationService>();
 
 builder.Services.AddScoped<
+    IMarketplaceEmailNotificationService,
+    MarketplaceEmailNotificationService>();
+    
+builder.Services.AddScoped<
     IProfileService,
     ProfileService>();
+
+builder.Services.AddScoped<
+    INotificationPreferenceService,
+    NotificationPreferenceService>();
 
 builder.Services.AddScoped<
     IRoleManagementService,

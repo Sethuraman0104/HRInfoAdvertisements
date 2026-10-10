@@ -31,4 +31,6 @@ public class AdvertisementEnquiryResponse
     public DateTime? ClosedDate { get; set; }
 
     public int MessageCount { get; set; }
+
+    public long? LastMessageSenderUserID { get; set; }
 }

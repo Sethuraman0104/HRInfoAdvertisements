@@ -28,6 +28,14 @@ public class PublicAuthenticationStateProvider
     public bool IsAuthenticated =>
         _currentUser.Identity?.IsAuthenticated == true;
 
+    public long? CurrentUserId =>
+    long.TryParse(
+        _currentUser.FindFirst(
+            ClaimTypes.NameIdentifier)?.Value,
+        out var userId)
+            ? userId
+            : null;
+
     public override Task<AuthenticationState>
         GetAuthenticationStateAsync()
     {

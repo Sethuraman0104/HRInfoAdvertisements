@@ -36,6 +36,8 @@ public class User
 
     public UserProfile? UserProfile { get; set; }
 
+    public NotificationPreference? NotificationPreference { get; set; }
+
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
     public ICollection<Advertisement> Advertisements { get; set; } = new List<Advertisement>();

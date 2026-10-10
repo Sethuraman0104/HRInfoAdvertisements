@@ -1,4 +1,4 @@
-﻿@page "/admin/advertisements/{AdvertisementId:long}"
+@page "/admin/advertisements/{AdvertisementId:long}"
 
 @using System.Globalization
 @using Microsoft.AspNetCore.Components.Forms
@@ -1491,7 +1491,10 @@
                                             </strong>
 
                                             <span>
-                                                @history.ActionDate.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")
+                                                @history.ActionDate
+                                                    .ToLocalTime()
+                                                    .ToString(
+                                                        "dd MMM yyyy, hh:mm tt")
                                             </span>
 
                                             @if (!string.IsNullOrWhiteSpace(history.Comments))
@@ -3674,7 +3677,8 @@ protected override async Task OnInitializedAsync()
 
     private bool CanApprove()
 {
-    return StatusIsAnyOf("PENDING_REVIEW");
+    return _advertisement != null &&
+           !StatusIsAnyOf("PUBLISHED", "SUSPENDED", "UNPUBLISHED");
 }
 
 private bool StatusIsAnyOf(params string[] statuses)
@@ -3696,9 +3700,9 @@ private bool StatusIsAnyOf(params string[] statuses)
     private bool CanSuspend() => StatusIsAnyOf("PUBLISHED");
 
 
-   private bool CanReactivate()
+    private bool CanReactivate()
 {
-    return StatusIsAnyOf("SUSPENDED");
+    return StatusIsAnyOf("SUSPENDED", "UNPUBLISHED");
 }
 
 

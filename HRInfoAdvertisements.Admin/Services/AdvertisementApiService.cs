@@ -8,6 +8,7 @@ using HRInfoAdvertisements.Application.DTOs.Advertisement;
 using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.DTOs.Common;
 using HRInfoAdvertisements.Application.DTOs.AdvertisementRemoval;
+using HRInfoAdvertisements.Application.Enquiries.DTOs;
 
 namespace HRInfoAdvertisements.Admin.Services;
 
@@ -1771,4 +1772,238 @@ private static async Task<string> ReadRemovalErrorAsync(
 
     return fallback;
 }
+
+
+    // ============================================================
+    // ENQUIRIES - CREATE
+    // ============================================================
+
+    public async Task<AdvertisementEnquiryResponse>
+        CreateEnquiryAsync(
+            CreateAdvertisementEnquiryRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.PostAsJsonAsync(
+            "api/v1/enquiries",
+            request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<AdvertisementEnquiryResponse>()
+            ?? throw new InvalidOperationException(
+                "The API returned an empty enquiry response.");
+    }
+
+    // ============================================================
+    // ENQUIRIES - SENT
+    // ============================================================
+
+    public async Task<List<AdvertisementEnquiryResponse>>
+        GetSentEnquiriesAsync()
+    {
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.GetAsync(
+            "api/v1/enquiries/sent");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<List<AdvertisementEnquiryResponse>>()
+            ?? new List<AdvertisementEnquiryResponse>();
+    }
+
+    // ============================================================
+    // ENQUIRIES - RECEIVED
+    // ============================================================
+
+    public async Task<List<AdvertisementEnquiryResponse>>
+        GetReceivedEnquiriesAsync()
+    {
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.GetAsync(
+            "api/v1/enquiries/received");
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<List<AdvertisementEnquiryResponse>>()
+            ?? new List<AdvertisementEnquiryResponse>();
+    }
+
+    // ============================================================
+    // ENQUIRIES - DETAILS
+    // ============================================================
+
+    public async Task<AdvertisementEnquiryDetailResponse?>
+        GetEnquiryByIdAsync(long enquiryId)
+    {
+        if (enquiryId <= 0)
+        {
+            return null;
+        }
+
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.GetAsync(
+            $"api/v1/enquiries/{enquiryId}");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<AdvertisementEnquiryDetailResponse>();
+    }
+
+    // ============================================================
+    // ENQUIRIES - REPLY
+    // ============================================================
+
+    public async Task<AdvertisementEnquiryMessageResponse>
+        ReplyToEnquiryAsync(
+            long enquiryId,
+            ReplyAdvertisementEnquiryRequest request)
+    {
+        if (enquiryId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(enquiryId));
+        }
+
+        ArgumentNullException.ThrowIfNull(request);
+
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.PostAsJsonAsync(
+            $"api/v1/enquiries/{enquiryId}/reply",
+            request);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return await response.Content
+            .ReadFromJsonAsync<AdvertisementEnquiryMessageResponse>()
+            ?? throw new InvalidOperationException(
+                "The API returned an empty reply response.");
+    }
+
+    // ============================================================
+    // ENQUIRIES - CLOSE
+    // ============================================================
+
+    public async Task<bool> CloseEnquiryAsync(long enquiryId)
+    {
+        if (enquiryId <= 0)
+        {
+            return false;
+        }
+
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.PostAsync(
+            $"api/v1/enquiries/{enquiryId}/close",
+            null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return true;
+    }
+
+    // ============================================================
+    // ENQUIRIES - MARK AS READ
+    // ============================================================
+
+    public async Task<bool> MarkEnquiryAsReadAsync(long enquiryId)
+    {
+        if (enquiryId <= 0)
+        {
+            return false;
+        }
+
+        var client = CreateAuthenticatedPublicClient();
+
+        var response = await client.PostAsync(
+            $"api/v1/enquiries/{enquiryId}/read",
+            null);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new InvalidOperationException(
+                await ReadEnquiryErrorAsync(response));
+        }
+
+        return true;
+    }
+
+    // ============================================================
+    // ENQUIRIES - API ERROR MESSAGE
+    // ============================================================
+
+    private static async Task<string> ReadEnquiryErrorAsync(
+        HttpResponseMessage response)
+    {
+        const string fallback =
+            "The enquiry request could not be completed. Please try again.";
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return fallback;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(body);
+
+            if (document.RootElement.ValueKind ==
+                    JsonValueKind.Object &&
+                document.RootElement.TryGetProperty(
+                    "message", out var message) &&
+                message.ValueKind == JsonValueKind.String &&
+                !string.IsNullOrWhiteSpace(message.GetString()))
+            {
+                return message.GetString()!;
+            }
+        }
+        catch (JsonException)
+        {
+            // The response was not JSON; use the fallback.
+        }
+
+        return fallback;
+    }
+
 }

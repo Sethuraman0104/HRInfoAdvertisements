@@ -376,7 +376,14 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
                 enquiry.ClosedDate,
 
             MessageCount =
-                enquiry.Messages?.Count ?? 0
+    enquiry.Messages?.Count ?? 0,
+
+LastMessageSenderUserID =
+    enquiry.Messages?
+        .OrderByDescending(x => x.CreatedDate)
+        .ThenByDescending(x => x.AdvertisementEnquiryMessageID)
+        .Select(x => (long?)x.SenderUserID)
+        .FirstOrDefault()
         };
     }
 

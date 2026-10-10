@@ -520,10 +520,34 @@ public class SystemSettingService : ISystemSettingService
                     10),
 
             EmailEnabled =
-                GetBool(
-                    settings,
-                    "EMAIL_ENABLED",
-                    true)
+    GetBool(
+        settings,
+        "EMAIL_ENABLED",
+        true),
+
+AutomatedEmailEnabled =
+    GetBool(
+        settings,
+        "AUTOMATED_EMAIL_ENABLED",
+        false),
+
+AccountEmailEnabled =
+    GetBool(
+        settings,
+        "ACCOUNT_EMAIL_ENABLED",
+        true),
+
+AdvertisementEmailEnabled =
+    GetBool(
+        settings,
+        "ADVERTISEMENT_EMAIL_ENABLED",
+        true),
+
+FavoriteAdvertisementEmailEnabled =
+    GetBool(
+        settings,
+        "FAVORITE_ADVERTISEMENT_EMAIL_ENABLED",
+        true)
         };
     }
 

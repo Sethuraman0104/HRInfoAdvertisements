@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HRInfoAdvertisements.Application.Profile;
 using HRInfoAdvertisements.Application.Profile.DTOs;
+using HRInfoAdvertisements.Application.NotificationPreferences;
+using HRInfoAdvertisements.Application.NotificationPreferences.DTOs;
 
 namespace HRInfoAdvertisements.API.Controllers;
 
@@ -15,13 +17,16 @@ public class UserManagementController : ControllerBase
 {
     private readonly IUserManagementService _userManagementService;
 private readonly IProfileService _profileService;
+private readonly INotificationPreferenceService _notificationPreferenceService;
 
 public UserManagementController(
     IUserManagementService userManagementService,
-    IProfileService profileService)
+    IProfileService profileService,
+    INotificationPreferenceService notificationPreferenceService)
 {
     _userManagementService = userManagementService;
     _profileService = profileService;
+    _notificationPreferenceService = notificationPreferenceService;
 }
 
     // ============================================================
@@ -63,6 +68,90 @@ public UserManagementController(
 
         return Ok(result);
     }
+
+    // ============================================================
+// GET USER NOTIFICATION PREFERENCES (ADMIN)
+// ============================================================
+
+[HttpGet("{userId:long}/notification-preferences")]
+[Authorize(Policy = "USER_VIEW")]
+public async Task<IActionResult> GetUserNotificationPreferences(
+    long userId)
+{
+    try
+    {
+        // Confirm that the requested user exists.
+        var user = await _userManagementService.GetUserByIdAsync(userId);
+
+        if (user == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "User not found."
+            });
+        }
+
+        var preferences =
+            await _notificationPreferenceService.GetAsync(userId);
+
+        return Ok(preferences);
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+}
+
+// ============================================================
+// UPDATE USER NOTIFICATION PREFERENCES (ADMIN)
+// ============================================================
+
+[HttpPut("{userId:long}/notification-preferences")]
+[Authorize(Policy = "USER_EDIT")]
+public async Task<IActionResult> UpdateUserNotificationPreferences(
+    long userId,
+    [FromBody] UpdateNotificationPreferenceRequest request)
+{
+    try
+    {
+        // Confirm that the requested user exists.
+        var user = await _userManagementService.GetUserByIdAsync(userId);
+
+        if (user == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "User not found."
+            });
+        }
+
+        var preferences =
+            await _notificationPreferenceService.UpdateAsync(
+                userId,
+                request);
+
+        return Ok(new
+        {
+            success = true,
+            message = "User notification preferences updated successfully.",
+            preferences
+        });
+    }
+    catch (KeyNotFoundException ex)
+    {
+        return NotFound(new
+        {
+            success = false,
+            message = ex.Message
+        });
+    }
+}
 
     [HttpPut("{userId:long}/profile")]
 [Authorize(Policy = "USER_EDIT")]

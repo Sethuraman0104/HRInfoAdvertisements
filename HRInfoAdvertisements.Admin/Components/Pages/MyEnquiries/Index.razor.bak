@@ -1,0 +1,694 @@
+
+@page "/my-enquiries"
+
+@using System.Globalization
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Enquiries.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>My Sent Enquiries</PageTitle>
+
+<div class="sent-enquiries-page">
+    <PublicTopBar />
+
+    <main class="sent-enquiries-container">
+        <header class="sent-enquiries-header">
+            <div class="sent-enquiries-heading">
+                <span class="sent-enquiries-eyebrow">MY MARKETPLACE</span>
+                <h1>My Sent Enquiries</h1>
+                <p>Track your questions and conversations with advertisers.</p>
+            </div>
+
+            <button type="button"
+                    class="sent-enquiries-back"
+                    @onclick="GoToMyAds">
+                <i class="bi bi-grid"></i>
+                My Advertisements
+            </button>
+        </header>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="sent-enquiries-alert sent-enquiries-alert-error"
+                 role="alert">
+                <i class="bi bi-exclamation-circle"></i>
+                <span>@errorMessage</span>
+                <button type="button"
+                        @onclick="LoadEnquiriesAsync"
+                        aria-label="Retry loading enquiries">
+                    Retry
+                </button>
+            </div>
+        }
+
+        @if (isLoading)
+        {
+            <section class="sent-enquiries-state">
+                <span class="sent-enquiries-spinner"></span>
+                <h2>Loading your enquiries</h2>
+                <p>Please wait while we retrieve your messages.</p>
+            </section>
+        }
+        else if (Enquiries.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <section class="sent-enquiries-state">
+                <div class="sent-enquiries-empty-icon">
+                    <i class="bi bi-chat-square-text"></i>
+                </div>
+                <h2>No sent enquiries yet</h2>
+                <p>
+                    When you contact an advertiser using Send Enquiry,
+                    your conversations will appear here.
+                </p>
+                <button type="button"
+                        class="sent-enquiries-primary"
+                        @onclick="BrowseAdvertisements">
+                    Browse Advertisements
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </section>
+        }
+        else if (!isLoading)
+        {
+            <section class="sent-enquiries-summary">
+                <div>
+                    <span class="sent-enquiries-summary-label">TOTAL ENQUIRIES</span>
+                    <strong>@Enquiries.Count</strong>
+                </div>
+                <div>
+                    <span class="sent-enquiries-summary-label">OPEN</span>
+                    <strong>@OpenCount</strong>
+                </div>
+                <div>
+                    <span class="sent-enquiries-summary-label">CLOSED</span>
+                    <strong>@ClosedCount</strong>
+                </div>
+            </section>
+
+            <section class="sent-enquiries-list">
+                @foreach (var enquiry in Enquiries)
+                {
+                    <article class="sent-enquiry-card"
+                             @key="enquiry.AdvertisementEnquiryID">
+
+                        <div class="sent-enquiry-main">
+                            <div class="sent-enquiry-icon">
+                                <i class="bi bi-chat-left-text"></i>
+                            </div>
+
+                            <div class="sent-enquiry-content">
+                                <div class="sent-enquiry-title-row">
+                                    <h2>@enquiry.Subject</h2>
+                                    <span class="@GetStatusClass(enquiry.Status)">
+                                        @GetStatusLabel(enquiry.Status)
+                                    </span>
+                                </div>
+
+                                <p class="sent-enquiry-advertisement">
+                                    <i class="bi bi-tag"></i>
+                                    @(string.IsNullOrWhiteSpace(enquiry.AdvertisementTitle)
+                                        ? "Advertisement"
+                                        : enquiry.AdvertisementTitle)
+                                </p>
+
+                                <p class="sent-enquiry-preview">
+                                    @enquiry.Message
+                                </p>
+
+                                <div class="sent-enquiry-meta">
+                                    <span>
+                                        <i class="bi bi-hash"></i>
+                                        Enquiry #@enquiry.AdvertisementEnquiryID
+                                    </span>
+                                    <span>
+                                        <i class="bi bi-calendar3"></i>
+                                        @enquiry.CreatedDate.ToString(
+                                            "dd MMM yyyy",
+                                            CultureInfo.CurrentCulture)
+                                    </span>
+                                    <span>
+                                        <i class="bi bi-person"></i>
+                                        @(string.IsNullOrWhiteSpace(enquiry.RecipientName)
+                                            ? "Advertiser"
+                                            : enquiry.RecipientName)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="sent-enquiry-actions">
+                            <button type="button"
+                                    class="sent-enquiry-view"
+                                    @onclick="@(() => OpenConversation(
+                                        enquiry.AdvertisementEnquiryID))">
+                                View Conversation
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
+
+                            <button type="button"
+                                    class="sent-enquiry-ad-link"
+                                    @onclick="@(() => OpenAdvertisement(
+                                        enquiry.AdvertisementID))">
+                                View Advertisement
+                            </button>
+                        </div>
+                    </article>
+                }
+            </section>
+        }
+
+        <div class="sent-enquiries-footer">
+            <button type="button"
+                    class="sent-enquiries-refresh"
+                    disabled="@isLoading"
+                    @onclick="LoadEnquiriesAsync">
+                <i class="bi bi-arrow-clockwise"></i>
+                Refresh enquiries
+            </button>
+        </div>
+    </main>
+</div>
+
+<style>
+    .sent-enquiries-page {
+        min-height: 100vh;
+        background: #f6f8fc;
+        color: #172033;
+    }
+
+    .sent-enquiries-container {
+        width: min(1100px, calc(100% - 36px));
+        margin: 0 auto;
+        padding: 36px 0 64px;
+    }
+
+    .sent-enquiries-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 28px;
+    }
+
+    .sent-enquiries-eyebrow {
+        color: #64748b;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+    }
+
+    .sent-enquiries-heading h1 {
+        margin: 8px 0;
+        font-size: clamp(25px, 4vw, 34px);
+        font-weight: 800;
+        letter-spacing: -0.8px;
+    }
+
+    .sent-enquiries-heading p {
+        margin: 0;
+        color: #64748b;
+        font-size: 14px;
+        line-height: 1.7;
+    }
+
+    .sent-enquiries-back,
+    .sent-enquiries-refresh {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 11px 15px;
+        border: 1px solid #dbe2ec;
+        border-radius: 10px;
+        background: #fff;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .sent-enquiries-summary {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .sent-enquiries-summary > div {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px;
+        border: 1px solid #e5eaf2;
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .sent-enquiries-summary-label {
+        color: #64748b;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1px;
+    }
+
+    .sent-enquiries-summary strong {
+        font-size: 27px;
+        font-weight: 800;
+    }
+
+    .sent-enquiries-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .sent-enquiry-card {
+        padding: 22px;
+        border: 1px solid #e5eaf2;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: 0 3px 12px rgba(15, 23, 42, .025);
+    }
+
+    .sent-enquiry-main {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .sent-enquiry-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 19px;
+    }
+
+    .sent-enquiry-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sent-enquiry-title-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .sent-enquiry-title-row h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 750;
+        overflow-wrap: anywhere;
+    }
+
+    .sent-enquiry-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 750;
+    }
+
+    .sent-enquiry-status-open {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .sent-enquiry-status-closed {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .sent-enquiry-status-other {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sent-enquiry-advertisement {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin: 10px 0;
+        color: #475569;
+        font-size: 13px;
+    }
+
+    .sent-enquiry-preview {
+        margin: 0;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+    }
+
+    .sent-enquiry-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 20px;
+        margin-top: 15px;
+        color: #64748b;
+        font-size: 11px;
+    }
+
+    .sent-enquiry-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .sent-enquiry-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid #edf0f5;
+    }
+
+    .sent-enquiry-view,
+    .sent-enquiry-ad-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 40px;
+        padding: 10px 14px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .sent-enquiry-view {
+        border: 1px solid #2563eb;
+        background: #2563eb;
+        color: #fff;
+    }
+
+    .sent-enquiry-view:hover {
+        background: #1d4ed8;
+    }
+
+    .sent-enquiry-ad-link {
+        border: 1px solid #dbe2ec;
+        background: #fff;
+        color: #475569;
+    }
+
+    .sent-enquiries-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+        padding: 35px 20px;
+        border: 1px solid #e5eaf2;
+        border-radius: 16px;
+        background: #fff;
+        text-align: center;
+    }
+
+    .sent-enquiries-empty-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 66px;
+        height: 66px;
+        margin-bottom: 18px;
+        border-radius: 20px;
+        background: #eff6ff;
+        color: #2563eb;
+        font-size: 27px;
+    }
+
+    .sent-enquiries-state h2 {
+        margin: 0 0 9px;
+        font-size: 19px;
+        font-weight: 800;
+    }
+
+    .sent-enquiries-state p {
+        max-width: 430px;
+        margin: 0 0 20px;
+        color: #64748b;
+        font-size: 13px;
+        line-height: 1.7;
+    }
+
+    .sent-enquiries-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border: 0;
+        border-radius: 10px;
+        background: #2563eb;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .sent-enquiries-alert {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        border-radius: 11px;
+        font-size: 13px;
+    }
+
+    .sent-enquiries-alert-error {
+        border: 1px solid #fecaca;
+        background: #fef2f2;
+        color: #991b1b;
+    }
+
+    .sent-enquiries-alert span {
+        flex: 1;
+    }
+
+    .sent-enquiries-alert button {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .sent-enquiries-footer {
+        display: flex;
+        justify-content: center;
+        margin-top: 25px;
+    }
+
+    .sent-enquiries-refresh:disabled {
+        opacity: .6;
+        cursor: wait;
+    }
+
+    .sent-enquiries-spinner {
+        width: 30px;
+        height: 30px;
+        margin-bottom: 18px;
+        border: 3px solid #dbeafe;
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: sentEnquiriesSpin .7s linear infinite;
+    }
+
+    @@keyframes sentEnquiriesSpin {
+        to { transform: rotate(360deg); }
+    }
+
+    @@media (max-width: 640px) {
+        .sent-enquiries-container {
+            width: calc(100% - 24px);
+            padding-top: 24px;
+        }
+
+        .sent-enquiries-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .sent-enquiries-summary {
+            gap: 8px;
+        }
+
+        .sent-enquiries-summary > div {
+            padding: 13px;
+            gap: 8px;
+        }
+
+        .sent-enquiries-summary-label {
+            font-size: 9px;
+            letter-spacing: .4px;
+        }
+
+        .sent-enquiries-summary strong {
+            font-size: 23px;
+        }
+
+        .sent-enquiry-card {
+            padding: 16px;
+        }
+
+        .sent-enquiry-main {
+            gap: 10px;
+        }
+
+        .sent-enquiry-icon {
+            flex-basis: 36px;
+            width: 36px;
+            height: 36px;
+        }
+
+        .sent-enquiry-actions {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .sent-enquiry-view,
+        .sent-enquiry-ad-link {
+            width: 100%;
+        }
+    }
+</style>
+
+@code {
+    private List<AdvertisementEnquiryResponse> Enquiries { get; set; } = new();
+
+    private bool isLoading;
+    private bool isAuthenticated;
+    private string? errorMessage;
+
+    private int OpenCount =>
+        Enquiries.Count(x =>
+            string.Equals(x.Status, "OPEN",
+                StringComparison.OrdinalIgnoreCase));
+
+    private int ClosedCount =>
+        Enquiries.Count(x =>
+            string.Equals(x.Status, "CLOSED",
+                StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        isAuthenticated =
+            authenticationState.User.Identity?.IsAuthenticated == true;
+
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadEnquiriesAsync();
+    }
+
+    private async Task LoadEnquiriesAsync()
+    {
+        if (isLoading)
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            Enquiries =
+                await AdvertisementApiService.GetSentEnquiriesAsync()
+                ?? new List<AdvertisementEnquiryResponse>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("MY SENT ENQUIRIES LOAD ERROR");
+            Console.WriteLine(ex);
+
+            Enquiries = new List<AdvertisementEnquiryResponse>();
+            errorMessage =
+                "We couldn't load your enquiries. Please try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string GetStatusLabel(string? status)
+    {
+        if (string.Equals(status, "OPEN",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return "Open";
+        }
+
+        if (string.Equals(status, "CLOSED",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return "Closed";
+        }
+
+        return string.IsNullOrWhiteSpace(status)
+            ? "Unknown"
+            : CultureInfo.CurrentCulture.TextInfo
+                .ToTitleCase(status.ToLowerInvariant());
+    }
+
+    private static string GetStatusClass(string? status)
+    {
+        var cssClass =
+            string.Equals(status, "OPEN",
+                StringComparison.OrdinalIgnoreCase)
+                ? "sent-enquiry-status sent-enquiry-status-open"
+                : string.Equals(status, "CLOSED",
+                    StringComparison.OrdinalIgnoreCase)
+                    ? "sent-enquiry-status sent-enquiry-status-closed"
+                    : "sent-enquiry-status sent-enquiry-status-other";
+
+        return cssClass;
+    }
+
+    private void OpenConversation(long enquiryId)
+    {
+        Navigation.NavigateTo($"/enquiries/{enquiryId}");
+    }
+
+    private void OpenAdvertisement(long advertisementId)
+    {
+        Navigation.NavigateTo($"/advertisements/{advertisementId}");
+    }
+
+    private void GoToMyAds()
+    {
+        Navigation.NavigateTo("/my-ads");
+    }
+
+    private void BrowseAdvertisements()
+    {
+        Navigation.NavigateTo("/");
+    }
+}

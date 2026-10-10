@@ -1,11 +1,8 @@
 @using HRInfoAdvertisements.Admin.Services
-@using Microsoft.AspNetCore.Components.Authorization
 
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 @inject SiteSettingsService SiteSettingsService
-@inject AdvertisementApiService AdvertisementApiService
-@implements IDisposable
 
 <header class="public-topbar">
 
@@ -71,23 +68,6 @@
                         @onclick="OpenMyAdvertisements">
                     My Advertisements
                 </button>
-
-                <!-- MY ENQUIRIES -->
-
-<button type="button"
-        class="public-topbar-text-button public-topbar-enquiries-button"
-        @onclick="OpenMyEnquiries">
-    <span>My Enquiries</span>
-
-    @if (PendingEnquiryCount > 0)
-    {
-        <span class="public-topbar-enquiry-badge"
-              aria-label="@($"{PendingEnquiryCount} open received enquiries")">
-            @(PendingEnquiryCount > 99 ? "99+" : PendingEnquiryCount)
-        </span>
-    }
-</button>
-
 
                 <!-- ACCOUNT -->
                 <button type="button"
@@ -169,13 +149,8 @@
 
     private string siteName = "AdMind";
 
-    private int PendingEnquiryCount { get; set; }
-
     protected override async Task OnInitializedAsync()
     {
-        AuthenticationStateProvider.AuthenticationStateChanged
-        += OnAuthenticationStateChanged;
-
         try
         {
             var settings = await SiteSettingsService.GetAsync();
@@ -185,8 +160,6 @@
             {
                 siteName = settings.SiteName;
             }
-
-            await LoadPendingEnquiryCountAsync();
         }
         catch (Exception ex)
         {
@@ -194,66 +167,7 @@
         }
     }
 
-private async Task LoadPendingEnquiryCountAsync()
-{
-    if (!IsAuthenticated)
-    {
-        PendingEnquiryCount = 0;
-        return;
-    }
 
-    try
-    {
-        var received =
-    await AdvertisementApiService.GetReceivedEnquiriesAsync();
-
-var sent =
-    await AdvertisementApiService.GetSentEnquiriesAsync();
-
-var currentUserId = AuthenticationStateProvider.CurrentUserId;
-
-var allEnquiries = received
-    .Concat(sent)
-    .GroupBy(x => x.AdvertisementEnquiryID)
-    .Select(g => g.First());
-
-PendingEnquiryCount = currentUserId.HasValue
-    ? allEnquiries.Count(x =>
-        string.Equals(
-            x.Status,
-            "OPEN",
-            StringComparison.OrdinalIgnoreCase)
-        &&
-        x.LastMessageSenderUserID.HasValue
-        &&
-        x.LastMessageSenderUserID.Value != currentUserId.Value)
-    : 0;
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine(
-            $"TOPBAR ENQUIRY COUNT ERROR: {ex.Message}");
-
-        // A count-loading failure should not break navigation.
-        PendingEnquiryCount = 0;
-    }
-}
-
-private void OnAuthenticationStateChanged(
-    Task<AuthenticationState> authenticationStateTask)
-{
-    _ = InvokeAsync(async () =>
-    {
-        await LoadPendingEnquiryCountAsync();
-        StateHasChanged();
-    });
-}
-
-public void Dispose()
-{
-    AuthenticationStateProvider.AuthenticationStateChanged
-        -= OnAuthenticationStateChanged;
-}
     // ============================================================
     // AUTHENTICATION
     // ============================================================
@@ -343,17 +257,6 @@ public void Dispose()
 
         Navigation.NavigateTo("/my-ads");
     }
-
-    private async Task OpenMyEnquiries()
-{
-    if (!IsAuthenticated)
-    {
-        await OpenLogin();
-        return;
-    }
-
-    Navigation.NavigateTo("/my-enquiries");
-}
 
     private async Task OpenAccount()
     {

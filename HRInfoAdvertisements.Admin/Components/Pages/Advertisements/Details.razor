@@ -5,6 +5,7 @@
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
 @using HRInfoAdvertisements.Admin.Components.Shared
+@using HRInfoAdvertisements.Application.Enquiries.DTOs
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 @inject SiteSettingsService SiteSettingsService
@@ -893,6 +894,117 @@
                             information about this advertisement.
                         </p>
 
+                        <div class="public-enquiry-section">
+
+    <button type="button"
+            class="public-contact-button enquiry"
+            @onclick="ToggleEnquiryForm">
+        <span class="contact-button-icon">
+            <i class="bi bi-chat-dots-fill"></i>
+        </span>
+
+        <span class="contact-button-content">
+            <strong>Send Enquiry</strong>
+            <small>Message the advertiser securely</small>
+        </span>
+
+        <i class="bi bi-arrow-right"></i>
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(enquirySuccess))
+{
+    <div class="enquiry-feedback enquiry-success" role="status">
+        <i class="bi bi-check-circle"></i>
+        @enquirySuccess
+    </div>
+}
+
+    @if (showEnquiryForm)
+    {
+        <form class="public-enquiry-form"
+              @onsubmit="SubmitEnquiryAsync"
+              @onsubmit:preventDefault="true">
+
+            <div class="enquiry-form-field">
+                <label for="enquirySubject">Subject *</label>
+                <input id="enquirySubject"
+                       type="text"
+                       maxlength="200"
+                       @bind="enquirySubject"
+                       required
+                       placeholder="e.g. Interested in this advertisement" />
+            </div>
+
+            <div class="enquiry-form-field">
+                <label for="enquiryMessage">Message *</label>
+                <textarea id="enquiryMessage"
+                          rows="5"
+                          maxlength="5000"
+                          @bind="enquiryMessage"
+                          required
+                          placeholder="Write your enquiry here..."></textarea>
+            </div>
+
+            <div class="enquiry-form-field">
+                <label for="enquiryMobile">Contact mobile</label>
+                <input id="enquiryMobile"
+                       type="tel"
+                       maxlength="30"
+                       @bind="enquiryContactMobile"
+                       placeholder="Your mobile number (optional)" />
+            </div>
+
+            <div class="enquiry-form-field">
+                <label for="enquiryEmail">Contact email</label>
+                <input id="enquiryEmail"
+                       type="email"
+                       maxlength="254"
+                       @bind="enquiryContactEmail"
+                       placeholder="Your email address (optional)" />
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(enquiryError))
+            {
+                <div class="enquiry-feedback enquiry-error" role="alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    @enquiryError
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(enquirySuccess))
+            {
+                <div class="enquiry-feedback enquiry-success" role="status">
+                    <i class="bi bi-check-circle"></i>
+                    @enquirySuccess
+                </div>
+            }
+
+            <button type="submit"
+                    class="public-contact-button enquiry-submit"
+                    disabled="@isSubmittingEnquiry">
+
+                @if (isSubmittingEnquiry)
+                {
+                    <span class="spinner-border spinner-border-sm"
+                          aria-hidden="true"></span>
+                    <span>Sending...</span>
+                }
+                else
+                {
+                    <i class="bi bi-send-fill"></i>
+                    <span>Submit Enquiry</span>
+                }
+            </button>
+
+            <button type="button"
+                    class="enquiry-cancel-button"
+                    @onclick="CancelEnquiry">
+                Cancel
+            </button>
+        </form>
+    }
+</div>
+
 
                         @if (HasPublicWhatsApp)
                         {
@@ -1261,6 +1373,21 @@
 
     private string? errorMessage;
 
+    // ============================================================
+// ENQUIRY FORM STATE
+// ============================================================
+
+private bool showEnquiryForm;
+private bool isSubmittingEnquiry;
+
+private string enquirySubject = string.Empty;
+private string enquiryMessage = string.Empty;
+private string enquiryContactMobile = string.Empty;
+private string enquiryContactEmail = string.Empty;
+
+private string? enquiryError;
+private string? enquirySuccess;
+
     private int selectedImageIndex;
 
     // ============================================================
@@ -1563,6 +1690,162 @@ private string GetReportUrl()
          */
     }
 
+// ============================================================
+// ADVERTISEMENT ENQUIRIES
+// ============================================================
+
+private void ToggleEnquiryForm()
+{
+    enquiryError = null;
+    enquirySuccess = null;
+
+    showEnquiryForm = !showEnquiryForm;
+
+    if (showEnquiryForm)
+    {
+        if (Advertisement is not null)
+        {
+            enquirySubject =
+                $"Enquiry about {GetAdvertisementNumber()}";
+        }
+    }
+}
+
+private void CancelEnquiry()
+{
+    showEnquiryForm = false;
+    enquiryError = null;
+    enquirySuccess = null;
+}
+
+private async Task SubmitEnquiryAsync()
+{
+    if (Advertisement is null)
+    {
+        enquiryError =
+            "The advertisement is unavailable. Please refresh the page.";
+        return;
+    }
+
+    if (isSubmittingEnquiry)
+    {
+        return;
+    }
+
+    enquiryError = null;
+    enquirySuccess = null;
+
+    enquirySubject = enquirySubject.Trim();
+    enquiryMessage = enquiryMessage.Trim();
+    enquiryContactMobile = enquiryContactMobile.Trim();
+    enquiryContactEmail = enquiryContactEmail.Trim();
+
+    if (string.IsNullOrWhiteSpace(enquirySubject))
+    {
+        enquiryError = "Please enter an enquiry subject.";
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(enquiryMessage))
+    {
+        enquiryError = "Please enter your message.";
+        return;
+    }
+
+    if (enquirySubject.Length > 200)
+    {
+        enquiryError =
+            "The subject cannot exceed 200 characters.";
+        return;
+    }
+
+    if (enquiryMessage.Length > 5000)
+    {
+        enquiryError =
+            "The message cannot exceed 5,000 characters.";
+        return;
+    }
+
+    if (!string.IsNullOrWhiteSpace(enquiryContactEmail) &&
+        !System.Text.RegularExpressions.Regex.IsMatch(
+            enquiryContactEmail,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+    {
+        enquiryError = "Please enter a valid contact email address.";
+        return;
+    }
+
+    isSubmittingEnquiry = true;
+
+    try
+    {
+        var request = new CreateAdvertisementEnquiryRequest
+        {
+            AdvertisementID = Advertisement.AdvertisementID,
+            Subject = enquirySubject,
+            Message = enquiryMessage,
+            ContactMobile = string.IsNullOrWhiteSpace(
+                enquiryContactMobile)
+                ? null
+                : enquiryContactMobile,
+            ContactEmail = string.IsNullOrWhiteSpace(
+                enquiryContactEmail)
+                ? null
+                : enquiryContactEmail
+        };
+
+        await AdvertisementApiService.CreateEnquiryAsync(request);
+
+        enquirySuccess =
+            "Your enquiry has been sent successfully.";
+
+        enquiryError = null;
+
+        enquirySubject = string.Empty;
+        enquiryMessage = string.Empty;
+        enquiryContactMobile = string.Empty;
+        enquiryContactEmail = string.Empty;
+
+        showEnquiryForm = false;
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("CREATE ADVERTISEMENT ENQUIRY ERROR");
+        Console.WriteLine(ex);
+
+        var message = ex.Message ?? string.Empty;
+
+        if (message.Contains(
+                "sign in",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "access token",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "unauthorized",
+                StringComparison.OrdinalIgnoreCase) ||
+            message.Contains(
+                "authentication",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            enquiryError =
+                "Please sign in to send an enquiry.";
+
+            authMode = PublicAuthModal.AuthMode.SignIn;
+            showAuthModal = true;
+        }
+        else
+        {
+            enquiryError = string.IsNullOrWhiteSpace(message)
+                ? "We couldn't send your enquiry. Please try again."
+                : message;
+        }
+    }
+    finally
+    {
+        isSubmittingEnquiry = false;
+    }
+}
 
     // ============================================================
     // CONTACT

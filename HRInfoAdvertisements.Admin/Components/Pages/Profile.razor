@@ -6,6 +6,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.Profile.DTOs
+@using HRInfoAdvertisements.Application.NotificationPreferences.DTOs
 @using HRInfoAdvertisements.Application.DTOs.Authentication
 @using HRInfoAdvertisements.Application.DTOs.SystemSettings
 
@@ -56,9 +57,7 @@
 
             <div class="profile-context-right">
 
-                <button type="button"
-                        class="profile-back-button"
-                        @onclick="GoToAccount">
+                <button type="button" class="profile-back-button" @onclick="GoToAccount">
 
                     <i class="bi bi-arrow-left"></i>
 
@@ -111,9 +110,7 @@
                     Please sign in to manage your profile and account settings.
                 </p>
 
-                <button type="button"
-                        class="profile-primary-button"
-                        @onclick="OpenLogin">
+                <button type="button" class="profile-primary-button" @onclick="OpenLogin">
 
                     <i class="bi bi-box-arrow-in-right"></i>
 
@@ -138,9 +135,7 @@
                         @successMessage
                     </span>
 
-                    <button type="button"
-                            class="profile-alert-close"
-                            @onclick="ClearMessages">
+                    <button type="button" class="profile-alert-close" @onclick="ClearMessages">
                         <i class="bi bi-x"></i>
                     </button>
                 </div>
@@ -155,9 +150,7 @@
                         @errorMessage
                     </span>
 
-                    <button type="button"
-                            class="profile-alert-close"
-                            @onclick="ClearMessages">
+                    <button type="button" class="profile-alert-close" @onclick="ClearMessages">
                         <i class="bi bi-x"></i>
                     </button>
                 </div>
@@ -214,9 +207,7 @@
 
                 <div class="profile-header-action">
 
-                    <button type="button"
-                            class="profile-secondary-button"
-                            disabled="@isRefreshing"
+                    <button type="button" class="profile-secondary-button" disabled="@isRefreshing"
                             @onclick="RefreshProfile">
 
                         @if (isRefreshing)
@@ -298,11 +289,7 @@
                                 <span class="profile-required">*</span>
                             </label>
 
-                            <input id="firstName"
-                                   class="profile-form-input"
-                                   type="text"
-                                   maxlength="100"
-                                   @bind="firstName"
+                            <input id="firstName" class="profile-form-input" type="text" maxlength="100" @bind="firstName"
                                    placeholder="Enter your first name" />
 
                         </div>
@@ -314,11 +301,7 @@
                                 Last Name
                             </label>
 
-                            <input id="lastName"
-                                   class="profile-form-input"
-                                   type="text"
-                                   maxlength="100"
-                                   @bind="lastName"
+                            <input id="lastName" class="profile-form-input" type="text" maxlength="100" @bind="lastName"
                                    placeholder="Enter your last name" />
 
                         </div>
@@ -330,12 +313,8 @@
                                 Nationality
                             </label>
 
-                            <input id="nationality"
-                                   class="profile-form-input"
-                                   type="text"
-                                   maxlength="100"
-                                   @bind="nationality"
-                                   placeholder="Enter your nationality" />
+                            <input id="nationality" class="profile-form-input" type="text" maxlength="100"
+                                   @bind="nationality" placeholder="Enter your nationality" />
 
                         </div>
 
@@ -346,9 +325,7 @@
                                 Preferred Language
                             </label>
 
-                            <select id="preferredLanguage"
-                                    class="profile-form-input"
-                                    @bind="preferredLanguage">
+                            <select id="preferredLanguage" class="profile-form-input" @bind="preferredLanguage">
 
                                 <option value="en">
                                     English
@@ -373,8 +350,7 @@
 
                         <label class="profile-preference-option">
 
-                            <input type="checkbox"
-                                   @bind="isBusinessAccount" />
+                            <input type="checkbox" @bind="isBusinessAccount" />
 
                             <span class="profile-check-box">
                                 <i class="bi bi-check"></i>
@@ -405,12 +381,8 @@
                                     <span class="profile-required">*</span>
                                 </label>
 
-                                <input id="companyName"
-                                       class="profile-form-input"
-                                       type="text"
-                                       maxlength="250"
-                                       @bind="companyName"
-                                       placeholder="Enter company name" />
+                                <input id="companyName" class="profile-form-input" type="text" maxlength="250"
+                                       @bind="companyName" placeholder="Enter company name" />
 
                             </div>
                         }
@@ -439,9 +411,7 @@
 
                     <div class="profile-card-footer">
 
-                        <button type="button"
-                                class="profile-primary-button"
-                                disabled="@isSavingProfile"
+                        <button type="button" class="profile-primary-button" disabled="@isSavingProfile"
                                 @onclick="SaveProfile">
 
                             @if (isSavingProfile)
@@ -666,16 +636,11 @@
 
                         <div class="profile-password-input">
 
-                            <input id="currentPassword"
-                                   class="profile-form-input"
-                                   type="@currentPasswordType"
-                                   @bind="currentPassword"
-                                   autocomplete="current-password"
+                            <input id="currentPassword" class="profile-form-input" type="@currentPasswordType"
+                                   @bind="currentPassword" autocomplete="current-password"
                                    placeholder="Enter current password" />
 
-                            <button type="button"
-                                    class="profile-password-toggle"
-                                    @onclick="ToggleCurrentPassword"
+                            <button type="button" class="profile-password-toggle" @onclick="ToggleCurrentPassword"
                                     aria-label="Show or hide current password">
 
                                 <i class="bi @(showCurrentPassword
@@ -700,12 +665,8 @@
 
                             <div class="profile-password-input">
 
-                                <input id="newPassword"
-                                       class="profile-form-input"
-                                       type="@newPasswordType"
-                                       @bind="newPassword"
-                                       autocomplete="new-password"
-                                       placeholder="Enter new password" />
+                                <input id="newPassword" class="profile-form-input" type="@newPasswordType"
+                                       @bind="newPassword" autocomplete="new-password" placeholder="Enter new password" />
 
                             </div>
 
@@ -721,11 +682,8 @@
 
                             <div class="profile-password-input">
 
-                                <input id="confirmPassword"
-                                       class="profile-form-input"
-                                       type="@confirmPasswordType"
-                                       @bind="confirmPassword"
-                                       autocomplete="new-password"
+                                <input id="confirmPassword" class="profile-form-input" type="@confirmPasswordType"
+                                       @bind="confirmPassword" autocomplete="new-password"
                                        placeholder="Confirm new password" />
 
                             </div>
@@ -750,9 +708,7 @@
 
                     <div class="profile-card-footer">
 
-                        <button type="button"
-                                class="profile-primary-button"
-                                disabled="@isChangingPassword"
+                        <button type="button" class="profile-primary-button" disabled="@isChangingPassword"
                                 @onclick="ChangePassword">
 
                             @if (isChangingPassword)
@@ -783,6 +739,10 @@
                      PREFERENCES
                      ================================================ -->
 
+                <!-- ================================================
+     PREFERENCES
+     ================================================ -->
+
                 <section class="profile-card">
 
                     <div class="profile-card-header">
@@ -811,133 +771,147 @@
                     </p>
 
 
-                    <div class="profile-preference-not-available">
+                    @if (isLoadingNotificationPreferences)
+                    {
+                        <div class="profile-preference-not-available">
 
-                        <div class="profile-preference-not-available-icon">
-                            <i class="bi bi-info-circle"></i>
+                            <div class="profile-preference-not-available-icon">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </div>
+
+                            <div>
+
+                                <strong>
+                                    Loading notification preferences...
+                                </strong>
+
+                                <p>
+                                    Please wait while your notification settings
+                                    are loaded.
+                                </p>
+
+                            </div>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="profile-preference-list">
+
+                            <!-- EMAIL NOTIFICATIONS -->
+
+                            <label class="profile-preference-option">
+
+                                <input type="checkbox" @bind="emailNotifications" />
+
+                                <span class="profile-check-box">
+                                    <i class="bi bi-check"></i>
+                                </span>
+
+                                <span class="profile-preference-content">
+
+                                    <strong>
+                                        Email Notifications
+                                    </strong>
+
+                                    <small>
+                                        Receive important account and marketplace
+                                        notifications by email.
+
+                                        @if (!Site.EmailEnabled)
+                                        {
+                                            <text>
+                                                Email delivery is currently turned off
+                                                by the site administrator.
+                                            </text>
+                                        }
+                                    </small>
+
+                                </span>
+
+                            </label>
+
+
+                            <!-- ADVERTISEMENT UPDATES -->
+
+                            <label class="profile-preference-option">
+
+                                <input type="checkbox" @bind="advertisementNotifications" />
+
+                                <span class="profile-check-box">
+                                    <i class="bi bi-check"></i>
+                                </span>
+
+                                <span class="profile-preference-content">
+
+                                    <strong>
+                                        Advertisement Updates
+                                    </strong>
+
+                                    <small>
+                                        Receive updates related to your posted
+                                        advertisements and account activity.
+                                    </small>
+
+                                </span>
+
+                            </label>
+
+
+                            <!-- FAVORITE ADVERTISEMENT UPDATES -->
+
+                            <label class="profile-preference-option">
+
+                                <input type="checkbox" @bind="favoriteNotifications" />
+
+                                <span class="profile-check-box">
+                                    <i class="bi bi-check"></i>
+                                </span>
+
+                                <span class="profile-preference-content">
+
+                                    <strong>
+                                        Favorite Advertisement Updates
+                                    </strong>
+
+                                    <small>
+                                        Stay informed about changes to advertisements
+                                        you have saved.
+                                    </small>
+
+                                </span>
+
+                            </label>
+
                         </div>
 
-                        <div>
 
-                            <strong>
-                                Notification preferences are coming soon
-                            </strong>
+                        <div class="profile-card-footer">
 
-                            <p>
-                                Your current notification system supports
-                                notifications, read status and notification
-                                templates. Individual user delivery preferences
-                                have not yet been configured in the account
-                                database.
-                            </p>
+                            <button type="button" class="profile-primary-button profile-full-button"
+                                    disabled="@isSavingNotificationPreferences" @onclick="SaveNotificationPreferences">
+
+                                @if (isSavingNotificationPreferences)
+                                {
+                                    <span class="profile-button-spinner"></span>
+
+                                    <span>
+                                        Saving...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check2"></i>
+
+                                    <span>
+                                        Save Notification Preferences
+                                    </span>
+                                }
+
+                            </button>
 
                         </div>
-
-                    </div>
-
-
-                    <div class="profile-preference-list profile-preference-disabled">
-
-                        <label class="profile-preference-option">
-
-                            <input type="checkbox"
-                                   checked="@emailNotifications"
-                                   disabled />
-
-                            <span class="profile-check-box">
-                                <i class="bi bi-check"></i>
-                            </span>
-
-                            <span class="profile-preference-content">
-
-                                <strong>
-                                    Email Notifications
-                                </strong>
-
-                                <!-- EMAIL_ENABLED -->
-                                <small>
-                                    Receive important account and marketplace
-                                    notifications by email.
-                                    @if (!Site.EmailEnabled)
-                                    {
-                                        <text> Email delivery is currently turned off.</text>
-                                    }
-                                </small>
-
-                            </span>
-
-                        </label>
-
-
-                        <label class="profile-preference-option">
-
-                            <input type="checkbox"
-                                   checked="@advertisementNotifications"
-                                   disabled />
-
-                            <span class="profile-check-box">
-                                <i class="bi bi-check"></i>
-                            </span>
-
-                            <span class="profile-preference-content">
-
-                                <strong>
-                                    Advertisement Updates
-                                </strong>
-
-                                <small>
-                                    Receive updates related to your posted
-                                    advertisements and account activity.
-                                </small>
-
-                            </span>
-
-                        </label>
-
-
-                        <label class="profile-preference-option">
-
-                            <input type="checkbox"
-                                   checked="@favoriteNotifications"
-                                   disabled />
-
-                            <span class="profile-check-box">
-                                <i class="bi bi-check"></i>
-                            </span>
-
-                            <span class="profile-preference-content">
-
-                                <strong>
-                                    Favorite Advertisement Updates
-                                </strong>
-
-                                <small>
-                                    Stay informed about changes to advertisements
-                                    you have saved.
-                                </small>
-
-                            </span>
-
-                        </label>
-
-                    </div>
-
-
-                    <div class="profile-card-footer">
-
-                        <button type="button"
-                                class="profile-secondary-button profile-full-button"
-                                disabled>
-
-                            <i class="bi bi-sliders"></i>
-
-                            <span>
-                                Preferences Not Yet Configured
-                            </span>
-
-                        </button>
-
-                    </div>
+                    }
 
                 </section>
 
@@ -977,9 +951,7 @@
 
                 <div class="profile-account-actions-buttons">
 
-                    <button type="button"
-                            class="profile-secondary-button"
-                            @onclick="GoToFavorites">
+                    <button type="button" class="profile-secondary-button" @onclick="GoToFavorites">
 
                         <i class="bi bi-heart"></i>
 
@@ -989,9 +961,7 @@
 
                     </button>
 
-                    <button type="button"
-                            class="profile-primary-button"
-                            @onclick="GoToAccount">
+                    <button type="button" class="profile-primary-button" @onclick="GoToAccount">
 
                         <i class="bi bi-grid"></i>
 
@@ -1014,11 +984,8 @@
          AUTH MODAL
          ============================================================ -->
 
-    <PublicAuthModal IsOpen="@showAuthModal"
-                     IsOpenChanged="@OnAuthModalVisibilityChanged"
-                     Mode="@authMode"
-                     ModeChanged="@OnAuthModalModeChanged"
-                     OnAuthenticated="@OnAuthenticated" />
+    <PublicAuthModal IsOpen="@showAuthModal" IsOpenChanged="@OnAuthModalVisibilityChanged" Mode="@authMode"
+                     ModeChanged="@OnAuthModalModeChanged" OnAuthenticated="@OnAuthenticated" />
 
 </div>
 
@@ -1093,10 +1060,7 @@
 
 
     // ================================================================
-    // NOTIFICATION DISPLAY
-    //
-    // These remain display-only until user notification preferences
-    // are introduced into the database/application layer.
+    // NOTIFICATION PREFERENCES
     // ================================================================
 
     private bool emailNotifications = true;
@@ -1104,6 +1068,10 @@
     private bool advertisementNotifications = true;
 
     private bool favoriteNotifications = true;
+
+    private bool isLoadingNotificationPreferences;
+
+    private bool isSavingNotificationPreferences;
 
 
     // ================================================================
@@ -1269,6 +1237,8 @@
                 }
             }
 
+            await LoadNotificationPreferences();
+
             BuildProfileInitials();
         }
         catch (HttpRequestException ex)
@@ -1294,6 +1264,102 @@
         }
     }
 
+    // ================================================================
+    // GET NOTIFICATION PREFERENCES API
+    // ================================================================
+
+    private async Task LoadNotificationPreferences()
+    {
+        if (isLoadingNotificationPreferences)
+        {
+            return;
+        }
+
+        var accessToken =
+            PublicAuthStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return;
+        }
+
+        isLoadingNotificationPreferences = true;
+
+        try
+        {
+            var client =
+                HttpClientFactory.CreateClient(
+                    "HRInfoAdvertisementsAPI");
+
+            using var request =
+                new HttpRequestMessage(
+                    HttpMethod.Get,
+                    "api/v1/profile/notification-preferences");
+
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    accessToken);
+
+            var response =
+                await client.SendAsync(request);
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                PublicAuthStateProvider.SignOut();
+
+                isAuthenticated = false;
+
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseBody =
+                    await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(
+                    $"NOTIFICATION PREFERENCES LOAD ERROR: " +
+                    $"HTTP {(int)response.StatusCode} " +
+                    $"{responseBody}");
+
+                return;
+            }
+
+            var preferences =
+                await response.Content
+                    .ReadFromJsonAsync<NotificationPreferenceResponse>();
+
+            if (preferences == null)
+            {
+                return;
+            }
+
+            emailNotifications =
+                preferences.EmailNotificationsEnabled;
+
+            advertisementNotifications =
+                preferences.AdvertisementUpdatesEnabled;
+
+            favoriteNotifications =
+                preferences.FavoriteAdvertisementUpdatesEnabled;
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"NOTIFICATION PREFERENCES LOAD ERROR: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"NOTIFICATION PREFERENCES LOAD ERROR: {ex}");
+        }
+        finally
+        {
+            isLoadingNotificationPreferences = false;
+        }
+    }
 
     // ================================================================
     // GET PROFILE API
@@ -1735,6 +1801,144 @@
         }
     }
 
+
+    // ================================================================
+    // SAVE NOTIFICATION PREFERENCES
+    // ================================================================
+
+    private async Task SaveNotificationPreferences()
+    {
+        if (isSavingNotificationPreferences)
+        {
+            return;
+        }
+
+        ClearMessages();
+
+        var accessToken =
+            PublicAuthStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            errorMessage =
+                "Your session has expired. Please sign in again.";
+
+            PublicAuthStateProvider.SignOut();
+
+            isAuthenticated = false;
+
+            return;
+        }
+
+        isSavingNotificationPreferences = true;
+
+        try
+        {
+            var request =
+                new UpdateNotificationPreferenceRequest
+                {
+                    EmailNotificationsEnabled =
+                        emailNotifications,
+
+                    AdvertisementUpdatesEnabled =
+                        advertisementNotifications,
+
+                    FavoriteAdvertisementUpdatesEnabled =
+                        favoriteNotifications
+                };
+
+            var client =
+                HttpClientFactory.CreateClient(
+                    "HRInfoAdvertisementsAPI");
+
+            using var httpRequest =
+                new HttpRequestMessage(
+                    HttpMethod.Put,
+                    "api/v1/profile/notification-preferences");
+
+            httpRequest.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue(
+                    "Bearer",
+                    accessToken);
+
+            httpRequest.Content =
+                JsonContent.Create(request);
+
+            var response =
+                await client.SendAsync(httpRequest);
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.Unauthorized)
+            {
+                PublicAuthStateProvider.SignOut();
+
+                isAuthenticated = false;
+
+                errorMessage =
+                    "Your session has expired. Please sign in again.";
+
+                return;
+            }
+
+            var responseBody =
+                await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                errorMessage =
+                    ExtractApiErrorMessage(
+                        responseBody,
+                        "Unable to save your notification preferences.");
+
+                return;
+            }
+
+            var updatedPreferences =
+                JsonSerializer.Deserialize<
+                    NotificationPreferenceResponse>(
+                        responseBody,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+            if (updatedPreferences != null)
+            {
+                emailNotifications =
+                    updatedPreferences.EmailNotificationsEnabled;
+
+                advertisementNotifications =
+                    updatedPreferences.AdvertisementUpdatesEnabled;
+
+                favoriteNotifications =
+                    updatedPreferences
+                        .FavoriteAdvertisementUpdatesEnabled;
+            }
+
+            successMessage =
+                "Your notification preferences have been saved successfully.";
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.WriteLine(
+                $"NOTIFICATION PREFERENCES SAVE ERROR: {ex.Message}");
+
+            errorMessage =
+                "Unable to save your notification preferences. Please try again.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"NOTIFICATION PREFERENCES SAVE ERROR: {ex}");
+
+            errorMessage =
+                "Unable to save your notification preferences. Please try again.";
+        }
+        finally
+        {
+            isSavingNotificationPreferences = false;
+        }
+    }
 
     // ================================================================
     // CHANGE PASSWORD

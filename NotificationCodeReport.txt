@@ -1,0 +1,1354 @@
+﻿
+========== HRInfoAdvertisements.Domain\Notifications\Notification.cs ==========
+namespace HRInfoAdvertisements.Domain.Entities;
+
+public class Notification
+{
+    public long NotificationID { get; set; }
+
+    public long UserID { get; set; }
+
+    public int? NotificationTemplateID { get; set; }
+
+    public string NotificationType { get; set; } = string.Empty;
+
+    public string Title { get; set; } = string.Empty;
+
+    public string? Message { get; set; }
+
+    public string? ReferenceType { get; set; }
+
+    public long? ReferenceID { get; set; }
+
+    public bool IsRead { get; set; }
+
+    public DateTime? ReadDate { get; set; }
+
+    public DateTime CreatedDate { get; set; }
+
+    public User User { get; set; } = null!;
+
+    public NotificationTemplate? NotificationTemplate { get; set; }
+}
+
+========== HRInfoAdvertisements.Domain\Notifications\NotificationTemplate.cs ==========
+namespace HRInfoAdvertisements.Domain.Entities;
+
+public class NotificationTemplate
+{
+    public int NotificationTemplateID { get; set; }
+
+    public string TemplateCode { get; set; } = string.Empty;
+
+    public string TemplateName { get; set; } = string.Empty;
+
+    public string? Subject { get; set; }
+
+    public string? Body { get; set; }
+
+    public string? SubjectAr { get; set; }
+
+    public string? BodyAr { get; set; }
+
+    public bool IsEmailEnabled { get; set; }
+
+    public bool IsSmsEnabled { get; set; }
+
+    public bool IsPushEnabled { get; set; }
+
+    public bool IsActive { get; set; } = true;
+}
+
+========== HRInfoAdvertisements.Infrastructure\Notifications\NotificationService.cs ==========
+using HRInfoAdvertisements.Application.Notifications;
+using HRInfoAdvertisements.Application.Notifications.DTOs;
+using HRInfoAdvertisements.Domain.Entities;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Infrastructure.Notifications;
+
+public class NotificationService : INotificationService
+{
+    private readonly ApplicationDbContext _context;
+
+    public NotificationService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<NotificationResponse> CreateAsync(
+        CreateNotificationRequest request)
+    {
+        if (request.UserID <= 0)
+            throw new ArgumentException("UserID is required.");
+
+        if (string.IsNullOrWhiteSpace(request.NotificationType))
+            throw new ArgumentException(
+                "Notification type is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Title))
+            throw new ArgumentException(
+                "Notification title is required.");
+
+        var title = request.Title.Trim();
+
+        if (title.Length > 250)
+            throw new ArgumentException(
+                "Notification title cannot exceed 250 characters.");
+
+        string? message = request.Message?.Trim();
+
+        if (message?.Length > 4000)
+            throw new ArgumentException(
+                "Notification message cannot exceed 4000 characters.");
+
+        var userExists = await _context.Users
+            .AsNoTracking()
+            .AnyAsync(x => x.UserID == request.UserID);
+
+        if (!userExists)
+            throw new KeyNotFoundException(
+                "Notification user was not found.");
+
+        if (request.NotificationTemplateID.HasValue)
+        {
+            var templateExists = await _context.NotificationTemplates
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.NotificationTemplateID ==
+                    request.NotificationTemplateID.Value &&
+                    x.IsActive);
+
+            if (!templateExists)
+                throw new KeyNotFoundException(
+                    "Notification template was not found or is inactive.");
+        }
+
+        var notification = new Notification
+        {
+            UserID = request.UserID,
+            NotificationTemplateID = request.NotificationTemplateID,
+            NotificationType = request.NotificationType.Trim(),
+            Title = title,
+            Message = message,
+            ReferenceType = string.IsNullOrWhiteSpace(
+                request.ReferenceType)
+                ? null
+                : request.ReferenceType.Trim(),
+            ReferenceID = request.ReferenceID,
+            IsRead = false,
+            ReadDate = null,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        _context.Notifications.Add(notification);
+
+        await _context.SaveChangesAsync();
+
+        return await BuildNotificationResponseAsync(
+            notification.NotificationID);
+    }
+
+    public async Task<NotificationResponse?> GetByIdAsync(
+        long userId,
+        long notificationId)
+    {
+        var notification = await _context.Notifications
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.NotificationID == notificationId &&
+                x.UserID == userId);
+
+        if (notification == null)
+            return null;
+
+        return MapNotification(notification);
+    }
+
+    public async Task<List<NotificationResponse>> GetAllAsync(
+        long userId)
+    {
+        var notifications = await _context.Notifications
+            .AsNoTracking()
+            .Where(x => x.UserID == userId)
+            .OrderByDescending(x => x.CreatedDate)
+            .ThenByDescending(x => x.NotificationID)
+            .ToListAsync();
+
+        return notifications
+            .Select(MapNotification)
+            .ToList();
+    }
+
+    public async Task<List<NotificationResponse>> GetUnreadAsync(
+        long userId)
+    {
+        var notifications = await _context.Notifications
+            .AsNoTracking()
+            .Where(x =>
+                x.UserID == userId &&
+                !x.IsRead)
+            .OrderByDescending(x => x.CreatedDate)
+            .ThenByDescending(x => x.NotificationID)
+            .ToListAsync();
+
+        return notifications
+            .Select(MapNotification)
+            .ToList();
+    }
+
+    public async Task<UnreadNotificationCountResponse>
+        GetUnreadCountAsync(long userId)
+    {
+        var count = await _context.Notifications
+            .AsNoTracking()
+            .CountAsync(x =>
+                x.UserID == userId &&
+                !x.IsRead);
+
+        return new UnreadNotificationCountResponse
+        {
+            UnreadCount = count
+        };
+    }
+
+    public async Task<MarkNotificationReadResponse?> MarkAsReadAsync(
+        long userId,
+        long notificationId)
+    {
+        var notification = await _context.Notifications
+            .FirstOrDefaultAsync(x =>
+                x.NotificationID == notificationId &&
+                x.UserID == userId);
+
+        if (notification == null)
+            return null;
+
+        if (!notification.IsRead)
+        {
+            notification.IsRead = true;
+            notification.ReadDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+        }
+
+        return new MarkNotificationReadResponse
+        {
+            NotificationID = notification.NotificationID,
+            IsRead = notification.IsRead,
+            ReadDate = notification.ReadDate
+        };
+    }
+
+    public async Task<int> MarkAllAsReadAsync(
+        long userId)
+    {
+        var notifications = await _context.Notifications
+            .Where(x =>
+                x.UserID == userId &&
+                !x.IsRead)
+            .ToListAsync();
+
+        if (notifications.Count == 0)
+            return 0;
+
+        var readDate = DateTime.UtcNow;
+
+        foreach (var notification in notifications)
+        {
+            notification.IsRead = true;
+            notification.ReadDate = readDate;
+        }
+
+        await _context.SaveChangesAsync();
+
+        return notifications.Count;
+    }
+
+    private async Task<NotificationResponse>
+        BuildNotificationResponseAsync(long notificationId)
+    {
+        var notification = await _context.Notifications
+            .AsNoTracking()
+            .FirstAsync(x =>
+                x.NotificationID == notificationId);
+
+        return MapNotification(notification);
+    }
+
+    private static NotificationResponse MapNotification(
+        Notification notification)
+    {
+        return new NotificationResponse
+        {
+            NotificationID = notification.NotificationID,
+            UserID = notification.UserID,
+            NotificationTemplateID =
+                notification.NotificationTemplateID,
+            NotificationType = notification.NotificationType,
+            Title = notification.Title,
+            Message = notification.Message,
+            ReferenceType = notification.ReferenceType,
+            ReferenceID = notification.ReferenceID,
+            IsRead = notification.IsRead,
+            ReadDate = notification.ReadDate,
+            CreatedDate = notification.CreatedDate
+        };
+    }
+}
+
+========== HRInfoAdvertisements.Infrastructure\Email\BrevoEmailService.cs ==========
+using System.Net.Http.Json;
+using HRInfoAdvertisements.Application.Interfaces;
+using Microsoft.Extensions.Options;
+
+namespace HRInfoAdvertisements.Infrastructure.Email;
+
+public sealed class BrevoEmailService : IEmailService
+{
+    private readonly HttpClient _http;
+    private readonly EmailOptions _o;
+
+    public BrevoEmailService(HttpClient http, IOptions<EmailOptions> options)
+    {
+        _http = http;
+        _o = options.Value;
+    }
+
+    public async Task SendAsync(string to, string subject, string htmlBody)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
+        request.Headers.Add("api-key", _o.Brevo.ApiKey);
+        request.Content = JsonContent.Create(new
+        {
+            sender = new { name = _o.FromName, email = _o.FromAddress },
+            to = new[] { new { email = to } },
+            subject,
+            htmlContent = htmlBody
+        });
+
+        using var response = await _http.SendAsync(request);
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException($"Brevo error {(int)response.StatusCode}: {detail}");
+        }
+    }
+}
+
+========== HRInfoAdvertisements.Infrastructure\Services\SystemSettingService.cs ==========
+using HRInfoAdvertisements.Application.DTOs.Settings;
+using HRInfoAdvertisements.Application.DTOs.SystemSettings;
+using HRInfoAdvertisements.Application.Interfaces;
+using HRInfoAdvertisements.Application.Security;
+using HRInfoAdvertisements.Domain.Entities;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Infrastructure.Services;
+
+public class SystemSettingService : ISystemSettingService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IConfigurationEncryptionService _encryptionService;
+
+    public SystemSettingService(
+        ApplicationDbContext context,
+        IConfigurationEncryptionService encryptionService)
+    {
+        _context = context;
+        _encryptionService = encryptionService;
+    }
+
+    // ============================================================
+    // GET SYSTEM SETTINGS
+    // ============================================================
+
+    public async Task<SystemSettingListResponse>
+        GetSystemSettingsAsync(
+            SystemSettingListRequest request)
+    {
+        var pageNumber =
+            request.PageNumber < 1
+                ? 1
+                : request.PageNumber;
+
+        var pageSize =
+            request.PageSize switch
+            {
+                <= 0 => 50,
+                > 100 => 100,
+                _ => request.PageSize
+            };
+
+        var query =
+            _context.SystemSettings
+                .AsNoTracking()
+                .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search =
+                request.Search.Trim();
+
+            query = query.Where(x =>
+                x.SettingKey.Contains(search) ||
+                (x.Description != null &&
+                 x.Description.Contains(search)));
+        }
+
+        if (request.IsActive.HasValue)
+        {
+            query = query.Where(x =>
+                x.IsActive == request.IsActive.Value);
+        }
+
+        var totalRecords =
+            await query.CountAsync();
+
+        var totalPages =
+            totalRecords == 0
+                ? 0
+                : (int)Math.Ceiling(
+                    totalRecords /
+                    (double)pageSize);
+
+        if (totalPages > 0 &&
+            pageNumber > totalPages)
+        {
+            pageNumber = totalPages;
+        }
+
+        var settings =
+            await query
+                .OrderBy(x => x.SettingKey)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+        var items =
+            settings
+                .Select(x =>
+                    new SystemSettingListItemResponse
+                    {
+                        SystemSettingID =
+                            x.SystemSettingID,
+
+                        SettingKey =
+                            x.SettingKey,
+
+                        // Never expose encrypted values.
+                        SettingValue =
+                            x.IsEncrypted
+                                ? null
+                                : x.SettingValue,
+
+                        Description =
+                            x.Description,
+
+                        IsEncrypted =
+                            x.IsEncrypted,
+
+                        IsActive =
+                            x.IsActive,
+
+                        CreatedDate =
+                            x.CreatedDate,
+
+                        ModifiedDate =
+                            x.ModifiedDate
+                    })
+                .ToList();
+
+        return new SystemSettingListResponse
+        {
+            Items = items,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = totalPages
+        };
+    }
+
+    // ============================================================
+    // GET SYSTEM SETTING BY ID
+    // ============================================================
+
+    public async Task<SystemSettingDetailResponse?>
+        GetSystemSettingByIdAsync(
+            int systemSettingId)
+    {
+        var setting =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.SystemSettingID ==
+                    systemSettingId);
+
+        if (setting == null)
+        {
+            return null;
+        }
+
+        return new SystemSettingDetailResponse
+        {
+            SystemSettingID =
+                setting.SystemSettingID,
+
+            SettingKey =
+                setting.SettingKey,
+
+            // Never expose encrypted values.
+            SettingValue =
+                setting.IsEncrypted
+                    ? null
+                    : setting.SettingValue,
+
+            Description =
+                setting.Description,
+
+            IsEncrypted =
+                setting.IsEncrypted,
+
+            IsActive =
+                setting.IsActive,
+
+            CreatedDate =
+                setting.CreatedDate,
+
+            ModifiedDate =
+                setting.ModifiedDate
+        };
+    }
+
+    // ============================================================
+    // CREATE SYSTEM SETTING
+    // ============================================================
+
+    public async Task<int?>
+        CreateSystemSettingAsync(
+            CreateSystemSettingRequest request,
+            long createdBy)
+    {
+        var settingKey =
+            request.SettingKey.Trim();
+
+        if (string.IsNullOrWhiteSpace(settingKey))
+        {
+            return null;
+        }
+
+        var exists =
+            await _context.SystemSettings
+                .AnyAsync(x =>
+                    x.SettingKey.ToLower() ==
+                    settingKey.ToLower());
+
+        if (exists)
+        {
+            return null;
+        }
+
+        var settingValue =
+            string.IsNullOrWhiteSpace(
+                request.SettingValue)
+                ? null
+                : request.SettingValue.Trim();
+
+        // Encrypt sensitive settings before they are persisted.
+        if (request.IsEncrypted &&
+            !string.IsNullOrWhiteSpace(settingValue))
+        {
+            settingValue =
+                _encryptionService.Protect(
+                    settingValue);
+        }
+
+        var setting =
+            new SystemSetting
+            {
+                SettingKey =
+                    settingKey,
+
+                SettingValue =
+                    settingValue,
+
+                Description =
+                    string.IsNullOrWhiteSpace(
+                        request.Description)
+                        ? null
+                        : request.Description.Trim(),
+
+                IsEncrypted =
+                    request.IsEncrypted,
+
+                IsActive =
+                    request.IsActive,
+
+                CreatedDate =
+                    DateTime.UtcNow
+            };
+
+        _context.SystemSettings.Add(setting);
+
+        await _context.SaveChangesAsync();
+
+        return setting.SystemSettingID;
+    }
+
+    // ============================================================
+    // UPDATE SYSTEM SETTING
+    // ============================================================
+
+    public async Task<bool>
+        UpdateSystemSettingAsync(
+            int systemSettingId,
+            UpdateSystemSettingRequest request,
+            long modifiedBy)
+    {
+        var setting =
+            await _context.SystemSettings
+                .FirstOrDefaultAsync(x =>
+                    x.SystemSettingID ==
+                    systemSettingId);
+
+        if (setting == null)
+        {
+            return false;
+        }
+
+        var settingKey =
+            request.SettingKey.Trim();
+
+        if (string.IsNullOrWhiteSpace(settingKey))
+        {
+            return false;
+        }
+
+        var duplicateKey =
+            await _context.SystemSettings
+                .AnyAsync(x =>
+                    x.SystemSettingID !=
+                        systemSettingId &&
+                    x.SettingKey.ToLower() ==
+                        settingKey.ToLower());
+
+        if (duplicateKey)
+        {
+            return false;
+        }
+
+        setting.SettingKey =
+            settingKey;
+
+        // ========================================================
+        // VALUE HANDLING
+        // ========================================================
+
+        var newValue =
+            string.IsNullOrWhiteSpace(
+                request.SettingValue)
+                ? null
+                : request.SettingValue.Trim();
+
+        if (request.IsEncrypted)
+        {
+            // When editing an existing encrypted setting, the UI
+            // intentionally sends an empty value when the user
+            // does not want to replace the secret.
+            //
+            // Preserve the existing encrypted value in that case.
+            if (!string.IsNullOrWhiteSpace(newValue))
+            {
+                setting.SettingValue =
+                    _encryptionService.Protect(
+                        newValue);
+            }
+            else if (!setting.IsEncrypted)
+            {
+                // The setting is being changed from plaintext
+                // to encrypted but no new secret was supplied.
+                // Do not retain the old plaintext value.
+                setting.SettingValue = null;
+            }
+
+            // If it was already encrypted and the new value is
+            // empty, leave the existing encrypted value untouched.
+        }
+        else
+        {
+            // Setting is being stored as plaintext.
+            // The caller explicitly changed IsEncrypted to false,
+            // so store the supplied plaintext value.
+            setting.SettingValue =
+                newValue;
+        }
+
+        setting.Description =
+            string.IsNullOrWhiteSpace(
+                request.Description)
+                ? null
+                : request.Description.Trim();
+
+        setting.IsEncrypted =
+            request.IsEncrypted;
+
+        setting.IsActive =
+            request.IsActive;
+
+        setting.ModifiedDate =
+            DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    // ============================================================
+    // UPDATE STATUS
+    // ============================================================
+
+    public async Task<bool>
+        UpdateSystemSettingStatusAsync(
+            int systemSettingId,
+            bool isActive,
+            long modifiedBy)
+    {
+        var setting =
+            await _context.SystemSettings
+                .FirstOrDefaultAsync(x =>
+                    x.SystemSettingID ==
+                    systemSettingId);
+
+        if (setting == null)
+        {
+            return false;
+        }
+
+        setting.IsActive =
+            isActive;
+
+        setting.ModifiedDate =
+            DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    // ============================================================
+    // GET APPLICATION SETTINGS
+    // ============================================================
+
+    public async Task<ApplicationSettings>
+        GetApplicationSettingsAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var settings =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .Where(x => x.IsActive)
+                .ToDictionaryAsync(
+                    x => x.SettingKey,
+                    x => x.SettingValue,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
+
+        return new ApplicationSettings
+        {
+            SiteName =
+                GetString(
+                    settings,
+                    "SITE_NAME",
+                    "AdMind"),
+
+            DefaultCurrency =
+                GetString(
+                    settings,
+                    "DEFAULT_CURRENCY",
+                    "BHD"),
+
+            AdvertisementExpiryDays =
+                GetInt(
+                    settings,
+                    "ADVERTISEMENT_EXPIRY_DAYS",
+                    30),
+
+            MaxImagesPerAdvertisement =
+                GetInt(
+                    settings,
+                    "MAX_IMAGES_PER_ADVERTISEMENT",
+                    2),
+
+            MaxVideoSizeMb =
+                GetInt(
+                    settings,
+                    "MAX_VIDEO_SIZE_MB",
+                    100),
+
+            RequireAdminApproval =
+                GetBool(
+                    settings,
+                    "REQUIRE_ADMIN_APPROVAL",
+                    true),
+
+            RequireEmailVerification =
+                GetBool(
+                    settings,
+                    "REQUIRE_EMAIL_VERIFICATION",
+                    true),
+
+            RequireMobileVerification =
+                GetBool(
+                    settings,
+                    "REQUIRE_MOBILE_VERIFICATION",
+                    true),
+
+            AdminMfaRequired =
+                GetBool(
+                    settings,
+                    "ADMIN_MFA_REQUIRED",
+                    true),
+
+            SiteTagline =
+                GetString(
+                    settings,
+                    "SITE_TAGLINE",
+                    "Your marketplace for everything"),
+
+            SiteUrl =
+                GetString(
+                    settings,
+                    "SITE_URL",
+                    string.Empty),
+
+            EmailLogoUrl =
+                GetString(
+                    settings,
+                    "EMAIL_LOGO_URL",
+                    string.Empty),
+
+            SupportEmail =
+                GetString(
+                    settings,
+                    "SUPPORT_EMAIL",
+                    string.Empty),
+
+            EmailFromName =
+                GetString(
+                    settings,
+                    "EMAIL_FROM_NAME",
+                    "AdMind"),
+
+            EmailVerificationSubject =
+                GetString(
+                    settings,
+                    "EMAIL_VERIFICATION_SUBJECT",
+                    "Verify your AdMind account"),
+
+            EmailPasswordResetSubject =
+                GetString(
+                    settings,
+                    "EMAIL_PASSWORD_RESET_SUBJECT",
+                    "Reset your AdMind password"),
+
+            EmailOtpExpiryMinutes =
+                GetInt(
+                    settings,
+                    "EMAIL_OTP_EXPIRY_MINUTES",
+                    10),
+
+            EmailEnabled =
+                GetBool(
+                    settings,
+                    "EMAIL_ENABLED",
+                    true)
+        };
+    }
+
+    // ============================================================
+    // GET PUBLIC SITE SETTINGS (safe for anonymous visitors)
+    // ============================================================
+
+    // Only these keys may ever be returned to the public site.
+    private static readonly string[] PublicKeys =
+    {
+        "SITE_NAME",
+        "SITE_TAGLINE",
+        "DEFAULT_CURRENCY",
+        "ADVERTISEMENT_EXPIRY_DAYS",
+        "MAX_IMAGES_PER_ADVERTISEMENT",
+        "MAX_VIDEO_SIZE_MB",
+        "REQUIRE_ADMIN_APPROVAL",
+        "REQUIRE_EMAIL_VERIFICATION",
+        "EMAIL_ENABLED",
+        "EMAIL_OTP_EXPIRY_MINUTES",
+        "SUPPORT_EMAIL"
+    };
+
+    public async Task<PublicSiteSettingsResponse>
+        GetPublicSettingsAsync(
+            CancellationToken cancellationToken = default)
+    {
+        // Only active, non-encrypted, whitelisted rows are read.
+        var settings =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .Where(x =>
+                    x.IsActive &&
+                    !x.IsEncrypted &&
+                    PublicKeys.Contains(x.SettingKey))
+                .ToDictionaryAsync(
+                    x => x.SettingKey,
+                    x => x.SettingValue,
+                    StringComparer.OrdinalIgnoreCase,
+                    cancellationToken);
+
+        // Default values come from the DTO itself.
+        var d = new PublicSiteSettingsResponse();
+
+        return new PublicSiteSettingsResponse
+        {
+            SiteName =
+                GetString(settings, "SITE_NAME", d.SiteName),
+
+            SiteTagline =
+                GetString(settings, "SITE_TAGLINE", d.SiteTagline),
+
+            DefaultCurrency =
+                GetString(settings, "DEFAULT_CURRENCY", d.DefaultCurrency),
+
+            AdvertisementExpiryDays =
+                GetInt(settings, "ADVERTISEMENT_EXPIRY_DAYS", d.AdvertisementExpiryDays),
+
+            MaxImagesPerAdvertisement =
+                GetInt(settings, "MAX_IMAGES_PER_ADVERTISEMENT", d.MaxImagesPerAdvertisement),
+
+            MaxVideoSizeMb =
+                GetInt(settings, "MAX_VIDEO_SIZE_MB", d.MaxVideoSizeMb),
+
+            RequireAdminApproval =
+                GetBool(settings, "REQUIRE_ADMIN_APPROVAL", d.RequireAdminApproval),
+
+            RequireEmailVerification =
+                GetBool(settings, "REQUIRE_EMAIL_VERIFICATION", d.RequireEmailVerification),
+
+            EmailEnabled =
+                GetBool(settings, "EMAIL_ENABLED", d.EmailEnabled),
+
+            EmailOtpExpiryMinutes =
+                GetInt(settings, "EMAIL_OTP_EXPIRY_MINUTES", d.EmailOtpExpiryMinutes),
+
+            SupportEmail =
+                GetString(settings, "SUPPORT_EMAIL", d.SupportEmail)
+        };
+    }
+
+    // ============================================================
+    // GET DECRYPTED VALUE
+    // ============================================================
+    //
+    // Internal application use only.
+    //
+    // This method is intentionally NOT part of the Admin API
+    // response. It is for trusted server-side consumers such as
+    // the future email configuration resolver.
+    //
+    // ============================================================
+
+    public async Task<string?>
+        GetDecryptedSettingValueAsync(
+            string settingKey)
+    {
+        if (string.IsNullOrWhiteSpace(settingKey))
+        {
+            return null;
+        }
+
+        var setting =
+            await _context.SystemSettings
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.SettingKey == settingKey &&
+                    x.IsActive);
+
+        if (setting == null)
+        {
+            return null;
+        }
+
+        if (string.IsNullOrWhiteSpace(
+                setting.SettingValue))
+        {
+            return null;
+        }
+
+        if (!setting.IsEncrypted)
+        {
+            return setting.SettingValue;
+        }
+
+        try
+        {
+            return _encryptionService.Unprotect(
+                setting.SettingValue);
+        }
+        catch
+        {
+            // Do not expose encrypted/ciphertext details to callers.
+            // A future logging layer can record the failure safely.
+            return null;
+        }
+    }
+
+    // ============================================================
+    // APPLICATION SETTINGS HELPERS
+    // ============================================================
+
+    private static string GetString(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        string defaultValue)
+    {
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return value.Trim();
+    }
+
+    private static int GetInt(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        int defaultValue)
+    {
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return int.TryParse(
+            value.Trim(),
+            out var result)
+                ? result
+                : defaultValue;
+    }
+
+    private static bool GetBool(
+        IReadOnlyDictionary<string, string?> settings,
+        string key,
+        bool defaultValue)
+    {
+        if (!settings.TryGetValue(key, out var value) ||
+            string.IsNullOrWhiteSpace(value))
+        {
+            return defaultValue;
+        }
+
+        return bool.TryParse(
+            value.Trim(),
+            out var result)
+                ? result
+                : defaultValue;
+    }
+}
+
+========== HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs ==========
+using HRInfoAdvertisements.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Infrastructure.Data;
+
+public class ApplicationDbContext : DbContext
+{
+    public ApplicationDbContext(
+        DbContextOptions<ApplicationDbContext> options)
+        : base(options)
+    {
+    }
+
+    // Security
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+    public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+
+    // Advertisements
+    public DbSet<Advertisement> Advertisements => Set<Advertisement>();
+    public DbSet<AdvertisementCategory> AdvertisementCategories => Set<AdvertisementCategory>();
+    public DbSet<AdvertisementType> AdvertisementTypes => Set<AdvertisementType>();
+    public DbSet<AdvertisementStatus> AdvertisementStatuses => Set<AdvertisementStatus>();
+    public DbSet<AdvertisementFeature> AdvertisementFeatures => Set<AdvertisementFeature>();
+    public DbSet<AdvertisementFeatureValue> AdvertisementFeatureValues => Set<AdvertisementFeatureValue>();
+    public DbSet<AdvertisementImage> AdvertisementImages => Set<AdvertisementImage>();
+    public DbSet<AdvertisementVideo> AdvertisementVideos => Set<AdvertisementVideo>();
+    public DbSet<AdvertisementDocument> AdvertisementDocuments => Set<AdvertisementDocument>();
+
+    // Locations
+    public DbSet<Location> Locations => Set<Location>();
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<State> States => Set<State>();
+    public DbSet<City> Cities => Set<City>();
+    public DbSet<Area> Areas => Set<Area>();
+
+    // Engagement
+    public DbSet<Favorite> Favorites => Set<Favorite>();
+    public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
+    public DbSet<AdvertisementView> AdvertisementViews => Set<AdvertisementView>();
+    public DbSet<AdvertisementEnquiry> AdvertisementEnquiries => Set<AdvertisementEnquiry>();
+    public DbSet<AdvertisementEnquiryMessage> AdvertisementEnquiryMessages
+        => Set<AdvertisementEnquiryMessage>();
+    public DbSet<Message> Messages => Set<Message>();
+    public DbSet<AdvertisementFavorite> AdvertisementFavorites
+    => Set<AdvertisementFavorite>();
+
+    // Removal Requests
+    public DbSet<AdvertisementRemovalRequest> AdvertisementRemovalRequests
+        => Set<AdvertisementRemovalRequest>();
+
+    // Approval
+    public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+    public DbSet<ApprovalHistory> ApprovalHistories => Set<ApprovalHistory>();
+    public DbSet<RejectionReason> RejectionReasons => Set<RejectionReason>();
+
+    // Reports
+    public DbSet<Report> Reports => Set<Report>();
+    public DbSet<ReportReason> ReportReasons => Set<ReportReason>();
+
+    // Notifications
+    public DbSet<Notification> Notifications => Set<Notification>();
+    public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+
+    // Authentication
+    public DbSet<OTPRequest> OTPRequests => Set<OTPRequest>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<LoginHistory> LoginHistories => Set<LoginHistory>();
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
+
+    // System
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(ApplicationDbContext).Assembly);
+    }
+}
+
+========== HRInfoAdvertisements.API\Controllers\NotificationController.cs ==========
+using HRInfoAdvertisements.Application.Notifications;
+using HRInfoAdvertisements.Application.Notifications.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace HRInfoAdvertisements.API.Controllers;
+
+[ApiController]
+[Route("api/v1/notifications")]
+[Authorize]
+public class NotificationController : ControllerBase
+{
+    private readonly INotificationService _notificationService;
+
+    public NotificationController(
+        INotificationService notificationService)
+    {
+        _notificationService = notificationService;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<List<NotificationResponse>>> GetAll()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetAllAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("unread")]
+    public async Task<ActionResult<List<NotificationResponse>>> GetUnread()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetUnreadAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("unread-count")]
+    public async Task<ActionResult<UnreadNotificationCountResponse>>
+        GetUnreadCount()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetUnreadCountAsync(
+            userId.Value);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{notificationId:long}")]
+    public async Task<ActionResult<NotificationResponse>> GetById(
+        long notificationId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.GetByIdAsync(
+            userId.Value,
+            notificationId);
+
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                message = "Notification not found."
+            });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("{notificationId:long}/read")]
+    public async Task<ActionResult<MarkNotificationReadResponse>>
+        MarkAsRead(long notificationId)
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var result = await _notificationService.MarkAsReadAsync(
+            userId.Value,
+            notificationId);
+
+        if (result == null)
+        {
+            return NotFound(new
+            {
+                message = "Notification not found."
+            });
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("read-all")]
+    public async Task<ActionResult> MarkAllAsRead()
+    {
+        var userId = GetCurrentUserId();
+
+        if (userId == null)
+            return Unauthorized();
+
+        var count = await _notificationService.MarkAllAsReadAsync(
+            userId.Value);
+
+        return Ok(new
+        {
+            message = "Notifications marked as read.",
+            count
+        });
+    }
+
+    private long? GetCurrentUserId()
+    {
+        var userIdClaim =
+            User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("userId")?.Value
+            ?? User.FindFirst("UserID")?.Value;
+
+        if (long.TryParse(userIdClaim, out var userId))
+            return userId;
+
+        return null;
+    }
+}
+
+========== HRInfoAdvertisements.Application\Notifications\INotificationService.cs ==========
+using HRInfoAdvertisements.Application.Notifications.DTOs;
+
+namespace HRInfoAdvertisements.Application.Notifications;
+
+public interface INotificationService
+{
+    Task<NotificationResponse> CreateAsync(
+        CreateNotificationRequest request);
+
+    Task<NotificationResponse?> GetByIdAsync(
+        long userId,
+        long notificationId);
+
+    Task<List<NotificationResponse>> GetAllAsync(
+        long userId);
+
+    Task<List<NotificationResponse>> GetUnreadAsync(
+        long userId);
+
+    Task<UnreadNotificationCountResponse> GetUnreadCountAsync(
+        long userId);
+
+    Task<MarkNotificationReadResponse?> MarkAsReadAsync(
+        long userId,
+        long notificationId);
+
+    Task<int> MarkAllAsReadAsync(
+        long userId);
+}
+
+========== HRInfoAdvertisements.Application\Interfaces\IEmailService.cs ==========
+namespace HRInfoAdvertisements.Application.Interfaces;
+
+public interface IEmailService
+{
+    Task SendAsync(string to, string subject, string htmlBody);
+}
+
+========== NOTIFICATION PREFERENCE RAZOR PAGES ==========
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Profile.razor:801: Notification Preferences
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Profile.razor:823: Notification preferences are coming soon
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Profile.razor:911: Favorite Advertisement Updates
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Profile.razor:935: Preferences Not Yet Configured
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Profile.razor:1098: // These remain display-only until user notification preferences
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Settings\Settings.razor:1101: Coming soon
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Settings\Settings.razor:1118: Coming soon
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Settings\Settings.razor:1265: Coming soon
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\Settings\Settings.razor:1282: Coming soon
+
+========== USER ENTITY AND DBSET REFERENCES ==========
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Domain\Entities\User.cs:3: public class User
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:6: public class ApplicationDbContext : DbContext
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:15: public DbSet<User> Users => Set<User>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:18: public DbSet<UserRole> UserRoles => Set<UserRole>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:20: public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:21: public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:66: public DbSet<Notification> Notifications => Set<Notification>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:67: public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:73: public DbSet<UserSession> UserSessions => Set<UserSession>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:77: public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:14: partial class ApplicationDbContextModelSnapshot : ModelSnapshot

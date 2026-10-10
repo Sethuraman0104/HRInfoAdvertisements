@@ -223,11 +223,36 @@ public sealed class ApplicationSettingsService : IApplicationSettingsService
                 cancellationToken)
             ?? 10,
 
-        EmailEnabled =
-            await GetBoolAsync(
-                "EMAIL_ENABLED",
-                cancellationToken)
-            ?? true
+        
+EmailEnabled =
+    await GetBoolAsync(
+        "EMAIL_ENABLED",
+        cancellationToken)
+    ?? true,
+
+AutomatedEmailEnabled =
+    await GetBoolAsync(
+        "AUTOMATED_EMAIL_ENABLED",
+        cancellationToken)
+    ?? false,
+
+AccountEmailEnabled =
+    await GetBoolAsync(
+        "ACCOUNT_EMAIL_ENABLED",
+        cancellationToken)
+    ?? true,
+
+AdvertisementEmailEnabled =
+    await GetBoolAsync(
+        "ADVERTISEMENT_EMAIL_ENABLED",
+        cancellationToken)
+    ?? true,
+
+FavoriteAdvertisementEmailEnabled =
+    await GetBoolAsync(
+        "FAVORITE_ADVERTISEMENT_EMAIL_ENABLED",
+        cancellationToken)
+    ?? true
     };
 }
 

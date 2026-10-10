@@ -40,4 +40,14 @@ public sealed class ApplicationSettings
     public int EmailOtpExpiryMinutes { get; init; } = 10;
 
     public bool EmailEnabled { get; init; } = true;
+
+    // Optional marketplace email automation controls.
+// These do not control verification, OTP, or password-reset emails.
+public bool AutomatedEmailEnabled { get; init; } = false;
+
+public bool AccountEmailEnabled { get; init; } = true;
+
+public bool AdvertisementEmailEnabled { get; init; } = true;
+
+public bool FavoriteAdvertisementEmailEnabled { get; init; } = true;
 }
