@@ -8,6 +8,8 @@ public interface IAdvertisementEnquiryService
         long senderUserId,
         CreateAdvertisementEnquiryRequest request);
 
+    Task<List<AdvertisementEnquiryResponse>> GetAllForAdminAsync();
+
     Task<AdvertisementEnquiryDetailResponse?> GetByIdAsync(
         long userId,
         long enquiryId);

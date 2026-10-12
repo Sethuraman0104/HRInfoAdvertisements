@@ -1,0 +1,465 @@
+@page "/admin/enquiries"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Enquiries.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject AdminAuthenticationStateProvider AdminAuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Advertisement Enquiries | HR Info Admin</PageTitle>
+
+<div class="enquiries-page">
+
+    <PageHeader Icon="bi-chat-left-text-fill"
+                Eyebrow="COMMUNICATION CENTER"
+                Title="Advertisement Enquiries"
+                SetBrowserTitle="true"
+                DescriptionContent="@EnquiryHeaderDescription"
+                ActionContent="@EnquiryHeaderActions" />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="enq-alert" role="alert">
+            <div class="enq-alert-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="enq-alert-content">
+                <strong>Unable to load enquiries</strong>
+                <span>@errorMessage</span>
+            </div>
+            <button type="button"
+                    class="enq-button enq-button-secondary"
+                    @onclick="LoadEnquiriesAsync"
+                    disabled="@isLoading">
+                Retry
+            </button>
+        </div>
+    }
+
+    <section class="enq-summary-grid">
+
+        <article class="enq-stat-card">
+            <div class="enq-stat-top">
+                <span class="enq-stat-label">Total enquiries</span>
+                <span class="enq-stat-icon enq-icon-blue">
+                    <i class="bi bi-chat-square-text"></i>
+                </span>
+            </div>
+            <div class="enq-stat-value">@enquiries.Count</div>
+            <div class="enq-stat-foot">All recorded enquiries</div>
+        </article>
+
+        <article class="enq-stat-card">
+            <div class="enq-stat-top">
+                <span class="enq-stat-label">Open enquiries</span>
+                <span class="enq-stat-icon enq-icon-amber">
+                    <i class="bi bi-envelope-open"></i>
+                </span>
+            </div>
+            <div class="enq-stat-value">@OpenCount</div>
+            <div class="enq-stat-foot">Awaiting completion</div>
+        </article>
+
+        <article class="enq-stat-card">
+            <div class="enq-stat-top">
+                <span class="enq-stat-label">Closed enquiries</span>
+                <span class="enq-stat-icon enq-icon-green">
+                    <i class="bi bi-check2-circle"></i>
+                </span>
+            </div>
+            <div class="enq-stat-value">@ClosedCount</div>
+            <div class="enq-stat-foot">Completed conversations</div>
+        </article>
+
+        <article class="enq-stat-card">
+            <div class="enq-stat-top">
+                <span class="enq-stat-label">Total messages</span>
+                <span class="enq-stat-icon enq-icon-purple">
+                    <i class="bi bi-chat-dots"></i>
+                </span>
+            </div>
+            <div class="enq-stat-value">@MessageCount</div>
+            <div class="enq-stat-foot">Across all enquiries</div>
+        </article>
+
+    </section>
+
+    <section class="enq-panel">
+
+        <div class="enq-panel-heading">
+            <div>
+                <h2>Find enquiries</h2>
+                <p>Search conversations and narrow results by status.</p>
+            </div>
+
+            @if (HasActiveFilters)
+            {
+                <button type="button"
+                        class="enq-clear-button"
+                        @onclick="ClearFilters">
+                    <i class="bi bi-x-circle"></i>
+                    Clear filters
+                </button>
+            }
+        </div>
+
+        <div class="enq-filter-grid">
+
+            <div class="enq-field enq-search-field">
+                <label for="enquirySearch">Search</label>
+                <div class="enq-input-wrap">
+                    <i class="bi bi-search"></i>
+                    <input id="enquirySearch"
+                           type="search"
+                           placeholder="Subject, ad number, sender or recipient..."
+                           @bind="searchText"
+                           @bind:event="oninput" />
+                </div>
+            </div>
+
+            <div class="enq-field">
+                <label for="enquiryStatus">Enquiry status</label>
+                <div class="enq-select-wrap">
+                    <i class="bi bi-funnel"></i>
+                    <select id="enquiryStatus" @bind="selectedStatus">
+                        <option value="">All statuses</option>
+                        <option value="OPEN">Open</option>
+                        <option value="CLOSED">Closed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="enq-filter-actions">
+                <button type="button"
+                        class="enq-button enq-button-primary"
+                        @onclick="ApplyFilters">
+                    <i class="bi bi-search"></i>
+                    Search
+                </button>
+
+                <button type="button"
+                        class="enq-button enq-button-secondary"
+                        @onclick="ClearFilters">
+                    Reset
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="enq-panel enq-results-panel">
+
+        <div class="enq-results-heading">
+            <div class="enq-results-title">
+                <div class="enq-results-title-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <div>
+                    <h2>Enquiry records</h2>
+                    <p>Review advertisement enquiries and their current status.</p>
+                </div>
+            </div>
+
+            <span class="enq-result-count">
+                @FilteredEnquiries.Count() results
+            </span>
+        </div>
+
+        @if (isLoading)
+        {
+            <div class="enq-state">
+                <div class="enq-spinner"></div>
+                <strong>Loading enquiries</strong>
+                <p>Please wait while we retrieve the latest records.</p>
+            </div>
+        }
+        else if (string.IsNullOrWhiteSpace(errorMessage)
+                 && !FilteredEnquiries.Any())
+        {
+            <div class="enq-state">
+                <div class="enq-empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+                <strong>No enquiries found</strong>
+                <p>
+                    @if (enquiries.Count == 0)
+                    {
+                        <span>There are no enquiry records to display yet.</span>
+                    }
+                    else
+                    {
+                        <span>Try different search terms or clear your filters.</span>
+                    }
+                </p>
+                @if (HasActiveFilters)
+                {
+                    <button type="button"
+                            class="enq-button enq-button-secondary"
+                            @onclick="ClearFilters">
+                        Clear filters
+                    </button>
+                }
+            </div>
+        }
+        else if (string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="enq-table-wrap">
+                <table class="enq-table">
+                    <thead>
+                        <tr>
+                            <th>Enquiry details</th>
+                            <th>Advertisement</th>
+                            <th>Participants</th>
+                            <th>Status</th>
+                            <th>Messages</th>
+                            <th>Date created</th>
+                            <th class="enq-action-heading">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var enquiry in FilteredEnquiries)
+                        {
+                            <tr @key="enquiry.AdvertisementEnquiryID">
+
+                                <td>
+                                    <div class="enq-subject">
+                                        @enquiry.Subject
+                                    </div>
+                                    <div class="enq-muted">
+                                        Enquiry #@enquiry.AdvertisementEnquiryID
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <div class="enq-ad-title">
+                                        @enquiry.AdvertisementTitle
+                                    </div>
+                                    <span class="enq-ad-number">
+                                        @enquiry.AdvertisementNumber
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="enq-person">
+                                        <span class="enq-person-avatar">
+                                            @Initial(enquiry.SenderName)
+                                        </span>
+                                        <div>
+                                            <div class="enq-person-name">
+                                                @enquiry.SenderName
+                                            </div>
+                                            <div class="enq-person-role">Sender</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="enq-person enq-recipient">
+                                        <span class="enq-person-avatar enq-avatar-alt">
+                                            @Initial(enquiry.RecipientName)
+                                        </span>
+                                        <div>
+                                            <div class="enq-person-name">
+                                                @enquiry.RecipientName
+                                            </div>
+                                            <div class="enq-person-role">Recipient</div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="@GetStatusClass(enquiry.Status)">
+                                        <span class="enq-status-dot"></span>
+                                        @DisplayStatus(enquiry.Status)
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="enq-message-count">
+                                        <i class="bi bi-chat-left-text"></i>
+                                        @enquiry.MessageCount
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="enq-date">
+                                        @enquiry.CreatedDate.ToString("dd MMM yyyy")
+                                    </div>
+                                    <div class="enq-muted">
+                                        @enquiry.CreatedDate.ToString("HH:mm")
+                                    </div>
+                                </td>
+
+                                <td class="enq-action-cell">
+                                    <button type="button"
+                                            class="enq-view-button"
+                                            title="View enquiry"
+                                            @onclick="@(() => OpenEnquiry(enquiry.AdvertisementEnquiryID))">
+                                        View
+                                        <i class="bi bi-arrow-up-right"></i>
+                                    </button>
+                                </td>
+
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (!isLoading && string.IsNullOrWhiteSpace(errorMessage)
+             && FilteredEnquiries.Any())
+        {
+            <div class="enq-table-footer">
+                <span>
+                    Showing @FilteredEnquiries.Count() of @enquiries.Count enquiries
+                </span>
+                <span>
+                    <i class="bi bi-shield-check"></i>
+                    Admin enquiry overview
+                </span>
+            </div>
+        }
+
+    </section>
+
+</div>
+
+@code {
+    private List<AdvertisementEnquiryResponse> enquiries = new();
+
+    private string searchText = string.Empty;
+    private string selectedStatus = string.Empty;
+
+    private string? errorMessage;
+    private bool isLoading;
+
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchText) ||
+        !string.IsNullOrWhiteSpace(selectedStatus);
+
+    private int OpenCount =>
+        enquiries.Count(x =>
+            string.Equals(x.Status, "OPEN",
+                StringComparison.OrdinalIgnoreCase));
+
+    private int ClosedCount =>
+        enquiries.Count(x =>
+            string.Equals(x.Status, "CLOSED",
+                StringComparison.OrdinalIgnoreCase));
+
+    private int MessageCount => enquiries.Sum(x => x.MessageCount);
+
+    private IEnumerable<AdvertisementEnquiryResponse> FilteredEnquiries =>
+        enquiries
+            .Where(x =>
+                string.IsNullOrWhiteSpace(selectedStatus) ||
+                string.Equals(x.Status, selectedStatus,
+                    StringComparison.OrdinalIgnoreCase))
+            .Where(x =>
+            {
+                if (string.IsNullOrWhiteSpace(searchText))
+                    return true;
+
+                var term = searchText.Trim();
+
+                return Contains(x.Subject, term)
+                    || Contains(x.AdvertisementTitle, term)
+                    || Contains(x.AdvertisementNumber, term)
+                    || Contains(x.SenderName, term)
+                    || Contains(x.RecipientName, term)
+                    || x.AdvertisementEnquiryID.ToString()
+                        .Contains(term, StringComparison.OrdinalIgnoreCase);
+            })
+            .OrderByDescending(x => x.CreatedDate);
+
+    private RenderFragment EnquiryHeaderDescription => @<span>
+        Monitor customer conversations and advertisement enquiries.
+    </span>;
+
+    private RenderFragment EnquiryHeaderActions => @<div>
+        <button type="button"
+                class="enq-button enq-button-secondary"
+                @onclick="LoadEnquiriesAsync"
+                disabled="@isLoading">
+            <i class="bi bi-arrow-clockwise"></i>
+            Refresh
+        </button>
+    </div>;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(
+                AdminAuthenticationStateProvider.AccessToken))
+        {
+            errorMessage =
+                "Your admin session is unavailable. Please sign in again.";
+            return;
+        }
+
+        await LoadEnquiriesAsync();
+    }
+
+    private async Task LoadEnquiriesAsync()
+    {
+        if (isLoading)
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            enquiries =
+                await AdvertisementApiService.GetAllEnquiriesForAdminAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        // Filters are applied immediately through the bound properties.
+    }
+
+    private void ClearFilters()
+    {
+        searchText = string.Empty;
+        selectedStatus = string.Empty;
+    }
+
+    private void OpenEnquiry(long enquiryId)
+    {
+        Navigation.NavigateTo($"/enquiries/{enquiryId}");
+    }
+
+    private static bool Contains(string? value, string term) =>
+        !string.IsNullOrEmpty(value) &&
+        value.Contains(term, StringComparison.OrdinalIgnoreCase);
+
+    private static string Initial(string? name) =>
+        string.IsNullOrWhiteSpace(name)
+            ? "?"
+            : name.Trim()[0].ToString().ToUpperInvariant();
+
+    private static string DisplayStatus(string? status) =>
+        string.IsNullOrWhiteSpace(status) ? "Unknown" : status;
+
+    private static string GetStatusClass(string? status)
+    {
+        if (string.Equals(status, "OPEN", StringComparison.OrdinalIgnoreCase))
+            return "enq-status enq-status-open";
+
+        if (string.Equals(status, "CLOSED", StringComparison.OrdinalIgnoreCase))
+            return "enq-status enq-status-closed";
+
+        return "enq-status enq-status-other";
+    }
+}

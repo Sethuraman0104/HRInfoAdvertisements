@@ -836,6 +836,23 @@ builder.Services.AddAuthorization(options =>
                 "permission",
                 "AUDIT_VIEW");
         });
+
+        
+    // ============================================================
+    // ENQUIRY MANAGEMENT
+    // ============================================================
+
+    options.AddPolicy(
+        "ENQUIRY_VIEW",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+
+            policy.RequireClaim(
+                "permission",
+                "ENQUIRY_VIEW");
+        });
+
 });
 
 

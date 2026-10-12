@@ -168,6 +168,16 @@ public static class DatabaseSeeder
                 IsActive = true
             },
 
+            
+new Permission
+{
+    PermissionCode = "ENQUIRY_VIEW",
+    PermissionName = "View Advertisement Enquiries",
+    Description = "View all advertisement enquiries in the admin console",
+    IsActive = true
+},
+
+
             new Permission
             {
                 PermissionCode = "ADVERTISEMENT_APPROVE",
@@ -296,7 +306,8 @@ public static class DatabaseSeeder
                     "REPORT_REVIEW",
 
                     "AUDIT_VIEW",
-                    "SYSTEM_SETTINGS"
+"SYSTEM_SETTINGS",
+"ENQUIRY_VIEW"
                 ],
 
                 ["Moderator"] =

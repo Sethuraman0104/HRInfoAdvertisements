@@ -128,6 +128,23 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
         return MapDetail(enquiry);
     }
 
+    public async Task<List<AdvertisementEnquiryResponse>>
+    GetAllForAdminAsync()
+{
+    var enquiries = await _context.AdvertisementEnquiries
+        .AsNoTracking()
+        .Include(x => x.Advertisement)
+        .Include(x => x.SenderUser)
+        .Include(x => x.RecipientUser)
+        .Include(x => x.Messages)
+        .OrderByDescending(x => x.CreatedDate)
+        .ToListAsync();
+
+    return enquiries
+        .Select(MapResponse)
+        .ToList();
+}
+
     public async Task<List<AdvertisementEnquiryResponse>> GetSentAsync(
         long userId)
     {
@@ -376,7 +393,7 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
                 enquiry.ClosedDate,
 
             MessageCount =
-    enquiry.Messages?.Count ?? 0,
+    1 + (enquiry.Messages?.Count ?? 0),
 
 LastMessageSenderUserID =
     enquiry.Messages?
@@ -384,6 +401,7 @@ LastMessageSenderUserID =
         .ThenByDescending(x => x.AdvertisementEnquiryMessageID)
         .Select(x => (long?)x.SenderUserID)
         .FirstOrDefault()
+    ?? enquiry.SenderUserID
         };
     }
 

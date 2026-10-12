@@ -1803,6 +1803,29 @@ private static async Task<string> ReadRemovalErrorAsync(
     }
 
     // ============================================================
+// ENQUIRIES - ADMIN
+// ============================================================
+
+public async Task<List<AdvertisementEnquiryResponse>>
+    GetAllEnquiriesForAdminAsync()
+{
+    var client = CreateAuthenticatedAdminClient();
+
+    var response = await client.GetAsync(
+        "api/v1/enquiries/admin");
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(
+            await ReadEnquiryErrorAsync(response));
+    }
+
+    return await response.Content
+        .ReadFromJsonAsync<List<AdvertisementEnquiryResponse>>()
+        ?? new List<AdvertisementEnquiryResponse>();
+}
+
+    // ============================================================
     // ENQUIRIES - SENT
     // ============================================================
 

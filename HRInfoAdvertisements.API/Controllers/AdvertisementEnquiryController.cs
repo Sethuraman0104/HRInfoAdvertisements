@@ -56,6 +56,14 @@ public class AdvertisementEnquiryController : ControllerBase
         }
     }
 
+    [HttpGet("admin")]
+[Authorize(Policy = "ENQUIRY_VIEW")]
+public async Task<IActionResult> GetAllForAdmin()
+{
+    var result = await _service.GetAllForAdminAsync();
+    return Ok(result);
+}
+
     [HttpGet("sent")]
     public async Task<IActionResult> GetSent()
     {
