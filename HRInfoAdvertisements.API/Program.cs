@@ -1,4 +1,4 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text;
 
 using HRInfoAdvertisements.Application.Interfaces;
@@ -9,7 +9,9 @@ using HRInfoAdvertisements.Infrastructure.Data.Seed;
 using HRInfoAdvertisements.Infrastructure.Services;
 
 using HRInfoAdvertisements.Application.Enquiries;
+using HRInfoAdvertisements.Application.Billing;
 using HRInfoAdvertisements.Infrastructure.Enquiries;
+using HRInfoAdvertisements.Infrastructure.Billing;
 
 using HRInfoAdvertisements.Application.Messaging;
 using HRInfoAdvertisements.Infrastructure.Messaging;
@@ -200,6 +202,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAdvertisementFavoriteService,
     AdvertisementFavoriteService>();
+
+builder.Services.AddScoped<
+    IEnquiryBillingService,
+    EnquiryBillingService>();
 
 builder.Services.AddScoped<
     IAdvertisementEnquiryService,
@@ -977,3 +983,7 @@ app.MapControllers();
 // ============================================================
 
 app.Run();
+
+builder.Services.AddScoped<
+    HRInfoAdvertisements.Application.Billing.IEnquiryPackageAdminService,
+    HRInfoAdvertisements.Infrastructure.Billing.EnquiryPackageAdminService>();

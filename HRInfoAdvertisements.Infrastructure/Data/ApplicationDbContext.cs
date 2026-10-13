@@ -1,4 +1,4 @@
-using HRInfoAdvertisements.Domain.Billing;
+﻿using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -80,6 +80,8 @@ public class ApplicationDbContext : DbContext
         => Set<UserPackageEntitlement>();
     public DbSet<PaymentTransaction> PaymentTransactions
         => Set<PaymentTransaction>();
+    public DbSet<PackagePurchaseRequest> PackagePurchaseRequests
+        => Set<PackagePurchaseRequest>();
 
     // System
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -93,3 +95,4 @@ public class ApplicationDbContext : DbContext
             typeof(ApplicationDbContext).Assembly);
     }
 }
+

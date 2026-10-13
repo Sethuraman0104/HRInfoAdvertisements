@@ -1,0 +1,361 @@
+﻿using HRInfoAdvertisements.Application.Billing;
+using HRInfoAdvertisements.Application.Billing.DTOs;
+using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Infrastructure.Billing;
+
+public sealed class EnquiryBillingService : IEnquiryBillingService
+{
+    private readonly ApplicationDbContext _context;
+
+    public EnquiryBillingService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IReadOnlyList<EnquiryPackageResponse>>
+        GetAvailablePackagesAsync(
+            CancellationToken cancellationToken = default)
+    {
+        return await _context.EnquiryPackages
+            .AsNoTracking()
+            .Where(package => package.IsActive)
+            .OrderBy(package => package.Price)
+            .ThenBy(package => package.EnquiryPackageID)
+            .Select(package => new EnquiryPackageResponse
+            {
+                EnquiryPackageID = package.EnquiryPackageID,
+                PackageCode = package.PackageCode,
+                Name = package.Name,
+                Description = package.Description,
+                MonthlySenderEnquiryLimit =
+                    package.MonthlySenderEnquiryLimit,
+                MonthlyAdvertisementEnquiryLimit =
+                    package.MonthlyAdvertisementEnquiryLimit,
+                ValidityDays = package.ValidityDays,
+                Price = package.Price,
+                CurrencyCode = package.CurrencyCode
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    public async Task<PackagePurchaseRequestResponse>
+        CreatePurchaseRequestAsync(
+            long userId,
+            int enquiryPackageId,
+            CancellationToken cancellationToken = default)
+    {
+        if (userId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The authenticated user ID is invalid.");
+        }
+
+        var package = await _context.EnquiryPackages
+            .SingleOrDefaultAsync(
+                x => x.EnquiryPackageID == enquiryPackageId &&
+                     x.IsActive,
+                cancellationToken);
+
+        if (package == null)
+        {
+            throw new InvalidOperationException(
+                "The requested package does not exist or is inactive.");
+        }
+
+        if (string.Equals(
+                package.PackageCode,
+                "FREE",
+                StringComparison.OrdinalIgnoreCase) ||
+            package.Price <= 0m ||
+            (package.MonthlySenderEnquiryLimit <= 0 &&
+             package.MonthlyAdvertisementEnquiryLimit <= 0))
+        {
+            throw new InvalidOperationException(
+                "This package is not configured for paid purchase.");
+        }
+
+        var hasPendingRequest = await _context.PackagePurchaseRequests
+            .AnyAsync(
+                x => x.UserID == userId &&
+                     x.Status == PackagePurchaseRequestStatuses.Pending,
+                cancellationToken);
+
+        if (hasPendingRequest)
+        {
+            throw new InvalidOperationException(
+                "You already have a pending package purchase request.");
+        }
+
+        var request = new PackagePurchaseRequest
+        {
+            UserID = userId,
+            EnquiryPackageID = package.EnquiryPackageID,
+            Amount = package.Price,
+            CurrencyCode = package.CurrencyCode,
+            Status = PackagePurchaseRequestStatuses.Pending,
+            CreatedDate = DateTime.UtcNow
+        };
+
+        _context.PackagePurchaseRequests.Add(request);
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        request.EnquiryPackage = package;
+
+        return MapPurchaseRequest(request);
+    }
+
+    public async Task<IReadOnlyList<PackagePurchaseRequestResponse>>
+        GetMyPurchaseRequestsAsync(
+            long userId,
+            CancellationToken cancellationToken = default)
+    {
+        if (userId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The authenticated user ID is invalid.");
+        }
+
+        var requests = await _context.PackagePurchaseRequests
+            .AsNoTracking()
+            .Include(x => x.EnquiryPackage)
+            .Where(x => x.UserID == userId)
+            .OrderByDescending(x => x.CreatedDate)
+            .ThenByDescending(x => x.PackagePurchaseRequestID)
+            .ToListAsync(cancellationToken);
+
+        return requests
+            .Select(MapPurchaseRequest)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPendingPurchaseRequestsForAdminAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var requests = await _context.PackagePurchaseRequests
+            .AsNoTracking()
+            .Include(x => x.EnquiryPackage)
+            .Where(x => x.Status == PackagePurchaseRequestStatuses.Pending)
+            .OrderBy(x => x.CreatedDate)
+            .ThenBy(x => x.PackagePurchaseRequestID)
+            .ToListAsync(cancellationToken);
+
+        return requests
+            .Select(MapAdminPurchaseRequest)
+            .ToList();
+    }
+
+    public async Task<AdminPackagePurchaseRequestResponse?>
+        ReviewPurchaseRequestAsync(
+            long adminUserId,
+            long purchaseRequestId,
+            bool approve,
+            CancellationToken cancellationToken = default)
+    {
+        if (adminUserId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The authenticated administrator ID is invalid.");
+        }
+
+        if (purchaseRequestId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The purchase request ID is invalid.");
+        }
+
+        var request = await _context.PackagePurchaseRequests
+            .Include(x => x.EnquiryPackage)
+            .SingleOrDefaultAsync(
+                x => x.PackagePurchaseRequestID == purchaseRequestId,
+                cancellationToken);
+
+        if (request == null)
+        {
+            return null;
+        }
+
+        if (request.Status != PackagePurchaseRequestStatuses.Pending)
+        {
+            throw new InvalidOperationException(
+                "Only pending purchase requests can be reviewed.");
+        }
+
+        request.Status = approve
+            ? PackagePurchaseRequestStatuses.Approved
+            : PackagePurchaseRequestStatuses.Rejected;
+
+        request.ModifiedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        // Approval permits the request to proceed to payment.
+        // It does not confirm payment or activate an entitlement.
+        return MapAdminPurchaseRequest(request);
+    }
+
+    public async Task<AdminPackagePurchaseRequestResponse?>
+        ConfirmPackagePaymentAsync(
+            long adminUserId,
+            long purchaseRequestId,
+            ConfirmPackagePaymentRequest request,
+            CancellationToken cancellationToken = default)
+    {
+        if (adminUserId <= 0)
+            throw new InvalidOperationException(
+                "The authenticated administrator ID is invalid.");
+
+        if (purchaseRequestId <= 0)
+            throw new InvalidOperationException(
+                "The purchase request ID is invalid.");
+
+        ArgumentNullException.ThrowIfNull(request);
+
+        var paymentMethod = request.PaymentMethod.Trim().ToUpperInvariant();
+
+        if (paymentMethod != "BANK_TRANSFER" &&
+            paymentMethod != "BENEFITPAY")
+        {
+            throw new InvalidOperationException(
+                "Payment method must be BANK_TRANSFER or BENEFITPAY.");
+        }
+
+        var reference = request.ProviderTransactionReference?.Trim();
+
+        if (string.IsNullOrWhiteSpace(reference) || reference.Length > 200)
+        {
+            throw new InvalidOperationException(
+                "A payment reference is required and must not exceed 200 characters.");
+        }
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable,
+                cancellationToken);
+
+        var purchaseRequest = await _context.PackagePurchaseRequests
+            .Include(x => x.EnquiryPackage)
+            .SingleOrDefaultAsync(
+                x => x.PackagePurchaseRequestID == purchaseRequestId,
+                cancellationToken);
+
+        if (purchaseRequest == null)
+            return null;
+
+        if (purchaseRequest.Status != PackagePurchaseRequestStatuses.Approved)
+        {
+            throw new InvalidOperationException(
+                "Only approved purchase requests can have payment confirmed.");
+        }
+
+        var package = purchaseRequest.EnquiryPackage;
+
+        if (!package.IsActive ||
+            string.Equals(package.PackageCode, "FREE",
+                StringComparison.OrdinalIgnoreCase) ||
+            purchaseRequest.Amount <= 0m)
+        {
+            throw new InvalidOperationException(
+                "The purchase request is not eligible for paid activation.");
+        }
+
+        var now = DateTime.UtcNow;
+
+        var activeEntitlements = await _context.UserPackageEntitlements
+            .Where(x =>
+                x.UserID == purchaseRequest.UserID &&
+                x.Status == UserPackageEntitlementStatuses.Active)
+            .ToListAsync(cancellationToken);
+
+        foreach (var entitlement in activeEntitlements)
+        {
+            if (!entitlement.EndDate.HasValue ||
+                entitlement.EndDate.Value > now)
+            {
+                throw new InvalidOperationException(
+                    "The user already has an active package. " +
+                    "Wait until it expires before activating another package.");
+            }
+
+            entitlement.Status = UserPackageEntitlementStatuses.Expired;
+            entitlement.ModifiedDate = now;
+        }
+
+        var newEntitlement = new UserPackageEntitlement
+        {
+            UserID = purchaseRequest.UserID,
+            EnquiryPackageID = package.EnquiryPackageID,
+            StartDate = now,
+            EndDate = package.ValidityDays.HasValue
+                ? now.AddDays(package.ValidityDays.Value)
+                : null,
+            Status = UserPackageEntitlementStatuses.Active,
+            CreatedDate = now
+        };
+
+        var payment = new PaymentTransaction
+        {
+            UserPackageEntitlement = newEntitlement,
+            Amount = purchaseRequest.Amount,
+            CurrencyCode = purchaseRequest.CurrencyCode,
+            PaymentMethod = paymentMethod,
+            PaymentProvider = paymentMethod == "BANK_TRANSFER"
+                ? "MANUAL"
+                : "BENEFITPAY",
+            ProviderTransactionReference = reference,
+            Status = PaymentTransactionStatuses.Confirmed,
+            CreatedDate = now,
+            ConfirmedDate = now
+        };
+
+        newEntitlement.Payments.Add(payment);
+        _context.UserPackageEntitlements.Add(newEntitlement);
+
+        purchaseRequest.Status = PackagePurchaseRequestStatuses.Completed;
+        purchaseRequest.ModifiedDate = now;
+
+        await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return MapAdminPurchaseRequest(purchaseRequest);
+    }
+    private static AdminPackagePurchaseRequestResponse
+        MapAdminPurchaseRequest(PackagePurchaseRequest request)
+    {
+        return new AdminPackagePurchaseRequestResponse
+        {
+            PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+            UserID = request.UserID,
+            EnquiryPackageID = request.EnquiryPackageID,
+            PackageCode = request.EnquiryPackage.PackageCode,
+            PackageName = request.EnquiryPackage.Name,
+            Amount = request.Amount,
+            CurrencyCode = request.CurrencyCode,
+            Status = request.Status,
+            CreatedDate = request.CreatedDate,
+            ModifiedDate = request.ModifiedDate
+        };
+    }
+    private static PackagePurchaseRequestResponse MapPurchaseRequest(
+        PackagePurchaseRequest request)
+    {
+        return new PackagePurchaseRequestResponse
+        {
+            PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+            EnquiryPackageID = request.EnquiryPackageID,
+            PackageCode = request.EnquiryPackage.PackageCode,
+            PackageName = request.EnquiryPackage.Name,
+            Amount = request.Amount,
+            CurrencyCode = request.CurrencyCode,
+            Status = request.Status,
+            CreatedDate = request.CreatedDate,
+            ModifiedDate = request.ModifiedDate
+        };
+    }
+}
+
+
