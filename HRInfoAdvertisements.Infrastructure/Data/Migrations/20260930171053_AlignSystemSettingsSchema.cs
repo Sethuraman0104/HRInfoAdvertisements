@@ -10,126 +10,124 @@ public partial class AlignSystemSettingsSchema : Migration
     {
         migrationBuilder.Sql(
             """
-            IF OBJECT_ID(N'dbo.SystemSettings', N'U') IS NULL
+            IF OBJECT_ID(N'dbo.SystemSettings', N'U') IS NOT NULL
             BEGIN
-                RETURN;
-            END;
+                IF OBJECT_ID(N'dbo.SystemSettings_Legacy', N'U') IS NOT NULL
+                BEGIN
+                    DROP TABLE dbo.SystemSettings_Legacy;
+                END;
 
-            IF OBJECT_ID(N'dbo.SystemSettings_Legacy', N'U') IS NOT NULL
-            BEGIN
+                /*
+                 * Rename the existing primary key constraint first.
+                 * sp_rename on the table does not rename the constraint.
+                 */
+                IF EXISTS
+                (
+                    SELECT 1
+                    FROM sys.key_constraints
+                    WHERE name = N'PK_SystemSettings'
+                      AND parent_object_id = OBJECT_ID(N'dbo.SystemSettings')
+                )
+                BEGIN
+                    EXEC sp_rename
+                        N'dbo.PK_SystemSettings',
+                        N'PK_SystemSettings_Legacy',
+                        N'OBJECT';
+                END;
+
+                /*
+                 * Preserve the existing table/data temporarily.
+                 */
+                EXEC sp_rename
+                    N'dbo.SystemSettings',
+                    N'SystemSettings_Legacy';
+
+                /*
+                 * Create the final SystemSettings schema.
+                 */
+                CREATE TABLE dbo.SystemSettings
+                (
+                    SystemSettingID int IDENTITY(1,1) NOT NULL,
+                    SettingKey nvarchar(150) NOT NULL,
+                    SettingValue nvarchar(4000) NULL,
+                    Description nvarchar(500) NULL,
+                    DataType varchar(30) NULL,
+                    IsEncrypted bit NOT NULL,
+                    IsActive bit NOT NULL,
+                    CreatedDate datetime2 NOT NULL,
+                    ModifiedDate datetime2 NULL,
+
+                    CONSTRAINT PK_SystemSettings
+                        PRIMARY KEY (SystemSettingID)
+                );
+
+                SET IDENTITY_INSERT dbo.SystemSettings ON;
+
+                /*
+                 * Existing databases may not have DataType.
+                 * Preserve the existing values and initialize DataType as NULL.
+                 */
+                INSERT INTO dbo.SystemSettings
+                (
+                    SystemSettingID,
+                    SettingKey,
+                    SettingValue,
+                    Description,
+                    DataType,
+                    IsEncrypted,
+                    IsActive,
+                    CreatedDate,
+                    ModifiedDate
+                )
+                SELECT
+                    SystemSettingID,
+                    CONVERT(nvarchar(150), SettingKey),
+                    CONVERT(nvarchar(4000), SettingValue),
+                    CONVERT(nvarchar(500), Description),
+                    NULL,
+                    IsEncrypted,
+                    IsActive,
+                    CreatedDate,
+                    ModifiedDate
+                FROM dbo.SystemSettings_Legacy
+                ORDER BY SystemSettingID;
+
+                SET IDENTITY_INSERT dbo.SystemSettings OFF;
+
+                /*
+                 * Make the identity value continue after the existing data.
+                 */
+                IF EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.SystemSettings
+                )
+                BEGIN
+                    DECLARE @MaxSystemSettingID int;
+
+                    SELECT
+                        @MaxSystemSettingID = MAX(SystemSettingID)
+                    FROM dbo.SystemSettings;
+
+                    DBCC CHECKIDENT
+                    (
+                        'dbo.SystemSettings',
+                        RESEED,
+                        @MaxSystemSettingID
+                    ) WITH NO_INFOMSGS;
+                END;
+
+                /*
+                 * Prevent duplicate setting keys.
+                 */
+                CREATE UNIQUE INDEX UX_SystemSettings_Key
+                    ON dbo.SystemSettings (SettingKey);
+
+                /*
+                 * Remove the temporary legacy table.
+                 */
                 DROP TABLE dbo.SystemSettings_Legacy;
             END;
-
-            /*
-             * Rename the existing primary key constraint first.
-             * sp_rename on the table does not rename the constraint.
-             */
-            IF EXISTS
-            (
-                SELECT 1
-                FROM sys.key_constraints
-                WHERE name = N'PK_SystemSettings'
-                  AND parent_object_id = OBJECT_ID(N'dbo.SystemSettings')
-            )
-            BEGIN
-                EXEC sp_rename
-                    N'dbo.PK_SystemSettings',
-                    N'PK_SystemSettings_Legacy',
-                    N'OBJECT';
-            END;
-
-            /*
-             * Preserve the existing table/data temporarily.
-             */
-            EXEC sp_rename
-                N'dbo.SystemSettings',
-                N'SystemSettings_Legacy';
-
-            /*
-             * Create the final SystemSettings schema.
-             */
-            CREATE TABLE dbo.SystemSettings
-            (
-                SystemSettingID int IDENTITY(1,1) NOT NULL,
-                SettingKey nvarchar(150) NOT NULL,
-                SettingValue nvarchar(4000) NULL,
-                Description nvarchar(500) NULL,
-                DataType varchar(30) NULL,
-                IsEncrypted bit NOT NULL,
-                IsActive bit NOT NULL,
-                CreatedDate datetime2 NOT NULL,
-                ModifiedDate datetime2 NULL,
-
-                CONSTRAINT PK_SystemSettings
-                    PRIMARY KEY (SystemSettingID)
-            );
-
-            SET IDENTITY_INSERT dbo.SystemSettings ON;
-
-            /*
-             * Existing office database does not have DataType.
-             * Preserve all existing values and initialize DataType as NULL.
-             */
-            INSERT INTO dbo.SystemSettings
-            (
-                SystemSettingID,
-                SettingKey,
-                SettingValue,
-                Description,
-                DataType,
-                IsEncrypted,
-                IsActive,
-                CreatedDate,
-                ModifiedDate
-            )
-            SELECT
-                SystemSettingID,
-                CONVERT(nvarchar(150), SettingKey),
-                CONVERT(nvarchar(4000), SettingValue),
-                CONVERT(nvarchar(500), Description),
-                NULL,
-                IsEncrypted,
-                IsActive,
-                CreatedDate,
-                ModifiedDate
-            FROM dbo.SystemSettings_Legacy
-            ORDER BY SystemSettingID;
-
-            SET IDENTITY_INSERT dbo.SystemSettings OFF;
-
-            /*
-             * Make the identity value continue after the existing data.
-             */
-            IF EXISTS
-            (
-                SELECT 1
-                FROM dbo.SystemSettings
-            )
-            BEGIN
-                DECLARE @MaxSystemSettingID int;
-
-                SELECT
-                    @MaxSystemSettingID = MAX(SystemSettingID)
-                FROM dbo.SystemSettings;
-
-                DBCC CHECKIDENT
-                (
-                    'dbo.SystemSettings',
-                    RESEED,
-                    @MaxSystemSettingID
-                ) WITH NO_INFOMSGS;
-            END;
-
-            /*
-             * Prevent duplicate setting keys.
-             */
-            CREATE UNIQUE INDEX UX_SystemSettings_Key
-                ON dbo.SystemSettings (SettingKey);
-
-            /*
-             * Remove the temporary legacy table.
-             */
-            DROP TABLE dbo.SystemSettings_Legacy;
             """);
     }
 

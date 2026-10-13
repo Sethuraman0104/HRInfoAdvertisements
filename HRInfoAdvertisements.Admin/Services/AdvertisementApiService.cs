@@ -1825,6 +1825,33 @@ public async Task<List<AdvertisementEnquiryResponse>>
         ?? new List<AdvertisementEnquiryResponse>();
 }
 
+public async Task<AdvertisementEnquiryDetailResponse?>
+    GetEnquiryDetailsForAdminAsync(long enquiryId)
+{
+    if (enquiryId <= 0)
+        return null;
+
+    var client = CreateAuthenticatedAdminClient();
+
+    var response = await client.GetAsync(
+        $"api/v1/enquiries/admin/{enquiryId}");
+
+    if (response.StatusCode ==
+        System.Net.HttpStatusCode.NotFound)
+    {
+        return null;
+    }
+
+    if (!response.IsSuccessStatusCode)
+    {
+        throw new InvalidOperationException(
+            await ReadEnquiryErrorAsync(response));
+    }
+
+    return await response.Content
+        .ReadFromJsonAsync<AdvertisementEnquiryDetailResponse>();
+}
+
     // ============================================================
     // ENQUIRIES - SENT
     // ============================================================

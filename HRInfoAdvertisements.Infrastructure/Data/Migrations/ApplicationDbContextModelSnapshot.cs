@@ -22,6 +22,188 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+                {
+                    b.Property<int>("EnquiryPackageID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryPackageID"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthlySenderEnquiryLimit")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("PackageCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.HasKey("EnquiryPackageID");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("PackageCode")
+                        .IsUnique();
+
+                    b.ToTable("EnquiryPackages", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementLimit", "[MonthlyAdvertisementEnquiryLimit] >= 0");
+
+                            t.HasCheckConstraint("CK_EnquiryPackages_Price", "[Price] >= 0");
+
+                            t.HasCheckConstraint("CK_EnquiryPackages_SenderLimit", "[MonthlySenderEnquiryLimit] >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+                {
+                    b.Property<long>("PaymentTransactionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PaymentTransactionID"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime?>("ConfirmedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(3)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PaymentProvider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProviderTransactionReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("RefundedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<long>("UserPackageEntitlementID")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("PaymentTransactionID");
+
+                    b.HasIndex("UserPackageEntitlementID");
+
+                    b.HasIndex("PaymentProvider", "ProviderTransactionReference")
+                        .IsUnique()
+                        .HasFilter("[ProviderTransactionReference] IS NOT NULL");
+
+                    b.ToTable("PaymentTransactions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PaymentTransactions_Amount", "[Amount] >= 0");
+
+                            t.HasCheckConstraint("CK_PaymentTransactions_Status", "[Status] IN ('PENDING', 'CONFIRMED', 'FAILED', 'REFUNDED')");
+                        });
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+                {
+                    b.Property<long>("UserPackageEntitlementID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserPackageEntitlementID"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EnquiryPackageID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<long>("UserID")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("UserPackageEntitlementID");
+
+                    b.HasIndex("EnquiryPackageID");
+
+                    b.HasIndex("UserID")
+                        .IsUnique()
+                        .HasFilter("[Status] = 'ACTIVE'");
+
+                    b.HasIndex("UserID", "Status", "StartDate", "EndDate");
+
+                    b.ToTable("UserPackageEntitlements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+
+                            t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+                        });
+                });
+
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
                 {
                     b.Property<long>("AdvertisementID")
@@ -2006,6 +2188,36 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.ToTable("UserSessions", (string)null);
                 });
 
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", "UserPackageEntitlement")
+                        .WithMany("Payments")
+                        .HasForeignKey("UserPackageEntitlementID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UserPackageEntitlement");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", "EnquiryPackage")
+                        .WithMany("Entitlements")
+                        .HasForeignKey("EnquiryPackageID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EnquiryPackage");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
                 {
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementType", "AdvertisementType")
@@ -2572,6 +2784,16 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+                {
+                    b.Navigation("Entitlements");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+                {
+                    b.Navigation("Payments");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>

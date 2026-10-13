@@ -1,3 +1,4 @@
+﻿using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,9 @@ public static class DatabaseSeeder
         // ========================================================
 
         await context.Database.MigrateAsync();
+
+        // Billing master data
+        await SeedEnquiryPackagesAsync(context);
 
         // ========================================================
         // SECURITY / AUTHORIZATION MASTER DATA
@@ -48,6 +52,36 @@ public static class DatabaseSeeder
     // ============================================================
     // ROLES
     // ============================================================
+
+    private static async Task SeedEnquiryPackagesAsync(
+        ApplicationDbContext context)
+    {
+        const string freePackageCode = "FREE";
+
+        var existingPackage = await context.EnquiryPackages
+            .FirstOrDefaultAsync(x =>
+                x.PackageCode == freePackageCode);
+
+        // Preserve any limits administrators have already configured.
+        if (existingPackage != null)
+            return;
+
+        context.EnquiryPackages.Add(new EnquiryPackage
+        {
+            PackageCode = freePackageCode,
+            Name = "Free",
+            Description =
+                "Default enquiry package for users without a qualifying paid package.",
+            MonthlySenderEnquiryLimit = 5,
+            MonthlyAdvertisementEnquiryLimit = 10,
+            Price = 0m,
+            CurrencyCode = "BHD",
+            IsActive = true,
+            CreatedDate = DateTime.UtcNow
+        });
+
+        await context.SaveChangesAsync();
+    }
 
     private static async Task SeedRolesAsync(
         ApplicationDbContext context)
@@ -581,7 +615,7 @@ new Permission
             {
                 StatusCode = "DRAFT",
                 StatusName = "Draft",
-                StatusNameAr = "مسودة",
+                StatusNameAr = "ظ…ط³ظˆط¯ط©",
                 Description =
                     "Advertisement is being prepared and has not been submitted for review.",
                 DisplayOrder = 1,
@@ -593,7 +627,7 @@ new Permission
             {
                 StatusCode = "PENDING_REVIEW",
                 StatusName = "Pending Review",
-                StatusNameAr = "قيد المراجعة",
+                StatusNameAr = "ظ‚ظٹط¯ ط§ظ„ظ…ط±ط§ط¬ط¹ط©",
                 Description =
                     "Advertisement has been submitted and is awaiting administrator review.",
                 DisplayOrder = 2,
@@ -605,7 +639,7 @@ new Permission
             {
                 StatusCode = "REJECTED",
                 StatusName = "Rejected",
-                StatusNameAr = "مرفوض",
+                StatusNameAr = "ظ…ط±ظپظˆط¶",
                 Description =
                     "Advertisement has been rejected by an administrator.",
                 DisplayOrder = 3,
@@ -617,7 +651,7 @@ new Permission
             {
                 StatusCode = "PUBLISHED",
                 StatusName = "Published",
-                StatusNameAr = "منشور",
+                StatusNameAr = "ظ…ظ†ط´ظˆط±",
                 Description =
                     "Advertisement is approved and publicly available.",
                 DisplayOrder = 4,
@@ -629,7 +663,7 @@ new Permission
             {
                 StatusCode = "SUSPENDED",
                 StatusName = "Suspended",
-                StatusNameAr = "موقوف",
+                StatusNameAr = "ظ…ظˆظ‚ظˆظپ",
                 Description =
                     "Advertisement has been temporarily suspended.",
                 DisplayOrder = 5,
@@ -641,7 +675,7 @@ new Permission
             {
                 StatusCode = "EXPIRED",
                 StatusName = "Expired",
-                StatusNameAr = "منتهي",
+                StatusNameAr = "ظ…ظ†طھظ‡ظٹ",
                 Description =
                     "Advertisement has passed its expiry date.",
                 DisplayOrder = 6,
@@ -653,7 +687,7 @@ new Permission
             {
                 StatusCode = "SOLD",
                 StatusName = "Sold",
-                StatusNameAr = "تم البيع",
+                StatusNameAr = "طھظ… ط§ظ„ط¨ظٹط¹",
                 Description =
                     "Advertisement item has been sold.",
                 DisplayOrder = 7,
@@ -665,7 +699,7 @@ new Permission
             {
                 StatusCode = "RENTED",
                 StatusName = "Rented",
-                StatusNameAr = "تم التأجير",
+                StatusNameAr = "طھظ… ط§ظ„طھط£ط¬ظٹط±",
                 Description =
                     "Advertisement item has been rented.",
                 DisplayOrder = 8,
@@ -677,7 +711,7 @@ new Permission
 {
     StatusCode = "UNPUBLISHED",
     StatusName = "Unpublished",
-    StatusNameAr = "غير منشور",
+    StatusNameAr = "ط؛ظٹط± ظ…ظ†ط´ظˆط±",
     Description =
         "Advertisement has been removed from public listings at the advertiser's request.",
     IsPublicStatus = false,

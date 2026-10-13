@@ -1,0 +1,453 @@
+
+@page "/admin/enquiries/{EnquiryId:long}"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Enquiries.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject AdvertisementApiService AdvertisementApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Enquiry Details | HR Info Admin</PageTitle>
+
+<div class="enquiry-detail-page">
+    <div class="detail-topbar">
+        <button type="button"
+                class="detail-back-button"
+                @onclick="GoBack">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to enquiries</span>
+        </button>
+
+        @if (Enquiry is not null)
+        {
+            <span class="detail-reference">
+                ENQUIRY #@Enquiry.AdvertisementEnquiryID
+            </span>
+        }
+    </div>
+
+    @if (isLoading)
+    {
+        <section class="detail-state-card">
+            <div class="detail-spinner"></div>
+            <h2>Loading enquiry</h2>
+            <p>Please wait while the conversation is retrieved.</p>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <section class="detail-state-card detail-error-state">
+            <div class="detail-state-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h2>Unable to load enquiry</h2>
+            <p>@errorMessage</p>
+            <button type="button"
+                    class="detail-primary-button"
+                    @onclick="LoadEnquiryAsync">
+                <i class="bi bi-arrow-clockwise"></i>
+                Try again
+            </button>
+        </section>
+    }
+    else if (Enquiry is null)
+    {
+        <section class="detail-state-card">
+            <div class="detail-state-icon">
+                <i class="bi bi-chat-square-text"></i>
+            </div>
+            <h2>Enquiry not found</h2>
+            <p>The enquiry may have been removed or is no longer available.</p>
+            <button type="button"
+                    class="detail-primary-button"
+                    @onclick="GoBack">
+                Return to enquiries
+            </button>
+        </section>
+    }
+    else
+    {
+        <header class="detail-hero">
+            <div class="detail-hero-copy">
+                <div class="detail-eyebrow">
+                    <i class="bi bi-chat-left-text-fill"></i>
+                    COMMUNICATION CENTER
+                </div>
+                <h1>Enquiry details</h1>
+                <p>
+                    Review the advertisement enquiry and its conversation history.
+                </p>
+                <div class="detail-hero-meta">
+                    <span>
+                        <i class="bi bi-calendar3"></i>
+                        Submitted @FormatDate(Enquiry.CreatedDate)
+                    </span>
+                    <span class="detail-meta-separator">•</span>
+                    <span>Reference #@Enquiry.AdvertisementEnquiryID</span>
+                </div>
+            </div>
+
+            <div class="detail-status-panel">
+                <span class="detail-status-label">Current status</span>
+                <span class="@GetStatusClass(Enquiry.Status)">
+                    <span class="detail-status-dot"></span>
+                    @GetStatusLabel(Enquiry.Status)
+                </span>
+                @if (IsClosed)
+                {
+                    <p>This conversation is closed and read-only.</p>
+                }
+                else
+                {
+                    <p>Conversation details and messages are available below.</p>
+                }
+            </div>
+        </header>
+
+        @if (IsClosed)
+        {
+            <div class="detail-closed-banner">
+                <span class="detail-banner-icon">
+                    <i class="bi bi-lock-fill"></i>
+                </span>
+                <div>
+                    <strong>This enquiry is closed</strong>
+                    <p>
+                        The conversation is displayed for review.
+                        No reply or modification is available on this page.
+                    </p>
+                    @if (Enquiry.ClosedDate.HasValue)
+                    {
+                        <small>Closed @FormatDate(Enquiry.ClosedDate.Value)</small>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="detail-content-grid">
+            <main class="detail-main-column">
+                <section class="detail-card original-enquiry-card">
+                    <div class="detail-card-heading">
+                        <div class="detail-heading-icon detail-icon-blue">
+                            <i class="bi bi-envelope-paper"></i>
+                        </div>
+                        <div>
+                            <h2>Original enquiry</h2>
+                            <p>The initial message submitted by the customer.</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-subject">
+                        <span class="detail-field-label">SUBJECT</span>
+                        <h3>@Enquiry.Subject</h3>
+                    </div>
+
+                    <div class="detail-original-message">
+                        @Enquiry.Message
+                    </div>
+
+                    <div class="detail-message-footer">
+                        <span>
+                            <i class="bi bi-clock"></i>
+                            @FormatDate(Enquiry.CreatedDate)
+                        </span>
+                        <span class="detail-original-tag">
+                            <i class="bi bi-bookmark-check"></i>
+                            Original message
+                        </span>
+                    </div>
+                </section>
+
+                <section class="detail-card conversation-card">
+                    <div class="detail-card-heading conversation-heading">
+                        <div class="detail-heading-icon detail-icon-purple">
+                            <i class="bi bi-chat-square-dots"></i>
+                        </div>
+                        <div>
+                            <h2>Conversation history</h2>
+                            <p>Messages recorded in this enquiry.</p>
+                        </div>
+                        <span class="detail-message-count">
+                            @(Enquiry.Messages?.Count ?? 0)
+                            @((Enquiry.Messages?.Count ?? 0) == 1 ? "message" : "messages")
+                        </span>
+                    </div>
+
+                    @if (Enquiry.Messages is null || Enquiry.Messages.Count == 0)
+                    {
+                        <div class="detail-empty-conversation">
+                            <div class="detail-empty-icon">
+                                <i class="bi bi-chat"></i>
+                            </div>
+                            <strong>No additional messages yet</strong>
+                            <p>The original enquiry is shown above.</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="detail-timeline">
+                            @foreach (var message in Enquiry.Messages
+                                .OrderBy(m => m.CreatedDate)
+                                .ThenBy(m => m.AdvertisementEnquiryMessageID))
+                            {
+                                var isSender = message.SenderUserID == Enquiry.SenderUserID;
+
+                                <article class="detail-timeline-item">
+                                    <div class="detail-timeline-marker @(isSender ? "marker-blue" : "marker-purple")">
+                                        <i class="bi @(isSender ? "bi-person" : "bi-reply")"></i>
+                                    </div>
+
+                                    <div class="detail-timeline-message">
+                                        <div class="detail-timeline-header">
+                                            <div>
+                                                <strong>@message.SenderName</strong>
+                                                <span class="detail-role-label">
+                                                    @(isSender ? "Enquiry sender" : message.SenderUserID == Enquiry.RecipientUserID
+                                                        ? "Advertisement owner"
+                                                        : "Conversation participant")
+                                                </span>
+                                            </div>
+                                            <time>@FormatDate(message.CreatedDate)</time>
+                                        </div>
+
+                                        <div class="detail-timeline-body">
+                                            @message.Message
+                                        </div>
+
+                                        @if (message.IsRead)
+                                        {
+                                            <div class="detail-read-indicator">
+                                                <i class="bi bi-check2-all"></i>
+                                                Read
+                                                @if (message.ReadDate.HasValue)
+                                                {
+                                                    <span>· @FormatDate(message.ReadDate.Value)</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </article>
+                            }
+                        </div>
+                    }
+                </section>
+            </main>
+
+            <aside class="detail-sidebar">
+                <section class="detail-card advertisement-card">
+                    <div class="detail-card-heading">
+                        <div class="detail-heading-icon detail-icon-green">
+                            <i class="bi bi-megaphone"></i>
+                        </div>
+                        <div>
+                            <h2>Advertisement</h2>
+                            <p>Related listing</p>
+                        </div>
+                    </div>
+
+                    <span class="detail-field-label">ADVERTISEMENT NUMBER</span>
+                    <div class="detail-ad-number">
+                        @(string.IsNullOrWhiteSpace(Enquiry.AdvertisementNumber)
+                            ? $"#{Enquiry.AdvertisementID}"
+                            : Enquiry.AdvertisementNumber)
+                    </div>
+
+                    <h3 class="detail-ad-title">@Enquiry.AdvertisementTitle</h3>
+
+                    <div class="detail-info-row">
+                        <span>Advertisement ID</span>
+                        <strong>@Enquiry.AdvertisementID</strong>
+                    </div>
+                    <div class="detail-info-row">
+                        <span>Enquiry ID</span>
+                        <strong>@Enquiry.AdvertisementEnquiryID</strong>
+                    </div>
+                </section>
+
+                <section class="detail-card participant-card">
+                    <div class="detail-card-heading">
+                        <div class="detail-heading-icon detail-icon-blue">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div>
+                            <h2>Participants</h2>
+                            <p>People involved in this enquiry</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-participant">
+                        <div class="detail-avatar avatar-blue">
+                            @GetInitials(Enquiry.SenderName)
+                        </div>
+                        <div class="detail-participant-info">
+                            <span class="detail-participant-role">ENQUIRY SENDER</span>
+                            <strong>@Enquiry.SenderName</strong>
+                            <small>User ID: @Enquiry.SenderUserID</small>
+                        </div>
+                    </div>
+
+                    <div class="detail-participant-divider"></div>
+
+                    <div class="detail-participant">
+                        <div class="detail-avatar avatar-purple">
+                            @GetInitials(Enquiry.RecipientName)
+                        </div>
+                        <div class="detail-participant-info">
+                            <span class="detail-participant-role">ADVERTISEMENT OWNER</span>
+                            <strong>@Enquiry.RecipientName</strong>
+                            <small>User ID: @Enquiry.RecipientUserID</small>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="detail-card contact-card">
+                    <div class="detail-card-heading">
+                        <div class="detail-heading-icon detail-icon-amber">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+                        <div>
+                            <h2>Contact information</h2>
+                            <p>Details supplied with the enquiry</p>
+                        </div>
+                    </div>
+
+                    @if (string.IsNullOrWhiteSpace(Enquiry.ContactMobile)
+                        && string.IsNullOrWhiteSpace(Enquiry.ContactEmail))
+                    {
+                        <div class="detail-no-contact">
+                            No additional contact information was provided.
+                        </div>
+                    }
+                    else
+                    {
+                        @if (!string.IsNullOrWhiteSpace(Enquiry.ContactMobile))
+                        {
+                            <div class="detail-contact-item">
+                                <span class="detail-contact-icon">
+                                    <i class="bi bi-telephone"></i>
+                                </span>
+                                <div>
+                                    <span>Mobile</span>
+                                    <strong>@Enquiry.ContactMobile</strong>
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(Enquiry.ContactEmail))
+                        {
+                            <div class="detail-contact-item">
+                                <span class="detail-contact-icon">
+                                    <i class="bi bi-envelope"></i>
+                                </span>
+                                <div>
+                                    <span>Email</span>
+                                    <strong class="detail-email-value">@Enquiry.ContactEmail</strong>
+                                </div>
+                            </div>
+                        }
+                    }
+                </section>
+
+                <section class="detail-note-card">
+                    <i class="bi bi-shield-check"></i>
+                    <div>
+                        <strong>Admin review</strong>
+                        <p>This page displays enquiry information using your admin access.</p>
+                    </div>
+                </section>
+            </aside>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public long EnquiryId { get; set; }
+
+    private AdvertisementEnquiryDetailResponse? Enquiry { get; set; }
+
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    private bool IsClosed =>
+        string.Equals(Enquiry?.Status, "CLOSED",
+            StringComparison.OrdinalIgnoreCase);
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadEnquiryAsync();
+    }
+
+    private async Task LoadEnquiryAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        Enquiry = null;
+
+        try
+        {
+            Enquiry = await AdvertisementApiService
+                .GetEnquiryDetailsForAdminAsync(EnquiryId);
+
+            if (Enquiry is null)
+            {
+                errorMessage = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/admin/enquiries");
+    }
+
+    private static string FormatDate(DateTime date)
+    {
+        return date.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt");
+    }
+
+    private static string GetStatusLabel(string? status)
+    {
+        return string.IsNullOrWhiteSpace(status)
+            ? "Unknown"
+            : status.Replace('_', ' ').ToLowerInvariant() switch
+            {
+                "open" => "Open",
+                "closed" => "Closed",
+                var value => System.Globalization.CultureInfo
+                    .CurrentCulture.TextInfo.ToTitleCase(value)
+            };
+    }
+
+    private static string GetStatusClass(string? status)
+    {
+        return string.Equals(status, "CLOSED",
+            StringComparison.OrdinalIgnoreCase)
+            ? "detail-status-badge status-closed"
+            : "detail-status-badge status-open";
+    }
+
+    private static string GetInitials(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return "?";
+
+        var parts = name.Trim()
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (parts.Length == 1)
+            return parts[0][..1].ToUpperInvariant();
+
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+}

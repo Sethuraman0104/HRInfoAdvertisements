@@ -64,6 +64,18 @@ public async Task<IActionResult> GetAllForAdmin()
     return Ok(result);
 }
 
+[HttpGet("admin/{enquiryId:long}")]
+[Authorize(Policy = "ENQUIRY_VIEW")]
+public async Task<IActionResult> GetByIdForAdmin(long enquiryId)
+{
+    var result = await _service.GetByIdForAdminAsync(enquiryId);
+
+    if (result == null)
+        return NotFound(new { message = "Enquiry not found." });
+
+    return Ok(result);
+}
+
     [HttpGet("sent")]
     public async Task<IActionResult> GetSent()
     {

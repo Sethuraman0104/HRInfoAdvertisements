@@ -1,3 +1,4 @@
+using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,6 +73,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<LoginHistory> LoginHistories => Set<LoginHistory>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+
+    // Billing and package entitlements
+    public DbSet<EnquiryPackage> EnquiryPackages => Set<EnquiryPackage>();
+    public DbSet<UserPackageEntitlement> UserPackageEntitlements
+        => Set<UserPackageEntitlement>();
+    public DbSet<PaymentTransaction> PaymentTransactions
+        => Set<PaymentTransaction>();
 
     // System
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();

@@ -1,8 +1,12 @@
-using HRInfoAdvertisements.Application.Enquiries;
+﻿using HRInfoAdvertisements.Application.Enquiries;
 using HRInfoAdvertisements.Application.Enquiries.DTOs;
+using System.Text.Json;
+using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace HRInfoAdvertisements.Infrastructure.Enquiries;
 
@@ -16,95 +20,228 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
         _context = context;
     }
 
-    public async Task<AdvertisementEnquiryResponse> CreateAsync(
-        long senderUserId,
-        CreateAdvertisementEnquiryRequest request)
+public async Task<AdvertisementEnquiryResponse> CreateAsync(
+    long senderUserId,
+    CreateAdvertisementEnquiryRequest request)
+{
+    if (request.AdvertisementID <= 0)
+        throw new ArgumentException("AdvertisementID is required.");
+
+    if (string.IsNullOrWhiteSpace(request.Subject))
+        throw new ArgumentException("Subject is required.");
+
+    if (string.IsNullOrWhiteSpace(request.Message))
+        throw new ArgumentException("Message is required.");
+
+    var advertisement = await _context.Advertisements
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x =>
+            x.AdvertisementID == request.AdvertisementID);
+
+    if (advertisement == null)
+        throw new KeyNotFoundException("Advertisement not found.");
+
+    var status = await _context.AdvertisementStatuses
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x =>
+            x.StatusID == advertisement.StatusID);
+
+    if (status == null ||
+        !string.Equals(
+            status.StatusCode,
+            "PUBLISHED",
+            StringComparison.OrdinalIgnoreCase))
     {
-        if (request.AdvertisementID <= 0)
-            throw new ArgumentException("AdvertisementID is required.");
-
-        if (string.IsNullOrWhiteSpace(request.Subject))
-            throw new ArgumentException("Subject is required.");
-
-        if (string.IsNullOrWhiteSpace(request.Message))
-            throw new ArgumentException("Message is required.");
-
-        var advertisement = await _context.Advertisements
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                x.AdvertisementID == request.AdvertisementID);
-
-        if (advertisement == null)
-            throw new KeyNotFoundException(
-                "Advertisement not found.");
-
-        var status = await _context.AdvertisementStatuses
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                x.StatusID == advertisement.StatusID);
-
-        if (status == null ||
-            !string.Equals(
-                status.StatusCode,
-                "PUBLISHED",
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                "Enquiries can only be sent for published advertisements.");
-        }
-
-        if (advertisement.UserID == senderUserId)
-        {
-            throw new InvalidOperationException(
-                "You cannot send an enquiry for your own advertisement.");
-        }
-
-        var sender = await _context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                x.UserID == senderUserId);
-
-        if (sender == null)
-            throw new KeyNotFoundException(
-                "Sender user not found.");
-
-        var enquiry = new AdvertisementEnquiry
-        {
-            AdvertisementID = advertisement.AdvertisementID,
-
-            // Always derive recipient from the advertisement owner.
-            RecipientUserID = advertisement.UserID,
-
-            SenderUserID = senderUserId,
-
-            Subject = request.Subject.Trim(),
-
-            Message = request.Message.Trim(),
-
-            ContactMobile =
-                string.IsNullOrWhiteSpace(request.ContactMobile)
-                    ? sender.MobileNo
-                    : request.ContactMobile.Trim(),
-
-            ContactEmail =
-                string.IsNullOrWhiteSpace(request.ContactEmail)
-                    ? sender.Email
-                    : request.ContactEmail.Trim(),
-
-            Status = "OPEN",
-
-            CreatedDate = DateTime.UtcNow
-        };
-
-        _context.AdvertisementEnquiries.Add(enquiry);
-
-        await _context.SaveChangesAsync();
-
-        return await BuildResponseAsync(
-            enquiry.AdvertisementEnquiryID)
-            ?? throw new InvalidOperationException(
-                "Unable to retrieve the created enquiry.");
+        throw new InvalidOperationException(
+            "Enquiries can only be sent for published advertisements.");
     }
+
+    if (advertisement.UserID == senderUserId)
+    {
+        throw new InvalidOperationException(
+            "You cannot send an enquiry for your own advertisement.");
+    }
+
+    var sender = await _context.Users
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x => x.UserID == senderUserId);
+
+    if (sender == null)
+        throw new KeyNotFoundException("Sender user not found.");
+
+    var now = DateTime.UtcNow;
+    var monthStart = new DateTime(
+        now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+    var nextMonthStart = monthStart.AddMonths(1);
+    var monthKey = monthStart.ToString("yyyyMM");
+
+    var senderLock =
+        $"HRInfoAdvertisements:EnquiryLimit:Sender:{senderUserId}:{monthKey}";
+
+    var advertisementLock =
+        $"HRInfoAdvertisements:EnquiryLimit:Advertisement:{advertisement.AdvertisementID}:{monthKey}";
+
+    string? rejectionType = null;
+    int rejectionCount = 0;
+    int rejectionLimit = 0;
+    string? rejectionPackageCode = null;
+    long? createdEnquiryId = null;
+
+    await using (var transaction =
+        await _context.Database.BeginTransactionAsync())
+    {
+        bool transactionCompleted = false;
+        try
+        {
+            // Acquire locks in a consistent order for every request.
+            foreach (var resource in new[] { senderLock, advertisementLock }
+                .OrderBy(x => x, StringComparer.Ordinal))
+            {
+                await AcquireEnquiryLimitLockAsync(resource);
+            }
+
+            // Resolve package entitlements while the limit locks are held.
+            var senderPackage =
+                await ResolveEnquiryPackageAsync(senderUserId, now);
+
+            var ownerPackage =
+                await ResolveEnquiryPackageAsync(advertisement.UserID, now);
+
+            var senderCount =
+                await _context.AdvertisementEnquiries.CountAsync(x =>
+                    x.SenderUserID == senderUserId &&
+                    x.CreatedDate >= monthStart &&
+                    x.CreatedDate < nextMonthStart);
+
+            if (senderCount >= senderPackage.MonthlySenderEnquiryLimit)
+            {
+                rejectionType = "SENDER_MONTHLY_LIMIT";
+                rejectionCount = senderCount;
+                rejectionLimit = senderPackage.MonthlySenderEnquiryLimit;
+                rejectionPackageCode = senderPackage.PackageCode;
+            }
+            else
+            {
+                var advertisementCount =
+                    await _context.AdvertisementEnquiries.CountAsync(x =>
+                        x.AdvertisementID == advertisement.AdvertisementID &&
+                        x.CreatedDate >= monthStart &&
+                        x.CreatedDate < nextMonthStart);
+
+                if (advertisementCount >=
+                    ownerPackage.MonthlyAdvertisementEnquiryLimit)
+                {
+                    rejectionType = "ADVERTISEMENT_MONTHLY_LIMIT";
+                    rejectionCount = advertisementCount;
+                    rejectionLimit =
+                        ownerPackage.MonthlyAdvertisementEnquiryLimit;
+                    rejectionPackageCode = ownerPackage.PackageCode;
+                }
+            }
+
+            if (rejectionType == null)
+            {
+                var enquiry = new AdvertisementEnquiry
+                {
+                    AdvertisementID = advertisement.AdvertisementID,
+                    RecipientUserID = advertisement.UserID,
+                    SenderUserID = senderUserId,
+                    Subject = request.Subject.Trim(),
+                    Message = request.Message.Trim(),
+                    ContactMobile =
+                        string.IsNullOrWhiteSpace(request.ContactMobile)
+                            ? sender.MobileNo
+                            : request.ContactMobile.Trim(),
+                    ContactEmail =
+                        string.IsNullOrWhiteSpace(request.ContactEmail)
+                            ? sender.Email
+                            : request.ContactEmail.Trim(),
+                    Status = "OPEN",
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.AdvertisementEnquiries.Add(enquiry);
+                await _context.SaveChangesAsync();
+
+                _context.AuditLogs.Add(new AuditLog
+                {
+                    UserID = senderUserId,
+                    Action = "ENQUIRY_CREATED",
+                    EntityName = "AdvertisementEnquiry",
+                    EntityID = enquiry.AdvertisementEnquiryID.ToString(),
+                    NewValues = JsonSerializer.Serialize(new
+                    {
+                        AdvertisementEnquiryID =
+                            enquiry.AdvertisementEnquiryID,
+                        AdvertisementID = advertisement.AdvertisementID,
+                        SenderUserID = senderUserId,
+                        RecipientUserID = advertisement.UserID,
+                        Subject = enquiry.Subject,
+                        CreatedDate = enquiry.CreatedDate
+                    }),
+                    CreatedDate = DateTime.UtcNow
+                });
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                transactionCompleted = true;
+createdEnquiryId = enquiry.AdvertisementEnquiryID;
+
+                return await BuildResponseAsync(
+                    enquiry.AdvertisementEnquiryID)
+                    ?? throw new InvalidOperationException(
+                        "Unable to retrieve the created enquiry.");
+            }
+
+            // Release the limit locks before persisting the rejection audit.
+            await transaction.RollbackAsync();
+            transactionCompleted = true;
+        }
+        catch
+        {
+            if (!transactionCompleted)
+    {
+        try
+        {
+            await transaction.RollbackAsync();
+        }
+        catch
+        {
+            // Preserve the original exception.
+        }
+    }
+
+            throw;
+        }
+    }
+
+    if (createdEnquiryId.HasValue)
+{
+    return await BuildResponseAsync(createdEnquiryId.Value)
+        ?? throw new InvalidOperationException(
+            "The enquiry was created, but its response could not be retrieved.");
+}
+
+    // Keep rejected-limit audit records outside the rolled-back transaction.
+    await WriteEnquiryLimitAuditAsync(
+        senderUserId,
+        advertisement.AdvertisementID,
+        rejectionType!,
+        rejectionCount,
+        rejectionLimit,
+        rejectionPackageCode!,
+        monthStart);
+
+    if (rejectionType == "SENDER_MONTHLY_LIMIT")
+    {
+        throw new InvalidOperationException(
+            $"Your monthly enquiry limit of {rejectionLimit} has been reached.");
+    }
+
+    throw new InvalidOperationException(
+        "This advertisement has reached its monthly enquiry limit.");
+}
 
     public async Task<AdvertisementEnquiryDetailResponse?> GetByIdAsync(
         long userId,
@@ -127,6 +264,25 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
 
         return MapDetail(enquiry);
     }
+
+    public async Task<AdvertisementEnquiryDetailResponse?> GetByIdForAdminAsync(
+    long enquiryId)
+{
+    var enquiry = await _context.AdvertisementEnquiries
+        .AsNoTracking()
+        .Include(x => x.Advertisement)
+        .Include(x => x.SenderUser)
+        .Include(x => x.RecipientUser)
+        .Include(x => x.Messages)
+            .ThenInclude(x => x.SenderUser)
+        .FirstOrDefaultAsync(x =>
+            x.AdvertisementEnquiryID == enquiryId);
+
+    if (enquiry == null)
+        return null;
+
+    return MapDetail(enquiry);
+}
 
     public async Task<List<AdvertisementEnquiryResponse>>
     GetAllForAdminAsync()
@@ -324,6 +480,114 @@ public class AdvertisementEnquiryService : IAdvertisementEnquiryService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    private async Task<EnquiryPackage> ResolveEnquiryPackageAsync(
+        long userId,
+        DateTime now)
+    {
+        var paidPackage = await _context.UserPackageEntitlements
+            .AsNoTracking()
+            .Where(x =>
+                x.UserID == userId &&
+                x.Status == UserPackageEntitlementStatuses.Active &&
+                x.StartDate <= now &&
+                (x.EndDate == null || x.EndDate > now) &&
+                x.EnquiryPackage.IsActive &&
+                x.EnquiryPackage.PackageCode != "FREE" &&
+                x.EnquiryPackage.Price > 0m &&
+                x.Payments.Any(p =>
+                    p.Status == PaymentTransactionStatuses.Confirmed &&
+                    p.ConfirmedDate != null &&
+                    p.RefundedDate == null))
+            .OrderByDescending(x => x.StartDate)
+            .Select(x => x.EnquiryPackage)
+            .FirstOrDefaultAsync();
+
+        if (paidPackage != null)
+            return paidPackage;
+
+        var freePackage = await _context.EnquiryPackages
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.PackageCode == "FREE" && x.IsActive);
+
+        return freePackage ?? throw new InvalidOperationException(
+            "The FREE enquiry package is unavailable. Please contact support.");
+    }
+
+private async Task AcquireEnquiryLimitLockAsync(
+    string resource)
+{
+    var transaction = _context.Database.CurrentTransaction
+        ?? throw new InvalidOperationException(
+            "An active database transaction is required for enquiry limit checks.");
+
+    await using var command =
+        _context.Database.GetDbConnection().CreateCommand();
+
+    command.Transaction = transaction.GetDbTransaction();
+    command.CommandType = CommandType.Text;
+    command.CommandText = """
+        DECLARE @result int;
+
+        EXEC @result = sys.sp_getapplock
+            @Resource = @resource,
+            @LockMode = 'Exclusive',
+            @LockOwner = 'Transaction',
+            @LockTimeout = 10000,
+            @DbPrincipal = 'public';
+
+        SELECT @result;
+        """;
+
+    var parameter = command.CreateParameter();
+    parameter.ParameterName = "@resource";
+    parameter.DbType = DbType.String;
+    parameter.Size = 255;
+    parameter.Value = resource;
+    command.Parameters.Add(parameter);
+
+    var result = await command.ExecuteScalarAsync();
+    var lockResult = Convert.ToInt32(result);
+
+    // SQL Server returns a negative value if the lock
+    // cannot be acquired. Never continue without the lock.
+    if (lockResult < 0)
+    {
+        throw new InvalidOperationException(
+            "The enquiry limit could not be checked because of concurrent activity. Please try again.");
+    }
+}
+
+    private async Task WriteEnquiryLimitAuditAsync(
+        long senderUserId,
+        long advertisementId,
+        string limitType,
+        int currentCount,
+        int configuredLimit,
+        string packageCode,
+        DateTime monthStart)
+    {
+        _context.AuditLogs.Add(new AuditLog
+        {
+            UserID = senderUserId,
+            Action = "ENQUIRY_LIMIT_REJECTED",
+            EntityName = "AdvertisementEnquiry",
+            EntityID = advertisementId.ToString(),
+            NewValues = JsonSerializer.Serialize(new
+            {
+                SenderUserID = senderUserId,
+                AdvertisementID = advertisementId,
+                LimitType = limitType,
+                CurrentCount = currentCount,
+                ConfiguredLimit = configuredLimit,
+                PackageCode = packageCode,
+                MonthStartUtc = monthStart
+            }),
+            CreatedDate = DateTime.UtcNow
+        });
+
+        await _context.SaveChangesAsync();
     }
 
     private async Task<AdvertisementEnquiryResponse?> BuildResponseAsync(

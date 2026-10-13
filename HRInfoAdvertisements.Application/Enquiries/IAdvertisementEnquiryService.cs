@@ -10,6 +10,9 @@ public interface IAdvertisementEnquiryService
 
     Task<List<AdvertisementEnquiryResponse>> GetAllForAdminAsync();
 
+    Task<AdvertisementEnquiryDetailResponse?> GetByIdForAdminAsync(
+    long enquiryId);
+
     Task<AdvertisementEnquiryDetailResponse?> GetByIdAsync(
         long userId,
         long enquiryId);

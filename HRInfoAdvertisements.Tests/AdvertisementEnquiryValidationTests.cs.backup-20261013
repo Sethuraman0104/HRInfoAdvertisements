@@ -1,0 +1,73 @@
+﻿using HRInfoAdvertisements.Application.Enquiries.DTOs;
+using HRInfoAdvertisements.Infrastructure.Data;
+using HRInfoAdvertisements.Infrastructure.Enquiries;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRInfoAdvertisements.Tests;
+
+public class AdvertisementEnquiryValidationTests
+{
+    private static AdvertisementEnquiryService CreateService()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        return new AdvertisementEnquiryService(
+            new ApplicationDbContext(options));
+    }
+
+    [Fact]
+    public async Task CreateAsync_RejectsInvalidAdvertisementId()
+    {
+        var service = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                1,
+                new CreateAdvertisementEnquiryRequest
+                {
+                    AdvertisementID = 0,
+                    Subject = "Test",
+                    Message = "Test message"
+                }));
+
+        Assert.Contains("AdvertisementID", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_RejectsBlankSubject()
+    {
+        var service = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                1,
+                new CreateAdvertisementEnquiryRequest
+                {
+                    AdvertisementID = 1,
+                    Subject = " ",
+                    Message = "Test message"
+                }));
+
+        Assert.Contains("Subject", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_RejectsBlankMessage()
+    {
+        var service = CreateService();
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => service.CreateAsync(
+                1,
+                new CreateAdvertisementEnquiryRequest
+                {
+                    AdvertisementID = 1,
+                    Subject = "Test",
+                    Message = " "
+                }));
+
+        Assert.Contains("Message", exception.Message);
+    }
+}

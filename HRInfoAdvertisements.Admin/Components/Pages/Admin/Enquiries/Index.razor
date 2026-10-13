@@ -436,9 +436,9 @@
     }
 
     private void OpenEnquiry(long enquiryId)
-    {
-        Navigation.NavigateTo($"/enquiries/{enquiryId}");
-    }
+{
+    Navigation.NavigateTo($"/admin/enquiries/{enquiryId}");
+}
 
     private static bool Contains(string? value, string term) =>
         !string.IsNullOrEmpty(value) &&
