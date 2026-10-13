@@ -53,22 +53,18 @@ public static class DatabaseSeeder
     // ROLES
     // ============================================================
 
-    private static async Task SeedEnquiryPackagesAsync(
-        ApplicationDbContext context)
+
+private static async Task SeedEnquiryPackagesAsync(
+    ApplicationDbContext context)
+{
+    var now = DateTime.UtcNow;
+
+    var packages = new[]
     {
-        const string freePackageCode = "FREE";
-
-        var existingPackage = await context.EnquiryPackages
-            .FirstOrDefaultAsync(x =>
-                x.PackageCode == freePackageCode);
-
-        // Preserve any limits administrators have already configured.
-        if (existingPackage != null)
-            return;
-
-        context.EnquiryPackages.Add(new EnquiryPackage
+        // Preserve the existing FREE package defaults.
+        new EnquiryPackage
         {
-            PackageCode = freePackageCode,
+            PackageCode = "FREE",
             Name = "Free",
             Description =
                 "Default enquiry package for users without a qualifying paid package.",
@@ -77,11 +73,71 @@ public static class DatabaseSeeder
             Price = 0m,
             CurrencyCode = "BHD",
             IsActive = true,
-            CreatedDate = DateTime.UtcNow
-        });
+            CreatedDate = now
+        },
 
-        await context.SaveChangesAsync();
+        // Paid tiers remain unavailable until configured and approved.
+        new EnquiryPackage
+        {
+            PackageCode = "BASIC",
+            Name = "Basic",
+            Description =
+                "Paid enquiry package. Configure pricing and limits before activation.",
+            MonthlySenderEnquiryLimit = 0,
+            MonthlyAdvertisementEnquiryLimit = 0,
+            ValidityDays = null,
+            Price = 0m,
+            CurrencyCode = "USD",
+            IsActive = false,
+            CreatedDate = now
+        },
+        new EnquiryPackage
+        {
+            PackageCode = "STANDARD",
+            Name = "Standard",
+            Description =
+                "Paid enquiry package. Configure pricing and limits before activation.",
+            MonthlySenderEnquiryLimit = 0,
+            MonthlyAdvertisementEnquiryLimit = 0,
+            ValidityDays = null,
+            Price = 0m,
+            CurrencyCode = "USD",
+            IsActive = false,
+            CreatedDate = now
+        },
+        new EnquiryPackage
+        {
+            PackageCode = "PREMIUM",
+            Name = "Premium",
+            Description =
+                "Paid enquiry package. Configure pricing and limits before activation.",
+            MonthlySenderEnquiryLimit = 0,
+            MonthlyAdvertisementEnquiryLimit = 0,
+            ValidityDays = null,
+            Price = 0m,
+            CurrencyCode = "USD",
+            IsActive = false,
+            CreatedDate = now
+        }
+    };
+
+    foreach (var package in packages)
+    {
+        // Never overwrite an existing package by code or display name.
+        var alreadyExists = await context.EnquiryPackages
+            .AnyAsync(x =>
+                x.PackageCode == package.PackageCode ||
+                x.Name == package.Name);
+
+        if (alreadyExists)
+            continue;
+
+        context.EnquiryPackages.Add(package);
     }
+
+    await context.SaveChangesAsync();
+}
+
 
     private static async Task SeedRolesAsync(
         ApplicationDbContext context)

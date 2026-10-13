@@ -17,6 +17,8 @@ public class EnquiryPackage
     // Maximum new enquiries an advertisement may receive per UTC calendar month.
     public int MonthlyAdvertisementEnquiryLimit { get; set; }
 
+    public int? ValidityDays { get; set; }
+
     public decimal Price { get; set; }
 
     public string CurrencyCode { get; set; } = "BHD";

@@ -70,6 +70,9 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
 
+                    b.Property<int?>("ValidityDays")
+                        .HasColumnType("int");
+
                     b.HasKey("EnquiryPackageID");
 
                     b.HasIndex("Name")
@@ -85,6 +88,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_EnquiryPackages_Price", "[Price] >= 0");
 
                             t.HasCheckConstraint("CK_EnquiryPackages_SenderLimit", "[MonthlySenderEnquiryLimit] >= 0");
+
+                            t.HasCheckConstraint("CK_EnquiryPackages_ValidityDays", "[ValidityDays] IS NULL OR [ValidityDays] > 0");
                         });
                 });
 

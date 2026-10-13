@@ -22,6 +22,10 @@ public class EnquiryPackageConfiguration
             table.HasCheckConstraint(
                 "CK_EnquiryPackages_AdvertisementLimit",
                 "[MonthlyAdvertisementEnquiryLimit] >= 0");
+
+            table.HasCheckConstraint(
+                "CK_EnquiryPackages_ValidityDays",
+                "[ValidityDays] IS NULL OR [ValidityDays] > 0");
         });
 
         builder.HasKey(x => x.EnquiryPackageID);
@@ -49,13 +53,13 @@ public class EnquiryPackageConfiguration
             .IsUnicode(false)
             .IsRequired();
 
+        builder.Property(x => x.ValidityDays)
+            .IsRequired(false);
+
         builder.Property(x => x.IsActive)
             .IsRequired();
 
         builder.HasIndex(x => x.Name)
             .IsUnique();
-
-
     }
 }
-
