@@ -40,7 +40,7 @@ public class RolePermissionManagementController : ControllerBase
 
     // POST: api/v1/roles/{roleId}/permissions
     [HttpPost("{roleId:int}/permissions")]
-    [Authorize(Policy = "USER_EDIT")]
+    [Authorize(Policy = "ROLE_PERMISSION_MANAGE")]
     public async Task<IActionResult> AssignPermission(
         int roleId,
         [FromBody] AssignRolePermissionRequest request)
@@ -82,6 +82,19 @@ public class RolePermissionManagementController : ControllerBase
             });
         }
 
+        
+if (string.Equals(
+    role.RoleName,
+    "SuperAdmin",
+    StringComparison.OrdinalIgnoreCase))
+{
+    return BadRequest(new
+    {
+        message = "Permissions cannot be modified for the SuperAdmin role."
+    });
+}
+
+
         var alreadyAssigned = role.Permissions.Any(
             x => x.PermissionID == request.PermissionID);
 
@@ -116,7 +129,7 @@ public class RolePermissionManagementController : ControllerBase
 
         // DELETE: api/v1/roles/{roleId}/permissions/{permissionId}
     [HttpDelete("{roleId:int}/permissions/{permissionId:int}")]
-    [Authorize(Policy = "USER_EDIT")]
+    [Authorize(Policy = "ROLE_PERMISSION_MANAGE")]
     public async Task<IActionResult> RemovePermission(
         int roleId,
         int permissionId)

@@ -1,0 +1,466 @@
+@page "/admin/package-purchase-requests"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Billing.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject PackagePurchaseRequestAdminApiService PurchaseRequestService
+@inject AdminAuthenticationStateProvider Auth
+
+<PageTitle>Package Purchase Requests | HR Info Admin</PageTitle>
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 mb-1">Package Purchase Requests</h1>
+            <p class="text-muted mb-0">
+                Review requests and confirm payments to activate package entitlements.
+            </p>
+        </div>
+
+        <button type="button"
+                class="btn btn-outline-primary"
+                @onclick="LoadAsync"
+                disabled="@isBusy">
+            <i class="bi bi-arrow-clockwise me-1"></i>
+            Refresh
+        </button>
+    </div>
+
+    <div class="alert alert-info">
+        <strong>Payment workflow:</strong>
+        Approval does not activate a package. Confirm the actual payment and
+        record its transaction reference to activate the entitlement.
+        BenefitPay confirmation is manual; this page does not verify a live gateway payment.
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            <strong>Unable to complete the operation.</strong>
+            <div class="mt-1">@errorMessage</div>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success" role="status">
+            @successMessage
+        </div>
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Pending review</div>
+                    <div class="fs-3 fw-bold">@PendingCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Awaiting payment confirmation</div>
+                    <div class="fs-3 fw-bold">@ApprovedCount</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Actionable requests</div>
+                    <div class="fs-3 fw-bold">@requests.Count</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h2 class="h5 mb-0">Requests awaiting action</h2>
+        </div>
+
+        <div class="card-body p-0">
+
+            @if (isLoading)
+            {
+                <div class="p-5 text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">Loading purchase requests...</p>
+                </div>
+            }
+            else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="p-5 text-center">
+                    <i class="bi bi-inbox fs-1 text-muted"></i>
+                    <h3 class="h5 mt-3">No actionable requests</h3>
+                    <p class="text-muted mb-0">
+                        New requests and approved requests awaiting payment will appear here.
+                    </p>
+                </div>
+            }
+            else if (!isLoading)
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Request</th>
+                                <th>Customer</th>
+                                <th>Package</th>
+                                <th>Amount</th>
+                                <th>Created</th>
+                                <th>Status</th>
+                                <th style="min-width: 230px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in requests)
+                            {
+                                <tr @key="item.PackagePurchaseRequestID">
+                                    <td>
+                                        <span class="fw-semibold">
+                                            #@item.PackagePurchaseRequestID
+                                        </span>
+                                    </td>
+                                    <td>@item.UserID</td>
+                                    <td>
+                                        <div class="fw-semibold">@item.PackageName</div>
+                                        <div class="small text-muted">@item.PackageCode</div>
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @item.Amount.ToString("N2")
+                                        @item.CurrencyCode
+                                    </td>
+                                    <td class="text-nowrap">
+                                        @item.CreatedDate.ToString("dd MMM yyyy")
+                                        <div class="small text-muted">
+                                            @item.CreatedDate.ToString("HH:mm")
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (IsPending(item))
+                                        {
+                                            <span class="badge text-bg-warning">Pending review</span>
+                                        }
+                                        else if (IsApproved(item))
+                                        {
+                                            <span class="badge text-bg-info">Awaiting payment</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge text-bg-secondary">
+                                                @item.Status
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (IsPending(item))
+                                        {
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <button type="button"
+                                                        class="btn btn-sm btn-success"
+                                                        @onclick="() => ReviewAsync(item, true)"
+                                                        disabled="@isBusy">
+                                                    Approve
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        @onclick="() => ReviewAsync(item, false)"
+                                                        disabled="@isBusy">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        }
+                                        else if (IsApproved(item))
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-primary"
+                                                    @onclick="() => SelectForPayment(item)">
+                                                <i class="bi bi-credit-card me-1"></i>
+                                                Confirm payment
+                                            </button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (selectedRequest is not null)
+    {
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-white py-3">
+                <h2 class="h5 mb-1">Confirm payment</h2>
+                <div class="text-muted small">
+                    Request #@selectedRequest.PackagePurchaseRequestID —
+                    @selectedRequest.PackageName —
+                    @selectedRequest.Amount.ToString("N2")
+                    @selectedRequest.CurrencyCode
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    Only confirm after you have independently verified receipt of payment.
+                    Confirmation activates the package entitlement.
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-5">
+                        <label for="paymentMethod" class="form-label">
+                            Payment method
+                        </label>
+                        <select id="paymentMethod"
+                                class="form-select"
+                                @bind="paymentMethod"
+                                disabled="@isBusy">
+                            <option value="BANK_TRANSFER">Bank transfer</option>
+                            <option value="BENEFITPAY">BenefitPay</option>
+                        </select>
+                        <div class="form-text">
+                            The API will reject a method disabled in system settings.
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-7">
+                        <label for="transactionReference" class="form-label">
+                            Transaction reference
+                        </label>
+                        <input id="transactionReference"
+                               class="form-control"
+                               maxlength="200"
+                               @bind="transactionReference"
+                               disabled="@isBusy"
+                               placeholder="Enter verified bank/payment reference" />
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="button"
+                            class="btn btn-primary"
+                            @onclick="ConfirmPaymentAsync"
+                            disabled="@isBusy">
+                        @if (isBusy)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                        }
+                        Confirm payment and activate package
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            @onclick="CancelPaymentSelection"
+                            disabled="@isBusy">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<AdminPackagePurchaseRequestResponse> requests = new();
+
+    private AdminPackagePurchaseRequestResponse? selectedRequest;
+
+    private string paymentMethod = "BANK_TRANSFER";
+    private string transactionReference = string.Empty;
+
+    private string? errorMessage;
+    private string? successMessage;
+
+    private bool isLoading;
+    private bool isBusy;
+
+    private int PendingCount =>
+        requests.Count(IsPending);
+
+    private int ApprovedCount =>
+        requests.Count(IsApproved);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Auth.AccessToken))
+        {
+            errorMessage =
+                "Your administrator session is missing. Please sign in again.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (isBusy || isLoading)
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            requests = await PurchaseRequestService.GetActionableAsync();
+
+            if (selectedRequest is not null)
+            {
+                selectedRequest = requests.FirstOrDefault(
+                    x => x.PackagePurchaseRequestID ==
+                         selectedRequest.PackagePurchaseRequestID);
+
+                if (selectedRequest is null)
+                    CancelPaymentSelection();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ReviewAsync(
+        AdminPackagePurchaseRequestResponse item,
+        bool approve)
+    {
+        if (isBusy)
+            return;
+
+        isBusy = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            if (approve)
+            {
+                await PurchaseRequestService.ApproveAsync(
+                    item.PackagePurchaseRequestID);
+
+                successMessage =
+                    $"Request #{item.PackagePurchaseRequestID} approved. Payment has not been confirmed.";
+            }
+            else
+            {
+                await PurchaseRequestService.RejectAsync(
+                    item.PackagePurchaseRequestID);
+
+                successMessage =
+                    $"Request #{item.PackagePurchaseRequestID} rejected.";
+            }
+
+            await ReloadAfterActionAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void SelectForPayment(
+        AdminPackagePurchaseRequestResponse item)
+    {
+        selectedRequest = item;
+        paymentMethod = "BANK_TRANSFER";
+        transactionReference = string.Empty;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private async Task ConfirmPaymentAsync()
+    {
+        if (isBusy || selectedRequest is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(transactionReference))
+        {
+            errorMessage = "Enter the verified payment transaction reference.";
+            return;
+        }
+
+        if (transactionReference.Trim().Length > 200)
+        {
+            errorMessage = "The transaction reference cannot exceed 200 characters.";
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+        successMessage = null;
+
+        var requestId = selectedRequest.PackagePurchaseRequestID;
+
+        try
+        {
+            await PurchaseRequestService.ConfirmPaymentAsync(
+                requestId,
+                new ConfirmPackagePaymentRequest
+                {
+                    PaymentMethod = paymentMethod,
+                    ProviderTransactionReference = transactionReference.Trim()
+                });
+
+            selectedRequest = null;
+            transactionReference = string.Empty;
+
+            successMessage =
+                $"Payment confirmed for request #{requestId}. The API reported success; verify the entitlement and transaction records during testing.";
+
+            await ReloadAfterActionAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task ReloadAfterActionAsync()
+    {
+        requests = await PurchaseRequestService.GetActionableAsync();
+    }
+
+    private void CancelPaymentSelection()
+    {
+        selectedRequest = null;
+        transactionReference = string.Empty;
+    }
+
+    private static bool IsPending(
+        AdminPackagePurchaseRequestResponse item) =>
+        string.Equals(
+            item.Status,
+            "PENDING",
+            StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsApproved(
+        AdminPackagePurchaseRequestResponse item) =>
+        string.Equals(
+            item.Status,
+            "APPROVED",
+            StringComparison.OrdinalIgnoreCase);
+}

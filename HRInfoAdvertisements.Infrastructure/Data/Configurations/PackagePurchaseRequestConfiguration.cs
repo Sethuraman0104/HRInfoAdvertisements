@@ -43,8 +43,8 @@ public sealed class PackagePurchaseRequestConfiguration
 
         // Only one pending purchase request per user.
         builder.HasIndex(x => x.UserID)
-            .IsUnique()
-            .HasFilter("[Status] = 'PENDING'");
+    .IsUnique()
+    .HasFilter("[Status] IN ('PENDING', 'APPROVED')");
 
         builder.HasOne(x => x.User)
             .WithMany()

@@ -1,4 +1,4 @@
-﻿using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +17,7 @@ public static class DatabaseSeeder
         await context.Database.MigrateAsync();
 
         // Billing master data
+        await SeedBillingSettingsAsync(context);
         await SeedEnquiryPackagesAsync(context);
 
         // ========================================================
@@ -54,6 +55,55 @@ public static class DatabaseSeeder
     // ============================================================
 
 
+    private static async Task SeedBillingSettingsAsync(
+        ApplicationDbContext context)
+    {
+        var now = DateTime.UtcNow;
+
+        var defaults = new[]
+        {
+            new SystemSetting
+            {
+                SettingKey = "PAID_PACKAGES_ENABLED",
+                SettingValue = "false",
+                Description = "Enables or disables paid enquiry packages.",
+                IsEncrypted = false,
+                IsActive = true,
+                CreatedDate = now
+            },
+            new SystemSetting
+            {
+                SettingKey = "BANK_TRANSFER_ENABLED",
+                SettingValue = "false",
+                Description = "Enables or disables bank transfer payment confirmation.",
+                IsEncrypted = false,
+                IsActive = true,
+                CreatedDate = now
+            },
+            new SystemSetting
+            {
+                SettingKey = "BENEFITPAY_ENABLED",
+                SettingValue = "false",
+                Description = "Enables or disables BenefitPay payment confirmation.",
+                IsEncrypted = false,
+                IsActive = true,
+                CreatedDate = now
+            }
+        };
+
+        foreach (var setting in defaults)
+        {
+            var exists = await context.SystemSettings
+                .AnyAsync(x => x.SettingKey == setting.SettingKey);
+
+            if (!exists)
+            {
+                context.SystemSettings.Add(setting);
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
 private static async Task SeedEnquiryPackagesAsync(
     ApplicationDbContext context)
 {
@@ -267,6 +317,22 @@ new Permission
     IsActive = true
 },
 
+            new Permission
+            {
+                PermissionCode = "BILLING_MANAGE",
+                PermissionName = "Manage Billing",
+                Description = "Manage enquiry packages and payment confirmations",
+                IsActive = true
+            },
+
+            new Permission
+{
+    PermissionCode = "ROLE_PERMISSION_MANAGE",
+    PermissionName = "Manage Role Permissions",
+    Description = "Assign and remove permissions from roles",
+    IsActive = true
+},
+
 
             new Permission
             {
@@ -397,7 +463,8 @@ new Permission
 
                     "AUDIT_VIEW",
 "SYSTEM_SETTINGS",
-"ENQUIRY_VIEW"
+"ENQUIRY_VIEW",
+                    "BILLING_MANAGE"
                 ],
 
                 ["Moderator"] =
@@ -1027,3 +1094,4 @@ new Permission
         await context.SaveChangesAsync();
     }
 }
+

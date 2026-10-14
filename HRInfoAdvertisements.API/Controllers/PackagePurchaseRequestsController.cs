@@ -64,7 +64,16 @@ public sealed class PackagePurchaseRequestsController : ControllerBase
                 Success = false,
                 Message = ex.Message
             });
-        }
+        }        
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException ex)
+    when (IsUniqueConstraintViolation(ex))
+{
+    return Conflict(new
+    {
+        Success = false,
+        Message = "The purchase request conflicts with an existing request. Refresh your purchase requests and try again."
+    });
+}
     }
 
     [HttpGet("mine")]
@@ -99,4 +108,21 @@ public sealed class PackagePurchaseRequestsController : ControllerBase
 
         return long.TryParse(value, out userId) && userId > 0;
     }
+
+    private static bool IsUniqueConstraintViolation(Exception exception)
+{
+    for (var current = exception;
+         current != null;
+         current = current.InnerException!)
+    {
+        if (current is Microsoft.Data.SqlClient.SqlException sqlException &&
+            (sqlException.Number == 2601 ||
+             sqlException.Number == 2627))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 }

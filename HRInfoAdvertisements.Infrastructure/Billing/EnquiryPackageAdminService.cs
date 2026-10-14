@@ -83,13 +83,15 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
                 throw new InvalidOperationException("The FREE package must remain active.");
         }
         else if (request.IsActive &&
-                 (request.Price <= 0m ||
-                  (request.MonthlySenderEnquiryLimit == 0 &&
-                   request.MonthlyAdvertisementEnquiryLimit == 0)))
-        {
-            throw new InvalidOperationException(
-                "A paid package can only be activated with a positive price and at least one positive enquiry limit.");
-        }
+         (request.Price <= 0m ||
+          (request.MonthlySenderEnquiryLimit == 0 &&
+           request.MonthlyAdvertisementEnquiryLimit == 0) ||
+          !request.ValidityDays.HasValue ||
+          request.ValidityDays.Value <= 0))
+{
+    throw new InvalidOperationException(
+        "An active paid package requires a positive price, at least one positive enquiry limit, and a positive validity period.");
+}
 
         var duplicateName = await _context.EnquiryPackages.AnyAsync(
             x => x.EnquiryPackageID != enquiryPackageId &&

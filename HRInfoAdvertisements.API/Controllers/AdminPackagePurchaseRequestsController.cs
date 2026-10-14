@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using HRInfoAdvertisements.Application.Billing;
 using HRInfoAdvertisements.Application.Billing.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +8,7 @@ namespace HRInfoAdvertisements.API.Controllers;
 
 [ApiController]
 [Route("api/v1/admin/package-purchase-requests")]
-[Authorize(Policy = "ENQUIRY_VIEW")]
+[Authorize(Policy = "BILLING_MANAGE")]
 public sealed class AdminPackagePurchaseRequestsController : ControllerBase
 {
     private readonly IEnquiryBillingService _billingService;
@@ -33,6 +33,21 @@ public sealed class AdminPackagePurchaseRequestsController : ControllerBase
             Data = result
         });
     }
+
+    [HttpGet("actionable")]
+public async Task<IActionResult> GetActionable(
+    CancellationToken cancellationToken)
+{
+    var result =
+        await _billingService.GetActionablePurchaseRequestsForAdminAsync(
+            cancellationToken);
+
+    return Ok(new
+    {
+        Success = true,
+        Data = result
+    });
+}
 
     [HttpPost("{purchaseRequestId:long}/approve")]
     public Task<IActionResult> Approve(

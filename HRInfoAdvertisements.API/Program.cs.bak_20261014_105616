@@ -204,6 +204,10 @@ builder.Services.AddScoped<
     AdvertisementFavoriteService>();
 
 builder.Services.AddScoped<
+    IEnquiryBillingService,
+    EnquiryBillingService>();
+
+builder.Services.AddScoped<
     IAdvertisementEnquiryService,
     AdvertisementEnquiryService>();
 
@@ -979,3 +983,7 @@ app.MapControllers();
 // ============================================================
 
 app.Run();
+
+builder.Services.AddScoped<
+    HRInfoAdvertisements.Application.Billing.IEnquiryPackageAdminService,
+    HRInfoAdvertisements.Infrastructure.Billing.EnquiryPackageAdminService>();

@@ -1,0 +1,216 @@
+﻿@page "/enquiry-packages"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Billing.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject EnquiryBillingApiService BillingService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Enquiry Packages</PageTitle>
+
+<div class="container py-4" style="max-width:1200px">
+    <PublicTopBar />
+
+    <header class="py-4">
+        <span class="text-uppercase text-secondary small fw-bold">
+            CUSTOMER PACKAGES
+        </span>
+        <h1 class="mt-2">Enquiry Packages</h1>
+        <p class="text-secondary">
+            Choose a package to increase your available enquiry limits.
+        </p>
+        <a href="/my-package-requests" class="btn btn-outline-secondary btn-sm">
+            My Package Requests
+        </a>
+    </header>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="alert alert-success" role="status">
+            @successMessage
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="py-5 text-center">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading</span>
+            </div>
+            <p class="mt-3">Loading available packages...</p>
+        </div>
+    }
+    else if (packages.Count == 0)
+    {
+        <div class="alert alert-info">
+            No packages are currently available. Please check again later.
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var package in packages)
+            {
+                <div class="col-12 col-md-6 col-xl-4" @key="package.EnquiryPackageID">
+                    <article class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column p-4">
+                            <h2 class="h4">@package.Name</h2>
+
+                            @if (!string.IsNullOrWhiteSpace(package.Description))
+                            {
+                                <p class="text-secondary">@package.Description</p>
+                            }
+
+                            <div class="my-3">
+                                <span class="display-6 fw-bold">
+                                    @package.Price.ToString("N3")
+                                </span>
+                                <span class="text-secondary">
+                                    @package.CurrencyCode
+                                </span>
+                            </div>
+
+                            <hr />
+
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <strong>@package.MonthlySenderEnquiryLimit</strong>
+                                    sender enquiries
+                                </li>
+                                <li class="mb-2">
+                                    <strong>@package.MonthlyAdvertisementEnquiryLimit</strong>
+                                    advertisement enquiries
+                                </li>
+                                <li class="mb-2">
+                                    Validity:
+                                    <strong>
+                                        @(package.ValidityDays.HasValue
+                                            ? $"{package.ValidityDays.Value} days"
+                                            : "Not specified")
+                                    </strong>
+                                </li>
+                            </ul>
+
+                            <div class="mt-auto pt-3">
+                                @if (package.Price <= 0)
+                                {
+                                    <div class="alert alert-light border mb-0">
+                                        Included/free package
+                                    </div>
+                                }
+                                else if (submittingPackageId == package.EnquiryPackageID)
+                                {
+                                    <button class="btn btn-primary w-100" disabled>
+                                        Submitting request...
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-primary w-100"
+                                            disabled="@(!package.IsActive || submittingPackageId.HasValue)"
+                                            @onclick="() => RequestPackageAsync(package.EnquiryPackageID)">
+                                        Request This Package
+                                    </button>
+                                }
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            }
+        </div>
+    }
+
+    <div class="alert alert-light border mt-4">
+        <strong>Payment information</strong>
+        <p class="mb-0 mt-2">
+            A package request is not a payment. Payment must be completed
+            using the instructions confirmed by the administrator.
+            BenefitPay confirmation is currently a manual process, not a
+            live payment gateway.
+        </p>
+    </div>
+</div>
+
+@code {
+    private List<EnquiryPackageResponse> packages = new();
+    private bool isLoading = true;
+    private int? submittingPackageId;
+    private string? errorMessage;
+    private string? successMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPackagesAsync();
+    }
+
+    private async Task LoadPackagesAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            packages = await BillingService.GetAvailablePackagesAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RequestPackageAsync(int packageId)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        if (!AuthenticationStateProvider.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var package = packages.FirstOrDefault(
+            x => x.EnquiryPackageID == packageId);
+
+        if (package is null || !package.IsActive || package.Price <= 0)
+        {
+            errorMessage = "This paid package is not available for purchase.";
+            return;
+        }
+
+        submittingPackageId = packageId;
+
+        try
+        {
+            var request = await BillingService.CreatePurchaseRequestAsync(packageId);
+
+            successMessage =
+                $"Request #{request.PackagePurchaseRequestID} was submitted. " +
+                "Continue to My Package Requests for its status and payment instructions.";
+
+            Navigation.NavigateTo("/my-package-requests");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            submittingPackageId = null;
+        }
+    }
+}

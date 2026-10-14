@@ -1,0 +1,333 @@
+
+@page "/admin/enquiry-packages"
+
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Billing.DTOs
+
+@inject EnquiryPackageAdminApiService PackageService
+@inject AdminAuthenticationStateProvider Auth
+@inject NavigationManager Navigation
+
+<PageTitle>Enquiry Package Management</PageTitle>
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>Enquiry Packages</h1>
+            <p>Manage package pricing, enquiry limits, validity and availability.</p>
+        </div>
+
+        <button class="btn btn-outline-primary"
+                @onclick="LoadAsync"
+                disabled="@loading">
+            Refresh
+        </button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-success">@message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger">
+            @error
+        </div>
+    }
+
+    @if (loading)
+    {
+        <p>Loading packages...</p>
+    }
+    else if (packages.Count == 0)
+    {
+        <div class="alert alert-info">No packages were returned by the API.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Sender Limit</th>
+                        <th>Advertisement Limit</th>
+                        <th>Validity</th>
+                        <th>Price</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var package in packages)
+                    {
+                        <tr @key="package.EnquiryPackageID">
+                            <td>
+                                <strong>@package.Name</strong>
+                                <div class="text-muted small">@package.PackageCode</div>
+                            </td>
+                            <td>@package.MonthlySenderEnquiryLimit</td>
+                            <td>@package.MonthlyAdvertisementEnquiryLimit</td>
+                            <td>
+                                @(package.ValidityDays.HasValue
+                                    ? $"{package.ValidityDays} days"
+                                    : "Not specified")
+                            </td>
+                            <td>@package.Price.ToString("N3") @package.CurrencyCode</td>
+                            <td>
+                                <span class="badge @(package.IsActive
+                                    ? "text-bg-success"
+                                    : "text-bg-secondary")">
+                                    @(package.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-primary"
+                                        @onclick="() => StartEdit(package)"
+                                        disabled="@saving">
+                                    Edit
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (editing is not null)
+    {
+        <section class="card mt-4">
+            <div class="card-header">
+                <h2 class="h5 mb-0">Edit: @editing.PackageName</h2>
+            </div>
+
+            <div class="card-body">
+                <EditForm Model="editing" OnValidSubmit="SaveAsync">
+                    <DataAnnotationsValidator />
+                    <ValidationSummary />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Package name</label>
+                            <InputText class="form-control"
+                                       @bind-Value="editing.Name" />
+                            <ValidationMessage For="@(() => editing.Name)" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Currency code</label>
+                            <InputText class="form-control"
+                                       @bind-Value="editing.CurrencyCode" />
+                            <ValidationMessage For="@(() => editing.CurrencyCode)" />
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control"
+                                           @bind-Value="editing.Description" />
+                            <ValidationMessage For="@(() => editing.Description)" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Monthly sender enquiry limit</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="editing.MonthlySenderEnquiryLimit" />
+                            <ValidationMessage For="@(() => editing.MonthlySenderEnquiryLimit)" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Monthly advertisement enquiry limit</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="editing.MonthlyAdvertisementEnquiryLimit" />
+                            <ValidationMessage For="@(() => editing.MonthlyAdvertisementEnquiryLimit)" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Validity in days</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="editing.ValidityDays" />
+                            <ValidationMessage For="@(() => editing.ValidityDays)" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Price</label>
+                            <InputNumber class="form-control"
+                                         @bind-Value="editing.Price" />
+                            <ValidationMessage For="@(() => editing.Price)" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label d-block">Availability</label>
+                            <InputCheckbox @bind-Value="editing.IsActive" />
+                            <span class="ms-2">
+                                @(editing.IsActive ? "Active" : "Inactive")
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary"
+                                type="submit"
+                                disabled="@saving">
+                            @(saving ? "Saving..." : "Save changes")
+                        </button>
+
+                        <button class="btn btn-outline-secondary"
+                                type="button"
+                                @onclick="CancelEdit"
+                                disabled="@saving">
+                            Cancel
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </section>
+    }
+</div>
+
+@code {
+    private List<EnquiryPackageResponse> packages = new();
+    private PackageEditModel? editing;
+    private bool loading;
+    private bool saving;
+    private string? message;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await Auth.GetAuthenticationStateAsync();
+
+        if (state.User.Identity?.IsAuthenticated != true)
+        {
+            Navigation.NavigateTo("/admin", forceLoad: true);
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        if (loading)
+            return;
+
+        loading = true;
+        error = null;
+        message = null;
+
+        try
+        {
+            packages = await PackageService.GetAllAsync();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Navigation.NavigateTo("/admin", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void StartEdit(EnquiryPackageResponse package)
+    {
+        error = null;
+        message = null;
+
+        editing = new PackageEditModel
+        {
+            EnquiryPackageID = package.EnquiryPackageID,
+            PackageName = package.Name,
+            Name = package.Name,
+            Description = package.Description,
+            MonthlySenderEnquiryLimit = package.MonthlySenderEnquiryLimit,
+            MonthlyAdvertisementEnquiryLimit = package.MonthlyAdvertisementEnquiryLimit,
+            ValidityDays = package.ValidityDays,
+            Price = package.Price,
+            CurrencyCode = package.CurrencyCode,
+            IsActive = package.IsActive
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        if (editing is null || saving)
+            return;
+
+        saving = true;
+        error = null;
+        message = null;
+
+        try
+        {
+            var request = new UpdateEnquiryPackageRequest
+            {
+                Name = editing.Name.Trim(),
+                Description = string.IsNullOrWhiteSpace(editing.Description)
+                    ? null : editing.Description.Trim(),
+                MonthlySenderEnquiryLimit = editing.MonthlySenderEnquiryLimit,
+                MonthlyAdvertisementEnquiryLimit = editing.MonthlyAdvertisementEnquiryLimit,
+                ValidityDays = editing.ValidityDays,
+                Price = editing.Price,
+                CurrencyCode = editing.CurrencyCode.Trim().ToUpperInvariant(),
+                IsActive = editing.IsActive
+            };
+
+            await PackageService.UpdateAsync(editing.EnquiryPackageID, request);
+
+            editing = null;
+            message = "Package updated successfully.";
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        if (!saving)
+            editing = null;
+    }
+
+    private sealed class PackageEditModel
+    {
+        public int EnquiryPackageID { get; set; }
+        public string PackageName { get; set; } = string.Empty;
+
+        [Required, StringLength(100, MinimumLength = 2)]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(1000)]
+        public string? Description { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int MonthlySenderEnquiryLimit { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+        [Range(1, 3650)]
+        public int? ValidityDays { get; set; }
+
+        [Range(typeof(decimal), "0", "999999999999999.999")]
+        public decimal Price { get; set; }
+
+        [Required, RegularExpression("^[A-Za-z]{3}$")]
+        public string CurrencyCode { get; set; } = "BHD";
+
+        public bool IsActive { get; set; }
+    }
+}

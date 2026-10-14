@@ -517,7 +517,8 @@
         new("general",  "General",              "bi-sliders",       "Site identity, currency and contact details"),
         new("ads",      "Advertisements",       "bi-megaphone",     "Approval, validity and media limits"),
         new("accounts", "Accounts & security",  "bi-shield-lock",   "Sign-up verification and admin sign-in"),
-        new("email",    "Email & notifications","bi-envelope-check","Sender details and optional automated emails"),
+        new("email",    "Email & notifications","bi-envelope-check","Sender details and optional automated emails"),        
+        new("billing", "Billing & Packages", "bi-credit-card", "Paid enquiry packages and payment methods"),
         new("custom",   "Custom settings",      "bi-braces",        "Settings added manually")
     };
 
@@ -554,6 +555,17 @@
             "Administrators must complete a second step when signing in."),
         new("EMAIL_OTP_EXPIRY_MINUTES", "Verification code lifetime", "accounts", SettingKind.Number,
             "How long a one-time code stays valid.", Unit: "minutes"),
+
+        
+        // ---- Billing & Packages ----
+        new("PAID_PACKAGES_ENABLED", "Enable paid packages", "billing", SettingKind.Toggle,
+            "Allows users to request paid enquiry packages. Keep disabled until the purchase workflow is tested.", "false"),
+        new("BANK_TRANSFER_ENABLED", "Enable bank transfer", "billing", SettingKind.Toggle,
+            "Allows bank transfer as a payment method. An administrator must verify and confirm payment.", "false",
+            DependsOn: "PAID_PACKAGES_ENABLED"),
+        new("BENEFITPAY_ENABLED", "Enable BenefitPay", "billing", SettingKind.Toggle,
+            "Enables the existing BenefitPay payment-confirmation option. This does not by itself integrate a live BenefitPay gateway.", "false",
+            DependsOn: "PAID_PACKAGES_ENABLED"),
 
         // ---- Email & notifications ----
         new("EMAIL_ENABLED", "Send emails", "email", SettingKind.Toggle,

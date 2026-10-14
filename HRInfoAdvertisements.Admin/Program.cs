@@ -1,4 +1,4 @@
-using HRInfoAdvertisements.Admin.Components;
+﻿using HRInfoAdvertisements.Admin.Components;
 using HRInfoAdvertisements.Admin.Services;
 using HRInfoAdvertisements.Application.Interfaces;
 
@@ -232,12 +232,18 @@ builder.Services.AddScoped<
 
 builder.Services.AddScoped<
     PublicFavoritesApiService>();
+builder.Services.AddScoped<EnquiryBillingApiService>();
 
 builder.Services.AddScoped<
     AdminProfileApiService>();
 
 builder.Services.AddScoped<
     AdvertisementTypeManagementApiService>();
+
+builder.Services.AddScoped<PackagePurchaseRequestAdminApiService>();
+
+builder.Services.AddScoped<
+    EnquiryPackageAdminApiService>();
 
 // ============================================================
 // ADMIN MODERATION SERVICE

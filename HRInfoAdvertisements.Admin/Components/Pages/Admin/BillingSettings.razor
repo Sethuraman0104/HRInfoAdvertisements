@@ -1,0 +1,193 @@
+@page "/admin/billing-settings"
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+@inject SystemSettingsApiService SettingsService
+
+<PageTitle>Billing Settings</PageTitle>
+
+<div class="container-fluid py-4">
+    <h3><i class="bi bi-credit-card me-2"></i>Billing & Monetization</h3>
+    <p class="text-muted">
+        Configure paid packages and available payment methods.
+    </p>
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="alert @(IsError ? "alert-danger" : "alert-info")">
+            @Message
+        </div>
+    }
+
+    @if (Loading)
+    {
+        <p><span class="spinner-border spinner-border-sm me-2"></span>Loading settings...</p>
+    }
+    else
+    {
+        <div class="card shadow-sm">
+            <div class="card-body">
+                @foreach (var item in Options)
+                {
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="@item.Key"
+                               @bind="item.Enabled" />
+
+                        <label class="form-check-label fw-semibold"
+                               for="@item.Key">
+                            @item.Label
+                        </label>
+
+                        <div class="form-text">@item.Description</div>
+                    </div>
+                }
+
+                <button class="btn btn-primary"
+                        @onclick="SaveAsync"
+                        disabled="@Saving">
+                    @if (Saving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                    }
+                    <i class="bi bi-save me-1"></i> Save Settings
+                </button>
+            </div>
+        </div>
+
+        <div class="alert alert-warning mt-3">
+            Enabling a payment method here does not create a live payment gateway.
+            Verify bank-transfer or BenefitPay payments manually using your existing
+            purchase-request workflow.
+        </div>
+    }
+</div>
+
+@code {
+    private bool Loading = true;
+    private bool Saving;
+    private bool IsError;
+    private string Message = string.Empty;
+
+    private readonly List<SettingOption> Options =
+    [
+        new()
+        {
+            Key = "PAID_PACKAGES_ENABLED",
+            Label = "Paid Packages",
+            Description = "Allow customers to purchase paid packages."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_ENABLED",
+            Label = "Bank Transfer",
+            Description = "Allow bank-transfer payment submissions."
+        },
+        new()
+        {
+            Key = "BENEFITPAY_ENABLED",
+            Label = "BenefitPay",
+            Description = "Allow BenefitPay payment submissions."
+        }
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var response = await SettingsService.GetSystemSettingsAsync(
+                new SystemSettingListRequest { PageNumber = 1, PageSize = 200 });
+
+            foreach (var option in Options)
+            {
+                var setting = response.Items.FirstOrDefault(
+                    x => string.Equals(
+                        x.SettingKey, option.Key,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (setting is not null)
+                {
+                    option.Id = setting.SystemSettingID;
+                    option.Exists = true;
+                    option.Enabled = setting.IsActive &&
+                        string.Equals(
+                            setting.SettingValue?.Trim(),
+                            "true",
+                            StringComparison.OrdinalIgnoreCase);
+                    option.Description = setting.Description ?? option.Description;
+                    option.IsEncrypted = setting.IsEncrypted;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Message = $"Unable to load billing settings: {ex.Message}";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        Saving = true;
+        Message = string.Empty;
+        IsError = false;
+
+        try
+        {
+            foreach (var option in Options)
+            {
+                if (!option.Exists)
+                {
+                    await SettingsService.CreateSystemSettingAsync(
+                        new CreateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = option.Enabled ? "true" : "false",
+                            Description = option.Description,
+                            IsEncrypted = false,
+                            IsActive = true
+                        });
+                }
+                else
+                {
+                    await SettingsService.UpdateSystemSettingAsync(
+                        option.Id,
+                        new UpdateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = option.Enabled ? "true" : "false",
+                            Description = option.Description,
+                            IsEncrypted = option.IsEncrypted,
+                            IsActive = true
+                        });
+                }
+            }
+
+            Message = "Billing settings saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Message = $"Unable to save billing settings: {ex.Message}";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+    private sealed class SettingOption
+    {
+        public int Id { get; set; }
+        public string Key { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool Enabled { get; set; }
+        public bool Exists { get; set; }
+        public bool IsEncrypted { get; set; }
+    }
+}

@@ -1,0 +1,220 @@
+﻿@page "/my-package-requests"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Billing.DTOs
+@using System.Globalization
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+
+@inject EnquiryBillingApiService BillingService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>My Package Requests</PageTitle>
+
+<div class="container py-4" style="max-width:1100px">
+    <PublicTopBar />
+
+    <header class="py-4">
+        <span class="text-uppercase text-secondary small fw-bold">
+            MY ACCOUNT
+        </span>
+        <h1 class="mt-2">My Package Requests</h1>
+        <p class="text-secondary">
+            Review your package requests and their payment status.
+        </p>
+        <a href="/enquiry-packages" class="btn btn-outline-primary btn-sm">
+            Browse Packages
+        </a>
+    </header>
+
+    @if (!AuthenticationStateProvider.IsAuthenticated)
+    {
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="h5">Sign in to view your requests</h2>
+                <p class="text-secondary">
+                    Your package requests are private to your account.
+                </p>
+                <button class="btn btn-primary"
+                        @onclick="() => Navigation.NavigateTo("/login")">
+                    Sign In
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+                <button class="btn btn-sm btn-outline-danger ms-3"
+                        @onclick="LoadRequestsAsync">
+                    Retry
+                </button>
+            </div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="py-5 text-center">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading</span>
+                </div>
+                <p class="mt-3">Loading your package requests...</p>
+            </div>
+        }
+        else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="card shadow-sm">
+                <div class="card-body text-center p-5">
+                    <h2 class="h5">No package requests yet</h2>
+                    <p class="text-secondary">
+                        Select a package to submit your first request.
+                    </p>
+                    <a href="/enquiry-packages" class="btn btn-primary">
+                        View Packages
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var request in requests)
+                {
+                    <div class="col-12" @key="request.PackagePurchaseRequestID">
+                        <article class="card shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex flex-wrap justify-content-between gap-3">
+                                    <div>
+                                        <h2 class="h5">@request.PackageName</h2>
+                                        <div class="text-secondary small">
+                                            Request #@request.PackagePurchaseRequestID
+                                        </div>
+                                        <div class="text-secondary small">
+                                            Submitted:
+                                            @request.CreatedDate.ToString(
+                                                "dd MMM yyyy HH:mm",
+                                                CultureInfo.CurrentCulture)
+                                        </div>
+                                    </div>
+
+                                    <div class="text-md-end">
+                                        <div class="fs-4 fw-bold">
+                                            @request.Amount.ToString("N3")
+                                            @request.CurrencyCode
+                                        </div>
+                                        <span class="badge rounded-pill text-bg-secondary">
+                                            @request.Status
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <hr />
+
+                                @switch (request.Status.Trim().ToUpperInvariant())
+                                {
+                                    case "PENDING":
+                                    case "PENDING_REVIEW":
+                                    case "SUBMITTED":
+                                        <p class="mb-0">
+                                            Your request is awaiting administrator review.
+                                            Please wait for approval before making payment.
+                                        </p>
+                                        break;
+
+                                    case "APPROVED":
+                                        <p class="mb-2">
+                                            Your request has been approved.
+                                            Contact the administrator or follow the
+                                            payment instructions provided to you.
+                                        </p>
+                                        <p class="small text-secondary mb-0">
+                                            Do not assume payment is complete until
+                                            the administrator confirms the transaction.
+                                        </p>
+                                        break;
+
+                                    case "COMPLETED":
+                                    case "PAID":
+                                        <p class="text-success mb-0">
+                                            Payment has been confirmed. If your package
+                                            entitlement is not visible, contact support.
+                                        </p>
+                                        break;
+
+                                    case "REJECTED":
+                                        <p class="mb-0">
+                                            This request was rejected. Contact support
+                                            if you need clarification.
+                                        </p>
+                                        break;
+
+                                    default:
+                                        <p class="mb-0">
+                                            Check with the administrator for the next
+                                            step associated with this request status.
+                                        </p>
+                                        break;
+                                }
+                            </div>
+                        </article>
+                    </div>
+                }
+            </div>
+        }
+
+        <div class="alert alert-light border mt-4">
+            <strong>Important:</strong>
+            Bank transfers and BenefitPay are subject to administrator
+            verification in the current workflow. This page does not collect
+            card details or process payments through a live payment gateway.
+        </div>
+    }
+</div>
+
+@code {
+    private List<PackagePurchaseRequestResponse> requests = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthenticationStateProvider.IsAuthenticated)
+        {
+            await LoadRequestsAsync();
+        }
+        else
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task LoadRequestsAsync()
+    {
+        if (!AuthenticationStateProvider.IsAuthenticated)
+        {
+            isLoading = false;
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            requests = await BillingService.GetMyPurchaseRequestsAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

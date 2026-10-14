@@ -135,7 +135,7 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserID")
                         .IsUnique()
-                        .HasFilter("[Status] = 'PENDING'");
+                        .HasFilter("[Status] IN ('PENDING', 'APPROVED')");
 
                     b.ToTable("PackagePurchaseRequests", null, t =>
                         {

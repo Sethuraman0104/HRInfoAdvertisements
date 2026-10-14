@@ -1,4 +1,4 @@
-@using HRInfoAdvertisements.Admin.Services
+﻿@using HRInfoAdvertisements.Admin.Services
 @using Microsoft.AspNetCore.Components.Authorization
 
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
@@ -42,6 +42,11 @@
 
             <button type="button" class="@GetNavClass("how")" @onclick="GoHowItWorks">
                 How It Works
+            </button>
+            <button type="button"
+                    class="@GetNavClass("packages")"
+                    @onclick="OpenPackages">
+                Enquiry Packages
             </button>
 
         </nav>
@@ -88,6 +93,13 @@
     }
 </button>
 
+
+                <!-- MY PACKAGE REQUESTS -->
+                <button type="button"
+                        class="public-topbar-text-button"
+                        @onclick="OpenMyPackageRequests">
+                    My Package Requests
+                </button>
 
                 <!-- ACCOUNT -->
                 <button type="button"
@@ -293,6 +305,19 @@ public void Dispose()
 
     private void GoHowItWorks() => Navigation.NavigateTo("/#how-it-works");
 
+    private void OpenPackages() => Navigation.NavigateTo("/enquiry-packages");
+
+    private async Task OpenMyPackageRequests()
+    {
+        if (!IsAuthenticated)
+        {
+            await OpenLogin();
+            return;
+        }
+
+        Navigation.NavigateTo("/my-package-requests");
+    }
+
 
     // ============================================================
     // SIGN IN / SIGN UP
@@ -419,3 +444,4 @@ public void Dispose()
         };
     }
 }
+

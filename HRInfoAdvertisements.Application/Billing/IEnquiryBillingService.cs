@@ -20,6 +20,10 @@ public interface IEnquiryBillingService
         GetPendingPurchaseRequestsForAdminAsync(
             CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+    GetActionablePurchaseRequestsForAdminAsync(
+        CancellationToken cancellationToken = default);
+
     Task<AdminPackagePurchaseRequestResponse?> ReviewPurchaseRequestAsync(
         long adminUserId,
         long purchaseRequestId,

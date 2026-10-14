@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Text;
 
 using HRInfoAdvertisements.Application.Interfaces;
@@ -286,6 +286,10 @@ builder.Services.AddScoped<
 builder.Services.AddScoped<
     IAdvertisementRemovalRequestService,
     AdvertisementRemovalRequestService>();
+
+builder.Services.AddScoped<
+    IEnquiryPackageAdminService,
+    EnquiryPackageAdminService>();
 
 // ============================================================
 // EMAIL
@@ -799,6 +803,16 @@ builder.Services.AddAuthorization(options =>
                 "ADVERTISEMENT_SUSPEND");
         });
 
+    options.AddPolicy(
+    "ROLE_PERMISSION_MANAGE",
+    policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim(
+            "permission",
+            "ROLE_PERMISSION_MANAGE");
+    });
+
 
     // ============================================================
     // REPORTS
@@ -857,6 +871,21 @@ builder.Services.AddAuthorization(options =>
             policy.RequireClaim(
                 "permission",
                 "ENQUIRY_VIEW");
+        });
+
+    // ============================================================
+    // BILLING MANAGEMENT
+    // ============================================================
+
+    options.AddPolicy(
+        "BILLING_MANAGE",
+        policy =>
+        {
+            policy.RequireAuthenticatedUser();
+
+            policy.RequireClaim(
+                "permission",
+                "BILLING_MANAGE");
         });
 
 });
@@ -983,7 +1012,3 @@ app.MapControllers();
 // ============================================================
 
 app.Run();
-
-builder.Services.AddScoped<
-    HRInfoAdvertisements.Application.Billing.IEnquiryPackageAdminService,
-    HRInfoAdvertisements.Infrastructure.Billing.EnquiryPackageAdminService>();

@@ -1,0 +1,175 @@
+﻿D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:15: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:108: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:167: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:224: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:281: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:338: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:483: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementController.cs:537: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementRemovalRequestController.cs:12: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementRemovalRequestController.cs:62: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminAdvertisementRemovalRequestController.cs:125: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminEnquiryPackagesController.cs:11: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminEnquiryPackagesController.cs:34: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:11: [Authorize(Policy = "BILLING_MANAGE")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:77: [FromBody] ConfirmPackagePaymentRequest request,
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:82: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:92: await _billingService.ConfirmPackagePaymentAsync(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:138: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminPackagePurchaseRequestsController.cs:147: var result = await _billingService.ReviewPurchaseRequestAsync(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminProfileController.cs:13: [Authorize(Policy = "ADMIN_PROFILE")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminProfileController.cs:40: return Unauthorized(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminProfileController.cs:99: return Unauthorized(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdminProfileController.cs:151: return Unauthorized(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:82: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:89: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:169: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:178: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:225: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:231: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:286: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:293: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:347: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:353: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:389: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementController.cs:395: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementEnquiryController.cs:10: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementEnquiryController.cs:60: [Authorize(Policy = "ENQUIRY_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementEnquiryController.cs:68: [Authorize(Policy = "ENQUIRY_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementEnquiryController.cs:215: throw new UnauthorizedAccessException(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementFavoriteController.cs:13: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementFavoriteController.cs:32: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementFavoriteController.cs:159: throw new UnauthorizedAccessException(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementFavoriteController.cs:167: throw new UnauthorizedAccessException(
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:27: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:35: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:105: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:111: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:141: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:148: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:179: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:185: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:219: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:226: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:295: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:301: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:335: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:342: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:411: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementMediaController.cs:417: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementRemovalRequestsController.cs:12: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementRemovalRequestsController.cs:46: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementRemovalRequestsController.cs:74: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementRemovalRequestsController.cs:110: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:31: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:47: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:73: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:80: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:119: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:127: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:161: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AdvertisementTypeManagementController.cs:169: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuditLogsController.cs:10: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuditLogsController.cs:26: [Authorize(Policy = "AUDIT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:64: return Unauthorized(result);
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:151: return Unauthorized(result);
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:162: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:174: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:255: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:272: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:308: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\AuthController.cs:319: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:27: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:43: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:68: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:75: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:112: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:120: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:153: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\CategoryManagementController.cs:161: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:10: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:25: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:33: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:42: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:51: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\DashboardController.cs:60: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:28: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:52: catch (UnauthorizedAccessException)
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:65: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:89: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:116: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:131: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\MessageController.cs:152: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:28: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:42: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:57: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:72: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:96: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\NotificationController.cs:119: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PackagePurchaseRequestsController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PackagePurchaseRequestsController.cs:30: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PackagePurchaseRequestsController.cs:85: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PermissionManagementController.cs:10: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PermissionManagementController.cs:23: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\PermissionManagementController.cs:34: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:12: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:37: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:62: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:99: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:115: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:145: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:160: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:185: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:226: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:262: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ProfileController.cs:287: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportReviewController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportReviewController.cs:23: [Authorize(Policy = "REPORT_REVIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportReviewController.cs:68: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportsController.cs:10: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportsController.cs:22: [Authorize(Policy = "REPORT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportSubmissionController.cs:28: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\ReportSubmissionController.cs:34: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:23: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:33: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:52: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:59: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:98: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:106: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:144: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RoleManagementController.cs:152: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:24: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:43: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:61: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:119: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\RolePermissionManagementController.cs:137: return Unauthorized(new
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:11: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:47: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:63: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:80: [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:106: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:115: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:155: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:165: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:200: [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\SystemSettingsController.cs:211: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:15: [Authorize]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:37: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:52: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:77: [Authorize(Policy = "USER_VIEW")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:115: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:157: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:194: [Authorize(Policy = "USER_SUSPEND")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:203: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:246: [Authorize(Policy = "USER_SUSPEND")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:255: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:301: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:310: return Unauthorized();
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:343: [Authorize(Policy = "USER_EDIT")]
+D:\My Projects\HRInfoAdvertisements\HRInfoAdvertisements.API\Controllers\UserManagementController.cs:352: return Unauthorized();
