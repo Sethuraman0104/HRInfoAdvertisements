@@ -54,6 +54,7 @@
                         <th>Package</th>
                         <th>Sender Limit</th>
                         <th>Advertisement Limit</th>
+                        <th>Reply Limit</th>
                         <th>Validity</th>
                         <th>Price</th>
                         <th>Status</th>
@@ -70,6 +71,7 @@
                             </td>
                             <td>@package.MonthlySenderEnquiryLimit</td>
                             <td>@package.MonthlyAdvertisementEnquiryLimit</td>
+                            <td>@package.MonthlyReplyLimit</td>
                             <td>
                                 @(package.ValidityDays.HasValue
                                     ? $"{package.ValidityDays} days"
@@ -132,18 +134,28 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Monthly sender enquiry limit</label>
-                            <InputNumber class="form-control"
-                                         @bind-Value="editing.MonthlySenderEnquiryLimit" />
-                            <ValidationMessage For="@(() => editing.MonthlySenderEnquiryLimit)" />
-                        </div>
+    <label class="form-label">Monthly sender enquiry limit</label>
+    <InputNumber class="form-control"
+                 @bind-Value="editing.MonthlySenderEnquiryLimit" />
+    <ValidationMessage For="@(() => editing.MonthlySenderEnquiryLimit)" />
+</div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Monthly advertisement enquiry limit</label>
-                            <InputNumber class="form-control"
-                                         @bind-Value="editing.MonthlyAdvertisementEnquiryLimit" />
-                            <ValidationMessage For="@(() => editing.MonthlyAdvertisementEnquiryLimit)" />
-                        </div>
+<div class="col-md-6">
+    <label class="form-label">Monthly advertisement enquiry limit</label>
+    <InputNumber class="form-control"
+                 @bind-Value="editing.MonthlyAdvertisementEnquiryLimit" />
+    <ValidationMessage For="@(() => editing.MonthlyAdvertisementEnquiryLimit)" />
+</div>
+
+<div class="col-md-6">
+    <label class="form-label">Monthly reply limit</label>
+    <InputNumber class="form-control"
+                 @bind-Value="editing.MonthlyReplyLimit" />
+    <ValidationMessage For="@(() => editing.MonthlyReplyLimit)" />
+    <div class="form-text">
+        Maximum replies this user can send per UTC calendar month.
+    </div>
+</div>
 
                         <div class="col-md-4">
                             <label class="form-label">Validity in days</label>
@@ -249,6 +261,7 @@
             Description = package.Description,
             MonthlySenderEnquiryLimit = package.MonthlySenderEnquiryLimit,
             MonthlyAdvertisementEnquiryLimit = package.MonthlyAdvertisementEnquiryLimit,
+            MonthlyReplyLimit = package.MonthlyReplyLimit,
             ValidityDays = package.ValidityDays,
             Price = package.Price,
             CurrencyCode = package.CurrencyCode,
@@ -274,6 +287,7 @@
                     ? null : editing.Description.Trim(),
                 MonthlySenderEnquiryLimit = editing.MonthlySenderEnquiryLimit,
                 MonthlyAdvertisementEnquiryLimit = editing.MonthlyAdvertisementEnquiryLimit,
+                MonthlyReplyLimit = editing.MonthlyReplyLimit,
                 ValidityDays = editing.ValidityDays,
                 Price = editing.Price,
                 CurrencyCode = editing.CurrencyCode.Trim().ToUpperInvariant(),
@@ -318,6 +332,9 @@
 
         [Range(0, int.MaxValue)]
         public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+        [Range(0, int.MaxValue)]
+public int MonthlyReplyLimit { get; set; }
 
         [Range(1, 3650)]
         public int? ValidityDays { get; set; }

@@ -17,6 +17,9 @@ public class EnquiryPackage
     // Maximum new enquiries an advertisement may receive per UTC calendar month.
     public int MonthlyAdvertisementEnquiryLimit { get; set; }
 
+    // Maximum replies a user may send across all enquiries per UTC calendar month.
+public int MonthlyReplyLimit { get; set; }
+
     public int? ValidityDays { get; set; }
 
     public decimal Price { get; set; }

@@ -52,6 +52,9 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<int>("MonthlyAdvertisementEnquiryLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("MonthlyReplyLimit")
+                        .HasColumnType("int");
+
                     b.Property<int>("MonthlySenderEnquiryLimit")
                         .HasColumnType("int");
 
@@ -86,6 +89,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementLimit", "[MonthlyAdvertisementEnquiryLimit] >= 0");
 
                             t.HasCheckConstraint("CK_EnquiryPackages_Price", "[Price] >= 0");
+
+                            t.HasCheckConstraint("CK_EnquiryPackages_ReplyLimit", "[MonthlyReplyLimit] >= 0");
 
                             t.HasCheckConstraint("CK_EnquiryPackages_SenderLimit", "[MonthlySenderEnquiryLimit] >= 0");
 

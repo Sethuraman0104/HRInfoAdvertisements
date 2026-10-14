@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HRInfoAdvertisements.Application.Billing.DTOs;
 
@@ -16,6 +16,9 @@ public sealed class UpdateEnquiryPackageRequest
 
     [Range(0, int.MaxValue)]
     public int MonthlyAdvertisementEnquiryLimit { get; init; }
+
+    [Range(0, int.MaxValue)]
+    public int MonthlyReplyLimit { get; init; }
 
     [Range(1, 3650)]
     public int? ValidityDays { get; init; }

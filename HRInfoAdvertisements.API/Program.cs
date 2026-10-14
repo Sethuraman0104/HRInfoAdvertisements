@@ -33,7 +33,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using HRInfoAdvertisements.Application.NotificationPreferences;
-
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -528,83 +529,126 @@ builder.Services
                 // Token Validated
                 // ------------------------------------------------
 
-                OnTokenValidated =
-                    context =>
-                    {
-                        Console.WriteLine(
-                            "================================================");
+                
+OnTokenValidated = async context =>
+{
+    var logger = context.HttpContext.RequestServices
+        .GetRequiredService<ILoggerFactory>()
+        .CreateLogger("JwtBearerEvents");
 
-                        Console.WriteLine(
-                            "JWT TOKEN VALIDATED SUCCESSFULLY");
+    var principal = context.Principal;
 
+    var identity = principal?.Identity as ClaimsIdentity;
 
-                        Console.WriteLine(
-                            $"USER: " +
-                            $"{context.Principal?.Identity?.Name}");
+    var userIdValue = principal?
+        .FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
+    if (identity is null ||
+        !long.TryParse(userIdValue, out var userId) ||
+        userId <= 0)
+    {
+        context.Fail("Invalid authenticated user identity.");
+        return;
+    }
 
-                        Console.WriteLine(
-                            $"AUTHENTICATED: " +
-                            $"{context.Principal?.Identity?.IsAuthenticated}");
+    try
+    {
+        var db = context.HttpContext.RequestServices
+            .GetRequiredService<ApplicationDbContext>();
 
+        var cancellationToken =
+            context.HttpContext.RequestAborted;
 
-                        // ----------------------------------------
-                        // User ID
-                        // ----------------------------------------
+        // 1. Verify that the account still exists and is active.
+        var account = await db.Users
+            .AsNoTracking()
+            .Where(u => u.UserID == userId)
+            .Select(u => new
+            {
+                u.AccountStatus
+            })
+            .SingleOrDefaultAsync(cancellationToken);
 
-                        var userId =
-                            context.Principal?
-                                .FindFirst(
-                                    ClaimTypes.NameIdentifier)
-                                ?.Value;
+        if (account is null ||
+            !string.Equals(
+                account.AccountStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            context.Fail("The user account is inactive or unavailable.");
+            return;
+        }
 
-                        Console.WriteLine(
-                            $"USER ID: {userId}");
+        // 2. Load the user's current active roles.
+        var roles = await db.UserRoles
+            .AsNoTracking()
+            .Where(ur =>
+                ur.UserID == userId &&
+                ur.Role.IsActive)
+            .Select(ur => ur.Role.RoleName)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
+        // 3. Load permissions belonging to active roles,
+        //    but only when each permission is active.
+        var permissions = await db.UserRoles
+            .AsNoTracking()
+            .Where(ur =>
+                ur.UserID == userId &&
+                ur.Role.IsActive)
+            .SelectMany(ur => ur.Role.RolePermissions
+                .Where(rp => rp.Permission.IsActive)
+                .Select(rp => rp.Permission.PermissionCode))
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
-                        // ----------------------------------------
-                        // Roles
-                        // ----------------------------------------
+        // 4. Remove stale role claims from this JWT identity.
+        foreach (var claim in identity
+            .FindAll(ClaimTypes.Role)
+            .ToList())
+        {
+            identity.RemoveClaim(claim);
+        }
 
-                        Console.WriteLine(
-                            "ROLES:");
+        // 5. Remove stale permission claims.
+        foreach (var claim in identity
+            .FindAll("permission")
+            .ToList())
+        {
+            identity.RemoveClaim(claim);
+        }
 
-                        foreach (
-                            var role in
-                            context.Principal?
-                                .FindAll(
-                                    ClaimTypes.Role)
-                            ?? Enumerable.Empty<Claim>())
-                        {
-                            Console.WriteLine(
-                                $"  ROLE: {role.Value}");
-                        }
+        // 6. Apply current database-backed roles.
+        foreach (var role in roles)
+        {
+            identity.AddClaim(
+                new Claim(ClaimTypes.Role, role));
+        }
 
+        // 7. Apply current database-backed permissions.
+        foreach (var permission in permissions)
+        {
+            identity.AddClaim(
+                new Claim("permission", permission));
+        }
 
-                        // ----------------------------------------
-                        // Permissions
-                        // ----------------------------------------
+        logger.LogDebug(
+            "JWT account and authorization claims validated for user {UserId}.",
+            userId);
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(
+            ex,
+            "Database-backed JWT validation failed for user {UserId}.",
+            userId);
 
-                        Console.WriteLine(
-                            "PERMISSIONS:");
+        // Fail closed: do not authorize using stale token claims.
+        context.Fail(
+            "Unable to validate current account authorization.");
+    }
+},
 
-                        foreach (
-                            var permission in
-                            context.Principal?
-                                .FindAll("permission")
-                            ?? Enumerable.Empty<Claim>())
-                        {
-                            Console.WriteLine(
-                                $"  PERMISSION: " +
-                                $"{permission.Value}");
-                        }
-
-
-                        Console.WriteLine(
-                            "================================================");
-
-                        return Task.CompletedTask;
-                    },
 
 
                 // ------------------------------------------------

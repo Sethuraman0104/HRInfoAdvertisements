@@ -338,84 +338,160 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
     }
 
     public async Task<AdvertisementEnquiryMessageResponse?> ReplyAsync(
-        long userId,
-        long enquiryId,
-        ReplyAdvertisementEnquiryRequest request)
+    long userId,
+    long enquiryId,
+    ReplyAdvertisementEnquiryRequest request)
+{
+    if (string.IsNullOrWhiteSpace(request.Message))
+        throw new ArgumentException("Message is required.");
+
+    var enquiry = await _context.AdvertisementEnquiries
+        .FirstOrDefaultAsync(x =>
+            x.AdvertisementEnquiryID == enquiryId &&
+            (x.SenderUserID == userId ||
+             x.RecipientUserID == userId));
+
+    if (enquiry == null)
+        return null;
+
+    if (string.Equals(
+        enquiry.Status,
+        "CLOSED",
+        StringComparison.OrdinalIgnoreCase))
     {
-        if (string.IsNullOrWhiteSpace(request.Message))
-            throw new ArgumentException("Message is required.");
+        throw new InvalidOperationException(
+            "This enquiry is closed and cannot receive new replies.");
+    }
 
-        var enquiry = await _context.AdvertisementEnquiries
-            .FirstOrDefaultAsync(x =>
-                x.AdvertisementEnquiryID == enquiryId &&
-                (x.SenderUserID == userId ||
-                 x.RecipientUserID == userId));
+    var now = DateTime.UtcNow;
+    var monthStart = new DateTime(
+        now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+    var nextMonthStart = monthStart.AddMonths(1);
+    var monthKey = monthStart.ToString("yyyyMM");
 
-        if (enquiry == null)
-            return null;
+    var replyLock =
+        $"HRInfoAdvertisements:ReplyLimit:User:{userId}:{monthKey}";
 
-        if (string.Equals(
-                enquiry.Status,
-                "CLOSED",
-                StringComparison.OrdinalIgnoreCase))
+    string? packageCode = null;
+    var currentCount = 0;
+    var configuredLimit = 0;
+    var limitReached = false;
+    AdvertisementEnquiryMessage? savedMessage = null;
+
+    await using (var transaction =
+        await _context.Database.BeginTransactionAsync())
+    {
+        var transactionCompleted = false;
+
+        try
         {
-            throw new InvalidOperationException(
-                "This enquiry is closed and cannot receive new replies.");
+            await AcquireEnquiryLimitLockAsync(replyLock);
+
+            var package = await ResolveEnquiryPackageAsync(userId, now);
+            packageCode = package.PackageCode;
+            configuredLimit = package.MonthlyReplyLimit;
+
+            currentCount = await _context.AdvertisementEnquiryMessages
+                .CountAsync(x =>
+                    x.SenderUserID == userId &&
+                    x.CreatedDate >= monthStart &&
+                    x.CreatedDate < nextMonthStart);
+
+            if (currentCount >= configuredLimit)
+            {
+                limitReached = true;
+
+                await transaction.RollbackAsync();
+                transactionCompleted = true;
+            }
+            else
+            {
+                var message = new AdvertisementEnquiryMessage
+                {
+                    AdvertisementEnquiryID =
+                        enquiry.AdvertisementEnquiryID,
+                    SenderUserID = userId,
+                    Message = request.Message.Trim(),
+                    CreatedDate = now,
+                    IsRead = false
+                };
+
+                _context.AdvertisementEnquiryMessages.Add(message);
+
+                enquiry.LastRepliedDate = now;
+                enquiry.Status = "OPEN";
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                transactionCompleted = true;
+                savedMessage = message;
+            }
         }
-
-        var message = new AdvertisementEnquiryMessage
+        catch
         {
-            AdvertisementEnquiryID =
-                enquiry.AdvertisementEnquiryID,
+            if (!transactionCompleted)
+            {
+                try
+                {
+                    await transaction.RollbackAsync();
+                }
+                catch
+                {
+                    // Preserve the original exception.
+                }
+            }
 
-            SenderUserID = userId,
+            throw;
+        }
+    }
 
-            Message = request.Message.Trim(),
-
-            CreatedDate = DateTime.UtcNow,
-
-            IsRead = false
-        };
-
-        _context.AdvertisementEnquiryMessages.Add(message);
-
-        enquiry.LastRepliedDate = message.CreatedDate;
-        enquiry.Status = "OPEN";
+    if (limitReached)
+    {
+        // Persist the audit record after releasing the limit lock.
+        _context.AuditLogs.Add(new AuditLog
+        {
+            UserID = userId,
+            Action = "REPLY_LIMIT_REJECTED",
+            EntityName = "AdvertisementEnquiry",
+            EntityID = enquiryId.ToString(),
+            NewValues = JsonSerializer.Serialize(new
+            {
+                UserID = userId,
+                AdvertisementEnquiryID = enquiryId,
+                LimitType = "USER_MONTHLY_REPLY_LIMIT",
+                CurrentCount = currentCount,
+                ConfiguredLimit = configuredLimit,
+                PackageCode = packageCode,
+                MonthStartUtc = monthStart
+            }),
+            CreatedDate = DateTime.UtcNow
+        });
 
         await _context.SaveChangesAsync();
 
-        var sender = await _context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x =>
-                x.UserID == userId);
-
-        return new AdvertisementEnquiryMessageResponse
-        {
-            AdvertisementEnquiryMessageID =
-                message.AdvertisementEnquiryMessageID,
-
-            AdvertisementEnquiryID =
-                message.AdvertisementEnquiryID,
-
-            SenderUserID =
-                message.SenderUserID,
-
-            SenderName =
-                GetUserDisplayName(sender),
-
-            Message =
-                message.Message,
-
-            CreatedDate =
-                message.CreatedDate,
-
-            IsRead =
-                message.IsRead,
-
-            ReadDate =
-                message.ReadDate
-        };
+        throw new InvalidOperationException(
+            $"Your monthly reply limit of {configuredLimit} has been reached.");
     }
+
+    var sender = await _context.Users
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x => x.UserID == userId);
+
+    return new AdvertisementEnquiryMessageResponse
+    {
+        AdvertisementEnquiryMessageID =
+            savedMessage!.AdvertisementEnquiryMessageID,
+        AdvertisementEnquiryID =
+            savedMessage.AdvertisementEnquiryID,
+        SenderUserID = savedMessage.SenderUserID,
+        SenderName = GetUserDisplayName(sender),
+        Message = savedMessage.Message,
+        CreatedDate = savedMessage.CreatedDate,
+        IsRead = savedMessage.IsRead,
+        ReadDate = savedMessage.ReadDate
+    };
+}
 
     public async Task<bool> CloseAsync(
         long userId,
@@ -483,37 +559,40 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
     }
 
     private async Task<EnquiryPackage> ResolveEnquiryPackageAsync(
-        long userId,
-        DateTime now)
-    {
-        var paidPackage = await _context.UserPackageEntitlements
-            .AsNoTracking()
-            .Where(x =>
-                x.UserID == userId &&
-                x.Status == UserPackageEntitlementStatuses.Active &&
-                x.StartDate <= now &&
-                (x.EndDate == null || x.EndDate > now) &&
-                x.EnquiryPackage.IsActive &&
-                x.EnquiryPackage.PackageCode != "FREE" &&
-                x.EnquiryPackage.Price > 0m &&
-                x.Payments.Any(p =>
-                    p.Status == PaymentTransactionStatuses.Confirmed &&
-                    p.ConfirmedDate != null &&
-                    p.RefundedDate == null))
-            .OrderByDescending(x => x.StartDate)
-            .Select(x => x.EnquiryPackage)
-            .FirstOrDefaultAsync();
+    long userId,
+    DateTime now)
+{
+    var paidPackage = await _context.UserPackageEntitlements
+        .AsNoTracking()
+        .Where(x =>
+            x.UserID == userId &&
+            x.Status == UserPackageEntitlementStatuses.Active &&
+            x.StartDate <= now &&
+            (x.EndDate == null || x.EndDate > now) &&
+            x.EnquiryPackage.IsActive &&
+            x.EnquiryPackage.PackageCode != "FREE" &&
+            x.EnquiryPackage.Price > 0m &&
+            x.Payments.Any(p =>
+                p.Status == PaymentTransactionStatuses.Confirmed &&
+                p.Status != PaymentTransactionStatuses.Refunded &&
+                p.ConfirmedDate != null &&
+                p.RefundedDate == null))
+        .OrderByDescending(x => x.StartDate)
+        .Select(x => x.EnquiryPackage)
+        .FirstOrDefaultAsync();
 
-        if (paidPackage != null)
-            return paidPackage;
+    if (paidPackage != null)
+        return paidPackage;
 
-        var freePackage = await _context.EnquiryPackages
-            .AsNoTracking()
-            .FirstOrDefaultAsync(x => x.PackageCode == "FREE" && x.IsActive);
+    var freePackage = await _context.EnquiryPackages
+        .AsNoTracking()
+        .FirstOrDefaultAsync(x =>
+            x.PackageCode == "FREE" &&
+            x.IsActive);
 
-        return freePackage ?? throw new InvalidOperationException(
-            "The FREE enquiry package is unavailable. Please contact support.");
-    }
+    return freePackage ?? throw new InvalidOperationException(
+        "The FREE enquiry package is unavailable. Please contact support.");
+}
 
 private async Task AcquireEnquiryLimitLockAsync(
     string resource)

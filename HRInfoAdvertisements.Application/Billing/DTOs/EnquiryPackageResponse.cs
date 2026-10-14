@@ -14,6 +14,8 @@ public sealed class EnquiryPackageResponse
 
     public int MonthlyAdvertisementEnquiryLimit { get; init; }
 
+    public int MonthlyReplyLimit { get; init; }
+
     public int? ValidityDays { get; init; }
 
     public decimal Price { get; init; }

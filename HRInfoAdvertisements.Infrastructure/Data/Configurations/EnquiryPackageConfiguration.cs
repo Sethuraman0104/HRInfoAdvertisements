@@ -12,6 +12,10 @@ public class EnquiryPackageConfiguration
         builder.ToTable("EnquiryPackages", table =>
         {
             table.HasCheckConstraint(
+    "CK_EnquiryPackages_ReplyLimit",
+    "[MonthlyReplyLimit] >= 0");
+    
+            table.HasCheckConstraint(
                 "CK_EnquiryPackages_Price",
                 "[Price] >= 0");
 

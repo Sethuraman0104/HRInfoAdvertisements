@@ -82,24 +82,30 @@
 
                             <hr />
 
-                            <ul class="list-unstyled">
-                                <li class="mb-2">
-                                    <strong>@package.MonthlySenderEnquiryLimit</strong>
-                                    sender enquiries
-                                </li>
-                                <li class="mb-2">
-                                    <strong>@package.MonthlyAdvertisementEnquiryLimit</strong>
-                                    advertisement enquiries
-                                </li>
-                                <li class="mb-2">
-                                    Validity:
-                                    <strong>
-                                        @(package.ValidityDays.HasValue
-                                            ? $"{package.ValidityDays.Value} days"
-                                            : "Not specified")
-                                    </strong>
-                                </li>
-                            </ul>
+                            
+<ul class="list-unstyled">
+    <li class="mb-2">
+        <strong>@package.MonthlySenderEnquiryLimit</strong>
+        sender enquiries per month
+    </li>
+    <li class="mb-2">
+        <strong>@package.MonthlyAdvertisementEnquiryLimit</strong>
+        enquiries received per advertisement per month
+    </li>
+    <li class="mb-2">
+        <strong>@package.MonthlyReplyLimit</strong>
+        replies per month
+    </li>
+    <li class="mb-2">
+        Validity:
+        <strong>
+            @(package.ValidityDays.HasValue
+                ? $"{package.ValidityDays.Value} days"
+                : "Not specified")
+        </strong>
+    </li>
+</ul>
+
 
                             <div class="mt-auto pt-3">
                                 @if (package.Price <= 0)

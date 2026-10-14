@@ -44,6 +44,7 @@ public sealed class EnquiryBillingService : IEnquiryBillingService
                     package.MonthlySenderEnquiryLimit,
                 MonthlyAdvertisementEnquiryLimit =
                     package.MonthlyAdvertisementEnquiryLimit,
+                MonthlyReplyLimit = package.MonthlyReplyLimit,
                 ValidityDays = package.ValidityDays,
                 Price = package.Price,
                 CurrencyCode = package.CurrencyCode,
@@ -90,12 +91,13 @@ public async Task<PackagePurchaseRequestResponse>
     }
 
     if (string.Equals(
-            package.PackageCode,
-            "FREE",
-            StringComparison.OrdinalIgnoreCase) ||
-        package.Price <= 0m ||
-        (package.MonthlySenderEnquiryLimit <= 0 &&
-         package.MonthlyAdvertisementEnquiryLimit <= 0))
+        package.PackageCode,
+        "FREE",
+        StringComparison.OrdinalIgnoreCase) ||
+    package.Price <= 0m ||
+    (package.MonthlySenderEnquiryLimit <= 0 &&
+     package.MonthlyAdvertisementEnquiryLimit <= 0 &&
+     package.MonthlyReplyLimit <= 0))
     {
         throw new InvalidOperationException(
             "This package is not configured for paid purchase.");
@@ -307,6 +309,19 @@ if (purchaseRequestId <= 0)
 }
 
 ArgumentNullException.ThrowIfNull(request);
+
+
+var paidPackagesEnabled =
+    await _settings.GetBoolAsync(
+        "PAID_PACKAGES_ENABLED",
+        cancellationToken) ?? false;
+
+if (!paidPackagesEnabled)
+{
+    throw new InvalidOperationException(
+        "Paid package payment confirmations are currently disabled.");
+}
+
 
 if (string.IsNullOrWhiteSpace(request.PaymentMethod))
 {

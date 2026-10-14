@@ -858,115 +858,115 @@ public async Task<AdvertisementResponse?>
     // ============================================================
 
     public async Task<bool> SubmitAsync(
-        long userId,
-        long advertisementId)
+    long userId,
+    long advertisementId)
+{
+    await using var transaction =
+        await _context.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable);
+
+    var advertisement =
+        await _context.Advertisements
+            .Include(x => x.Status)
+            .FirstOrDefaultAsync(x =>
+                x.AdvertisementID == advertisementId &&
+                x.UserID == userId);
+
+    if (advertisement == null)
+        return false;
+
+    if (advertisement.Status == null ||
+        advertisement.Status.StatusCode != "DRAFT")
+        return false;
+
+    if (string.IsNullOrWhiteSpace(advertisement.Title) ||
+        string.IsNullOrWhiteSpace(advertisement.Description))
+        return false;
+
+    var hasWhatsApp =
+        !string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber);
+
+    var hasEmail =
+        !string.IsNullOrWhiteSpace(advertisement.ContactEmail);
+
+    var hasPublicWhatsApp =
+        hasWhatsApp && advertisement.ShowWhatsAppToPublic;
+
+    var hasPublicEmail =
+        hasEmail && advertisement.ShowEmailToPublic;
+
+    if (!hasWhatsApp && !hasEmail)
+        throw new InvalidOperationException(
+            "At least one contact method is required before submitting the advertisement.");
+
+    if (!hasPublicWhatsApp && !hasPublicEmail)
+        throw new InvalidOperationException(
+            "At least one contact method must be enabled for public visibility before submitting the advertisement.");
+
+    var now = DateTime.UtcNow;
+    var monthStart = new DateTime(now.Year, now.Month, 1);
+    var nextMonthStart = monthStart.AddMonths(1);
+    var entityId = advertisementId.ToString();
+
+    var alreadyCounted =
+        await _context.AuditLogs.AnyAsync(x =>
+            x.UserID == userId &&
+            x.Action == "ADVERTISEMENT_SUBMITTED" &&
+            x.EntityName == "Advertisement" &&
+            x.EntityID == entityId &&
+            x.CreatedDate >= monthStart &&
+            x.CreatedDate < nextMonthStart);
+
+    if (!alreadyCounted)
     {
-        var advertisement =
-            await _context.Advertisements
-                .Include(x => x.Status)
-                .FirstOrDefaultAsync(x =>
-                    x.AdvertisementID == advertisementId &&
-                    x.UserID == userId);
+        var monthlyCount =
+            await _context.AuditLogs
+                .Where(x =>
+                    x.UserID == userId &&
+                    x.Action == "ADVERTISEMENT_SUBMITTED" &&
+                    x.EntityName == "Advertisement" &&
+                    x.CreatedDate >= monthStart &&
+                    x.CreatedDate < nextMonthStart)
+                .Select(x => x.EntityID)
+                .Distinct()
+                .CountAsync();
 
-        if (advertisement == null)
-        {
-            return false;
-        }
-
-        // --------------------------------------------------------
-        // Only Draft advertisements can be submitted.
-        // --------------------------------------------------------
-
-        if (advertisement.Status == null ||
-            advertisement.Status.StatusCode != "DRAFT")
-        {
-            return false;
-        }
-
-        // --------------------------------------------------------
-        // Validate mandatory information
-        // --------------------------------------------------------
-
-        if (string.IsNullOrWhiteSpace(advertisement.Title) ||
-            string.IsNullOrWhiteSpace(advertisement.Description))
-        {
-            return false;
-        }
-
-        // --------------------------------------------------------
-        // Validate Contact Information
-        //
-        // At least one contact method must:
-        //   1. contain a value
-        //   2. be allowed to be shown publicly
-        //
-        // This prevents an advertisement from being submitted
-        // without a usable public contact method.
-        // --------------------------------------------------------
-
-        var hasWhatsApp =
-            !string.IsNullOrWhiteSpace(
-                advertisement.WhatsAppNumber);
-
-        var hasEmail =
-            !string.IsNullOrWhiteSpace(
-                advertisement.ContactEmail);
-
-        var hasPublicWhatsApp =
-            hasWhatsApp &&
-            advertisement.ShowWhatsAppToPublic;
-
-        var hasPublicEmail =
-            hasEmail &&
-            advertisement.ShowEmailToPublic;
-
-        if (!hasWhatsApp && !hasEmail)
-        {
+        if (monthlyCount >= 5)
             throw new InvalidOperationException(
-                "At least one contact method is required before submitting the advertisement.");
-        }
-
-        if (!hasPublicWhatsApp && !hasPublicEmail)
-        {
-            throw new InvalidOperationException(
-                "At least one contact method must be enabled for public visibility before submitting the advertisement.");
-        }
-
-        // --------------------------------------------------------
-        // Get Pending Review Status
-        // --------------------------------------------------------
-
-        var pendingReviewStatus =
-            await _context.AdvertisementStatuses
-                .FirstOrDefaultAsync(x =>
-                    x.StatusCode == "PENDING_REVIEW" &&
-                    x.IsActive);
-
-        if (pendingReviewStatus == null)
-        {
-            throw new InvalidOperationException(
-                "Advertisement PENDING_REVIEW status was not found or is inactive.");
-        }
-
-        // --------------------------------------------------------
-        // Change Status
-        //
-        // DRAFT → PENDING_REVIEW
-        // --------------------------------------------------------
-
-        advertisement.StatusID =
-            pendingReviewStatus.StatusID;
-
-        advertisement.ModifiedDate =
-            DateTime.UtcNow;
-
-        advertisement.ModifiedBy =
-            userId;
-
-        await _context.SaveChangesAsync();
-
-        return true;
+                "You have reached the five free advertisement submissions for this month. Paid posting is currently unavailable.");
     }
+
+    var pendingReviewStatus =
+        await _context.AdvertisementStatuses
+            .FirstOrDefaultAsync(x =>
+                x.StatusCode == "PENDING_REVIEW" &&
+                x.IsActive);
+
+    if (pendingReviewStatus == null)
+        throw new InvalidOperationException(
+            "Advertisement PENDING_REVIEW status was not found or is inactive.");
+
+    advertisement.StatusID = pendingReviewStatus.StatusID;
+    advertisement.ModifiedDate = now;
+    advertisement.ModifiedBy = userId;
+
+    if (!alreadyCounted)
+    {
+        _context.AuditLogs.Add(new AuditLog
+        {
+            UserID = userId,
+            Action = "ADVERTISEMENT_SUBMITTED",
+            EntityName = "Advertisement",
+            EntityID = entityId,
+            CreatedDate = now
+        });
+    }
+
+    await _context.SaveChangesAsync();
+    await transaction.CommitAsync();
+
+    return true;
+}
 
     // ============================================================
     // GENERATE ADVERTISEMENT NUMBER
