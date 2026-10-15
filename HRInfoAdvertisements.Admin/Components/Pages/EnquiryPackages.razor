@@ -1,4 +1,5 @@
-﻿@page "/enquiry-packages"
+﻿
+@page "/enquiry-packages"
 
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.Billing.DTOs
@@ -9,142 +10,420 @@
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
-<PageTitle>Enquiry Packages</PageTitle>
+<PageTitle>Enquiry Packages | AdMind</PageTitle>
 
-<div class="container py-4" style="max-width:1200px">
+<div class="enquiry-packages-page">
     <PublicTopBar />
 
-    <header class="py-4">
-        <span class="text-uppercase text-secondary small fw-bold">
-            CUSTOMER PACKAGES
-        </span>
-        <h1 class="mt-2">Enquiry Packages</h1>
-        <p class="text-secondary">
-            Choose a package to increase your available enquiry limits.
-        </p>
-        <a href="/my-package-requests" class="btn btn-outline-secondary btn-sm">
-            My Package Requests
-        </a>
-    </header>
+    <main class="enquiry-packages-shell">
+        <nav class="enquiry-breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page">Enquiry Packages</span>
+        </nav>
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
-    {
-        <div class="alert alert-danger" role="alert">
-            @errorMessage
-        </div>
-    }
+        <section class="enquiry-hero">
+            <div class="enquiry-hero-content">
+                <span class="enquiry-eyebrow">
+                    <span class="enquiry-eyebrow-dot"></span>
+                    FLEXIBLE PLANS FOR YOUR BUSINESS
+                </span>
 
-    @if (!string.IsNullOrWhiteSpace(successMessage))
-    {
-        <div class="alert alert-success" role="status">
-            @successMessage
-        </div>
-    }
+                <h1>Connect with customers.<br />Grow your business.</h1>
 
-    @if (isLoading)
-    {
-        <div class="py-5 text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading</span>
+                <p>
+                    Choose an enquiry package that suits your needs.
+                    Send enquiries, receive customer interest, and reply
+                    with clear monthly limits.
+                </p>
+
+                <div class="enquiry-hero-actions">
+                    <a href="#available-packages"
+                       class="enquiry-primary-button">
+                        Explore packages
+                        <span aria-hidden="true">→</span>
+                    </a>
+
+                    <a href="/my-package-requests"
+                       class="enquiry-secondary-button">
+                        <span aria-hidden="true">▤</span>
+                        My package requests
+                    </a>
+                </div>
+
+                <div class="enquiry-hero-note">
+                    <span aria-hidden="true">✓</span>
+                    Transparent limits · Clear pricing · Secure account access
+                </div>
             </div>
-            <p class="mt-3">Loading available packages...</p>
-        </div>
-    }
-    else if (packages.Count == 0)
-    {
-        <div class="alert alert-info">
-            No packages are currently available. Please check again later.
-        </div>
-    }
-    else
-    {
-        <div class="row g-4">
-            @foreach (var package in packages)
-            {
-                <div class="col-12 col-md-6 col-xl-4" @key="package.EnquiryPackageID">
-                    <article class="card h-100 shadow-sm">
-                        <div class="card-body d-flex flex-column p-4">
-                            <h2 class="h4">@package.Name</h2>
 
-                            @if (!string.IsNullOrWhiteSpace(package.Description))
+            <div class="enquiry-hero-visual" aria-hidden="true">
+                <div class="enquiry-visual-glow"></div>
+
+                <div class="enquiry-visual-orbit enquiry-orbit-one"></div>
+                <div class="enquiry-visual-orbit enquiry-orbit-two"></div>
+
+                <div class="enquiry-visual-card enquiry-visual-card-back">
+                    <span class="enquiry-visual-icon enquiry-icon-purple">↗</span>
+                    <span class="enquiry-visual-lines">
+                        <span></span>
+                        <span></span>
+                    </span>
+                </div>
+
+                <div class="enquiry-visual-card enquiry-visual-card-front">
+                    <div class="enquiry-visual-card-heading">
+                        <span class="enquiry-visual-icon enquiry-icon-blue">✉</span>
+                        <span>
+                            <strong>Customer enquiries</strong>
+                            <small>Build better connections</small>
+                        </span>
+                    </div>
+
+                    <div class="enquiry-visual-stat">
+                        <div>
+                            <small>Monthly usage</small>
+                            <strong>Stay in control</strong>
+                        </div>
+                        <span class="enquiry-visual-check">✓</span>
+                    </div>
+
+                    <div class="enquiry-visual-progress">
+                        <span></span>
+                    </div>
+
+                    <div class="enquiry-visual-footer">
+                        <span>Send</span>
+                        <span>Receive</span>
+                        <span>Reply</span>
+                    </div>
+                </div>
+
+                <div class="enquiry-floating-badge">
+                    <span>✓</span>
+                    Simple and transparent
+                </div>
+            </div>
+        </section>
+
+        <section class="enquiry-benefits" aria-label="Package benefits">
+            <div class="enquiry-benefit">
+                <span class="enquiry-benefit-icon">↗</span>
+                <div>
+                    <strong>Know your limits</strong>
+                    <span>See monthly allowances before choosing.</span>
+                </div>
+            </div>
+
+            <div class="enquiry-benefit">
+                <span class="enquiry-benefit-icon">◎</span>
+                <div>
+                    <strong>Manage your requests</strong>
+                    <span>Track package requests in your account.</span>
+                </div>
+            </div>
+
+            <div class="enquiry-benefit">
+                <span class="enquiry-benefit-icon">✓</span>
+                <div>
+                    <strong>Clear payment status</strong>
+                    <span>Know when a request is awaiting confirmation.</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="available-packages" class="enquiry-plans-section">
+            <div class="enquiry-section-heading">
+                <div>
+                    <span class="enquiry-section-eyebrow">FIND YOUR PLAN</span>
+                    <h2>Enquiry packages</h2>
+                    <p>
+                        Compare the monthly allowances and choose the
+                        package that works for you.
+                    </p>
+                </div>
+
+                <a href="/my-package-requests"
+                   class="enquiry-requests-link">
+                    View my requests <span aria-hidden="true">→</span>
+                </a>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="enquiry-message enquiry-message-error"
+                     role="alert">
+                    <span class="enquiry-message-icon">!</span>
+                    <div>
+                        <strong>We couldn't complete that action</strong>
+                        <p>@errorMessage</p>
+                    </div>
+                    <button type="button"
+                            class="enquiry-message-close"
+                            aria-label="Dismiss error"
+                            @onclick="() => errorMessage = null">
+                        ×
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <div class="enquiry-message enquiry-message-success"
+                     role="status">
+                    <span class="enquiry-message-icon">✓</span>
+                    <div>
+                        <strong>Request submitted</strong>
+                        <p>@successMessage</p>
+                    </div>
+                </div>
+            }
+
+            @if (isLoading)
+            {
+                <div class="enquiry-loading" role="status">
+                    <span class="enquiry-spinner"></span>
+                    <strong>Loading available packages</strong>
+                    <p>Please wait while we retrieve the latest package details.</p>
+                </div>
+            }
+            else if (packages.Count == 0)
+            {
+                <div class="enquiry-empty-state">
+                    <span class="enquiry-empty-icon">▤</span>
+                    <h3>No packages available right now</h3>
+                    <p>
+                        Please check again later. Package availability
+                        will be updated when plans are published.
+                    </p>
+                    <button type="button"
+                            class="enquiry-primary-button"
+                            @onclick="LoadPackagesAsync">
+                        Try again
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="enquiry-plan-grid">
+                    @foreach (var package in packages)
+                    {
+                        var isFree = package.Price <= 0;
+                        var isSubmitting =
+                            submittingPackageId == package.EnquiryPackageID;
+                        var isUnavailable =
+                            !isFree && !package.IsActive;
+
+                        <article class="enquiry-plan-card @(isFree ? "enquiry-plan-free" : "") @(isUnavailable ? "enquiry-plan-unavailable" : "")"
+                                 @key="package.EnquiryPackageID">
+
+                            @if (isFree)
                             {
-                                <p class="text-secondary">@package.Description</p>
+                                <div class="enquiry-plan-ribbon enquiry-ribbon-free">
+                                    FREE PLAN
+                                </div>
+                            }
+                            else if (isUnavailable)
+                            {
+                                <div class="enquiry-plan-ribbon enquiry-ribbon-unavailable">
+                                    NOT AVAILABLE
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="enquiry-plan-ribbon enquiry-ribbon-paid">
+                                    AVAILABLE PLAN
+                                </div>
                             }
 
-                            <div class="my-3">
-                                <span class="display-6 fw-bold">
-                                    @package.Price.ToString("N3")
-                                </span>
-                                <span class="text-secondary">
-                                    @package.CurrencyCode
-                                </span>
-                            </div>
-
-                            <hr />
-
-                            
-<ul class="list-unstyled">
-    <li class="mb-2">
-        <strong>@package.MonthlySenderEnquiryLimit</strong>
-        sender enquiries per month
-    </li>
-    <li class="mb-2">
-        <strong>@package.MonthlyAdvertisementEnquiryLimit</strong>
-        enquiries received per advertisement per month
-    </li>
-    <li class="mb-2">
-        <strong>@package.MonthlyReplyLimit</strong>
-        replies per month
-    </li>
-    <li class="mb-2">
-        Validity:
-        <strong>
-            @(package.ValidityDays.HasValue
-                ? $"{package.ValidityDays.Value} days"
-                : "Not specified")
-        </strong>
-    </li>
-</ul>
-
-
-                            <div class="mt-auto pt-3">
-                                @if (package.Price <= 0)
-                                {
-                                    <div class="alert alert-light border mb-0">
-                                        Included/free package
+                            <div class="enquiry-plan-card-content">
+                                <div class="enquiry-plan-title-row">
+                                    <div class="enquiry-plan-symbol @(isFree ? "enquiry-symbol-free" : "enquiry-symbol-paid")">
+                                        @(isFree ? "◎" : "✦")
                                     </div>
-                                }
-                                else if (submittingPackageId == package.EnquiryPackageID)
+
+                                    <span class="enquiry-plan-status @(isFree ? "status-free" : isUnavailable ? "status-unavailable" : "status-active")">
+                                        @(isFree ? "Free" : isUnavailable ? "Coming soon" : "Available")
+                                    </span>
+                                </div>
+
+                                <h3>@package.Name</h3>
+
+                                @if (!string.IsNullOrWhiteSpace(package.Description))
                                 {
-                                    <button class="btn btn-primary w-100" disabled>
-                                        Submitting request...
-                                    </button>
+                                    <p class="enquiry-plan-description">
+                                        @package.Description
+                                    </p>
                                 }
                                 else
                                 {
-                                    <button class="btn btn-primary w-100"
-                                            disabled="@(!package.IsActive || submittingPackageId.HasValue)"
-                                            @onclick="() => RequestPackageAsync(package.EnquiryPackageID)">
-                                        Request This Package
-                                    </button>
+                                    <p class="enquiry-plan-description">
+                                        @(isFree
+                                            ? "Get started with essential enquiry features."
+                                            : "More enquiry capacity for your business.")
+                                    </p>
                                 }
+
+                                <div class="enquiry-plan-price">
+                                    <strong>@package.Price.ToString("N3")</strong>
+                                    <span>@package.CurrencyCode</span>
+                                </div>
+
+                                <div class="enquiry-plan-billing">
+                                    @(isFree ? "No package fee" : "Package price")
+                                </div>
+
+                                <div class="enquiry-plan-divider"></div>
+
+                                <div class="enquiry-plan-features-heading">
+                                    WHAT'S INCLUDED
+                                </div>
+
+                                <ul class="enquiry-plan-features">
+                                    <li>
+                                        <span class="enquiry-feature-check">✓</span>
+                                        <span>
+                                            <strong>@package.MonthlySenderEnquiryLimit</strong>
+                                            enquiries you can send monthly
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="enquiry-feature-check">✓</span>
+                                        <span>
+                                            <strong>@package.MonthlyAdvertisementEnquiryLimit</strong>
+                                            enquiries received per advertisement monthly
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="enquiry-feature-check">✓</span>
+                                        <span>
+                                            <strong>@package.MonthlyReplyLimit</strong>
+                                            replies you can send monthly
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="enquiry-feature-check">✓</span>
+                                        <span>
+                                            <strong>
+                                                @(package.ValidityDays.HasValue
+                                                    ? $"{package.ValidityDays.Value} days"
+                                                    : "Not specified")
+                                            </strong>
+                                            package validity
+                                        </span>
+                                    </li>
+                                </ul>
+
+                                <div class="enquiry-plan-action">
+                                    @if (isFree)
+                                    {
+                                        <div class="enquiry-current-plan">
+                                            <span>✓</span>
+                                            Included free package
+                                        </div>
+                                    }
+                                    else if (isUnavailable)
+                                    {
+                                        <button type="button"
+                                                class="enquiry-plan-button enquiry-button-disabled"
+                                                disabled>
+                                            Currently unavailable
+                                        </button>
+                                    }
+                                    else if (isSubmitting)
+                                    {
+                                        <button type="button"
+                                                class="enquiry-plan-button"
+                                                disabled>
+                                            <span class="enquiry-button-spinner"></span>
+                                            Submitting request...
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="enquiry-plan-button"
+                                                disabled="@submittingPackageId.HasValue"
+                                                @onclick="() => RequestPackageAsync(package.EnquiryPackageID)">
+                                            Request this package
+                                            <span aria-hidden="true">→</span>
+                                        </button>
+                                    }
+                                </div>
                             </div>
-                        </div>
-                    </article>
+                        </article>
+                    }
                 </div>
             }
-        </div>
-    }
 
-    <div class="alert alert-light border mt-4">
-        <strong>Payment information</strong>
-        <p class="mb-0 mt-2">
-            A package request is not a payment. Payment must be completed
-            using the instructions confirmed by the administrator.
-            BenefitPay confirmation is currently a manual process, not a
-            live payment gateway.
-        </p>
-    </div>
+            <p class="enquiry-package-footnote">
+                Package availability, pricing and limits are retrieved from
+                the application. Monthly limits are subject to the package
+                rules applied by the service.
+            </p>
+        </section>
+
+        <section class="enquiry-payment-section">
+            <div class="enquiry-payment-icon">↔</div>
+
+            <div class="enquiry-payment-copy">
+                <span class="enquiry-section-eyebrow">PAYMENT PROCESS</span>
+                <h2>Clear steps. No payment surprises.</h2>
+                <p>
+                    Submitting a paid-package request does not complete
+                    payment or activate the package. Follow the payment
+                    instructions shown for your request and wait for
+                    confirmation.
+                </p>
+
+                <div class="enquiry-payment-steps">
+                    <div>
+                        <span>1</span>
+                        <strong>Request</strong>
+                        <small>Choose an available package.</small>
+                    </div>
+                    <div>
+                        <span>2</span>
+                        <strong>Follow instructions</strong>
+                        <small>Review the details on your request.</small>
+                    </div>
+                    <div>
+                        <span>3</span>
+                        <strong>Confirmation</strong>
+                        <small>Wait for payment verification and activation.</small>
+                    </div>
+                </div>
+
+                <p class="enquiry-payment-disclaimer">
+                    BenefitPay confirmation is currently handled manually.
+                    This page does not process live payments.
+                </p>
+            </div>
+        </section>
+
+        <section class="enquiry-help-section">
+            <div>
+                <span class="enquiry-help-icon">?</span>
+                <div>
+                    <h2>Need help choosing a package?</h2>
+                    <p>
+                        Review your package requests to check their
+                        current status and any available payment instructions.
+                    </p>
+                </div>
+            </div>
+
+            <a href="/my-package-requests"
+               class="enquiry-secondary-button">
+                My package requests <span aria-hidden="true">→</span>
+            </a>
+        </section>
+
+        <footer class="enquiry-page-footer">
+            <span>AdMind · Enquiry packages</span>
+            <a href="/my-package-requests">Manage my requests</a>
+        </footer>
+    </main>
 </div>
 
 @code {
@@ -194,7 +473,8 @@
 
         if (package is null || !package.IsActive || package.Price <= 0)
         {
-            errorMessage = "This paid package is not available for purchase.";
+            errorMessage =
+                "This paid package is not available for purchase.";
             return;
         }
 
@@ -202,11 +482,12 @@
 
         try
         {
-            var request = await BillingService.CreatePurchaseRequestAsync(packageId);
+            var request =
+                await BillingService.CreatePurchaseRequestAsync(packageId);
 
             successMessage =
                 $"Request #{request.PackagePurchaseRequestID} was submitted. " +
-                "Continue to My Package Requests for its status and payment instructions.";
+                "Review its status and payment instructions.";
 
             Navigation.NavigateTo("/my-package-requests");
         }

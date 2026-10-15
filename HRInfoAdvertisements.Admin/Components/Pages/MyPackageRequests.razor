@@ -12,166 +12,230 @@
 
 <PageTitle>My Package Requests</PageTitle>
 
-<div class="container py-4" style="max-width:1100px">
+<div class="container my-requests-page">
     <PublicTopBar />
 
-    <header class="py-4">
-        <span class="text-uppercase text-secondary small fw-bold">
-            MY ACCOUNT
-        </span>
-        <h1 class="mt-2">My Package Requests</h1>
-        <p class="text-secondary">
-            Review your package requests and their payment status.
-        </p>
-        <a href="/enquiry-packages" class="btn btn-outline-primary btn-sm">
-            Browse Packages
+    <header class="my-requests-hero">
+        <div class="my-requests-hero-copy">
+            <span class="my-requests-eyebrow">
+                <span class="my-requests-eyebrow-dot"></span>
+                MY ACCOUNT
+            </span>
+            <h1>My Package Requests</h1>
+            <p>
+                Track your package requests, review their status,
+                and see what needs to happen next.
+            </p>
+        </div>
+
+        <a href="/enquiry-packages" class="my-requests-browse-link">
+            <span>Browse Packages</span>
+            <span aria-hidden="true">→</span>
         </a>
     </header>
 
     @if (!AuthenticationStateProvider.IsAuthenticated)
     {
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <h2 class="h5">Sign in to view your requests</h2>
-                <p class="text-secondary">
-                    Your package requests are private to your account.
-                </p>
-                <button class="btn btn-primary"
-                        @onclick='() => Navigation.NavigateTo("/login")'>
-                    Sign In
-                </button>
-            </div>
-        </div>
+        <section class="my-requests-state-card">
+            <div class="my-requests-state-icon" aria-hidden="true">↗</div>
+            <h2>Sign in to view your requests</h2>
+            <p>
+                Your package requests are private to your account.
+                Sign in to review your submissions and their latest status.
+            </p>
+            <button class="my-requests-primary-button"
+                    @onclick='() => Navigation.NavigateTo("/login")'>
+                Sign In
+            </button>
+        </section>
     }
     else
     {
-        @if (!string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="alert alert-danger" role="alert">
-                @errorMessage
-                <button class="btn btn-sm btn-outline-danger ms-3"
-                        @onclick="LoadRequestsAsync">
-                    Retry
-                </button>
-            </div>
-        }
-
-        @if (isLoading)
-        {
-            <div class="py-5 text-center">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading</span>
+        <section class="my-requests-content" aria-live="polite">
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="my-requests-error" role="alert">
+                    <div>
+                        <strong>We couldn't load your requests.</strong>
+                        <p>@errorMessage</p>
+                    </div>
+                    <button type="button"
+                            class="my-requests-retry-button"
+                            @onclick="LoadRequestsAsync"
+                            disabled="@isLoading">
+                        @(isLoading ? "Retrying..." : "Try again")
+                    </button>
                 </div>
-                <p class="mt-3">Loading your package requests...</p>
-            </div>
-        }
-        else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
-        {
-            <div class="card shadow-sm">
-                <div class="card-body text-center p-5">
-                    <h2 class="h5">No package requests yet</h2>
-                    <p class="text-secondary">
-                        Select a package to submit your first request.
+            }
+
+            @if (isLoading)
+            {
+                <div class="my-requests-state-card my-requests-loading">
+                    <div class="my-requests-spinner" role="status">
+                        <span class="visually-hidden">Loading</span>
+                    </div>
+                    <h2>Loading your requests</h2>
+                    <p>We're retrieving your package request history.</p>
+                </div>
+            }
+            else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="my-requests-state-card">
+                    <div class="my-requests-state-icon" aria-hidden="true">＋</div>
+                    <span class="my-requests-section-kicker">GET STARTED</span>
+                    <h2>No package requests yet</h2>
+                    <p>
+                        When you submit a paid package request, its status and
+                        details will appear here.
                     </p>
-                    <a href="/enquiry-packages" class="btn btn-primary">
-                        View Packages
+                    <a href="/enquiry-packages" class="my-requests-primary-button">
+                        Explore Packages
+                        <span aria-hidden="true">→</span>
                     </a>
                 </div>
-            </div>
-        }
-        else
-        {
-            <div class="row g-3">
-                @foreach (var request in requests)
-                {
-                    <div class="col-12" @key="request.PackagePurchaseRequestID">
-                        <article class="card shadow-sm">
-                            <div class="card-body p-4">
-                                <div class="d-flex flex-wrap justify-content-between gap-3">
-                                    <div>
-                                        <h2 class="h5">@request.PackageName</h2>
-                                        <div class="text-secondary small">
-                                            Request #@request.PackagePurchaseRequestID
-                                        </div>
-                                        <div class="text-secondary small">
-                                            Submitted:
-                                            @request.CreatedDate.ToString(
-                                                "dd MMM yyyy HH:mm",
-                                                CultureInfo.CurrentCulture)
-                                        </div>
+            }
+            else if (requests.Count > 0)
+            {
+                <div class="my-requests-list-heading">
+                    <div>
+                        <span class="my-requests-section-kicker">YOUR ACTIVITY</span>
+                        <h2>Request history</h2>
+                    </div>
+                    <span class="my-requests-count">
+                        @requests.Count @(requests.Count == 1 ? "request" : "requests")
+                    </span>
+                </div>
+
+                <div class="my-requests-list">
+                    @foreach (var request in requests)
+                    {
+                        var normalizedStatus = NormalizeStatus(request.Status);
+
+                        <article class="my-request-card"
+                                 @key="request.PackagePurchaseRequestID">
+                            <div class="my-request-card-main">
+                                <div class="my-request-package-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none">
+                                        <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"
+                                              stroke="currentColor"
+                                              stroke-width="1.7"
+                                              stroke-linejoin="round" />
+                                        <path d="m4.5 7.7 7.5 4.4 7.5-4.4M12 12.1V21M8 5.3l8 4.6"
+                                              stroke="currentColor"
+                                              stroke-width="1.7"
+                                              stroke-linejoin="round" />
+                                    </svg>
+                                </div>
+
+                                <div class="my-request-details">
+                                    <div class="my-request-title-line">
+                                        <h3>@request.PackageName</h3>
+                                        <span class="my-request-status @GetStatusClass(normalizedStatus)">
+                                            @GetStatusLabel(normalizedStatus)
+                                        </span>
                                     </div>
 
-                                    <div class="text-md-end">
-                                        <div class="fs-4 fw-bold">
-                                            @request.Amount.ToString("N3")
-                                            @request.CurrencyCode
-                                        </div>
-                                        <span class="badge rounded-pill text-bg-secondary">
-                                            @request.Status
+                                    <div class="my-request-meta">
+                                        <span>Request #@request.PackagePurchaseRequestID</span>
+                                        <span class="my-request-meta-separator" aria-hidden="true"></span>
+                                        <span>
+                                            Submitted
+                                            @request.CreatedDate.ToString(
+                                                "dd MMM yyyy, HH:mm",
+                                                CultureInfo.CurrentCulture)
                                         </span>
                                     </div>
                                 </div>
+                            </div>
 
-                                <hr />
+                            <div class="my-request-amount">
+                                <span class="my-request-amount-label">Request amount</span>
+                                <strong>
+                                    @request.Amount.ToString("N3")
+                                    <span>@request.CurrencyCode</span>
+                                </strong>
+                            </div>
 
-                                @switch (request.Status.Trim().ToUpperInvariant())
+                            <div class="my-request-next-step">
+                                @switch (normalizedStatus)
                                 {
                                     case "PENDING":
                                     case "PENDING_REVIEW":
                                     case "SUBMITTED":
-                                        <p class="mb-0">
-                                            Your request is awaiting administrator review.
-                                            Please wait for approval before making payment.
-                                        </p>
+                                        <span class="my-request-step-icon my-request-step-pending" aria-hidden="true">◷</span>
+                                        <div>
+                                            <strong>Awaiting review</strong>
+                                            <p>
+                                                Your request is awaiting administrator review.
+                                                Please wait for approval before making payment.
+                                            </p>
+                                        </div>
                                         break;
 
                                     case "APPROVED":
-                                        <p class="mb-2">
-                                            Your request has been approved.
-                                            Contact the administrator or follow the
-                                            payment instructions provided to you.
-                                        </p>
-                                        <p class="small text-secondary mb-0">
-                                            Do not assume payment is complete until
-                                            the administrator confirms the transaction.
-                                        </p>
+                                        <span class="my-request-step-icon my-request-step-approved" aria-hidden="true">✓</span>
+                                        <div>
+                                            <strong>Approved — payment instructions next</strong>
+                                            <p>
+                                                Follow the payment instructions provided by the
+                                                administrator. Your payment is not confirmed until
+                                                the administrator verifies it.
+                                            </p>
+                                        </div>
                                         break;
 
                                     case "COMPLETED":
                                     case "PAID":
-                                        <p class="text-success mb-0">
-                                            Payment has been confirmed. If your package
-                                            entitlement is not visible, contact support.
-                                        </p>
+                                        <span class="my-request-step-icon my-request-step-complete" aria-hidden="true">✓</span>
+                                        <div>
+                                            <strong>Payment confirmed</strong>
+                                            <p>
+                                                Your payment has been confirmed. If your package
+                                                entitlement is not visible, contact support.
+                                            </p>
+                                        </div>
                                         break;
 
                                     case "REJECTED":
-                                        <p class="mb-0">
-                                            This request was rejected. Contact support
-                                            if you need clarification.
-                                        </p>
+                                        <span class="my-request-step-icon my-request-step-rejected" aria-hidden="true">!</span>
+                                        <div>
+                                            <strong>Request rejected</strong>
+                                            <p>
+                                                Contact support if you need clarification about
+                                                this decision.
+                                            </p>
+                                        </div>
                                         break;
 
                                     default:
-                                        <p class="mb-0">
-                                            Check with the administrator for the next
-                                            step associated with this request status.
-                                        </p>
+                                        <span class="my-request-step-icon my-request-step-default" aria-hidden="true">i</span>
+                                        <div>
+                                            <strong>Next step</strong>
+                                            <p>
+                                                Contact the administrator for guidance on this
+                                                request's current status.
+                                            </p>
+                                        </div>
                                         break;
                                 }
                             </div>
                         </article>
-                    </div>
-                }
-            </div>
-        }
+                    }
+                </div>
+            }
+        </section>
 
-        <div class="alert alert-light border mt-4">
-            <strong>Important:</strong>
-            Bank transfers and BenefitPay are subject to administrator
-            verification in the current workflow. This page does not collect
-            card details or process payments through a live payment gateway.
-        </div>
+        <aside class="my-requests-payment-note">
+            <div class="my-requests-payment-note-icon" aria-hidden="true">i</div>
+            <div>
+                <strong>Payment and verification</strong>
+                <p>
+                    Bank transfers and BenefitPay are subject to administrator
+                    verification in the current workflow. This page does not collect
+                    card details or process payments through a live payment gateway.
+                </p>
+            </div>
+        </aside>
     }
 </div>
 
@@ -217,4 +281,33 @@
             isLoading = false;
         }
     }
+
+    private static string NormalizeStatus(string? status) =>
+        (status ?? string.Empty).Trim().ToUpperInvariant();
+
+    private static string GetStatusLabel(string status) =>
+        status switch
+        {
+            "PENDING" => "Pending",
+            "PENDING_REVIEW" => "Pending review",
+            "SUBMITTED" => "Submitted",
+            "APPROVED" => "Approved",
+            "COMPLETED" => "Completed",
+            "PAID" => "Paid",
+            "REJECTED" => "Rejected",
+            _ => string.IsNullOrWhiteSpace(status)
+                ? "Status unavailable"
+                : CultureInfo.CurrentCulture.TextInfo.ToTitleCase(
+                    status.Replace('_', ' ').ToLowerInvariant())
+        };
+
+    private static string GetStatusClass(string status) =>
+        status switch
+        {
+            "PENDING" or "PENDING_REVIEW" or "SUBMITTED" => "status-pending",
+            "APPROVED" => "status-approved",
+            "COMPLETED" or "PAID" => "status-completed",
+            "REJECTED" => "status-rejected",
+            _ => "status-default"
+        };
 }
