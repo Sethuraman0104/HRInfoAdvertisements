@@ -1,0 +1,877 @@
+@page "/admin/billing-settings"
+
+@using Microsoft.AspNetCore.Components
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
+
+@inject SystemSettingsApiService SettingsService
+
+<PageTitle>Billing Settings</PageTitle>
+
+<div class="admin-billing">
+
+    @* ============================================================
+       MESSAGE BANNER
+       ============================================================ *@
+
+    @if (!string.IsNullOrWhiteSpace(Message))
+    {
+        <div class="billing-banner @(IsError ? "billing-banner-error" : "billing-banner-success")"
+             role="alert">
+
+            <div class="billing-banner-icon">
+                <i class="bi @(IsError
+                    ? "bi-exclamation-triangle-fill"
+                    : "bi-check-circle-fill")"></i>
+            </div>
+
+            <div class="billing-banner-content">
+
+                <strong>
+                    @(IsError ? "Something went wrong" : "Settings saved")
+                </strong>
+
+                <span>@Message</span>
+
+            </div>
+
+            @if (IsError)
+            {
+                <button type="button"
+                        class="billing-banner-retry"
+                        @onclick="LoadSettingsAsync"
+                        disabled="@Loading">
+
+                    <i class="bi bi-arrow-clockwise @(Loading ? "billing-spin" : "")"></i>
+
+                    <span>Retry</span>
+
+                </button>
+            }
+
+            <button type="button"
+                    class="billing-banner-close"
+                    @onclick="DismissMessage"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    @* ============================================================
+       PAGE HEADER
+       ============================================================ *@
+
+    <PageHeader Title="Billing &amp; Monetization">
+
+        <DescriptionContent>
+
+            <p class="billing-page-description">
+                Configure paid packages and available payment methods.
+            </p>
+
+        </DescriptionContent>
+
+
+        <ActionContent>
+
+            <div class="billing-header-actions">
+
+                <button type="button"
+                        class="billing-btn billing-btn-secondary"
+                        @onclick="LoadSettingsAsync"
+                        disabled="@(Loading || Saving)">
+
+                    <i class="bi bi-arrow-clockwise @(Loading ? "billing-spin" : "")"></i>
+
+                    <span>Refresh</span>
+
+                </button>
+
+
+                <button type="button"
+                        class="billing-btn billing-btn-primary"
+                        @onclick="SaveAsync"
+                        disabled="@(Loading || Saving || !HasChanges)">
+
+                    @if (Saving)
+                    {
+                        <span class="billing-button-spinner"></span>
+
+                        <span>Saving...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-save"></i>
+
+                        <span>Save Settings</span>
+                    }
+
+                </button>
+
+            </div>
+
+        </ActionContent>
+
+    </PageHeader>
+
+
+    @* ============================================================
+       RESULTS PANEL
+       ============================================================ *@
+
+    <section class="billing-results">
+
+        <div class="billing-results-header">
+
+            <div class="billing-results-title">
+
+                <div class="billing-results-icon">
+                    <i class="bi bi-credit-card-2-front"></i>
+                </div>
+
+                <div>
+
+                    <h2>Billing Options</h2>
+
+                    <span>
+                        @Options.Count
+                        @(Options.Count == 1 ? "option" : "options")
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            @if (!Loading)
+            {
+                <div class="billing-results-summary">
+
+                    <span class="billing-summary-active">
+
+                        <i class="bi bi-check-circle-fill"></i>
+
+                        @EnabledCount enabled
+
+                    </span>
+
+                    <span class="billing-summary-inactive">
+
+                        <i class="bi bi-dash-circle-fill"></i>
+
+                        @(Options.Count - EnabledCount) disabled
+
+                    </span>
+
+                </div>
+            }
+
+        </div>
+
+
+        @* ========================================================
+           LOADING
+           ======================================================== *@
+
+        @if (Loading)
+        {
+            <div class="billing-loading">
+
+                <div class="billing-loading-spinner"></div>
+
+                <div class="billing-loading-text">
+
+                    <strong>Loading settings</strong>
+
+                    <span>Please wait...</span>
+
+                </div>
+
+            </div>
+        }
+
+        @* ========================================================
+           TABLE
+           ======================================================== *@
+
+        else
+        {
+            <div class="billing-table-wrapper">
+
+                <table class="billing-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th class="billing-col-option">Option</th>
+
+                            <th class="billing-col-description">Description</th>
+
+                            <th class="billing-col-status">Status</th>
+
+                            <th class="billing-col-toggle">Enabled</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var item in Options)
+                        {
+                            var option = item;
+
+                            <tr @key="option.Key">
+
+                                @* OPTION *@
+
+                                <td class="billing-option-cell">
+
+                                    <div class="billing-option-icon @(option.Enabled ? "billing-option-icon-on" : "")">
+
+                                        <i class="bi @option.Icon"></i>
+
+                                    </div>
+
+
+                                    <div class="billing-option-info">
+
+                                        <div class="billing-option-name-row">
+
+                                            <label for="@option.Key"
+                                                   class="billing-option-name">
+                                                @option.Label
+                                            </label>
+
+                                            @if (option.IsDirty)
+                                            {
+                                                <span class="billing-unsaved-badge">
+                                                    <i class="bi bi-dot"></i>
+                                                    Unsaved
+                                                </span>
+                                            }
+
+                                        </div>
+
+                                        <span class="billing-option-key">
+                                            @option.Key
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* DESCRIPTION *@
+
+                                <td class="billing-description-cell">
+
+                                    <span>@option.Description</span>
+
+                                    @if (option.IsPaymentMethod && option.Enabled && !PaidPackagesOn)
+                                    {
+                                        <span class="billing-hint">
+
+                                            <i class="bi bi-info-circle-fill"></i>
+
+                                            Paid Packages is off, so customers cannot use this method yet.
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* STATUS *@
+
+                                <td class="billing-status-cell">
+
+                                    @if (option.Enabled)
+                                    {
+                                        <span class="billing-status billing-status-active">
+
+                                            <span class="billing-status-dot"></span>
+
+                                            Enabled
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="billing-status billing-status-inactive">
+
+                                            <span class="billing-status-dot"></span>
+
+                                            Disabled
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* TOGGLE *@
+
+                                <td class="billing-toggle-cell">
+
+                                    <label class="billing-switch"
+                                           title="@(option.Enabled ? "Disable" : "Enable") @option.Label">
+
+                                        <input type="checkbox"
+                                               id="@option.Key"
+                                               role="switch"
+                                               @bind="option.Enabled"
+                                               disabled="@Saving" />
+
+                                        <span class="billing-switch-slider"></span>
+
+                                    </label>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+            @* ====================================================
+               FOOTER BAR
+               ==================================================== *@
+
+            <div class="billing-footer">
+
+                <span class="billing-footer-state @(HasChanges ? "billing-footer-state-dirty" : "")"
+                      aria-live="polite">
+
+                    <i class="bi @(HasChanges ? "bi-pencil-fill" : "bi-check2-circle")"></i>
+
+                    @(HasChanges ? "You have unsaved changes" : "All changes saved")
+
+                </span>
+
+
+                <div class="billing-footer-actions">
+
+                    <button type="button"
+                            class="billing-btn billing-btn-secondary"
+                            @onclick="DiscardChanges"
+                            disabled="@(!HasChanges || Saving)">
+
+                        <i class="bi bi-arrow-counterclockwise"></i>
+
+                        <span>Discard</span>
+
+                    </button>
+
+
+                    <button type="button"
+                            class="billing-btn billing-btn-primary"
+                            @onclick="SaveAsync"
+                            disabled="@(!HasChanges || Saving)">
+
+                        @if (Saving)
+                        {
+                            <span class="billing-button-spinner"></span>
+
+                            <span>Saving...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg"></i>
+
+                            <span>Save Settings</span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+    </section>
+
+
+    @* ============================================================
+       PAYMENT INSTRUCTIONS
+       ============================================================ *@
+
+    @if (!Loading)
+    {
+        <section class="billing-section mt-4">
+
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div>
+                    <i class="bi bi-bank fs-3"></i>
+                </div>
+
+                <div>
+                    <h4 class="mb-1">Customer Payment Instructions</h4>
+                    <p class="text-muted mb-0">
+                        Configure the bank details and payment instructions displayed
+                        to customers for manual payment verification.
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert alert-info" role="alert">
+                These values are intended to be shared with customers. Enter only
+                payment details and instructions that you authorize the application
+                to display publicly. Do not enter passwords, PINs, or banking credentials.
+            </div>
+
+            <div class="row g-3">
+                @foreach (var setting in PaymentInstructionSettings)
+                {
+                    <div class="col-12 col-md-6" @key="setting.Key">
+
+                        <label class="form-label" for="@($"payment-setting-{setting.Key}")">
+                            @setting.Label
+                        </label>
+
+                        @if (setting.Key.EndsWith(
+                            "_INSTRUCTIONS",
+                            StringComparison.OrdinalIgnoreCase))
+                        {
+                            <textarea id="@($"payment-setting-{setting.Key}")"
+                                      class="form-control"
+                                      rows="4"
+                                      maxlength="4000"
+                                      @bind="setting.Value"
+                                      placeholder="@setting.Description"></textarea>
+                        }
+                        else
+                        {
+                            <input id="@($"payment-setting-{setting.Key}")"
+                                   class="form-control"
+                                   type="text"
+                                   maxlength="4000"
+                                   autocomplete="off"
+                                   @bind="setting.Value"
+                                   placeholder="@setting.Description" />
+                        }
+
+                        <div class="form-text">@setting.Description</div>
+
+                        @if (setting.IsEncrypted)
+                        {
+                            <div class="text-warning small mt-1">
+                                This setting was previously encrypted. Enter the intended
+                                customer-visible value before saving.
+                            </div>
+                        }
+
+                    </div>
+                }
+            </div>
+
+            <div class="text-muted small mt-3">
+                Changes are saved using the existing Save Settings button above.
+                Select Discard Changes to restore the values loaded from the server.
+            </div>
+
+        </section>
+    }
+
+    @* ============================================================
+       NOTICE
+       ============================================================ *@
+
+    @if (!Loading)
+    {
+        <div class="billing-warning">
+
+            <i class="bi bi-exclamation-triangle-fill"></i>
+
+            <span>
+
+                <strong>No live payment gateway.</strong>
+
+                Enabling a payment method here does not create a live payment gateway.
+                Verify bank-transfer or BenefitPay payments manually using your existing
+                purchase-request workflow.
+
+            </span>
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private bool Loading = true;
+
+    private bool Saving;
+
+    private bool IsError;
+
+    private string Message = string.Empty;
+
+
+    // ============================================================
+    // OPTIONS
+    // ============================================================
+
+    private readonly List<SettingOption> Options =
+    [
+        new()
+        {
+            Key = "PAID_PACKAGES_ENABLED",
+            Label = "Paid Packages",
+            Icon = "bi-box-seam-fill",
+            Description = "Allow customers to purchase paid packages."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_ENABLED",
+            Label = "Bank Transfer",
+            Icon = "bi-bank2",
+            IsPaymentMethod = true,
+            Description = "Allow bank-transfer payment submissions."
+        },
+        new()
+        {
+            Key = "BENEFITPAY_ENABLED",
+            Label = "BenefitPay",
+            Icon = "bi-phone-fill",
+            IsPaymentMethod = true,
+            Description = "Allow BenefitPay payment submissions."
+        }
+    ];
+
+
+    // ============================================================
+    private readonly List<TextSettingOption> PaymentInstructionSettings =
+    [
+        new()
+        {
+            Key = "BANK_TRANSFER_BANK_NAME",
+            Label = "Bank Name",
+            Description = "Bank name displayed to customers for bank transfers."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_ACCOUNT_HOLDER",
+            Label = "Account Holder",
+            Description = "Account holder name displayed to customers."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_ACCOUNT_NUMBER",
+            Label = "Account Number",
+            Description = "Bank account number displayed to customers."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_IBAN",
+            Label = "IBAN",
+            Description = "IBAN displayed to customers for bank transfers."
+        },
+        new()
+        {
+            Key = "BANK_TRANSFER_INSTRUCTIONS",
+            Label = "Bank Transfer Instructions",
+            Description = "Payment steps and reference details for bank transfers."
+        },
+        new()
+        {
+            Key = "BENEFITPAY_INSTRUCTIONS",
+            Label = "BenefitPay Instructions",
+            Description = "Instructions customers should follow to pay with BenefitPay."
+        }
+    ];
+    // COMPUTED VALUES
+    // ============================================================
+
+    private int EnabledCount =>
+        Options.Count(x => x.Enabled);
+
+    private bool PaidPackagesOn =>
+        Options.Any(x =>
+            x.Key == "PAID_PACKAGES_ENABLED" &&
+            x.Enabled);
+
+    private bool HasChanges =>
+        Options.Any(x => x.IsDirty) ||
+        PaymentInstructionSettings.Any(x => x.IsDirty);
+
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettingsAsync();
+    }
+
+    private async Task LoadSettingsAsync()
+    {
+        Loading = true;
+        IsError = false;
+        Message = string.Empty;
+
+        try
+        {
+            var response = await SettingsService.GetSystemSettingsAsync(
+                new SystemSettingListRequest { PageNumber = 1, PageSize = 200 });
+
+            foreach (var option in Options)
+            {
+                var setting = response.Items.FirstOrDefault(
+                    x => string.Equals(
+                        x.SettingKey, option.Key,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (setting is not null)
+                {
+                    option.Id = setting.SystemSettingID;
+                    option.Exists = true;
+                    option.Enabled = setting.IsActive &&
+                        string.Equals(
+                            setting.SettingValue?.Trim(),
+                            "true",
+                            StringComparison.OrdinalIgnoreCase);
+                    option.Description = setting.Description ?? option.Description;
+                    option.IsEncrypted = setting.IsEncrypted;
+                }
+
+                option.OriginalEnabled = option.Enabled;
+            }
+
+            foreach (var option in PaymentInstructionSettings)
+            {
+                var setting = response.Items.FirstOrDefault(
+                    x => string.Equals(
+                        x.SettingKey, option.Key,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (setting is not null)
+                {
+                    option.Id = setting.SystemSettingID;
+                    option.Exists = true;
+                    option.Value = setting.IsEncrypted ? string.Empty : (setting.SettingValue ?? string.Empty);
+                    option.OriginalValue = option.Value;
+                    option.Description = setting.Description ?? option.Description;
+                    option.IsEncrypted = setting.IsEncrypted;
+                }
+                else
+                {
+                    option.Value = string.Empty;
+                    option.OriginalValue = string.Empty;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Message = $"Unable to load billing settings: {ex.Message}";
+        }
+        finally
+        {
+            Loading = false;
+        }
+    }
+
+
+    // ============================================================
+    // ACTIONS
+    // ============================================================
+
+    private void DismissMessage()
+    {
+        Message = string.Empty;
+    }
+
+    private void DiscardChanges()
+    {
+        foreach (var option in Options)
+        {
+            option.Enabled = option.OriginalEnabled;
+        }
+
+        foreach (var option in PaymentInstructionSettings)
+        {
+            option.Value = option.OriginalValue;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        if (Saving)
+            return;
+
+        Saving = true;
+        Message = string.Empty;
+        IsError = false;
+
+        try
+        {
+            foreach (var option in Options)
+            {
+                if (!option.Exists)
+                {
+                    await SettingsService.CreateSystemSettingAsync(
+                        new CreateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = option.Enabled ? "true" : "false",
+                            Description = option.Description,
+                            IsEncrypted = false,
+                            IsActive = true
+                        });
+                }
+                else
+                {
+                    await SettingsService.UpdateSystemSettingAsync(
+                        option.Id,
+                        new UpdateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = option.Enabled ? "true" : "false",
+                            Description = option.Description,
+                            IsEncrypted = option.IsEncrypted,
+                            IsActive = true
+                        });
+                }
+            }
+
+            foreach (var option in PaymentInstructionSettings)
+            {
+                var value = option.Value ?? string.Empty;
+
+                if (!option.Exists)
+                {
+                    await SettingsService.CreateSystemSettingAsync(
+                        new CreateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = value,
+                            Description = option.Description,
+                            IsEncrypted = false,
+                            IsActive = true
+                        });
+                }
+                else
+                {
+                    await SettingsService.UpdateSystemSettingAsync(
+                        option.Id,
+                        new UpdateSystemSettingRequest
+                        {
+                            SettingKey = option.Key,
+                            SettingValue = value,
+                            Description = option.Description,
+                            IsEncrypted = false,
+                            IsActive = true
+                        });
+                }
+            }
+
+            var refreshedSettings = await SettingsService.GetSystemSettingsAsync(
+                new SystemSettingListRequest { PageNumber = 1, PageSize = 200 });
+
+            foreach (var option in PaymentInstructionSettings)
+            {
+                var setting = refreshedSettings.Items.FirstOrDefault(
+                    x => string.Equals(
+                        x.SettingKey, option.Key,
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (setting is not null)
+                {
+                    option.Id = setting.SystemSettingID;
+                    option.Exists = true;
+                    option.IsEncrypted = setting.IsEncrypted;
+                }
+
+                option.OriginalValue = option.Value;
+            }
+
+            foreach (var option in Options)
+            {
+                option.OriginalEnabled = option.Enabled;
+            }
+
+            Message = "Billing settings saved successfully.";
+        }
+        catch (Exception ex)
+        {
+            IsError = true;
+            Message = $"Unable to save billing settings: {ex.Message}";
+        }
+        finally
+        {
+            Saving = false;
+        }
+    }
+
+
+    // ============================================================
+    // MODEL
+    // ============================================================
+
+    private sealed class SettingOption
+    {
+        public int Id { get; set; }
+
+        public string Key { get; set; } = string.Empty;
+
+        public string Label { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        public string Icon { get; set; } = "bi-gear-fill";
+
+        public bool Enabled { get; set; }
+
+        public bool OriginalEnabled { get; set; }
+
+        public bool Exists { get; set; }
+
+        public bool IsEncrypted { get; set; }
+
+        public bool IsPaymentMethod { get; set; }
+
+        public bool IsDirty => Enabled != OriginalEnabled;
+    }
+
+    private sealed class TextSettingOption
+    {
+        public int Id { get; set; }
+
+        public string Key { get; set; } = string.Empty;
+
+        public string Label { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        public string Value { get; set; } = string.Empty;
+
+        public string OriginalValue { get; set; } = string.Empty;
+
+        public bool Exists { get; set; }
+
+        public bool IsEncrypted { get; set; }
+
+        public bool IsDirty =>
+            !string.Equals(Value, OriginalValue, StringComparison.Ordinal);
+    }
+}

@@ -1,4 +1,5 @@
-﻿using HRInfoAdvertisements.Domain.Billing;
+﻿
+using HRInfoAdvertisements.Domain.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,9 +21,32 @@ public class UserPackageEntitlementConfiguration
                 table.HasCheckConstraint(
                     "CK_UserPackageEntitlements_Status",
                     "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+
+                table.HasCheckConstraint(
+                    "CK_UserPackageEntitlements_NonNegativeLimits",
+                    "[MonthlyAdvertisementPostLimit] >= 0 AND " +
+                    "[MonthlySenderEnquiryLimit] >= 0 AND " +
+                    "[MonthlyAdvertisementEnquiryLimit] >= 0 AND " +
+                    "[MonthlyReplyLimit] >= 0");
             });
 
         builder.HasKey(x => x.UserPackageEntitlementID);
+
+        builder.Property(x => x.MonthlyAdvertisementPostLimit)
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(x => x.MonthlySenderEnquiryLimit)
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(x => x.MonthlyAdvertisementEnquiryLimit)
+            .HasDefaultValue(0)
+            .IsRequired();
+
+        builder.Property(x => x.MonthlyReplyLimit)
+            .HasDefaultValue(0)
+            .IsRequired();
 
         builder.Property(x => x.Status)
             .HasMaxLength(20)
@@ -37,9 +61,7 @@ public class UserPackageEntitlementConfiguration
             x.EndDate
         });
 
-        // Prevent more than one entitlement marked ACTIVE for a user.
-        // The service must expire/cancel the previous entitlement before
-        // activating a replacement.
+        // Only one entitlement marked ACTIVE per user.
         builder.HasIndex(x => x.UserID)
             .IsUnique()
             .HasFilter("[Status] = 'ACTIVE'");

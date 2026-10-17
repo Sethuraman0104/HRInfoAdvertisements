@@ -1,0 +1,1107 @@
+
+========== .\HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs ==========
+
+--- MATCH: SubmitAsync ---
+
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:74:            throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:75:                "Advertisement DRAFT status was not found or is inactive.");
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:76:        }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:77:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:78:        // --------------------------------------------------------
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:79:        // Validate Contact Information
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:80:        //
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:81:        // Contact information may be saved while creating a draft.
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:82:        // Full submission validation is performed in SubmitAsync().
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:83:        // --------------------------------------------------------
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:84:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:85:        var whatsappNumber =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:86:            NormalizeOptionalValue(request.WhatsAppNumber);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:87:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:88:        var contactEmail =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:89:            NormalizeOptionalValue(request.ContactEmail);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:90:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:91:        ValidatePublicContactFlags(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:92:            whatsappNumber,
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:93:            contactEmail,
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:94:            request.ShowWhatsAppToPublic,
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:95:            request.ShowEmailToPublic);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:96:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:97:        // --------------------------------------------------------
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:98:        // Generate Advertisement Number
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:99:        // --------------------------------------------------------
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:100:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:854:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:855:        return true;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:856:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:857:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:858:    // ============================================================
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:859:    // SUBMIT FOR APPROVAL
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:860:    // ============================================================
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:861:
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:862:    public async Task<bool> SubmitAsync(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:863:    long userId,
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:864:    long advertisementId)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:865:{
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:866:    await using var transaction =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:867:        await _context.Database.BeginTransactionAsync(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:868:            System.Data.IsolationLevel.Serializable);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:869:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:870:    var advertisement =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:871:        await _context.Advertisements
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:872:            .Include(x => x.Status)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:873:            .FirstOrDefaultAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:874:                x.AdvertisementID == advertisementId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:875:                x.UserID == userId);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:876:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:877:    if (advertisement == null)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:878:        return false;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:879:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:880:    if (advertisement.Status == null ||
+
+
+
+
+--- MATCH: ActivateDueAsync ---
+
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:908:    var now = DateTime.UtcNow;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:909:    var monthStart = new DateTime(now.Year, now.Month, 1);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:910:    var nextMonthStart = monthStart.AddMonths(1);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:911:    var monthKey = monthStart.ToString("yyyyMM");
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:912:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:913:await AcquireAdvertisementSubmissionLockAsync(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:914:    $"HRInfoAdvertisements:AdvertisementSubmission:User:{userId}:{monthKey}");
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:915:
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:916:    await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:917:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:918:    var entityId = advertisementId.ToString();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:919:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:920:    var alreadyCounted =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:921:        await _context.AuditLogs.AnyAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:922:            x.UserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:923:            x.Action == "ADVERTISEMENT_SUBMITTED" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:924:            x.EntityName == "Advertisement" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:925:            x.EntityID == entityId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:926:            x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:927:            x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:928:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:929:    if (!alreadyCounted)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:930:{
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:931:    // Prefer the user's currently active paid package entitlement.
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:932:    
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:933:var paidPackageLimit =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:934:    await _context.UserPackageEntitlements
+
+
+
+
+--- MATCH: MonthlyAdvertisementPostLimit ---
+
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:938:            x.StartDate <= now &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:939:            (!x.EndDate.HasValue || x.EndDate.Value > now) &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:940:            x.EnquiryPackage.PackageCode != "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:941:            x.Payments.Any(payment =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:942:                payment.Status == PaymentTransactionStatuses.Confirmed &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:943:                payment.ConfirmedDate != null &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:944:                payment.RefundedDate == null))
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:945:        .OrderByDescending(x => x.StartDate)
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:946:        .Select(x => (int?)x.MonthlyAdvertisementPostLimit)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:947:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:948:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:949:    int monthlyPostLimit;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:950:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:951:    if (paidPackageLimit.HasValue)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:952:    {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:953:        monthlyPostLimit = paidPackageLimit.Value;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:954:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:955:    else
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:956:    {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:957:        // No active paid entitlement: use the configured FREE allowance.
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:958:        var freePackageLimit =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:959:            await _context.EnquiryPackages
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:960:                .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:961:                    x.PackageCode == "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:962:                    x.IsActive)
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:963:                .Select(x => (int?)x.MonthlyAdvertisementPostLimit)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:964:                .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:965:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:966:        if (!freePackageLimit.HasValue)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:967:        {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:968:            throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:969:                "The active FREE package is not configured. Please contact the administrator.");
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:970:        }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:971:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:972:        monthlyPostLimit = freePackageLimit.Value;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:973:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:974:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:975:    var monthlyCount =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:976:        await _context.AuditLogs
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:977:            .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:978:                x.UserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:979:                x.Action == "ADVERTISEMENT_SUBMITTED" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:980:                x.EntityName == "Advertisement" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:981:                x.CreatedDate >= monthStart &&
+
+
+
+
+--- MATCH: ADVERTISEMENT_SUBMITTED ---
+
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:915:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:916:    await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:917:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:918:    var entityId = advertisementId.ToString();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:919:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:920:    var alreadyCounted =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:921:        await _context.AuditLogs.AnyAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:922:            x.UserID == userId &&
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:923:            x.Action == "ADVERTISEMENT_SUBMITTED" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:924:            x.EntityName == "Advertisement" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:925:            x.EntityID == entityId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:926:            x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:927:            x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:928:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:929:    if (!alreadyCounted)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:930:{
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:931:    // Prefer the user's currently active paid package entitlement.
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:932:    
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:933:var paidPackageLimit =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:934:    await _context.UserPackageEntitlements
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:935:        .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:936:            x.UserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:937:            x.Status == UserPackageEntitlementStatuses.Active &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:938:            x.StartDate <= now &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:939:            (!x.EndDate.HasValue || x.EndDate.Value > now) &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:940:            x.EnquiryPackage.PackageCode != "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:941:            x.Payments.Any(payment =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:971:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:972:        monthlyPostLimit = freePackageLimit.Value;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:973:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:974:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:975:    var monthlyCount =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:976:        await _context.AuditLogs
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:977:            .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:978:                x.UserID == userId &&
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:979:                x.Action == "ADVERTISEMENT_SUBMITTED" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:980:                x.EntityName == "Advertisement" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:981:                x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:982:                x.CreatedDate < nextMonthStart)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:983:            .Select(x => x.EntityID)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:984:            .Distinct()
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:985:            .CountAsync();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:986:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:987:    if (monthlyCount >= monthlyPostLimit)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:988:    {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:989:        throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:990:            $"You have reached your monthly advertisement submission limit of {monthlyPostLimit}. Please upgrade your package or contact the 
+administrator.");
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:991:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:992:}
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:993:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:994:    var pendingReviewStatus =
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:995:        await _context.AdvertisementStatuses
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:996:            .FirstOrDefaultAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:997:                x.StatusCode == "PENDING_REVIEW" &&
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1005:    advertisement.ModifiedDate = now;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1006:    advertisement.ModifiedBy = userId;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1007:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1008:    if (!alreadyCounted)
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1009:    {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1010:        _context.AuditLogs.Add(new AuditLog
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1011:        {
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1012:            UserID = userId,
+> HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1013:            Action = "ADVERTISEMENT_SUBMITTED",
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1014:            EntityName = "Advertisement",
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1015:            EntityID = entityId,
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1016:            CreatedDate = now
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1017:        });
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1018:    }
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1019:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1020:    await _context.SaveChangesAsync();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1021:    await transaction.CommitAsync();
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1022:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1023:    return true;
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1024:}
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1025:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1026:    // ============================================================
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1027:    // GENERATE ADVERTISEMENT NUMBER
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1028:    // ============================================================
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1029:
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1030:    private async Task<string>
+  HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:1031:        GenerateAdvertisementNumberAsync()
+
+
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs ==========
+
+--- MATCH: ResolveEnquiryPackageAsync ---
+
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:106:                .Distinct()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:107:                .OrderBy(x => x))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:108:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:109:                await PackageEntitlementActivation.ActivateDueAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:110:                    _context, packageUserId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:111:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:112:            // Resolve package entitlements while the limit locks are held.
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:113:            var senderPackage =
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:114:                await ResolveEnquiryPackageAsync(senderUserId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:115:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:116:            var ownerPackage =
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:117:                await ResolveEnquiryPackageAsync(advertisement.UserID, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:118:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:119:            var senderCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:120:                await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:121:                    x.SenderUserID == senderUserId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:122:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:123:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:124:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:125:            if (senderCount >= senderPackage.MonthlySenderEnquiryLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:126:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:127:                rejectionType = "SENDER_MONTHLY_LIMIT";
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:128:                rejectionCount = senderCount;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:129:                rejectionLimit = senderPackage.MonthlySenderEnquiryLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:130:                rejectionPackageCode = senderPackage.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:131:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:132:            else
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:133:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:134:                var advertisementCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:135:                    await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:392:    {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:393:        var transactionCompleted = false;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:394:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:395:        try
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:396:        {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:397:            await AcquireEnquiryLimitLockAsync(replyLock);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:398:            await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:399:
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:400:            var package = await ResolveEnquiryPackageAsync(userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:401:            packageCode = package.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:402:            configuredLimit = package.MonthlyReplyLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:403:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:404:            currentCount = await _context.AdvertisementEnquiryMessages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:405:                .CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:406:                    x.SenderUserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:407:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:408:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:409:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:410:            if (currentCount >= configuredLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:411:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:412:                limitReached = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:413:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:414:                await transaction.RollbackAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:415:                transactionCompleted = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:416:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:417:            else
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:418:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:564:        }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:565:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:566:        await _context.SaveChangesAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:567:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:568:        return true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:569:    }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:570:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:571:    
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:572:private async Task<ResolvedEnquiryPackage> ResolveEnquiryPackageAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:573:    long userId,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:574:    DateTime now)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:575:{
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:576:    var paidPackage = await _context.UserPackageEntitlements
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:577:        .AsNoTracking()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:578:        .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:579:            x.UserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:580:            x.Status == UserPackageEntitlementStatuses.Active &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:581:            x.StartDate <= now &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:582:            (x.EndDate == null || x.EndDate > now) &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:583:            x.EnquiryPackage.PackageCode != "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:584:            x.Payments.Any(p =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:585:                p.Status == PaymentTransactionStatuses.Confirmed &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:586:                p.ConfirmedDate != null &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:587:                p.RefundedDate == null))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:588:        .OrderByDescending(x => x.StartDate)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:589:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:590:            x.EnquiryPackage.PackageCode,
+
+
+
+
+--- MATCH: MonthlySenderEnquiryLimit ---
+
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:117:                await ResolveEnquiryPackageAsync(advertisement.UserID, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:118:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:119:            var senderCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:120:                await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:121:                    x.SenderUserID == senderUserId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:122:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:123:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:124:
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:125:            if (senderCount >= senderPackage.MonthlySenderEnquiryLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:126:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:127:                rejectionType = "SENDER_MONTHLY_LIMIT";
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:128:                rejectionCount = senderCount;
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:129:                rejectionLimit = senderPackage.MonthlySenderEnquiryLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:130:                rejectionPackageCode = senderPackage.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:131:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:132:            else
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:133:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:134:                var advertisementCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:135:                    await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:136:                        x.AdvertisementID == advertisement.AdvertisementID &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:137:                        x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:138:                        x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:139:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:140:                if (advertisementCount >=
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:141:                    ownerPackage.MonthlyAdvertisementEnquiryLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:142:                {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:143:                    rejectionType = "ADVERTISEMENT_MONTHLY_LIMIT";
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:144:                    rejectionCount = advertisementCount;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:145:                    rejectionLimit =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:146:                        ownerPackage.MonthlyAdvertisementEnquiryLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:147:                    rejectionPackageCode = ownerPackage.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:583:            x.EnquiryPackage.PackageCode != "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:584:            x.Payments.Any(p =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:585:                p.Status == PaymentTransactionStatuses.Confirmed &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:586:                p.ConfirmedDate != null &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:587:                p.RefundedDate == null))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:588:        .OrderByDescending(x => x.StartDate)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:589:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:590:            x.EnquiryPackage.PackageCode,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:591:            x.MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:592:            x.MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:593:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:594:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:595:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:596:    if (paidPackage != null)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:597:        return paidPackage;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:598:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:599:    var freePackage = await _context.EnquiryPackages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:600:        .AsNoTracking()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:601:        .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:602:            x.PackageCode == "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:603:            x.IsActive)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:604:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:605:            x.PackageCode,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:606:            x.MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:607:            x.MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:608:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:609:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:610:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:611:    return freePackage ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:612:        "The FREE enquiry package is unavailable. Please contact support.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:613:}
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:614:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:615:private sealed record ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:616:    string PackageCode,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:617:    int MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:618:    int MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:619:    int MonthlyReplyLimit);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:620:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:621:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:622:private async Task AcquireEnquiryLimitLockAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:623:    string resource)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:624:{
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:625:    var transaction = _context.Database.CurrentTransaction
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:626:        ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:627:            "An active database transaction is required for enquiry limit checks.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:628:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:629:    await using var command =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:630:        _context.Database.GetDbConnection().CreateCommand();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:631:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:632:    command.Transaction = transaction.GetDbTransaction();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:633:    command.CommandType = CommandType.Text;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:634:    command.CommandText = """
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:635:        DECLARE @result int;
+
+
+
+
+--- MATCH: MonthlyAdvertisementEnquiryLimit ---
+
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:133:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:134:                var advertisementCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:135:                    await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:136:                        x.AdvertisementID == advertisement.AdvertisementID &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:137:                        x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:138:                        x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:139:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:140:                if (advertisementCount >=
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:141:                    ownerPackage.MonthlyAdvertisementEnquiryLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:142:                {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:143:                    rejectionType = "ADVERTISEMENT_MONTHLY_LIMIT";
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:144:                    rejectionCount = advertisementCount;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:145:                    rejectionLimit =
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:146:                        ownerPackage.MonthlyAdvertisementEnquiryLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:147:                    rejectionPackageCode = ownerPackage.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:148:                }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:149:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:150:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:151:            if (rejectionType == null)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:152:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:153:                var enquiry = new AdvertisementEnquiry
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:154:                {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:155:                    AdvertisementID = advertisement.AdvertisementID,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:156:                    RecipientUserID = advertisement.UserID,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:157:                    SenderUserID = senderUserId,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:158:                    Subject = request.Subject.Trim(),
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:159:                    Message = request.Message.Trim(),
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:160:                    ContactMobile =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:161:                        string.IsNullOrWhiteSpace(request.ContactMobile)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:162:                            ? sender.MobileNo
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:163:                            : request.ContactMobile.Trim(),
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:164:                    ContactEmail =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:584:            x.Payments.Any(p =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:585:                p.Status == PaymentTransactionStatuses.Confirmed &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:586:                p.ConfirmedDate != null &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:587:                p.RefundedDate == null))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:588:        .OrderByDescending(x => x.StartDate)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:589:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:590:            x.EnquiryPackage.PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:591:            x.MonthlySenderEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:592:            x.MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:593:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:594:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:595:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:596:    if (paidPackage != null)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:597:        return paidPackage;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:598:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:599:    var freePackage = await _context.EnquiryPackages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:600:        .AsNoTracking()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:601:        .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:602:            x.PackageCode == "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:603:            x.IsActive)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:604:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:605:            x.PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:606:            x.MonthlySenderEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:607:            x.MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:608:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:609:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:610:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:611:    return freePackage ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:612:        "The FREE enquiry package is unavailable. Please contact support.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:613:}
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:614:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:615:private sealed record ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:616:    string PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:617:    int MonthlySenderEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:618:    int MonthlyAdvertisementEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:619:    int MonthlyReplyLimit);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:620:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:621:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:622:private async Task AcquireEnquiryLimitLockAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:623:    string resource)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:624:{
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:625:    var transaction = _context.Database.CurrentTransaction
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:626:        ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:627:            "An active database transaction is required for enquiry limit checks.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:628:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:629:    await using var command =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:630:        _context.Database.GetDbConnection().CreateCommand();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:631:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:632:    command.Transaction = transaction.GetDbTransaction();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:633:    command.CommandType = CommandType.Text;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:634:    command.CommandText = """
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:635:        DECLARE @result int;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:636:
+
+
+
+
+--- MATCH: MonthlyReplyLimit ---
+
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:394:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:395:        try
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:396:        {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:397:            await AcquireEnquiryLimitLockAsync(replyLock);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:398:            await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:399:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:400:            var package = await ResolveEnquiryPackageAsync(userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:401:            packageCode = package.PackageCode;
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:402:            configuredLimit = package.MonthlyReplyLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:403:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:404:            currentCount = await _context.AdvertisementEnquiryMessages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:405:                .CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:406:                    x.SenderUserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:407:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:408:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:409:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:410:            if (currentCount >= configuredLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:411:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:412:                limitReached = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:413:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:414:                await transaction.RollbackAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:415:                transactionCompleted = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:416:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:417:            else
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:418:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:419:                var message = new AdvertisementEnquiryMessage
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:420:                {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:585:                p.Status == PaymentTransactionStatuses.Confirmed &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:586:                p.ConfirmedDate != null &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:587:                p.RefundedDate == null))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:588:        .OrderByDescending(x => x.StartDate)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:589:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:590:            x.EnquiryPackage.PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:591:            x.MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:592:            x.MonthlyAdvertisementEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:593:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:594:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:595:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:596:    if (paidPackage != null)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:597:        return paidPackage;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:598:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:599:    var freePackage = await _context.EnquiryPackages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:600:        .AsNoTracking()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:601:        .Where(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:602:            x.PackageCode == "FREE" &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:603:            x.IsActive)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:604:        .Select(x => new ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:605:            x.PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:606:            x.MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:607:            x.MonthlyAdvertisementEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:608:            x.MonthlyReplyLimit))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:609:        .FirstOrDefaultAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:610:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:611:    return freePackage ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:612:        "The FREE enquiry package is unavailable. Please contact support.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:613:}
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:614:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:615:private sealed record ResolvedEnquiryPackage(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:616:    string PackageCode,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:617:    int MonthlySenderEnquiryLimit,
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:618:    int MonthlyAdvertisementEnquiryLimit,
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:619:    int MonthlyReplyLimit);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:620:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:621:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:622:private async Task AcquireEnquiryLimitLockAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:623:    string resource)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:624:{
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:625:    var transaction = _context.Database.CurrentTransaction
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:626:        ?? throw new InvalidOperationException(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:627:            "An active database transaction is required for enquiry limit checks.");
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:628:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:629:    await using var command =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:630:        _context.Database.GetDbConnection().CreateCommand();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:631:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:632:    command.Transaction = transaction.GetDbTransaction();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:633:    command.CommandType = CommandType.Text;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:634:    command.CommandText = """
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:635:        DECLARE @result int;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:636:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:637:        EXEC @result = sys.sp_getapplock
+
+
+
+
+--- MATCH: ActivateDueAsync ---
+
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:101:                await AcquireEnquiryLimitLockAsync(resource);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:102:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:103:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:104:            // Activate any paid packages whose scheduled start has arrived.
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:105:            foreach (var packageUserId in new[] { senderUserId, advertisement.UserID }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:106:                .Distinct()
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:107:                .OrderBy(x => x))
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:108:            {
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:109:                await PackageEntitlementActivation.ActivateDueAsync(
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:110:                    _context, packageUserId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:111:            }
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:112:            // Resolve package entitlements while the limit locks are held.
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:113:            var senderPackage =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:114:                await ResolveEnquiryPackageAsync(senderUserId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:115:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:116:            var ownerPackage =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:117:                await ResolveEnquiryPackageAsync(advertisement.UserID, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:118:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:119:            var senderCount =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:120:                await _context.AdvertisementEnquiries.CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:121:                    x.SenderUserID == senderUserId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:122:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:123:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:124:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:125:            if (senderCount >= senderPackage.MonthlySenderEnquiryLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:126:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:127:                rejectionType = "SENDER_MONTHLY_LIMIT";
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:390:    await using (var transaction =
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:391:        await _context.Database.BeginTransactionAsync())
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:392:    {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:393:        var transactionCompleted = false;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:394:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:395:        try
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:396:        {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:397:            await AcquireEnquiryLimitLockAsync(replyLock);
+> HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:398:            await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:399:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:400:            var package = await ResolveEnquiryPackageAsync(userId, now);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:401:            packageCode = package.PackageCode;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:402:            configuredLimit = package.MonthlyReplyLimit;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:403:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:404:            currentCount = await _context.AdvertisementEnquiryMessages
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:405:                .CountAsync(x =>
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:406:                    x.SenderUserID == userId &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:407:                    x.CreatedDate >= monthStart &&
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:408:                    x.CreatedDate < nextMonthStart);
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:409:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:410:            if (currentCount >= configuredLimit)
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:411:            {
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:412:                limitReached = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:413:
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:414:                await transaction.RollbackAsync();
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:415:                transactionCompleted = true;
+  HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:416:            }
+
+
+
+
+========== .\HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor ==========
+
+--- MATCH: QueuedPackages ---
+
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:144:                                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:145:                                    </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:146:                                }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:147:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:148:                        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:149:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:150:                </section>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:151:            }
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:152:            @if (packageBalance is not null && packageBalance.QueuedPackages.Count > 0)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:153:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:154:                <section class="my-package-queued-packages" aria-labelledby="queued-packages-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:155:                    <div class="my-package-received-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:156:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:157:                            <span class="my-requests-section-kicker">UPCOMING</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:158:                            <h3 id="queued-packages-heading">Queued packages</h3>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:159:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:160:                        <span class="my-package-queued-label">Not active yet</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:161:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:162:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:163:                    @foreach (var queued in packageBalance.QueuedPackages)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:164:                    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:165:                        <article class="my-package-queued-card" @key="queued.StartDate">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:166:                            <div class="my-package-queued-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:167:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:168:                                    <h4>@queued.PackageName</h4>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:169:                                    <p>Package code: @queued.PackageCode</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:170:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:171:                                <span class="my-package-queued-status">Queued</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:172:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:173:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:174:                            <div class="my-package-queued-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:175:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:176:                                    <span>Starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:177:                                    <strong>@FormatPackageDate(queued.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:178:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:179:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:180:                                    <span>Expires</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:181:                                    <strong>@FormatPackageDate(queued.EndDate)</strong>
+
+
+
+
+--- MATCH: QueuedPackage ---
+
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:144:                                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:145:                                    </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:146:                                }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:147:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:148:                        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:149:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:150:                </section>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:151:            }
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:152:            @if (packageBalance is not null && packageBalance.QueuedPackages.Count > 0)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:153:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:154:                <section class="my-package-queued-packages" aria-labelledby="queued-packages-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:155:                    <div class="my-package-received-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:156:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:157:                            <span class="my-requests-section-kicker">UPCOMING</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:158:                            <h3 id="queued-packages-heading">Queued packages</h3>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:159:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:160:                        <span class="my-package-queued-label">Not active yet</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:161:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:162:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:163:                    @foreach (var queued in packageBalance.QueuedPackages)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:164:                    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:165:                        <article class="my-package-queued-card" @key="queued.StartDate">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:166:                            <div class="my-package-queued-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:167:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:168:                                    <h4>@queued.PackageName</h4>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:169:                                    <p>Package code: @queued.PackageCode</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:170:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:171:                                <span class="my-package-queued-status">Queued</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:172:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:173:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:174:                            <div class="my-package-queued-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:175:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:176:                                    <span>Starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:177:                                    <strong>@FormatPackageDate(queued.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:178:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:179:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:180:                                    <span>Expires</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:181:                                    <strong>@FormatPackageDate(queued.EndDate)</strong>
+
+
+
+
+--- MATCH: packageBalance ---
+
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:54:                        @onclick='() => Navigation.NavigateTo("/?auth=signin")'>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:55:                    Sign In
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:56:                </button>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:57:            </section>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:58:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:59:        else
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:60:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:61:            <section class="my-requests-content" aria-live="polite">
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:62:            @if (packageBalance is not null)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:63:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:64:                <section class="my-package-balance" aria-labelledby="package-balance-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:65:                    <div class="my-package-balance-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:66:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:67:                            <span class="my-requests-section-kicker">YOUR CURRENT PLAN</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:68:                            <h2 id="package-balance-heading">@packageBalance.PackageName</h2>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:69:                            <p>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:70:                                Package code: @packageBalance.PackageCode
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:71:                                <span class="my-package-balance-dot" aria-hidden="true">·</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:72:                                @(packageBalance.IsPaidPackage ? "Paid package" : "Free package")
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:73:                            </p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:74:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:75:                        <span class="my-package-balance-status">
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:76:                            @GetStatusLabel(packageBalance.EntitlementStatus)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:77:                        </span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:78:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:79:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:80:                    <div class="my-package-balance-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:81:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:82:                            <span>Package starts</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:83:                            <strong>@FormatPackageDate(packageBalance.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:84:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:85:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:86:                            <span>Package expires</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:87:                            <strong>@FormatPackageDate(packageBalance.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:88:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:89:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:90:                            <span>Usage period</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:91:                            <strong>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:92:                                @FormatPackageDate(packageBalance.UsagePeriodStartUtc)
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:93:                                – @FormatPackageDate(packageBalance.UsagePeriodEndUtc)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:94:                            </strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:95:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:96:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:97:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:98:                    <div class="my-package-usage-grid">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:99:                        <article class="my-package-usage-card">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:100:                            <span>Advertisements posted</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:101:                            <strong>@FormatUsageCount(packageBalance.AdvertisementPosts)</strong>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:102:                            <p>@GetUsageRemainingText(packageBalance.AdvertisementPosts)</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:103:                        </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:104:                        <article class="my-package-usage-card">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:105:                            <span>Enquiries sent</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:106:                            <strong>@FormatUsageCount(packageBalance.EnquiriesSent)</strong>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:107:                            <p>@GetUsageRemainingText(packageBalance.EnquiriesSent)</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:108:                        </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:109:                        <article class="my-package-usage-card">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:110:                            <span>Replies sent</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:111:                            <strong>@FormatUsageCount(packageBalance.RepliesSent)</strong>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:112:                            <p>@GetUsageRemainingText(packageBalance.RepliesSent)</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:113:                        </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:114:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:115:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:116:                    <div class="my-package-received-usage">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:117:                        <div class="my-package-received-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:118:                            <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:119:                                <span class="my-requests-section-kicker">PER ADVERTISEMENT</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:120:                                <h3>Enquiries received</h3>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:121:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:122:                            <span class="my-package-received-period">Current usage period</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:123:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:124:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:125:                        @if (packageBalance.AdvertisementEnquiriesReceived.Count == 0)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:126:                        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:127:                            <p class="my-package-empty-usage">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:128:                                You do not have any advertisements to show enquiry usage for yet.
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:129:                            </p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:130:                        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:131:                        else
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:132:                        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:133:                            <div class="my-package-ad-usage-list">
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:134:                                @foreach (var usage in packageBalance.AdvertisementEnquiriesReceived)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:135:                                {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:136:                                    <article class="my-package-ad-usage" @key="usage.AdvertisementID">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:137:                                        <div class="my-package-ad-usage-title">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:138:                                            <strong>@usage.AdvertisementTitle</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:139:                                            <span>Ad #@usage.AdvertisementID</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:140:                                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:141:                                        <div class="my-package-ad-usage-count">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:142:                                            <strong>@usage.Used.ToString("N0", CultureInfo.CurrentCulture) / 
+@FormatUsageLimit(usage.Limit)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:143:                                            <span>@GetRemainingText(usage.Limit, usage.Remaining)</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:144:                                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:145:                                    </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:146:                                }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:147:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:148:                        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:149:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:150:                </section>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:151:            }
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:152:            @if (packageBalance is not null && packageBalance.QueuedPackages.Count > 0)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:153:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:154:                <section class="my-package-queued-packages" aria-labelledby="queued-packages-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:155:                    <div class="my-package-received-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:156:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:157:                            <span class="my-requests-section-kicker">UPCOMING</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:158:                            <h3 id="queued-packages-heading">Queued packages</h3>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:159:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:160:                        <span class="my-package-queued-label">Not active yet</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:161:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:162:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:163:                    @foreach (var queued in packageBalance.QueuedPackages)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:164:                    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:165:                        <article class="my-package-queued-card" @key="queued.StartDate">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:166:                            <div class="my-package-queued-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:167:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:168:                                    <h4>@queued.PackageName</h4>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:169:                                    <p>Package code: @queued.PackageCode</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:170:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:171:                                <span class="my-package-queued-status">Queued</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:172:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:173:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:174:                            <div class="my-package-queued-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:175:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:176:                                    <span>Starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:177:                                    <strong>@FormatPackageDate(queued.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:178:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:179:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:180:                                    <span>Expires</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:181:                                    <strong>@FormatPackageDate(queued.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:194:            }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:195:            @if (!string.IsNullOrWhiteSpace(balanceErrorMessage))
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:196:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:197:                <div class="my-package-balance-error" role="alert">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:198:                    <strong>Package balance is temporarily unavailable.</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:199:                    <p>@balanceErrorMessage</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:200:                    <button type="button"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:201:                            class="my-requests-retry-button"
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:202:                            @onclick="LoadPackageBalanceAsync"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:203:                            disabled="@isLoading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:204:                        Refresh balance
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:205:                    </button>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:206:                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:207:            }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:208:                @if (!string.IsNullOrWhiteSpace(errorMessage))
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:209:                {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:210:                    <div class="my-requests-error" role="alert">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:211:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:212:                            <strong>We couldn't load your requests.</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:213:                            <p>@errorMessage</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:214:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:215:                        <button type="button"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:216:                                class="my-requests-retry-button"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:217:                                @onclick="LoadRequestsAsync"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:218:                                disabled="@isLoading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:219:                            @(isLoading ? "Retrying..." : "Try again")
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:220:                        </button>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:442:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:443:    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:444:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:445:</div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:446:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:447:@code {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:448:    private List<PackagePurchaseRequestResponse> requests = new();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:449:    private PublicSiteSettingsResponse paymentSettings = new();
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:450:    private MyPackageBalanceResponse? packageBalance;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:451:    private bool isLoading = true;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:452:    private string? errorMessage;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:453:    private string? balanceErrorMessage;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:454:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:455:    protected override async Task OnInitializedAsync()
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:456:    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:457:        if (AuthenticationStateProvider.IsAuthenticated)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:458:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:459:            await LoadRequestsAsync();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:460:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:461:        else
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:462:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:463:            isLoading = false;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:464:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:465:    }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:466:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:467:    private async Task LoadRequestsAsync()
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:468:    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:476:        isLoading = true;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:477:        errorMessage = null;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:478:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:479:        try
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:480:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:481:            paymentSettings = await SiteSettings.GetAsync();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:482:            requests = await BillingService.GetMyPurchaseRequestsAsync();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:483:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:484:            await LoadPackageBalanceAsync();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:485:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:486:        catch (Exception ex)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:487:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:488:            errorMessage = ex.Message;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:489:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:490:        finally
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:491:        {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:492:            isLoading = false;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:493:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:494:    }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:495:
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:496:    private async Task LoadPackageBalanceAsync()
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:497:    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:498:        if (!AuthenticationStateProvider.IsAuthenticated)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:499:        {
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:500:            packageBalance = null;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:501:            balanceErrorMessage = "Please sign in to view your package balance.";
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:502:            return;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:503:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:504:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:505:        try
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:506:        {
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:507:            packageBalance = await BillingService.GetMyPackageBalanceAsync();
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:508:            balanceErrorMessage = null;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:509:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:510:        catch (Exception ex)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:511:        {
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:512:            packageBalance = null;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:513:            balanceErrorMessage = ex.Message;
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:514:        }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:515:    }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:516:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:517:    private static string FormatPackageDate(DateTime? value) =>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:518:        value.HasValue
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:519:            ? value.Value.ToLocalTime().ToString("dd MMM yyyy", CultureInfo.CurrentCulture)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:520:            : "Not scheduled";
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:521:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:522:    private static string FormatUsageLimit(int limit) =>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:523:        limit < 0
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:524:            ? "Unlimited"
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:525:            : limit.ToString("N0", CultureInfo.CurrentCulture);
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:526:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:527:    private static string FormatUsageCount(PackageUsageBalance usage) =>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:528:        $"{usage.Used.ToString("N0", CultureInfo.CurrentCulture)} / {FormatUsageLimit(usage.Limit)}";
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:529:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:530:    private static string GetUsageRemainingText(PackageUsageBalance usage) =>
+
+
+
+
+--- MATCH: EndDate ---
+
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:79:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:80:                    <div class="my-package-balance-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:81:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:82:                            <span>Package starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:83:                            <strong>@FormatPackageDate(packageBalance.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:84:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:85:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:86:                            <span>Package expires</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:87:                            <strong>@FormatPackageDate(packageBalance.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:88:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:89:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:90:                            <span>Usage period</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:91:                            <strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:92:                                @FormatPackageDate(packageBalance.UsagePeriodStartUtc)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:93:                                – @FormatPackageDate(packageBalance.UsagePeriodEndUtc)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:94:                            </strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:95:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:96:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:97:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:98:                    <div class="my-package-usage-grid">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:99:                        <article class="my-package-usage-card">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:100:                            <span>Advertisements posted</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:101:                            <strong>@FormatUsageCount(packageBalance.AdvertisementPosts)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:102:                            <p>@GetUsageRemainingText(packageBalance.AdvertisementPosts)</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:103:                        </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:104:                        <article class="my-package-usage-card">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:105:                            <span>Enquiries sent</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:173:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:174:                            <div class="my-package-queued-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:175:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:176:                                    <span>Starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:177:                                    <strong>@FormatPackageDate(queued.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:178:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:179:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:180:                                    <span>Expires</span>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:181:                                    <strong>@FormatPackageDate(queued.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:182:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:183:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:184:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:185:                            <div class="my-package-queued-limits">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:186:                                <span>Monthly advertisement posts: <strong>@FormatUsageLimit(queued.MonthlyAdvertisementPostLimit)</strong></span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:187:                                <span>Monthly enquiries sent: <strong>@FormatUsageLimit(queued.MonthlySenderEnquiryLimit)</strong></span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:188:                                <span>Monthly enquiries per advertisement: 
+<strong>@FormatUsageLimit(queued.MonthlyAdvertisementEnquiryLimit)</strong></span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:189:                                <span>Monthly replies: <strong>@FormatUsageLimit(queued.MonthlyReplyLimit)</strong></span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:190:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:191:                        </article>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:192:                    }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:193:                </section>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:194:            }
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:195:            @if (!string.IsNullOrWhiteSpace(balanceErrorMessage))
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:196:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:197:                <div class="my-package-balance-error" role="alert">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:198:                    <strong>Package balance is temporarily unavailable.</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:199:                    <p>@balanceErrorMessage</p>
+
+
+
+
+--- MATCH: PackageCode ---
+
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:62:            @if (packageBalance is not null)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:63:            {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:64:                <section class="my-package-balance" aria-labelledby="package-balance-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:65:                    <div class="my-package-balance-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:66:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:67:                            <span class="my-requests-section-kicker">YOUR CURRENT PLAN</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:68:                            <h2 id="package-balance-heading">@packageBalance.PackageName</h2>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:69:                            <p>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:70:                                Package code: @packageBalance.PackageCode
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:71:                                <span class="my-package-balance-dot" aria-hidden="true">·</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:72:                                @(packageBalance.IsPaidPackage ? "Paid package" : "Free package")
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:73:                            </p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:74:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:75:                        <span class="my-package-balance-status">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:76:                            @GetStatusLabel(packageBalance.EntitlementStatus)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:77:                        </span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:78:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:79:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:80:                    <div class="my-package-balance-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:81:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:82:                            <span>Package starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:83:                            <strong>@FormatPackageDate(packageBalance.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:84:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:85:                        <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:86:                            <span>Package expires</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:87:                            <strong>@FormatPackageDate(packageBalance.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:88:                        </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:161:                    </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:162:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:163:                    @foreach (var queued in packageBalance.QueuedPackages)
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:164:                    {
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:165:                        <article class="my-package-queued-card" @key="queued.StartDate">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:166:                            <div class="my-package-queued-heading">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:167:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:168:                                    <h4>@queued.PackageName</h4>
+> HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:169:                                    <p>Package code: @queued.PackageCode</p>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:170:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:171:                                <span class="my-package-queued-status">Queued</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:172:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:173:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:174:                            <div class="my-package-queued-dates">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:175:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:176:                                    <span>Starts</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:177:                                    <strong>@FormatPackageDate(queued.StartDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:178:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:179:                                <div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:180:                                    <span>Expires</span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:181:                                    <strong>@FormatPackageDate(queued.EndDate)</strong>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:182:                                </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:183:                            </div>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:184:
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:185:                            <div class="my-package-queued-limits">
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:186:                                <span>Monthly advertisement posts: <strong>@FormatUsageLimit(queued.MonthlyAdvertisementPostLimit)</strong></span>
+  HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:187:                                <span>Monthly enquiries sent: <strong>@FormatUsageLimit(queued.MonthlySenderEnquiryLimit)</strong></span>
+
+
+

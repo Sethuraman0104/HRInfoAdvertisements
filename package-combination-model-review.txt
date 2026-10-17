@@ -1,0 +1,3446 @@
+Package combination model and UI review
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs ==========
+    1: using HRInfoAdvertisements.Domain.Billing;
+    2: using HRInfoAdvertisements.Domain.Entities;
+    3: using Microsoft.EntityFrameworkCore;
+    4: 
+    5: namespace HRInfoAdvertisements.Infrastructure.Data;
+    6: 
+    7: public class ApplicationDbContext : DbContext
+    8: {
+    9:     public ApplicationDbContext(
+   10:         DbContextOptions<ApplicationDbContext> options)
+   11:         : base(options)
+   12:     {
+   13:     }
+   14: 
+   15:     // Security
+   16:     public DbSet<User> Users => Set<User>();
+   17:     public DbSet<Role> Roles => Set<Role>();
+   18:     public DbSet<Permission> Permissions => Set<Permission>();
+   19:     public DbSet<UserRole> UserRoles => Set<UserRole>();
+   20:     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+   21:     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
+   22:     public DbSet<UserAddress> UserAddresses => Set<UserAddress>();
+   23: 
+   24:     // Advertisements
+   25:     public DbSet<Advertisement> Advertisements => Set<Advertisement>();
+   26:     public DbSet<AdvertisementCategory> AdvertisementCategories => Set<AdvertisementCategory>();
+   27:     public DbSet<AdvertisementType> AdvertisementTypes => Set<AdvertisementType>();
+   28:     public DbSet<AdvertisementStatus> AdvertisementStatuses => Set<AdvertisementStatus>();
+   29:     public DbSet<AdvertisementFeature> AdvertisementFeatures => Set<AdvertisementFeature>();
+   30:     public DbSet<AdvertisementFeatureValue> AdvertisementFeatureValues => Set<AdvertisementFeatureValue>();
+   31:     public DbSet<AdvertisementImage> AdvertisementImages => Set<AdvertisementImage>();
+   32:     public DbSet<AdvertisementVideo> AdvertisementVideos => Set<AdvertisementVideo>();
+   33:     public DbSet<AdvertisementDocument> AdvertisementDocuments => Set<AdvertisementDocument>();
+   34: 
+   35:     // Locations
+   36:     public DbSet<Location> Locations => Set<Location>();
+   37:     public DbSet<Country> Countries => Set<Country>();
+   38:     public DbSet<State> States => Set<State>();
+   39:     public DbSet<City> Cities => Set<City>();
+   40:     public DbSet<Area> Areas => Set<Area>();
+   41: 
+   42:     // Engagement
+   43:     public DbSet<Favorite> Favorites => Set<Favorite>();
+   44:     public DbSet<SavedSearch> SavedSearches => Set<SavedSearch>();
+   45:     public DbSet<AdvertisementView> AdvertisementViews => Set<AdvertisementView>();
+   46:     public DbSet<AdvertisementEnquiry> AdvertisementEnquiries => Set<AdvertisementEnquiry>();
+   47:     public DbSet<AdvertisementEnquiryMessage> AdvertisementEnquiryMessages
+   48:         => Set<AdvertisementEnquiryMessage>();
+   49:     public DbSet<Message> Messages => Set<Message>();
+   50:     public DbSet<AdvertisementFavorite> AdvertisementFavorites
+   51:     => Set<AdvertisementFavorite>();
+   52: 
+   53:     // Removal Requests
+   54:     public DbSet<AdvertisementRemovalRequest> AdvertisementRemovalRequests
+   55:         => Set<AdvertisementRemovalRequest>();
+   56: 
+   57:     // Approval
+   58:     public DbSet<ApprovalRequest> ApprovalRequests => Set<ApprovalRequest>();
+   59:     public DbSet<ApprovalHistory> ApprovalHistories => Set<ApprovalHistory>();
+   60:     public DbSet<RejectionReason> RejectionReasons => Set<RejectionReason>();
+   61: 
+   62:     // Reports
+   63:     public DbSet<Report> Reports => Set<Report>();
+   64:     public DbSet<ReportReason> ReportReasons => Set<ReportReason>();
+   65: 
+   66:     // Notifications
+   67:     public DbSet<Notification> Notifications => Set<Notification>();
+   68:     public DbSet<NotificationTemplate> NotificationTemplates => Set<NotificationTemplate>();
+   69:     public DbSet<NotificationPreference> NotificationPreferences
+   70:     => Set<NotificationPreference>();
+   71:     // Authentication
+   72:     public DbSet<OTPRequest> OTPRequests => Set<OTPRequest>();
+   73:     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+   74:     public DbSet<LoginHistory> LoginHistories => Set<LoginHistory>();
+   75:     public DbSet<UserSession> UserSessions => Set<UserSession>();
+   76: 
+   77:     // Billing and package entitlements
+   78:     public DbSet<EnquiryPackage> EnquiryPackages => Set<EnquiryPackage>();
+   79:     public DbSet<UserPackageEntitlement> UserPackageEntitlements
+   80:         => Set<UserPackageEntitlement>();
+   81:     public DbSet<PaymentTransaction> PaymentTransactions
+   82:         => Set<PaymentTransaction>();
+   83:     public DbSet<PackagePurchaseRequest> PackagePurchaseRequests
+   84:         => Set<PackagePurchaseRequest>();
+   85: 
+   86:     // System
+   87:     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+   88:     public DbSet<SystemSetting> SystemSettings => Set<SystemSetting>();
+   89: 
+   90:     protected override void OnModelCreating(ModelBuilder modelBuilder)
+   91:     {
+   92:         base.OnModelCreating(modelBuilder);
+   93: 
+   94:         modelBuilder.ApplyConfigurationsFromAssembly(
+   95:             typeof(ApplicationDbContext).Assembly);
+   96:     }
+   97: }
+   98: 
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Data\Configurations\UserPackageEntitlementConfiguration.cs ==========
+    1: 
+    2: using HRInfoAdvertisements.Domain.Billing;
+    3: using Microsoft.EntityFrameworkCore;
+    4: using Microsoft.EntityFrameworkCore.Metadata.Builders;
+    5: 
+    6: namespace HRInfoAdvertisements.Infrastructure.Data.Configurations;
+    7: 
+    8: public class UserPackageEntitlementConfiguration
+    9:     : IEntityTypeConfiguration<UserPackageEntitlement>
+   10: {
+   11:     public void Configure(EntityTypeBuilder<UserPackageEntitlement> builder)
+   12:     {
+   13:         builder.ToTable(
+   14:             "UserPackageEntitlements",
+   15:             table =>
+   16:             {
+   17:                 table.HasCheckConstraint(
+   18:                     "CK_UserPackageEntitlements_DateRange",
+   19:                     "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+   20: 
+   21:                 table.HasCheckConstraint(
+   22:                     "CK_UserPackageEntitlements_Status",
+   23:                     "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+   24: 
+   25:                 table.HasCheckConstraint(
+   26:                     "CK_UserPackageEntitlements_NonNegativeLimits",
+   27:                     "[MonthlyAdvertisementPostLimit] >= 0 AND " +
+   28:                     "[MonthlySenderEnquiryLimit] >= 0 AND " +
+   29:                     "[MonthlyAdvertisementEnquiryLimit] >= 0 AND " +
+   30:                     "[MonthlyReplyLimit] >= 0");
+   31:             });
+   32: 
+   33:         builder.HasKey(x => x.UserPackageEntitlementID);
+   34: 
+   35:         builder.Property(x => x.MonthlyAdvertisementPostLimit)
+   36:             .HasDefaultValue(0)
+   37:             .IsRequired();
+   38: 
+   39:         builder.Property(x => x.MonthlySenderEnquiryLimit)
+   40:             .HasDefaultValue(0)
+   41:             .IsRequired();
+   42: 
+   43:         builder.Property(x => x.MonthlyAdvertisementEnquiryLimit)
+   44:             .HasDefaultValue(0)
+   45:             .IsRequired();
+   46: 
+   47:         builder.Property(x => x.MonthlyReplyLimit)
+   48:             .HasDefaultValue(0)
+   49:             .IsRequired();
+   50: 
+   51:         builder.Property(x => x.Status)
+   52:             .HasMaxLength(20)
+   53:             .IsUnicode(false)
+   54:             .IsRequired();
+   55: 
+   56:         builder.HasIndex(x => new
+   57:         {
+   58:             x.UserID,
+   59:             x.Status,
+   60:             x.StartDate,
+   61:             x.EndDate
+   62:         });
+   63: 
+   64:         // Only one entitlement marked ACTIVE per user.
+   65:         builder.HasIndex(x => x.UserID)
+   66:             .IsUnique()
+   67:             .HasFilter("[Status] = 'ACTIVE'");
+   68: 
+   69:         builder.HasOne(x => x.User)
+   70:             .WithMany()
+   71:             .HasForeignKey(x => x.UserID)
+   72:             .OnDelete(DeleteBehavior.Restrict);
+   73: 
+   74:         builder.HasOne(x => x.EnquiryPackage)
+   75:             .WithMany(x => x.Entitlements)
+   76:             .HasForeignKey(x => x.EnquiryPackageID)
+   77:             .OnDelete(DeleteBehavior.Restrict);
+   78:     }
+   79: }
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Data\Configurations\PaymentTransactionConfiguration.cs ==========
+    1: using HRInfoAdvertisements.Domain.Billing;
+    2: using Microsoft.EntityFrameworkCore;
+    3: using Microsoft.EntityFrameworkCore.Metadata.Builders;
+    4: 
+    5: namespace HRInfoAdvertisements.Infrastructure.Data.Configurations;
+    6: 
+    7: public class PaymentTransactionConfiguration
+    8:     : IEntityTypeConfiguration<PaymentTransaction>
+    9: {
+   10:     public void Configure(EntityTypeBuilder<PaymentTransaction> builder)
+   11:     {
+   12:         builder.ToTable(
+   13:             "PaymentTransactions",
+   14:             table =>
+   15:             {
+   16:                 table.HasCheckConstraint(
+   17:                     "CK_PaymentTransactions_Amount",
+   18:                     "[Amount] >= 0");
+   19: 
+   20:                 table.HasCheckConstraint(
+   21:                     "CK_PaymentTransactions_Status",
+   22:                     "[Status] IN ('PENDING', 'CONFIRMED', 'FAILED', 'REFUNDED')");
+   23:             });
+   24: 
+   25:         builder.HasKey(x => x.PaymentTransactionID);
+   26: 
+   27:         builder.Property(x => x.Amount)
+   28:             .HasPrecision(18, 3);
+   29: 
+   30:         builder.Property(x => x.CurrencyCode)
+   31:             .HasMaxLength(3)
+   32:             .IsUnicode(false)
+   33:             .IsRequired();
+   34: 
+   35:         builder.Property(x => x.PaymentMethod)
+   36:             .HasMaxLength(50)
+   37:             .IsRequired();
+   38: 
+   39:         builder.Property(x => x.PaymentProvider)
+   40:             .HasMaxLength(50)
+   41:             .IsRequired();
+   42: 
+   43:         builder.Property(x => x.ProviderTransactionReference)
+   44:             .HasMaxLength(200);
+   45: 
+   46:         builder.Property(x => x.ExternalRefundReference)
+   47:             .HasMaxLength(200);
+   48: 
+   49:         builder.HasIndex(x => x.ExternalRefundReference)
+   50:             .IsUnique()
+   51:             .HasFilter("[ExternalRefundReference] IS NOT NULL")
+   52:             .HasDatabaseName("IX_PaymentTransactions_ExternalRefundReference");
+   53: 
+   54:         builder.Property(x => x.Status)
+   55:             .HasMaxLength(20)
+   56:             .IsUnicode(false)
+   57:             .IsRequired();
+   58: 
+   59:         builder.HasIndex(x => x.UserPackageEntitlementID);
+   60: 
+   61:         builder.HasIndex(x => new
+   62:         {
+   63:             x.PaymentProvider,
+   64:             x.ProviderTransactionReference
+   65:         })
+   66:         .IsUnique()
+   67:         .HasFilter("[ProviderTransactionReference] IS NOT NULL");
+   68: 
+   69:         builder.HasOne(x => x.UserPackageEntitlement)
+   70:             .WithMany(x => x.Payments)
+   71:             .HasForeignKey(x => x.UserPackageEntitlementID)
+   72:             .OnDelete(DeleteBehavior.Restrict);
+   73:     }
+   74: }
+
+
+========== .\HRInfoAdvertisements.Domain\Billing\PackagePurchaseRequest.cs ==========
+    1: using HRInfoAdvertisements.Domain.Entities;
+    2: 
+    3: namespace HRInfoAdvertisements.Domain.Billing;
+    4: 
+    5: public static class PackagePurchaseRequestStatuses
+    6: {
+    7:     public const string Pending = "PENDING";
+    8:     public const string Approved = "APPROVED";
+    9:     public const string Completed = "COMPLETED";
+   10:     public const string Rejected = "REJECTED";
+   11:     public const string Cancelled = "CANCELLED";
+   12: }
+   13: 
+   14: public class PackagePurchaseRequest
+   15: {
+   16:     public long PackagePurchaseRequestID { get; set; }
+   17: 
+   18:     public long UserID { get; set; }
+   19: 
+   20:     public int EnquiryPackageID { get; set; }
+   21: 
+   22:     // Snapshot of the package price when the request was created.
+   23:     public decimal Amount { get; set; }
+   24: 
+   25:     // Snapshot of the package currency when the request was created.
+   26:     public string CurrencyCode { get; set; } = string.Empty;
+   27: 
+   28:     public string Status { get; set; } =
+   29:         PackagePurchaseRequestStatuses.Pending;
+   30: 
+   31:     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+   32: 
+   33:     public DateTime? ModifiedDate { get; set; }
+   34: 
+   35:     public User User { get; set; } = null!;
+   36: 
+   37:     public EnquiryPackage EnquiryPackage { get; set; } = null!;
+   38: }
+   39: 
+
+
+========== C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs ==========
+    1: // <auto-generated />
+    2: using System;
+    3: using HRInfoAdvertisements.Infrastructure.Data;
+    4: using Microsoft.EntityFrameworkCore;
+    5: using Microsoft.EntityFrameworkCore.Infrastructure;
+    6: using Microsoft.EntityFrameworkCore.Metadata;
+    7: using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+    8: 
+    9: #nullable disable
+   10: 
+   11: namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
+   12: {
+   13:     [DbContext(typeof(ApplicationDbContext))]
+   14:     partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+   15:     {
+   16:         protected override void BuildModel(ModelBuilder modelBuilder)
+   17:         {
+   18: #pragma warning disable 612, 618
+   19:             modelBuilder
+   20:                 .HasAnnotation("ProductVersion", "9.0.9")
+   21:                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
+   22: 
+   23:             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+   24: 
+   25:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+   26:                 {
+   27:                     b.Property<int>("EnquiryPackageID")
+   28:                         .ValueGeneratedOnAdd()
+   29:                         .HasColumnType("int");
+   30: 
+   31:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryPackageID"));
+   32: 
+   33:                     b.Property<DateTime>("CreatedDate")
+   34:                         .HasColumnType("datetime2");
+   35: 
+   36:                     b.Property<string>("CurrencyCode")
+   37:                         .IsRequired()
+   38:                         .HasMaxLength(3)
+   39:                         .IsUnicode(false)
+   40:                         .HasColumnType("varchar(3)");
+   41: 
+   42:                     b.Property<string>("Description")
+   43:                         .HasMaxLength(1000)
+   44:                         .HasColumnType("nvarchar(1000)");
+   45: 
+   46:                     b.Property<bool>("IsActive")
+   47:                         .HasColumnType("bit");
+   48: 
+   49:                     b.Property<DateTime?>("ModifiedDate")
+   50:                         .HasColumnType("datetime2");
+   51: 
+   52:                     b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+   53:                         .HasColumnType("int");
+   54: 
+   55:                     b.Property<int>("MonthlyAdvertisementPostLimit")
+   56:                         .HasColumnType("int");
+   57: 
+   58:                     b.Property<int>("MonthlyReplyLimit")
+   59:                         .HasColumnType("int");
+   60: 
+   61:                     b.Property<int>("MonthlySenderEnquiryLimit")
+   62:                         .HasColumnType("int");
+   63: 
+   64:                     b.Property<string>("Name")
+   65:                         .IsRequired()
+   66:                         .HasMaxLength(100)
+   67:                         .HasColumnType("nvarchar(100)");
+   68: 
+   69:                     b.Property<string>("PackageCode")
+   70:                         .IsRequired()
+   71:                         .HasMaxLength(50)
+   72:                         .IsUnicode(false)
+   73:                         .HasColumnType("varchar(50)");
+   74: 
+   75:                     b.Property<decimal>("Price")
+   76:                         .HasPrecision(18, 3)
+   77:                         .HasColumnType("decimal(18,3)");
+   78: 
+   79:                     b.Property<int?>("ValidityDays")
+   80:                         .HasColumnType("int");
+   81: 
+   82:                     b.HasKey("EnquiryPackageID");
+   83: 
+   84:                     b.HasIndex("Name")
+   85:                         .IsUnique();
+   86: 
+   87:                     b.HasIndex("PackageCode")
+   88:                         .IsUnique();
+   89: 
+   90:                     b.ToTable("EnquiryPackages", null, t =>
+   91:                         {
+   92:                             t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementLimit", "[MonthlyAdvertisementEnquiryLimit] >= 0");
+   93: 
+   94:                             t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementPostLimit", "[MonthlyAdvertisementPostLimit] >= 0");
+   95: 
+   96:                             t.HasCheckConstraint("CK_EnquiryPackages_Price", "[Price] >= 0");
+   97: 
+   98:                             t.HasCheckConstraint("CK_EnquiryPackages_ReplyLimit", "[MonthlyReplyLimit] >= 0");
+   99: 
+  100:                             t.HasCheckConstraint("CK_EnquiryPackages_SenderLimit", "[MonthlySenderEnquiryLimit] >= 0");
+  101: 
+  102:                             t.HasCheckConstraint("CK_EnquiryPackages_ValidityDays", "[ValidityDays] IS NULL OR [ValidityDays] > 0");
+  103:                         });
+  104:                 });
+  105: 
+  106:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackagePurchaseRequest", b =>
+  107:                 {
+  108:                     b.Property<long>("PackagePurchaseRequestID")
+  109:                         .ValueGeneratedOnAdd()
+  110:                         .HasColumnType("bigint");
+  111: 
+  112:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PackagePurchaseRequestID"));
+  113: 
+  114:                     b.Property<decimal>("Amount")
+  115:                         .HasPrecision(18, 3)
+  116:                         .HasColumnType("decimal(18,3)");
+  117: 
+  118:                     b.Property<DateTime>("CreatedDate")
+  119:                         .HasColumnType("datetime2");
+  120: 
+  121:                     b.Property<string>("CurrencyCode")
+  122:                         .IsRequired()
+  123:                         .HasMaxLength(3)
+  124:                         .IsUnicode(false)
+  125:                         .HasColumnType("varchar(3)");
+  126: 
+  127:                     b.Property<int>("EnquiryPackageID")
+  128:                         .HasColumnType("int");
+  129: 
+  130:                     b.Property<DateTime?>("ModifiedDate")
+  131:                         .HasColumnType("datetime2");
+  132: 
+  133:                     b.Property<string>("Status")
+  134:                         .IsRequired()
+  135:                         .HasMaxLength(20)
+  136:                         .IsUnicode(false)
+  137:                         .HasColumnType("varchar(20)");
+  138: 
+  139:                     b.Property<long>("UserID")
+  140:                         .HasColumnType("bigint");
+  141: 
+  142:                     b.HasKey("PackagePurchaseRequestID");
+  143: 
+  144:                     b.HasIndex("EnquiryPackageID");
+  145: 
+  146:                     b.HasIndex("UserID")
+  147:                         .IsUnique()
+  148:                         .HasFilter("[Status] IN ('PENDING', 'APPROVED')");
+  149: 
+  150:                     b.ToTable("PackagePurchaseRequests", null, t =>
+  151:                         {
+  152:                             t.HasCheckConstraint("CK_PackagePurchaseRequests_Amount", "[Amount] >= 0");
+  153: 
+  154:                             t.HasCheckConstraint("CK_PackagePurchaseRequests_Status", "[Status] IN ('PENDING', 'APPROVED', 'COMPLETED', 'REJECTED', 'CANCELLED')");
+  155:                         });
+  156:                 });
+  157: 
+  158:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+  159:                 {
+  160:                     b.Property<long>("PaymentTransactionID")
+  161:                         .ValueGeneratedOnAdd()
+  162:                         .HasColumnType("bigint");
+  163: 
+  164:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PaymentTransactionID"));
+  165: 
+  166:                     b.Property<decimal>("Amount")
+  167:                         .HasPrecision(18, 3)
+  168:                         .HasColumnType("decimal(18,3)");
+  169: 
+  170:                     b.Property<DateTime?>("ConfirmedDate")
+  171:                         .HasColumnType("datetime2");
+  172: 
+  173:                     b.Property<DateTime>("CreatedDate")
+  174:                         .HasColumnType("datetime2");
+  175: 
+  176:                     b.Property<string>("CurrencyCode")
+  177:                         .IsRequired()
+  178:                         .HasMaxLength(3)
+  179:                         .IsUnicode(false)
+  180:                         .HasColumnType("varchar(3)");
+  181: 
+  182:                     b.Property<string>("ExternalRefundReference")
+  183:                         .HasMaxLength(200)
+  184:                         .HasColumnType("nvarchar(200)");
+  185: 
+  186:                     b.Property<string>("PaymentMethod")
+  187:                         .IsRequired()
+  188:                         .HasMaxLength(50)
+  189:                         .HasColumnType("nvarchar(50)");
+  190: 
+  191:                     b.Property<string>("PaymentProvider")
+  192:                         .IsRequired()
+  193:                         .HasMaxLength(50)
+  194:                         .HasColumnType("nvarchar(50)");
+  195: 
+  196:                     b.Property<string>("ProviderTransactionReference")
+  197:                         .HasMaxLength(200)
+  198:                         .HasColumnType("nvarchar(200)");
+  199: 
+  200:                     b.Property<DateTime?>("RefundedDate")
+  201:                         .HasColumnType("datetime2");
+  202: 
+  203:                     b.Property<string>("Status")
+  204:                         .IsRequired()
+  205:                         .HasMaxLength(20)
+  206:                         .IsUnicode(false)
+  207:                         .HasColumnType("varchar(20)");
+  208: 
+  209:                     b.Property<long>("UserPackageEntitlementID")
+  210:                         .HasColumnType("bigint");
+  211: 
+  212:                     b.HasKey("PaymentTransactionID");
+  213: 
+  214:                     b.HasIndex("ExternalRefundReference")
+  215:                         .IsUnique()
+  216:                         .HasDatabaseName("IX_PaymentTransactions_ExternalRefundReference")
+  217:                         .HasFilter("[ExternalRefundReference] IS NOT NULL");
+  218: 
+  219:                     b.HasIndex("UserPackageEntitlementID");
+  220: 
+  221:                     b.HasIndex("PaymentProvider", "ProviderTransactionReference")
+  222:                         .IsUnique()
+  223:                         .HasFilter("[ProviderTransactionReference] IS NOT NULL");
+  224: 
+  225:                     b.ToTable("PaymentTransactions", null, t =>
+  226:                         {
+  227:                             t.HasCheckConstraint("CK_PaymentTransactions_Amount", "[Amount] >= 0");
+  228: 
+  229:                             t.HasCheckConstraint("CK_PaymentTransactions_Status", "[Status] IN ('PENDING', 'CONFIRMED', 'FAILED', 'REFUNDED')");
+  230:                         });
+  231:                 });
+  232: 
+  233:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+  234:                 {
+  235:                     b.Property<long>("UserPackageEntitlementID")
+  236:                         .ValueGeneratedOnAdd()
+  237:                         .HasColumnType("bigint");
+  238: 
+  239:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserPackageEntitlementID"));
+  240: 
+  241:                     b.Property<DateTime>("CreatedDate")
+  242:                         .HasColumnType("datetime2");
+  243: 
+  244:                     b.Property<DateTime?>("EndDate")
+  245:                         .HasColumnType("datetime2");
+  246: 
+  247:                     b.Property<int>("EnquiryPackageID")
+  248:                         .HasColumnType("int");
+  249: 
+  250:                     b.Property<DateTime?>("ModifiedDate")
+  251:                         .HasColumnType("datetime2");
+  252: 
+  253:                     b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+  254:                         .ValueGeneratedOnAdd()
+  255:                         .HasColumnType("int")
+  256:                         .HasDefaultValue(0);
+  257: 
+  258:                     b.Property<int>("MonthlyAdvertisementPostLimit")
+  259:                         .ValueGeneratedOnAdd()
+  260:                         .HasColumnType("int")
+  261:                         .HasDefaultValue(0);
+  262: 
+  263:                     b.Property<int>("MonthlyReplyLimit")
+  264:                         .ValueGeneratedOnAdd()
+  265:                         .HasColumnType("int")
+  266:                         .HasDefaultValue(0);
+  267: 
+  268:                     b.Property<int>("MonthlySenderEnquiryLimit")
+  269:                         .ValueGeneratedOnAdd()
+  270:                         .HasColumnType("int")
+  271:                         .HasDefaultValue(0);
+  272: 
+  273:                     b.Property<DateTime>("StartDate")
+  274:                         .HasColumnType("datetime2");
+  275: 
+  276:                     b.Property<string>("Status")
+  277:                         .IsRequired()
+  278:                         .HasMaxLength(20)
+  279:                         .IsUnicode(false)
+  280:                         .HasColumnType("varchar(20)");
+  281: 
+  282:                     b.Property<long>("UserID")
+  283:                         .HasColumnType("bigint");
+  284: 
+  285:                     b.HasKey("UserPackageEntitlementID");
+  286: 
+  287:                     b.HasIndex("EnquiryPackageID");
+  288: 
+  289:                     b.HasIndex("UserID")
+  290:                         .IsUnique()
+  291:                         .HasFilter("[Status] = 'ACTIVE'");
+  292: 
+  293:                     b.HasIndex("UserID", "Status", "StartDate", "EndDate");
+  294: 
+  295:                     b.ToTable("UserPackageEntitlements", null, t =>
+  296:                         {
+  297:                             t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+  298: 
+  299:                             t.HasCheckConstraint("CK_UserPackageEntitlements_NonNegativeLimits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
+  300: 
+  301:                             t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+  302:                         });
+  303:                 });
+  304: 
+  305:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
+  306:                 {
+  307:                     b.Property<long>("AdvertisementID")
+  308:                         .ValueGeneratedOnAdd()
+  309:                         .HasColumnType("bigint");
+  310: 
+  311:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementID"));
+  312: 
+  313:                     b.Property<string>("AddressLine")
+  314:                         .HasColumnType("nvarchar(max)");
+  315: 
+  316:                     b.Property<string>("AdvertisementNumber")
+  317:                         .IsRequired()
+  318:                         .HasMaxLength(50)
+  319:                         .HasColumnType("nvarchar(50)");
+  320: 
+  321:                     b.Property<int>("AdvertisementTypeID")
+  322:                         .HasColumnType("int");
+  323: 
+  324:                     b.Property<int?>("AreaID")
+  325:                         .HasColumnType("int");
+  326: 
+  327:                     b.Property<int?>("Bathrooms")
+  328:                         .HasColumnType("int");
+  329: 
+  330:                     b.Property<int?>("Bedrooms")
+  331:                         .HasColumnType("int");
+  332: 
+  333:                     b.Property<decimal?>("BuiltUpArea")
+  334:                         .HasPrecision(18, 2)
+  335:                         .HasColumnType("decimal(18,2)");
+  336: 
+  337:                     b.Property<int>("CategoryID")
+  338:                         .HasColumnType("int");
+  339: 
+  340:                     b.Property<int?>("CityID")
+  341:                         .HasColumnType("int");
+  342: 
+  343:                     b.Property<string>("ContactEmail")
+  344:                         .HasMaxLength(254)
+  345:                         .HasColumnType("nvarchar(254)");
+  346: 
+  347:                     b.Property<int?>("CountryID")
+  348:                         .HasColumnType("int");
+  349: 
+  350:                     b.Property<long?>("CreatedBy")
+  351:                         .HasColumnType("bigint");
+  352: 
+  353:                     b.Property<DateTime>("CreatedDate")
+  354:                         .HasColumnType("datetime2");
+  355: 
+  356:                     b.Property<string>("CurrencyCode")
+  357:                         .IsRequired()
+  358:                         .ValueGeneratedOnAdd()
+  359:                         .HasMaxLength(10)
+  360:                         .HasColumnType("nvarchar(10)")
+  361:                         .HasDefaultValue("BHD");
+  362: 
+  363:                     b.Property<string>("Description")
+  364:                         .IsRequired()
+  365:                         .HasColumnType("nvarchar(max)");
+  366: 
+  367:                     b.Property<string>("DescriptionAr")
+  368:                         .HasColumnType("nvarchar(max)");
+  369: 
+  370:                     b.Property<DateTime?>("ExpiryDate")
+  371:                         .HasColumnType("datetime2");
+  372: 
+  373:                     b.Property<DateTime?>("FeaturedUntil")
+  374:                         .HasColumnType("datetime2");
+  375: 
+  376:                     b.Property<bool>("IsFeatured")
+  377:                         .HasColumnType("bit");
+  378: 
+  379:                     b.Property<bool>("IsNegotiable")
+  380:                         .HasColumnType("bit");
+  381: 
+  382:                     b.Property<decimal?>("LandArea")
+  383:                         .HasPrecision(18, 2)
+  384:                         .HasColumnType("decimal(18,2)");
+  385: 
+  386:                     b.Property<decimal?>("Latitude")
+  387:                         .HasPrecision(10, 7)
+  388:                         .HasColumnType("decimal(10,7)");
+  389: 
+  390:                     b.Property<decimal?>("Longitude")
+  391:                         .HasPrecision(10, 7)
+  392:                         .HasColumnType("decimal(10,7)");
+  393: 
+  394:                     b.Property<long?>("ModifiedBy")
+  395:                         .HasColumnType("bigint");
+  396: 
+  397:                     b.Property<DateTime?>("ModifiedDate")
+  398:                         .HasColumnType("datetime2");
+  399: 
+  400:                     b.Property<string>("PlotNumber")
+  401:                         .HasColumnType("nvarchar(max)");
+  402: 
+  403:                     b.Property<decimal?>("Price")
+  404:                         .HasPrecision(18, 3)
+  405:                         .HasColumnType("decimal(18,3)");
+  406: 
+  407:                     b.Property<int?>("PropertyAge")
+  408:                         .HasColumnType("int");
+  409: 
+  410:                     b.Property<DateTime?>("PublishedDate")
+  411:                         .HasColumnType("datetime2");
+  412: 
+  413:                     b.Property<bool>("ShowEmailToPublic")
+  414:                         .ValueGeneratedOnAdd()
+  415:                         .HasColumnType("bit")
+  416:                         .HasDefaultValue(false);
+  417: 
+  418:                     b.Property<bool>("ShowWhatsAppToPublic")
+  419:                         .ValueGeneratedOnAdd()
+  420:                         .HasColumnType("bit")
+  421:                         .HasDefaultValue(false);
+  422: 
+  423:                     b.Property<int?>("StateID")
+  424:                         .HasColumnType("int");
+  425: 
+  426:                     b.Property<int>("StatusID")
+  427:                         .HasColumnType("int");
+  428: 
+  429:                     b.Property<string>("Title")
+  430:                         .IsRequired()
+  431:                         .HasMaxLength(250)
+  432:                         .HasColumnType("nvarchar(250)");
+  433: 
+  434:                     b.Property<string>("TitleAr")
+  435:                         .HasMaxLength(250)
+  436:                         .HasColumnType("nvarchar(250)");
+  437: 
+  438:                     b.Property<long>("UserID")
+  439:                         .HasColumnType("bigint");
+  440: 
+  441:                     b.Property<string>("WhatsAppNumber")
+  442:                         .HasMaxLength(30)
+  443:                         .HasColumnType("nvarchar(30)");
+  444: 
+  445:                     b.HasKey("AdvertisementID");
+  446: 
+  447:                     b.HasIndex("AdvertisementNumber")
+  448:                         .IsUnique();
+  449: 
+  450:                     b.HasIndex("AdvertisementTypeID");
+  451: 
+  452:                     b.HasIndex("AreaID");
+  453: 
+  454:                     b.HasIndex("CategoryID");
+  455: 
+  456:                     b.HasIndex("CityID");
+  457: 
+  458:                     b.HasIndex("CountryID");
+  459: 
+  460:                     b.HasIndex("ExpiryDate");
+  461: 
+  462:                     b.HasIndex("Price");
+  463: 
+  464:                     b.HasIndex("PublishedDate");
+  465: 
+  466:                     b.HasIndex("StateID");
+  467: 
+  468:                     b.HasIndex("StatusID");
+  469: 
+  470:                     b.HasIndex("UserID");
+  471: 
+  472:                     b.ToTable("Advertisements", (string)null);
+  473:                 });
+  474: 
+  475:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
+  476:                 {
+  477:                     b.Property<int>("CategoryID")
+  478:                         .ValueGeneratedOnAdd()
+  479:                         .HasColumnType("int");
+  480: 
+  481:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryID"));
+  482: 
+  483:                     b.Property<string>("CategoryName")
+  484:                         .IsRequired()
+  485:                         .HasMaxLength(150)
+  486:                         .HasColumnType("nvarchar(150)");
+  487: 
+  488:                     b.Property<string>("CategoryNameAr")
+  489:                         .HasMaxLength(150)
+  490:                         .HasColumnType("nvarchar(150)");
+  491: 
+  492:                     b.Property<string>("Description")
+  493:                         .HasMaxLength(500)
+  494:                         .HasColumnType("nvarchar(500)");
+  495: 
+  496:                     b.Property<int>("DisplayOrder")
+  497:                         .HasColumnType("int");
+  498: 
+  499:                     b.Property<bool>("IsActive")
+  500:                         .HasColumnType("bit");
+  501: 
+  502:                     b.HasKey("CategoryID");
+  503: 
+  504:                     b.HasIndex("CategoryName")
+  505:                         .IsUnique();
+  506: 
+  507:                     b.ToTable("AdvertisementCategories", (string)null);
+  508:                 });
+  509: 
+  510:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementDocument", b =>
+  511:                 {
+  512:                     b.Property<long>("AdvertisementDocumentID")
+  513:                         .ValueGeneratedOnAdd()
+  514:                         .HasColumnType("bigint")
+  515:                         .HasColumnName("AdvertisementDocumentID");
+  516: 
+  517:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementDocumentID"));
+  518: 
+  519:                     b.Property<long>("AdvertisementID")
+  520:                         .HasColumnType("bigint")
+  521:                         .HasColumnName("AdvertisementID");
+  522: 
+  523:                     b.Property<string>("ContentType")
+  524:                         .HasMaxLength(100)
+  525:                         .HasColumnType("nvarchar(100)")
+  526:                         .HasColumnName("ContentType");
+  527: 
+  528:                     b.Property<DateTime>("CreatedDate")
+  529:                         .HasColumnType("datetime2")
+  530:                         .HasColumnName("CreatedDate");
+  531: 
+  532:                     b.Property<string>("DocumentName")
+  533:                         .IsRequired()
+  534:                         .HasMaxLength(255)
+  535:                         .HasColumnType("nvarchar(255)")
+  536:                         .HasColumnName("DocumentName");
+  537: 
+  538:                     b.Property<long?>("FileSize")
+  539:                         .HasColumnType("bigint")
+  540:                         .HasColumnName("FileSize");
+  541: 
+  542:                     b.Property<string>("FileURL")
+  543:                         .IsRequired()
+  544:                         .HasMaxLength(1000)
+  545:                         .HasColumnType("nvarchar(1000)")
+  546:                         .HasColumnName("FileURL");
+  547: 
+  548:                     b.Property<string>("StorageKey")
+  549:                         .HasMaxLength(1000)
+  550:                         .HasColumnType("nvarchar(1000)")
+  551:                         .HasColumnName("StorageKey");
+  552: 
+  553:                     b.HasKey("AdvertisementDocumentID");
+  554: 
+  555:                     b.HasIndex("AdvertisementID");
+  556: 
+  557:                     b.ToTable("AdvertisementDocuments", (string)null);
+  558:                 });
+  559: 
+  560:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
+  561:                 {
+  562:                     b.Property<long>("AdvertisementEnquiryID")
+  563:                         .ValueGeneratedOnAdd()
+  564:                         .HasColumnType("bigint");
+  565: 
+  566:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementEnquiryID"));
+  567: 
+  568:                     b.Property<long>("AdvertisementID")
+  569:                         .HasColumnType("bigint");
+  570: 
+  571:                     b.Property<DateTime?>("ClosedDate")
+  572:                         .HasColumnType("datetime2");
+  573: 
+  574:                     b.Property<string>("ContactEmail")
+  575:                         .HasMaxLength(255)
+  576:                         .HasColumnType("nvarchar(255)");
+  577: 
+  578:                     b.Property<string>("ContactMobile")
+  579:                         .HasMaxLength(30)
+  580:                         .HasColumnType("nvarchar(30)");
+  581: 
+  582:                     b.Property<DateTime>("CreatedDate")
+  583:                         .HasColumnType("datetime2");
+  584: 
+  585:                     b.Property<DateTime?>("LastRepliedDate")
+  586:                         .HasColumnType("datetime2");
+  587: 
+  588:                     b.Property<string>("Message")
+  589:                         .IsRequired()
+  590:                         .HasMaxLength(3000)
+  591:                         .HasColumnType("nvarchar(3000)");
+  592: 
+  593:                     b.Property<long>("RecipientUserID")
+  594:                         .HasColumnType("bigint");
+  595: 
+  596:                     b.Property<long>("SenderUserID")
+  597:                         .HasColumnType("bigint");
+  598: 
+  599:                     b.Property<string>("Status")
+  600:                         .IsRequired()
+  601:                         .HasMaxLength(30)
+  602:                         .HasColumnType("nvarchar(30)");
+  603: 
+  604:                     b.Property<string>("Subject")
+  605:                         .IsRequired()
+  606:                         .HasColumnType("nvarchar(max)");
+  607: 
+  608:                     b.HasKey("AdvertisementEnquiryID");
+  609: 
+  610:                     b.HasIndex("RecipientUserID");
+  611: 
+  612:                     b.HasIndex("SenderUserID");
+  613: 
+  614:                     b.HasIndex("AdvertisementID", "CreatedDate");
+  615: 
+  616:                     b.ToTable("AdvertisementEnquiries", (string)null);
+  617:                 });
+  618: 
+  619:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiryMessage", b =>
+  620:                 {
+  621:                     b.Property<long>("AdvertisementEnquiryMessageID")
+  622:                         .ValueGeneratedOnAdd()
+  623:                         .HasColumnType("bigint");
+  624: 
+  625:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementEnquiryMessageID"));
+  626: 
+  627:                     b.Property<long>("AdvertisementEnquiryID")
+  628:                         .HasColumnType("bigint");
+  629: 
+  630:                     b.Property<DateTime>("CreatedDate")
+  631:                         .HasColumnType("datetime2");
+  632: 
+  633:                     b.Property<bool>("IsRead")
+  634:                         .HasColumnType("bit");
+  635: 
+  636:                     b.Property<string>("Message")
+  637:                         .IsRequired()
+  638:                         .HasMaxLength(3000)
+  639:                         .HasColumnType("nvarchar(3000)");
+  640: 
+  641:                     b.Property<DateTime?>("ReadDate")
+  642:                         .HasColumnType("datetime2");
+  643: 
+  644:                     b.Property<long>("SenderUserID")
+  645:                         .HasColumnType("bigint");
+  646: 
+  647:                     b.HasKey("AdvertisementEnquiryMessageID");
+  648: 
+  649:                     b.HasIndex("AdvertisementEnquiryID", "CreatedDate");
+  650: 
+  651:                     b.HasIndex("SenderUserID", "IsRead");
+  652: 
+  653:                     b.ToTable("AdvertisementEnquiryMessages", (string)null);
+  654:                 });
+  655: 
+  656:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFavorite", b =>
+  657:                 {
+  658:                     b.Property<long>("AdvertisementFavoriteID")
+  659:                         .ValueGeneratedOnAdd()
+  660:                         .HasColumnType("bigint");
+  661: 
+  662:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementFavoriteID"));
+  663: 
+  664:                     b.Property<long>("AdvertisementID")
+  665:                         .HasColumnType("bigint");
+  666: 
+  667:                     b.Property<DateTime>("CreatedDate")
+  668:                         .HasColumnType("datetime2");
+  669: 
+  670:                     b.Property<long>("UserID")
+  671:                         .HasColumnType("bigint");
+  672: 
+  673:                     b.HasKey("AdvertisementFavoriteID");
+  674: 
+  675:                     b.HasIndex("AdvertisementID");
+  676: 
+  677:                     b.HasIndex("UserID", "AdvertisementID")
+  678:                         .IsUnique();
+  679: 
+  680:                     b.ToTable("AdvertisementFavorites", (string)null);
+  681:                 });
+  682: 
+  683:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
+  684:                 {
+  685:                     b.Property<int>("AdvertisementFeatureID")
+  686:                         .ValueGeneratedOnAdd()
+  687:                         .HasColumnType("int");
+  688: 
+  689:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdvertisementFeatureID"));
+  690: 
+  691:                     b.Property<int>("CategoryID")
+  692:                         .HasColumnType("int");
+  693: 
+  694:                     b.Property<string>("DataType")
+  695:                         .IsRequired()
+  696:                         .HasMaxLength(30)
+  697:                         .HasColumnType("nvarchar(30)");
+  698: 
+  699:                     b.Property<int>("DisplayOrder")
+  700:                         .HasColumnType("int");
+  701: 
+  702:                     b.Property<string>("FeatureName")
+  703:                         .IsRequired()
+  704:                         .HasMaxLength(150)
+  705:                         .HasColumnType("nvarchar(150)");
+  706: 
+  707:                     b.Property<string>("FeatureNameAr")
+  708:                         .HasMaxLength(150)
+  709:                         .HasColumnType("nvarchar(150)");
+  710: 
+  711:                     b.Property<bool>("IsActive")
+  712:                         .HasColumnType("bit");
+  713: 
+  714:                     b.Property<bool>("IsRequired")
+  715:                         .HasColumnType("bit");
+  716: 
+  717:                     b.HasKey("AdvertisementFeatureID");
+  718: 
+  719:                     b.HasIndex("CategoryID");
+  720: 
+  721:                     b.ToTable("AdvertisementFeatures", (string)null);
+  722:                 });
+  723: 
+  724:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureValue", b =>
+  725:                 {
+  726:                     b.Property<long>("AdvertisementFeatureValueID")
+  727:                         .ValueGeneratedOnAdd()
+  728:                         .HasColumnType("bigint");
+  729: 
+  730:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementFeatureValueID"));
+  731: 
+  732:                     b.Property<int>("AdvertisementFeatureID")
+  733:                         .HasColumnType("int");
+  734: 
+  735:                     b.Property<long>("AdvertisementID")
+  736:                         .HasColumnType("bigint");
+  737: 
+  738:                     b.Property<string>("FeatureValue")
+  739:                         .HasMaxLength(1000)
+  740:                         .HasColumnType("nvarchar(1000)");
+  741: 
+  742:                     b.Property<string>("FeatureValueAr")
+  743:                         .HasMaxLength(1000)
+  744:                         .HasColumnType("nvarchar(1000)");
+  745: 
+  746:                     b.HasKey("AdvertisementFeatureValueID");
+  747: 
+  748:                     b.HasIndex("AdvertisementFeatureID");
+  749: 
+  750:                     b.HasIndex("AdvertisementID", "AdvertisementFeatureID")
+  751:                         .IsUnique();
+  752: 
+  753:                     b.ToTable("AdvertisementFeatureValues", (string)null);
+  754:                 });
+  755: 
+  756:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementImage", b =>
+  757:                 {
+  758:                     b.Property<long>("AdvertisementImageID")
+  759:                         .ValueGeneratedOnAdd()
+  760:                         .HasColumnType("bigint")
+  761:                         .HasColumnName("AdvertisementImageID");
+  762: 
+  763:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementImageID"));
+  764: 
+  765:                     b.Property<long>("AdvertisementID")
+  766:                         .HasColumnType("bigint")
+  767:                         .HasColumnName("AdvertisementID");
+  768: 
+  769:                     b.Property<string>("ContentType")
+  770:                         .HasMaxLength(100)
+  771:                         .HasColumnType("nvarchar(100)")
+  772:                         .HasColumnName("ContentType");
+  773: 
+  774:                     b.Property<DateTime>("CreatedDate")
+  775:                         .HasColumnType("datetime2")
+  776:                         .HasColumnName("CreatedDate");
+  777: 
+  778:                     b.Property<int>("DisplayOrder")
+  779:                         .HasColumnType("int")
+  780:                         .HasColumnName("DisplayOrder");
+  781: 
+  782:                     b.Property<string>("FileName")
+  783:                         .IsRequired()
+  784:                         .HasMaxLength(255)
+  785:                         .HasColumnType("nvarchar(255)")
+  786:                         .HasColumnName("FileName");
+  787: 
+  788:                     b.Property<long?>("FileSize")
+  789:                         .HasColumnType("bigint")
+  790:                         .HasColumnName("FileSize");
+  791: 
+  792:                     b.Property<string>("FileURL")
+  793:                         .IsRequired()
+  794:                         .HasMaxLength(1000)
+  795:                         .HasColumnType("nvarchar(1000)")
+  796:                         .HasColumnName("FileURL");
+  797: 
+  798:                     b.Property<bool>("IsPrimary")
+  799:                         .HasColumnType("bit")
+  800:                         .HasColumnName("IsPrimary");
+  801: 
+  802:                     b.Property<string>("StorageKey")
+  803:                         .HasMaxLength(1000)
+  804:                         .HasColumnType("nvarchar(1000)")
+  805:                         .HasColumnName("StorageKey");
+  806: 
+  807:                     b.HasKey("AdvertisementImageID");
+  808: 
+  809:                     b.HasIndex("AdvertisementID");
+  810: 
+  811:                     b.ToTable("AdvertisementImages", (string)null);
+  812:                 });
+  813: 
+  814:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementRemovalRequest", b =>
+  815:                 {
+  816:                     b.Property<long>("RemovalRequestID")
+  817:                         .ValueGeneratedOnAdd()
+  818:                         .HasColumnType("bigint");
+  819: 
+  820:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RemovalRequestID"));
+  821: 
+  822:                     b.Property<long>("AdvertisementID")
+  823:                         .HasColumnType("bigint");
+  824: 
+  825:                     b.Property<DateTime>("CreatedDate")
+  826:                         .HasColumnType("datetime2");
+  827: 
+  828:                     b.Property<string>("Reason")
+  829:                         .HasMaxLength(500)
+  830:                         .HasColumnType("nvarchar(500)");
+  831: 
+  832:                     b.Property<string>("RequestStatus")
+  833:                         .IsRequired()
+  834:                         .HasMaxLength(20)
+  835:                         .IsUnicode(false)
+  836:                         .HasColumnType("varchar(20)");
+  837: 
+  838:                     b.Property<string>("RequestType")
+  839:                         .IsRequired()
+  840:                         .HasMaxLength(20)
+  841:                         .IsUnicode(false)
+  842:                         .HasColumnType("varchar(20)");
+  843: 
+  844:                     b.Property<string>("ReviewComments")
+  845:                         .HasMaxLength(500)
+  846:                         .HasColumnType("nvarchar(500)");
+  847: 
+  848:                     b.Property<long?>("ReviewedBy")
+  849:                         .HasColumnType("bigint");
+  850: 
+  851:                     b.Property<DateTime?>("ReviewedDate")
+  852:                         .HasColumnType("datetime2");
+  853: 
+  854:                     b.Property<long>("UserID")
+  855:                         .HasColumnType("bigint");
+  856: 
+  857:                     b.HasKey("RemovalRequestID");
+  858: 
+  859:                     b.HasIndex("AdvertisementID")
+  860:                         .IsUnique()
+  861:                         .HasDatabaseName("UX_AdvRemovalReq_OnePending")
+  862:                         .HasFilter("[RequestStatus] = 'PENDING'");
+  863: 
+  864:                     b.HasIndex("AdvertisementID", "CreatedDate")
+  865:                         .HasDatabaseName("IX_AdvRemovalReq_Ad_Created");
+  866: 
+  867:                     b.ToTable("AdvertisementRemovalRequests", (string)null);
+  868:                 });
+  869: 
+  870:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementStatus", b =>
+  871:                 {
+  872:                     b.Property<int>("StatusID")
+  873:                         .ValueGeneratedOnAdd()
+  874:                         .HasColumnType("int");
+  875: 
+  876:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StatusID"));
+  877: 
+  878:                     b.Property<string>("Description")
+  879:                         .HasMaxLength(500)
+  880:                         .HasColumnType("nvarchar(500)");
+  881: 
+  882:                     b.Property<int>("DisplayOrder")
+  883:                         .HasColumnType("int");
+  884: 
+  885:                     b.Property<bool>("IsActive")
+  886:                         .HasColumnType("bit");
+  887: 
+  888:                     b.Property<bool>("IsPublicStatus")
+  889:                         .HasColumnType("bit");
+  890: 
+  891:                     b.Property<string>("StatusCode")
+  892:                         .IsRequired()
+  893:                         .HasMaxLength(50)
+  894:                         .HasColumnType("nvarchar(50)");
+  895: 
+  896:                     b.Property<string>("StatusName")
+  897:                         .IsRequired()
+  898:                         .HasMaxLength(100)
+  899:                         .HasColumnType("nvarchar(100)");
+  900: 
+  901:                     b.Property<string>("StatusNameAr")
+  902:                         .HasMaxLength(100)
+  903:                         .HasColumnType("nvarchar(100)");
+  904: 
+  905:                     b.HasKey("StatusID");
+  906: 
+  907:                     b.HasIndex("StatusCode")
+  908:                         .IsUnique();
+  909: 
+  910:                     b.ToTable("AdvertisementStatuses", (string)null);
+  911:                 });
+  912: 
+  913:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementType", b =>
+  914:                 {
+  915:                     b.Property<int>("AdvertisementTypeID")
+  916:                         .ValueGeneratedOnAdd()
+  917:                         .HasColumnType("int");
+  918: 
+  919:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdvertisementTypeID"));
+  920: 
+  921:                     b.Property<string>("Description")
+  922:                         .HasMaxLength(500)
+  923:                         .HasColumnType("nvarchar(500)");
+  924: 
+  925:                     b.Property<bool>("IsActive")
+  926:                         .HasColumnType("bit");
+  927: 
+  928:                     b.Property<string>("TypeName")
+  929:                         .IsRequired()
+  930:                         .HasMaxLength(100)
+  931:                         .HasColumnType("nvarchar(100)");
+  932: 
+  933:                     b.Property<string>("TypeNameAr")
+  934:                         .HasMaxLength(100)
+  935:                         .HasColumnType("nvarchar(100)");
+  936: 
+  937:                     b.HasKey("AdvertisementTypeID");
+  938: 
+  939:                     b.HasIndex("TypeName")
+  940:                         .IsUnique();
+  941: 
+  942:                     b.ToTable("AdvertisementTypes", (string)null);
+  943:                 });
+  944: 
+  945:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementVideo", b =>
+  946:                 {
+  947:                     b.Property<long>("AdvertisementVideoID")
+  948:                         .ValueGeneratedOnAdd()
+  949:                         .HasColumnType("bigint")
+  950:                         .HasColumnName("AdvertisementVideoID");
+  951: 
+  952:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementVideoID"));
+  953: 
+  954:                     b.Property<long>("AdvertisementID")
+  955:                         .HasColumnType("bigint")
+  956:                         .HasColumnName("AdvertisementID");
+  957: 
+  958:                     b.Property<string>("ContentType")
+  959:                         .HasMaxLength(100)
+  960:                         .HasColumnType("nvarchar(100)")
+  961:                         .HasColumnName("ContentType");
+  962: 
+  963:                     b.Property<DateTime>("CreatedDate")
+  964:                         .HasColumnType("datetime2")
+  965:                         .HasColumnName("CreatedDate");
+  966: 
+  967:                     b.Property<int>("DisplayOrder")
+  968:                         .HasColumnType("int")
+  969:                         .HasColumnName("DisplayOrder");
+  970: 
+  971:                     b.Property<string>("FileName")
+  972:                         .IsRequired()
+  973:                         .HasMaxLength(255)
+  974:                         .HasColumnType("nvarchar(255)")
+  975:                         .HasColumnName("FileName");
+  976: 
+  977:                     b.Property<long?>("FileSize")
+  978:                         .HasColumnType("bigint")
+  979:                         .HasColumnName("FileSize");
+  980: 
+  981:                     b.Property<string>("FileURL")
+  982:                         .IsRequired()
+  983:                         .HasMaxLength(1000)
+  984:                         .HasColumnType("nvarchar(1000)")
+  985:                         .HasColumnName("FileURL");
+  986: 
+  987:                     b.Property<string>("StorageKey")
+  988:                         .HasMaxLength(1000)
+  989:                         .HasColumnType("nvarchar(1000)")
+  990:                         .HasColumnName("StorageKey");
+  991: 
+  992:                     b.HasKey("AdvertisementVideoID");
+  993: 
+  994:                     b.HasIndex("AdvertisementID");
+  995: 
+  996:                     b.ToTable("AdvertisementVideos", (string)null);
+  997:                 });
+  998: 
+  999:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementView", b =>
+ 1000:                 {
+ 1001:                     b.Property<long>("AdvertisementViewID")
+ 1002:                         .ValueGeneratedOnAdd()
+ 1003:                         .HasColumnType("bigint");
+ 1004: 
+ 1005:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementViewID"));
+ 1006: 
+ 1007:                     b.Property<long>("AdvertisementID")
+ 1008:                         .HasColumnType("bigint");
+ 1009: 
+ 1010:                     b.Property<string>("IPAddress")
+ 1011:                         .HasMaxLength(100)
+ 1012:                         .HasColumnType("nvarchar(100)");
+ 1013: 
+ 1014:                     b.Property<string>("UserAgent")
+ 1015:                         .HasMaxLength(1000)
+ 1016:                         .HasColumnType("nvarchar(1000)");
+ 1017: 
+ 1018:                     b.Property<long?>("UserID")
+ 1019:                         .HasColumnType("bigint");
+ 1020: 
+ 1021:                     b.Property<DateTime>("ViewedDate")
+ 1022:                         .HasColumnType("datetime2");
+ 1023: 
+ 1024:                     b.HasKey("AdvertisementViewID");
+ 1025: 
+ 1026:                     b.HasIndex("UserID");
+ 1027: 
+ 1028:                     b.HasIndex("AdvertisementID", "ViewedDate");
+ 1029: 
+ 1030:                     b.ToTable("AdvertisementViews", (string)null);
+ 1031:                 });
+ 1032: 
+ 1033:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalHistory", b =>
+ 1034:                 {
+ 1035:                     b.Property<long>("ApprovalHistoryID")
+ 1036:                         .ValueGeneratedOnAdd()
+ 1037:                         .HasColumnType("bigint");
+ 1038: 
+ 1039:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ApprovalHistoryID"));
+ 1040: 
+ 1041:                     b.Property<string>("Action")
+ 1042:                         .IsRequired()
+ 1043:                         .HasMaxLength(50)
+ 1044:                         .HasColumnType("nvarchar(50)");
+ 1045: 
+ 1046:                     b.Property<DateTime>("ActionDate")
+ 1047:                         .HasColumnType("datetime2");
+ 1048: 
+ 1049:                     b.Property<long>("ActionedByUserID")
+ 1050:                         .HasColumnType("bigint");
+ 1051: 
+ 1052:                     b.Property<long>("ApprovalRequestID")
+ 1053:                         .HasColumnType("bigint");
+ 1054: 
+ 1055:                     b.Property<string>("Comments")
+ 1056:                         .HasMaxLength(2000)
+ 1057:                         .HasColumnType("nvarchar(2000)");
+ 1058: 
+ 1059:                     b.HasKey("ApprovalHistoryID");
+ 1060: 
+ 1061:                     b.HasIndex("ActionedByUserID");
+ 1062: 
+ 1063:                     b.HasIndex("ApprovalRequestID");
+ 1064: 
+ 1065:                     b.ToTable("ApprovalHistories", (string)null);
+ 1066:                 });
+ 1067: 
+ 1068:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalRequest", b =>
+ 1069:                 {
+ 1070:                     b.Property<long>("ApprovalRequestID")
+ 1071:                         .ValueGeneratedOnAdd()
+ 1072:                         .HasColumnType("bigint");
+ 1073: 
+ 1074:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ApprovalRequestID"));
+ 1075: 
+ 1076:                     b.Property<long>("AdvertisementID")
+ 1077:                         .HasColumnType("bigint");
+ 1078: 
+ 1079:                     b.Property<long?>("AssignedToUserID")
+ 1080:                         .HasColumnType("bigint")
+ 1081:                         .HasColumnName("AssignedToUserID");
+ 1082: 
+ 1083:                     b.Property<string>("Comments")
+ 1084:                         .HasMaxLength(2000)
+ 1085:                         .HasColumnType("nvarchar(2000)");
+ 1086: 
+ 1087:                     b.Property<DateTime?>("CompletedDate")
+ 1088:                         .HasColumnType("datetime2")
+ 1089:                         .HasColumnName("CompletedDate");
+ 1090: 
+ 1091:                     b.Property<string>("Status")
+ 1092:                         .IsRequired()
+ 1093:                         .HasMaxLength(30)
+ 1094:                         .HasColumnType("nvarchar(30)");
+ 1095: 
+ 1096:                     b.Property<long>("SubmittedByUserID")
+ 1097:                         .HasColumnType("bigint")
+ 1098:                         .HasColumnName("SubmittedByUserID");
+ 1099: 
+ 1100:                     b.Property<DateTime>("SubmittedDate")
+ 1101:                         .HasColumnType("datetime2");
+ 1102: 
+ 1103:                     b.HasKey("ApprovalRequestID");
+ 1104: 
+ 1105:                     b.HasIndex("AdvertisementID");
+ 1106: 
+ 1107:                     b.HasIndex("AssignedToUserID");
+ 1108: 
+ 1109:                     b.HasIndex("SubmittedByUserID");
+ 1110: 
+ 1111:                     b.HasIndex("Status", "SubmittedDate");
+ 1112: 
+ 1113:                     b.ToTable("ApprovalRequests", (string)null);
+ 1114:                 });
+ 1115: 
+ 1116:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Area", b =>
+ 1117:                 {
+ 1118:                     b.Property<int>("AreaID")
+ 1119:                         .ValueGeneratedOnAdd()
+ 1120:                         .HasColumnType("int");
+ 1121: 
+ 1122:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AreaID"));
+ 1123: 
+ 1124:                     b.Property<string>("AreaName")
+ 1125:                         .IsRequired()
+ 1126:                         .HasMaxLength(150)
+ 1127:                         .HasColumnType("nvarchar(150)");
+ 1128: 
+ 1129:                     b.Property<string>("AreaNameAr")
+ 1130:                         .HasMaxLength(150)
+ 1131:                         .HasColumnType("nvarchar(150)");
+ 1132: 
+ 1133:                     b.Property<int>("CityID")
+ 1134:                         .HasColumnType("int");
+ 1135: 
+ 1136:                     b.Property<int?>("CountryID")
+ 1137:                         .HasColumnType("int");
+ 1138: 
+ 1139:                     b.Property<bool>("IsActive")
+ 1140:                         .HasColumnType("bit");
+ 1141: 
+ 1142:                     b.Property<int?>("StateID")
+ 1143:                         .HasColumnType("int");
+ 1144: 
+ 1145:                     b.HasKey("AreaID");
+ 1146: 
+ 1147:                     b.HasIndex("CountryID");
+ 1148: 
+ 1149:                     b.HasIndex("StateID");
+ 1150: 
+ 1151:                     b.HasIndex("CityID", "AreaName")
+ 1152:                         .IsUnique();
+ 1153: 
+ 1154:                     b.ToTable("Areas", (string)null);
+ 1155:                 });
+ 1156: 
+ 1157:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AuditLog", b =>
+ 1158:                 {
+ 1159:                     b.Property<long>("AuditLogID")
+ 1160:                         .ValueGeneratedOnAdd()
+ 1161:                         .HasColumnType("bigint");
+ 1162: 
+ 1163:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AuditLogID"));
+ 1164: 
+ 1165:                     b.Property<string>("Action")
+ 1166:                         .IsRequired()
+ 1167:                         .HasMaxLength(100)
+ 1168:                         .HasColumnType("nvarchar(100)");
+ 1169: 
+ 1170:                     b.Property<DateTime>("CreatedDate")
+ 1171:                         .HasColumnType("datetime2");
+ 1172: 
+ 1173:                     b.Property<string>("EntityID")
+ 1174:                         .HasMaxLength(100)
+ 1175:                         .HasColumnType("nvarchar(100)");
+ 1176: 
+ 1177:                     b.Property<string>("EntityName")
+ 1178:                         .IsRequired()
+ 1179:                         .HasMaxLength(150)
+ 1180:                         .HasColumnType("nvarchar(150)");
+ 1181: 
+ 1182:                     b.Property<string>("IPAddress")
+ 1183:                         .HasMaxLength(100)
+ 1184:                         .HasColumnType("nvarchar(100)");
+ 1185: 
+ 1186:                     b.Property<string>("NewValues")
+ 1187:                         .HasColumnType("nvarchar(max)");
+ 1188: 
+ 1189:                     b.Property<string>("OldValues")
+ 1190:                         .HasColumnType("nvarchar(max)");
+ 1191: 
+ 1192:                     b.Property<string>("UserAgent")
+ 1193:                         .HasColumnType("nvarchar(max)");
+ 1194: 
+ 1195:                     b.Property<long?>("UserID")
+ 1196:                         .HasColumnType("bigint");
+ 1197: 
+ 1198:                     b.HasKey("AuditLogID");
+ 1199: 
+ 1200:                     b.HasIndex("CreatedDate");
+ 1201: 
+ 1202:                     b.HasIndex("UserID");
+ 1203: 
+ 1204:                     b.HasIndex("EntityName", "EntityID");
+ 1205: 
+ 1206:                     b.ToTable("AuditLogs", (string)null);
+ 1207:                 });
+ 1208: 
+ 1209:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.City", b =>
+ 1210:                 {
+ 1211:                     b.Property<int>("CityID")
+ 1212:                         .ValueGeneratedOnAdd()
+ 1213:                         .HasColumnType("int");
+ 1214: 
+ 1215:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CityID"));
+ 1216: 
+ 1217:                     b.Property<string>("CityName")
+ 1218:                         .IsRequired()
+ 1219:                         .HasMaxLength(150)
+ 1220:                         .HasColumnType("nvarchar(150)");
+ 1221: 
+ 1222:                     b.Property<string>("CityNameAr")
+ 1223:                         .HasMaxLength(150)
+ 1224:                         .HasColumnType("nvarchar(150)");
+ 1225: 
+ 1226:                     b.Property<int?>("CountryID")
+ 1227:                         .HasColumnType("int");
+ 1228: 
+ 1229:                     b.Property<bool>("IsActive")
+ 1230:                         .HasColumnType("bit");
+ 1231: 
+ 1232:                     b.Property<int?>("StateID")
+ 1233:                         .HasColumnType("int");
+ 1234: 
+ 1235:                     b.HasKey("CityID");
+ 1236: 
+ 1237:                     b.HasIndex("CountryID");
+ 1238: 
+ 1239:                     b.HasIndex("StateID", "CityName")
+ 1240:                         .IsUnique()
+ 1241:                         .HasFilter("[StateID] IS NOT NULL");
+ 1242: 
+ 1243:                     b.ToTable("Cities", (string)null);
+ 1244:                 });
+ 1245: 
+ 1246:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Country", b =>
+ 1247:                 {
+ 1248:                     b.Property<int>("CountryID")
+ 1249:                         .ValueGeneratedOnAdd()
+ 1250:                         .HasColumnType("int");
+ 1251: 
+ 1252:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CountryID"));
+ 1253: 
+ 1254:                     b.Property<string>("CountryCode")
+ 1255:                         .IsRequired()
+ 1256:                         .HasMaxLength(10)
+ 1257:                         .HasColumnType("nvarchar(10)");
+ 1258: 
+ 1259:                     b.Property<string>("CountryName")
+ 1260:                         .IsRequired()
+ 1261:                         .HasMaxLength(150)
+ 1262:                         .HasColumnType("nvarchar(150)");
+ 1263: 
+ 1264:                     b.Property<string>("CountryNameAr")
+ 1265:                         .HasMaxLength(150)
+ 1266:                         .HasColumnType("nvarchar(150)");
+ 1267: 
+ 1268:                     b.Property<bool>("IsActive")
+ 1269:                         .HasColumnType("bit");
+ 1270: 
+ 1271:                     b.HasKey("CountryID");
+ 1272: 
+ 1273:                     b.HasIndex("CountryCode")
+ 1274:                         .IsUnique();
+ 1275: 
+ 1276:                     b.HasIndex("CountryName")
+ 1277:                         .IsUnique();
+ 1278: 
+ 1279:                     b.ToTable("Countries", (string)null);
+ 1280:                 });
+ 1281: 
+ 1282:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Favorite", b =>
+ 1283:                 {
+ 1284:                     b.Property<long>("FavoriteID")
+ 1285:                         .ValueGeneratedOnAdd()
+ 1286:                         .HasColumnType("bigint");
+ 1287: 
+ 1288:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("FavoriteID"));
+ 1289: 
+ 1290:                     b.Property<long>("AdvertisementID")
+ 1291:                         .HasColumnType("bigint");
+ 1292: 
+ 1293:                     b.Property<DateTime>("CreatedDate")
+ 1294:                         .HasColumnType("datetime2");
+ 1295: 
+ 1296:                     b.Property<long>("UserID")
+ 1297:                         .HasColumnType("bigint");
+ 1298: 
+ 1299:                     b.HasKey("FavoriteID");
+ 1300: 
+ 1301:                     b.HasIndex("AdvertisementID");
+ 1302: 
+ 1303:                     b.HasIndex("UserID", "AdvertisementID")
+ 1304:                         .IsUnique();
+ 1305: 
+ 1306:                     b.ToTable("Favorites", (string)null);
+ 1307:                 });
+ 1308: 
+ 1309:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Location", b =>
+ 1310:                 {
+ 1311:                     b.Property<long>("LocationID")
+ 1312:                         .ValueGeneratedOnAdd()
+ 1313:                         .HasColumnType("bigint");
+ 1314: 
+ 1315:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("LocationID"));
+ 1316: 
+ 1317:                     b.Property<string>("AddressLine")
+ 1318:                         .HasColumnType("nvarchar(max)");
+ 1319: 
+ 1320:                     b.Property<DateTime>("CreatedDate")
+ 1321:                         .HasColumnType("datetime2");
+ 1322: 
+ 1323:                     b.Property<bool>("IsActive")
+ 1324:                         .HasColumnType("bit");
+ 1325: 
+ 1326:                     b.Property<decimal?>("Latitude")
+ 1327:                         .HasPrecision(10, 7)
+ 1328:                         .HasColumnType("decimal(10,7)");
+ 1329: 
+ 1330:                     b.Property<string>("LocationName")
+ 1331:                         .IsRequired()
+ 1332:                         .HasColumnType("nvarchar(max)");
+ 1333: 
+ 1334:                     b.Property<string>("LocationNameAr")
+ 1335:                         .HasColumnType("nvarchar(max)");
+ 1336: 
+ 1337:                     b.Property<decimal?>("Longitude")
+ 1338:                         .HasPrecision(10, 7)
+ 1339:                         .HasColumnType("decimal(10,7)");
+ 1340: 
+ 1341:                     b.HasKey("LocationID");
+ 1342: 
+ 1343:                     b.ToTable("Locations", (string)null);
+ 1344:                 });
+ 1345: 
+ 1346:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.LoginHistory", b =>
+ 1347:                 {
+ 1348:                     b.Property<long>("LoginHistoryID")
+ 1349:                         .ValueGeneratedOnAdd()
+ 1350:                         .HasColumnType("bigint");
+ 1351: 
+ 1352:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("LoginHistoryID"));
+ 1353: 
+ 1354:                     b.Property<string>("FailureReason")
+ 1355:                         .HasMaxLength(500)
+ 1356:                         .HasColumnType("nvarchar(500)");
+ 1357: 
+ 1358:                     b.Property<string>("IPAddress")
+ 1359:                         .HasMaxLength(100)
+ 1360:                         .HasColumnType("nvarchar(100)");
+ 1361: 
+ 1362:                     b.Property<bool>("IsSuccessful")
+ 1363:                         .HasColumnType("bit");
+ 1364: 
+ 1365:                     b.Property<DateTime>("LoginDate")
+ 1366:                         .HasColumnType("datetime2");
+ 1367: 
+ 1368:                     b.Property<string>("LoginIdentifier")
+ 1369:                         .IsRequired()
+ 1370:                         .HasMaxLength(255)
+ 1371:                         .HasColumnType("nvarchar(255)");
+ 1372: 
+ 1373:                     b.Property<string>("UserAgent")
+ 1374:                         .HasMaxLength(1000)
+ 1375:                         .HasColumnType("nvarchar(1000)");
+ 1376: 
+ 1377:                     b.Property<long?>("UserID")
+ 1378:                         .HasColumnType("bigint");
+ 1379: 
+ 1380:                     b.HasKey("LoginHistoryID");
+ 1381: 
+ 1382:                     b.HasIndex("LoginDate");
+ 1383: 
+ 1384:                     b.HasIndex("UserID");
+ 1385: 
+ 1386:                     b.ToTable("LoginHistories", (string)null);
+ 1387:                 });
+ 1388: 
+ 1389:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Message", b =>
+ 1390:                 {
+ 1391:                     b.Property<long>("MessageID")
+ 1392:                         .ValueGeneratedOnAdd()
+ 1393:                         .HasColumnType("bigint");
+ 1394: 
+ 1395:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("MessageID"));
+ 1396: 
+ 1397:                     b.Property<long?>("AdvertisementID")
+ 1398:                         .HasColumnType("bigint");
+ 1399: 
+ 1400:                     b.Property<DateTime>("CreatedDate")
+ 1401:                         .HasColumnType("datetime2");
+ 1402: 
+ 1403:                     b.Property<long?>("EnquiryID")
+ 1404:                         .HasColumnType("bigint");
+ 1405: 
+ 1406:                     b.Property<bool>("IsRead")
+ 1407:                         .ValueGeneratedOnAdd()
+ 1408:                         .HasColumnType("bit")
+ 1409:                         .HasDefaultValue(false);
+ 1410: 
+ 1411:                     b.Property<string>("MessageText")
+ 1412:                         .IsRequired()
+ 1413:                         .HasMaxLength(4000)
+ 1414:                         .HasColumnType("nvarchar(4000)");
+ 1415: 
+ 1416:                     b.Property<DateTime?>("ReadDate")
+ 1417:                         .HasColumnType("datetime2");
+ 1418: 
+ 1419:                     b.Property<long>("ReceiverUserID")
+ 1420:                         .HasColumnType("bigint");
+ 1421: 
+ 1422:                     b.Property<long>("SenderUserID")
+ 1423:                         .HasColumnType("bigint");
+ 1424: 
+ 1425:                     b.HasKey("MessageID");
+ 1426: 
+ 1427:                     b.HasIndex("AdvertisementID");
+ 1428: 
+ 1429:                     b.HasIndex("EnquiryID");
+ 1430: 
+ 1431:                     b.HasIndex("SenderUserID");
+ 1432: 
+ 1433:                     b.HasIndex("ReceiverUserID", "IsRead", "CreatedDate");
+ 1434: 
+ 1435:                     b.ToTable("Messages", (string)null);
+ 1436:                 });
+ 1437: 
+ 1438:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Notification", b =>
+ 1439:                 {
+ 1440:                     b.Property<long>("NotificationID")
+ 1441:                         .ValueGeneratedOnAdd()
+ 1442:                         .HasColumnType("bigint");
+ 1443: 
+ 1444:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("NotificationID"));
+ 1445: 
+ 1446:                     b.Property<DateTime>("CreatedDate")
+ 1447:                         .HasColumnType("datetime2");
+ 1448: 
+ 1449:                     b.Property<bool>("IsRead")
+ 1450:                         .ValueGeneratedOnAdd()
+ 1451:                         .HasColumnType("bit")
+ 1452:                         .HasDefaultValue(false);
+ 1453: 
+ 1454:                     b.Property<string>("Message")
+ 1455:                         .HasMaxLength(4000)
+ 1456:                         .HasColumnType("nvarchar(4000)");
+ 1457: 
+ 1458:                     b.Property<int?>("NotificationTemplateID")
+ 1459:                         .HasColumnType("int");
+ 1460: 
+ 1461:                     b.Property<string>("NotificationType")
+ 1462:                         .IsRequired()
+ 1463:                         .HasMaxLength(50)
+ 1464:                         .HasColumnType("nvarchar(50)");
+ 1465: 
+ 1466:                     b.Property<DateTime?>("ReadDate")
+ 1467:                         .HasColumnType("datetime2");
+ 1468: 
+ 1469:                     b.Property<long?>("ReferenceID")
+ 1470:                         .HasColumnType("bigint");
+ 1471: 
+ 1472:                     b.Property<string>("ReferenceType")
+ 1473:                         .HasMaxLength(100)
+ 1474:                         .HasColumnType("nvarchar(100)");
+ 1475: 
+ 1476:                     b.Property<string>("Title")
+ 1477:                         .IsRequired()
+ 1478:                         .HasMaxLength(250)
+ 1479:                         .HasColumnType("nvarchar(250)");
+ 1480: 
+ 1481:                     b.Property<long>("UserID")
+ 1482:                         .HasColumnType("bigint");
+ 1483: 
+ 1484:                     b.HasKey("NotificationID");
+ 1485: 
+ 1486:                     b.HasIndex("NotificationTemplateID");
+ 1487: 
+ 1488:                     b.HasIndex("UserID", "IsRead", "CreatedDate");
+ 1489: 
+ 1490:                     b.ToTable("Notifications", (string)null);
+ 1491:                 });
+ 1492: 
+ 1493:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.NotificationPreference", b =>
+ 1494:                 {
+ 1495:                     b.Property<long>("NotificationPreferenceID")
+ 1496:                         .ValueGeneratedOnAdd()
+ 1497:                         .HasColumnType("bigint");
+ 1498: 
+ 1499:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("NotificationPreferenceID"));
+ 1500: 
+ 1501:                     b.Property<bool>("AdvertisementUpdatesEnabled")
+ 1502:                         .ValueGeneratedOnAdd()
+ 1503:                         .HasColumnType("bit")
+ 1504:                         .HasDefaultValue(true);
+ 1505: 
+ 1506:                     b.Property<DateTime>("CreatedDate")
+ 1507:                         .HasColumnType("datetime2");
+ 1508: 
+ 1509:                     b.Property<bool>("EmailNotificationsEnabled")
+ 1510:                         .ValueGeneratedOnAdd()
+ 1511:                         .HasColumnType("bit")
+ 1512:                         .HasDefaultValue(true);
+ 1513: 
+ 1514:                     b.Property<bool>("FavoriteAdvertisementUpdatesEnabled")
+ 1515:                         .ValueGeneratedOnAdd()
+ 1516:                         .HasColumnType("bit")
+ 1517:                         .HasDefaultValue(true);
+ 1518: 
+ 1519:                     b.Property<DateTime?>("ModifiedDate")
+ 1520:                         .HasColumnType("datetime2");
+ 1521: 
+ 1522:                     b.Property<long>("UserID")
+ 1523:                         .HasColumnType("bigint");
+ 1524: 
+ 1525:                     b.HasKey("NotificationPreferenceID");
+ 1526: 
+ 1527:                     b.HasIndex("UserID")
+ 1528:                         .IsUnique();
+ 1529: 
+ 1530:                     b.ToTable("NotificationPreferences", (string)null);
+ 1531:                 });
+ 1532: 
+ 1533:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.NotificationTemplate", b =>
+ 1534:                 {
+ 1535:                     b.Property<int>("NotificationTemplateID")
+ 1536:                         .ValueGeneratedOnAdd()
+ 1537:                         .HasColumnType("int");
+ 1538: 
+ 1539:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationTemplateID"));
+ 1540: 
+ 1541:                     b.Property<string>("Body")
+ 1542:                         .HasColumnType("nvarchar(max)");
+ 1543: 
+ 1544:                     b.Property<string>("BodyAr")
+ 1545:                         .HasColumnType("nvarchar(max)");
+ 1546: 
+ 1547:                     b.Property<bool>("IsActive")
+ 1548:                         .HasColumnType("bit");
+ 1549: 
+ 1550:                     b.Property<bool>("IsEmailEnabled")
+ 1551:                         .HasColumnType("bit");
+ 1552: 
+ 1553:                     b.Property<bool>("IsPushEnabled")
+ 1554:                         .HasColumnType("bit");
+ 1555: 
+ 1556:                     b.Property<bool>("IsSmsEnabled")
+ 1557:                         .HasColumnType("bit");
+ 1558: 
+ 1559:                     b.Property<string>("Subject")
+ 1560:                         .HasColumnType("nvarchar(max)");
+ 1561: 
+ 1562:                     b.Property<string>("SubjectAr")
+ 1563:                         .HasColumnType("nvarchar(max)");
+ 1564: 
+ 1565:                     b.Property<string>("TemplateCode")
+ 1566:                         .IsRequired()
+ 1567:                         .HasMaxLength(100)
+ 1568:                         .HasColumnType("nvarchar(100)");
+ 1569: 
+ 1570:                     b.Property<string>("TemplateName")
+ 1571:                         .IsRequired()
+ 1572:                         .HasMaxLength(150)
+ 1573:                         .HasColumnType("nvarchar(150)");
+ 1574: 
+ 1575:                     b.HasKey("NotificationTemplateID");
+ 1576: 
+ 1577:                     b.HasIndex("TemplateCode")
+ 1578:                         .IsUnique();
+ 1579: 
+ 1580:                     b.ToTable("NotificationTemplates", (string)null);
+ 1581:                 });
+ 1582: 
+ 1583:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.OTPRequest", b =>
+ 1584:                 {
+ 1585:                     b.Property<long>("OTPRequestID")
+ 1586:                         .ValueGeneratedOnAdd()
+ 1587:                         .HasColumnType("bigint");
+ 1588: 
+ 1589:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("OTPRequestID"));
+ 1590: 
+ 1591:                     b.Property<int>("AttemptCount")
+ 1592:                         .HasColumnType("int");
+ 1593: 
+ 1594:                     b.Property<DateTime?>("ConsumedDate")
+ 1595:                         .HasColumnType("datetime2");
+ 1596: 
+ 1597:                     b.Property<DateTime>("CreatedDate")
+ 1598:                         .HasColumnType("datetime2");
+ 1599: 
+ 1600:                     b.Property<string>("Destination")
+ 1601:                         .IsRequired()
+ 1602:                         .HasMaxLength(255)
+ 1603:                         .HasColumnType("nvarchar(255)");
+ 1604: 
+ 1605:                     b.Property<DateTime>("ExpiresAt")
+ 1606:                         .HasColumnType("datetime2");
+ 1607: 
+ 1608:                     b.Property<bool>("IsConsumed")
+ 1609:                         .HasColumnType("bit");
+ 1610: 
+ 1611:                     b.Property<int>("MaxAttempts")
+ 1612:                         .HasColumnType("int");
+ 1613: 
+ 1614:                     b.Property<string>("OTPHash")
+ 1615:                         .IsRequired()
+ 1616:                         .HasMaxLength(500)
+ 1617:                         .HasColumnType("nvarchar(500)");
+ 1618: 
+ 1619:                     b.Property<string>("Purpose")
+ 1620:                         .IsRequired()
+ 1621:                         .HasMaxLength(50)
+ 1622:                         .HasColumnType("nvarchar(50)");
+ 1623: 
+ 1624:                     b.Property<long?>("UserID")
+ 1625:                         .HasColumnType("bigint");
+ 1626: 
+ 1627:                     b.HasKey("OTPRequestID");
+ 1628: 
+ 1629:                     b.HasIndex("UserID");
+ 1630: 
+ 1631:                     b.HasIndex("Destination", "Purpose", "CreatedDate");
+ 1632: 
+ 1633:                     b.ToTable("OTPRequests", (string)null);
+ 1634:                 });
+ 1635: 
+ 1636:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Permission", b =>
+ 1637:                 {
+ 1638:                     b.Property<int>("PermissionID")
+ 1639:                         .ValueGeneratedOnAdd()
+ 1640:                         .HasColumnType("int");
+ 1641: 
+ 1642:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PermissionID"));
+ 1643: 
+ 1644:                     b.Property<string>("Description")
+ 1645:                         .HasMaxLength(500)
+ 1646:                         .HasColumnType("nvarchar(500)");
+ 1647: 
+ 1648:                     b.Property<bool>("IsActive")
+ 1649:                         .HasColumnType("bit");
+ 1650: 
+ 1651:                     b.Property<string>("PermissionCode")
+ 1652:                         .IsRequired()
+ 1653:                         .HasMaxLength(100)
+ 1654:                         .HasColumnType("nvarchar(100)");
+ 1655: 
+ 1656:                     b.Property<string>("PermissionName")
+ 1657:                         .IsRequired()
+ 1658:                         .HasMaxLength(150)
+ 1659:                         .HasColumnType("nvarchar(150)");
+ 1660: 
+ 1661:                     b.HasKey("PermissionID");
+ 1662: 
+ 1663:                     b.HasIndex("PermissionCode")
+ 1664:                         .IsUnique();
+ 1665: 
+ 1666:                     b.ToTable("Permissions", (string)null);
+ 1667:                 });
+ 1668: 
+ 1669:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RefreshToken", b =>
+ 1670:                 {
+ 1671:                     b.Property<long>("RefreshTokenID")
+ 1672:                         .ValueGeneratedOnAdd()
+ 1673:                         .HasColumnType("bigint");
+ 1674: 
+ 1675:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RefreshTokenID"));
+ 1676: 
+ 1677:                     b.Property<string>("CreatedByIPAddress")
+ 1678:                         .HasMaxLength(100)
+ 1679:                         .HasColumnType("nvarchar(100)");
+ 1680: 
+ 1681:                     b.Property<DateTime>("CreatedDate")
+ 1682:                         .HasColumnType("datetime2");
+ 1683: 
+ 1684:                     b.Property<DateTime>("ExpiresAt")
+ 1685:                         .HasColumnType("datetime2");
+ 1686: 
+ 1687:                     b.Property<string>("ReplacedByTokenHash")
+ 1688:                         .HasMaxLength(500)
+ 1689:                         .HasColumnType("nvarchar(500)");
+ 1690: 
+ 1691:                     b.Property<DateTime?>("RevokedAt")
+ 1692:                         .HasColumnType("datetime2");
+ 1693: 
+ 1694:                     b.Property<string>("RevokedByIPAddress")
+ 1695:                         .HasMaxLength(100)
+ 1696:                         .HasColumnType("nvarchar(100)");
+ 1697: 
+ 1698:                     b.Property<string>("TokenHash")
+ 1699:                         .IsRequired()
+ 1700:                         .HasMaxLength(500)
+ 1701:                         .HasColumnType("nvarchar(500)");
+ 1702: 
+ 1703:                     b.Property<long>("UserID")
+ 1704:                         .HasColumnType("bigint");
+ 1705: 
+ 1706:                     b.HasKey("RefreshTokenID");
+ 1707: 
+ 1708:                     b.HasIndex("TokenHash")
+ 1709:                         .IsUnique();
+ 1710: 
+ 1711:                     b.HasIndex("UserID", "ExpiresAt");
+ 1712: 
+ 1713:                     b.ToTable("RefreshTokens", (string)null);
+ 1714:                 });
+ 1715: 
+ 1716:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RejectionReason", b =>
+ 1717:                 {
+ 1718:                     b.Property<int>("RejectionReasonID")
+ 1719:                         .ValueGeneratedOnAdd()
+ 1720:                         .HasColumnType("int")
+ 1721:                         .HasColumnName("RejectionReasonID");
+ 1722: 
+ 1723:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RejectionReasonID"));
+ 1724: 
+ 1725:                     b.Property<int>("DisplayOrder")
+ 1726:                         .HasColumnType("int")
+ 1727:                         .HasColumnName("DisplayOrder");
+ 1728: 
+ 1729:                     b.Property<bool>("IsActive")
+ 1730:                         .HasColumnType("bit")
+ 1731:                         .HasColumnName("IsActive");
+ 1732: 
+ 1733:                     b.Property<string>("ReasonCode")
+ 1734:                         .IsRequired()
+ 1735:                         .HasColumnType("nvarchar(max)")
+ 1736:                         .HasColumnName("ReasonCode");
+ 1737: 
+ 1738:                     b.Property<string>("ReasonText")
+ 1739:                         .IsRequired()
+ 1740:                         .HasColumnType("nvarchar(max)")
+ 1741:                         .HasColumnName("ReasonText");
+ 1742: 
+ 1743:                     b.Property<string>("ReasonTextAr")
+ 1744:                         .HasColumnType("nvarchar(max)")
+ 1745:                         .HasColumnName("ReasonTextAr");
+ 1746: 
+ 1747:                     b.HasKey("RejectionReasonID");
+ 1748: 
+ 1749:                     b.ToTable("RejectionReasons", (string)null);
+ 1750:                 });
+ 1751: 
+ 1752:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Report", b =>
+ 1753:                 {
+ 1754:                     b.Property<long>("ReportID")
+ 1755:                         .ValueGeneratedOnAdd()
+ 1756:                         .HasColumnType("bigint");
+ 1757: 
+ 1758:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ReportID"));
+ 1759: 
+ 1760:                     b.Property<long>("AdvertisementID")
+ 1761:                         .HasColumnType("bigint");
+ 1762: 
+ 1763:                     b.Property<string>("Comments")
+ 1764:                         .HasMaxLength(2000)
+ 1765:                         .HasColumnType("nvarchar(2000)");
+ 1766: 
+ 1767:                     b.Property<DateTime>("CreatedDate")
+ 1768:                         .HasColumnType("datetime2");
+ 1769: 
+ 1770:                     b.Property<int>("ReportReasonID")
+ 1771:                         .HasColumnType("int");
+ 1772: 
+ 1773:                     b.Property<long>("ReportedByUserID")
+ 1774:                         .HasColumnType("bigint");
+ 1775: 
+ 1776:                     b.Property<long?>("ReviewedByUserID")
+ 1777:                         .HasColumnType("bigint");
+ 1778: 
+ 1779:                     b.Property<DateTime?>("ReviewedDate")
+ 1780:                         .HasColumnType("datetime2");
+ 1781: 
+ 1782:                     b.Property<string>("Status")
+ 1783:                         .IsRequired()
+ 1784:                         .HasMaxLength(30)
+ 1785:                         .HasColumnType("nvarchar(30)");
+ 1786: 
+ 1787:                     b.HasKey("ReportID");
+ 1788: 
+ 1789:                     b.HasIndex("AdvertisementID");
+ 1790: 
+ 1791:                     b.HasIndex("ReportReasonID");
+ 1792: 
+ 1793:                     b.HasIndex("ReportedByUserID");
+ 1794: 
+ 1795:                     b.HasIndex("ReviewedByUserID");
+ 1796: 
+ 1797:                     b.HasIndex("Status", "CreatedDate");
+ 1798: 
+ 1799:                     b.ToTable("Reports", (string)null);
+ 1800:                 });
+ 1801: 
+ 1802:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ReportReason", b =>
+ 1803:                 {
+ 1804:                     b.Property<int>("ReportReasonID")
+ 1805:                         .ValueGeneratedOnAdd()
+ 1806:                         .HasColumnType("int");
+ 1807: 
+ 1808:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReportReasonID"));
+ 1809: 
+ 1810:                     b.Property<int>("DisplayOrder")
+ 1811:                         .HasColumnType("int");
+ 1812: 
+ 1813:                     b.Property<bool>("IsActive")
+ 1814:                         .HasColumnType("bit");
+ 1815: 
+ 1816:                     b.Property<string>("ReasonCode")
+ 1817:                         .IsRequired()
+ 1818:                         .HasMaxLength(50)
+ 1819:                         .HasColumnType("nvarchar(50)");
+ 1820: 
+ 1821:                     b.Property<string>("ReasonText")
+ 1822:                         .IsRequired()
+ 1823:                         .HasMaxLength(300)
+ 1824:                         .HasColumnType("nvarchar(300)");
+ 1825: 
+ 1826:                     b.Property<string>("ReasonTextAr")
+ 1827:                         .HasMaxLength(300)
+ 1828:                         .HasColumnType("nvarchar(300)");
+ 1829: 
+ 1830:                     b.HasKey("ReportReasonID");
+ 1831: 
+ 1832:                     b.HasIndex("ReasonCode")
+ 1833:                         .IsUnique();
+ 1834: 
+ 1835:                     b.ToTable("ReportReasons", (string)null);
+ 1836:                 });
+ 1837: 
+ 1838:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Role", b =>
+ 1839:                 {
+ 1840:                     b.Property<int>("RoleID")
+ 1841:                         .ValueGeneratedOnAdd()
+ 1842:                         .HasColumnType("int");
+ 1843: 
+ 1844:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleID"));
+ 1845: 
+ 1846:                     b.Property<DateTime>("CreatedDate")
+ 1847:                         .HasColumnType("datetime2");
+ 1848: 
+ 1849:                     b.Property<bool>("IsActive")
+ 1850:                         .HasColumnType("bit");
+ 1851: 
+ 1852:                     b.Property<string>("RoleDescription")
+ 1853:                         .HasMaxLength(500)
+ 1854:                         .HasColumnType("nvarchar(500)");
+ 1855: 
+ 1856:                     b.Property<string>("RoleName")
+ 1857:                         .IsRequired()
+ 1858:                         .HasMaxLength(50)
+ 1859:                         .HasColumnType("nvarchar(50)");
+ 1860: 
+ 1861:                     b.HasKey("RoleID");
+ 1862: 
+ 1863:                     b.HasIndex("RoleName")
+ 1864:                         .IsUnique();
+ 1865: 
+ 1866:                     b.ToTable("Roles", (string)null);
+ 1867:                 });
+ 1868: 
+ 1869:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RolePermission", b =>
+ 1870:                 {
+ 1871:                     b.Property<long>("RolePermissionID")
+ 1872:                         .ValueGeneratedOnAdd()
+ 1873:                         .HasColumnType("bigint");
+ 1874: 
+ 1875:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("RolePermissionID"));
+ 1876: 
+ 1877:                     b.Property<DateTime>("CreatedDate")
+ 1878:                         .HasColumnType("datetime2");
+ 1879: 
+ 1880:                     b.Property<int>("PermissionID")
+ 1881:                         .HasColumnType("int");
+ 1882: 
+ 1883:                     b.Property<int>("RoleID")
+ 1884:                         .HasColumnType("int");
+ 1885: 
+ 1886:                     b.HasKey("RolePermissionID");
+ 1887: 
+ 1888:                     b.HasIndex("PermissionID");
+ 1889: 
+ 1890:                     b.HasIndex("RoleID", "PermissionID")
+ 1891:                         .IsUnique();
+ 1892: 
+ 1893:                     b.ToTable("RolePermissions", (string)null);
+ 1894:                 });
+ 1895: 
+ 1896:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.SavedSearch", b =>
+ 1897:                 {
+ 1898:                     b.Property<long>("SavedSearchID")
+ 1899:                         .ValueGeneratedOnAdd()
+ 1900:                         .HasColumnType("bigint");
+ 1901: 
+ 1902:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SavedSearchID"));
+ 1903: 
+ 1904:                     b.Property<long?>("AdvertisementID")
+ 1905:                         .HasColumnType("bigint");
+ 1906: 
+ 1907:                     b.Property<DateTime>("CreatedDate")
+ 1908:                         .HasColumnType("datetime2");
+ 1909: 
+ 1910:                     b.Property<bool>("EnableNotifications")
+ 1911:                         .HasColumnType("bit");
+ 1912: 
+ 1913:                     b.Property<DateTime?>("ModifiedDate")
+ 1914:                         .HasColumnType("datetime2");
+ 1915: 
+ 1916:                     b.Property<string>("SearchCriteriaJson")
+ 1917:                         .HasColumnType("nvarchar(max)");
+ 1918: 
+ 1919:                     b.Property<string>("SearchName")
+ 1920:                         .IsRequired()
+ 1921:                         .HasMaxLength(150)
+ 1922:                         .HasColumnType("nvarchar(150)");
+ 1923: 
+ 1924:                     b.Property<long>("UserID")
+ 1925:                         .HasColumnType("bigint");
+ 1926: 
+ 1927:                     b.HasKey("SavedSearchID");
+ 1928: 
+ 1929:                     b.HasIndex("AdvertisementID");
+ 1930: 
+ 1931:                     b.HasIndex("UserID");
+ 1932: 
+ 1933:                     b.ToTable("SavedSearches", (string)null);
+ 1934:                 });
+ 1935: 
+ 1936:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.State", b =>
+ 1937:                 {
+ 1938:                     b.Property<int>("StateID")
+ 1939:                         .ValueGeneratedOnAdd()
+ 1940:                         .HasColumnType("int");
+ 1941: 
+ 1942:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StateID"));
+ 1943: 
+ 1944:                     b.Property<int>("CountryID")
+ 1945:                         .HasColumnType("int");
+ 1946: 
+ 1947:                     b.Property<bool>("IsActive")
+ 1948:                         .HasColumnType("bit");
+ 1949: 
+ 1950:                     b.Property<string>("StateName")
+ 1951:                         .IsRequired()
+ 1952:                         .HasMaxLength(150)
+ 1953:                         .HasColumnType("nvarchar(150)");
+ 1954: 
+ 1955:                     b.Property<string>("StateNameAr")
+ 1956:                         .HasMaxLength(150)
+ 1957:                         .HasColumnType("nvarchar(150)");
+ 1958: 
+ 1959:                     b.HasKey("StateID");
+ 1960: 
+ 1961:                     b.HasIndex("CountryID", "StateName")
+ 1962:                         .IsUnique();
+ 1963: 
+ 1964:                     b.ToTable("States", (string)null);
+ 1965:                 });
+ 1966: 
+ 1967:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.SystemSetting", b =>
+ 1968:                 {
+ 1969:                     b.Property<int>("SystemSettingID")
+ 1970:                         .ValueGeneratedOnAdd()
+ 1971:                         .HasColumnType("int");
+ 1972: 
+ 1973:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SystemSettingID"));
+ 1974: 
+ 1975:                     b.Property<DateTime>("CreatedDate")
+ 1976:                         .HasColumnType("datetime2");
+ 1977: 
+ 1978:                     b.Property<string>("Description")
+ 1979:                         .HasMaxLength(500)
+ 1980:                         .HasColumnType("nvarchar(500)");
+ 1981: 
+ 1982:                     b.Property<bool>("IsActive")
+ 1983:                         .HasColumnType("bit");
+ 1984: 
+ 1985:                     b.Property<bool>("IsEncrypted")
+ 1986:                         .HasColumnType("bit");
+ 1987: 
+ 1988:                     b.Property<DateTime?>("ModifiedDate")
+ 1989:                         .HasColumnType("datetime2");
+ 1990: 
+ 1991:                     b.Property<string>("SettingKey")
+ 1992:                         .IsRequired()
+ 1993:                         .HasMaxLength(150)
+ 1994:                         .HasColumnType("nvarchar(150)");
+ 1995: 
+ 1996:                     b.Property<string>("SettingValue")
+ 1997:                         .HasMaxLength(4000)
+ 1998:                         .HasColumnType("nvarchar(4000)");
+ 1999: 
+ 2000:                     b.HasKey("SystemSettingID");
+ 2001: 
+ 2002:                     b.HasIndex("SettingKey")
+ 2003:                         .IsUnique();
+ 2004: 
+ 2005:                     b.ToTable("SystemSettings", (string)null);
+ 2006:                 });
+ 2007: 
+ 2008:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.User", b =>
+ 2009:                 {
+ 2010:                     b.Property<long>("UserID")
+ 2011:                         .ValueGeneratedOnAdd()
+ 2012:                         .HasColumnType("bigint");
+ 2013: 
+ 2014:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserID"));
+ 2015: 
+ 2016:                     b.Property<string>("AccountStatus")
+ 2017:                         .IsRequired()
+ 2018:                         .HasMaxLength(30)
+ 2019:                         .HasColumnType("nvarchar(30)");
+ 2020: 
+ 2021:                     b.Property<long?>("CreatedBy")
+ 2022:                         .HasColumnType("bigint");
+ 2023: 
+ 2024:                     b.Property<DateTime>("CreatedDate")
+ 2025:                         .HasColumnType("datetime2");
+ 2026: 
+ 2027:                     b.Property<string>("Email")
+ 2028:                         .IsRequired()
+ 2029:                         .HasMaxLength(255)
+ 2030:                         .HasColumnType("nvarchar(255)");
+ 2031: 
+ 2032:                     b.Property<int>("FailedLoginAttempts")
+ 2033:                         .HasColumnType("int");
+ 2034: 
+ 2035:                     b.Property<bool>("IsEmailVerified")
+ 2036:                         .HasColumnType("bit");
+ 2037: 
+ 2038:                     b.Property<bool>("IsMFAEnabled")
+ 2039:                         .HasColumnType("bit");
+ 2040: 
+ 2041:                     b.Property<bool>("IsMobileVerified")
+ 2042:                         .HasColumnType("bit");
+ 2043: 
+ 2044:                     b.Property<DateTime?>("LastLoginDate")
+ 2045:                         .HasColumnType("datetime2");
+ 2046: 
+ 2047:                     b.Property<DateTime?>("LockoutEndDate")
+ 2048:                         .HasColumnType("datetime2");
+ 2049: 
+ 2050:                     b.Property<string>("MobileNo")
+ 2051:                         .HasMaxLength(30)
+ 2052:                         .HasColumnType("nvarchar(30)");
+ 2053: 
+ 2054:                     b.Property<long?>("ModifiedBy")
+ 2055:                         .HasColumnType("bigint");
+ 2056: 
+ 2057:                     b.Property<DateTime?>("ModifiedDate")
+ 2058:                         .HasColumnType("datetime2");
+ 2059: 
+ 2060:                     b.Property<string>("PasswordHash")
+ 2061:                         .IsRequired()
+ 2062:                         .HasMaxLength(500)
+ 2063:                         .HasColumnType("nvarchar(500)");
+ 2064: 
+ 2065:                     b.Property<string>("UserName")
+ 2066:                         .IsRequired()
+ 2067:                         .HasMaxLength(100)
+ 2068:                         .HasColumnType("nvarchar(100)");
+ 2069: 
+ 2070:                     b.HasKey("UserID");
+ 2071: 
+ 2072:                     b.HasIndex("Email")
+ 2073:                         .IsUnique();
+ 2074: 
+ 2075:                     b.HasIndex("MobileNo")
+ 2076:                         .IsUnique()
+ 2077:                         .HasFilter("[MobileNo] IS NOT NULL");
+ 2078: 
+ 2079:                     b.HasIndex("UserName")
+ 2080:                         .IsUnique();
+ 2081: 
+ 2082:                     b.ToTable("Users", (string)null);
+ 2083:                 });
+ 2084: 
+ 2085:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserAddress", b =>
+ 2086:                 {
+ 2087:                     b.Property<long>("UserAddressID")
+ 2088:                         .ValueGeneratedOnAdd()
+ 2089:                         .HasColumnType("bigint");
+ 2090: 
+ 2091:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserAddressID"));
+ 2092: 
+ 2093:                     b.Property<string>("AddressLine1")
+ 2094:                         .HasMaxLength(300)
+ 2095:                         .HasColumnType("nvarchar(300)");
+ 2096: 
+ 2097:                     b.Property<string>("AddressLine2")
+ 2098:                         .HasMaxLength(300)
+ 2099:                         .HasColumnType("nvarchar(300)");
+ 2100: 
+ 2101:                     b.Property<int?>("AreaID")
+ 2102:                         .HasColumnType("int");
+ 2103: 
+ 2104:                     b.Property<string>("BlockNo")
+ 2105:                         .HasMaxLength(50)
+ 2106:                         .HasColumnType("nvarchar(50)");
+ 2107: 
+ 2108:                     b.Property<string>("BuildingNo")
+ 2109:                         .HasMaxLength(50)
+ 2110:                         .HasColumnType("nvarchar(50)");
+ 2111: 
+ 2112:                     b.Property<int?>("CityID")
+ 2113:                         .HasColumnType("int");
+ 2114: 
+ 2115:                     b.Property<int?>("CountryID")
+ 2116:                         .HasColumnType("int");
+ 2117: 
+ 2118:                     b.Property<DateTime>("CreatedDate")
+ 2119:                         .HasColumnType("datetime2");
+ 2120: 
+ 2121:                     b.Property<bool>("IsPrimary")
+ 2122:                         .HasColumnType("bit");
+ 2123: 
+ 2124:                     b.Property<DateTime?>("ModifiedDate")
+ 2125:                         .HasColumnType("datetime2");
+ 2126: 
+ 2127:                     b.Property<string>("PostalCode")
+ 2128:                         .HasMaxLength(30)
+ 2129:                         .HasColumnType("nvarchar(30)");
+ 2130: 
+ 2131:                     b.Property<string>("RoadNo")
+ 2132:                         .HasMaxLength(50)
+ 2133:                         .HasColumnType("nvarchar(50)");
+ 2134: 
+ 2135:                     b.Property<int?>("StateID")
+ 2136:                         .HasColumnType("int");
+ 2137: 
+ 2138:                     b.Property<long>("UserID")
+ 2139:                         .HasColumnType("bigint");
+ 2140: 
+ 2141:                     b.HasKey("UserAddressID");
+ 2142: 
+ 2143:                     b.HasIndex("AreaID");
+ 2144: 
+ 2145:                     b.HasIndex("CityID");
+ 2146: 
+ 2147:                     b.HasIndex("CountryID");
+ 2148: 
+ 2149:                     b.HasIndex("StateID");
+ 2150: 
+ 2151:                     b.HasIndex("UserID");
+ 2152: 
+ 2153:                     b.ToTable("UserAddresses", (string)null);
+ 2154:                 });
+ 2155: 
+ 2156:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserProfile", b =>
+ 2157:                 {
+ 2158:                     b.Property<long>("UserProfileID")
+ 2159:                         .ValueGeneratedOnAdd()
+ 2160:                         .HasColumnType("bigint");
+ 2161: 
+ 2162:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserProfileID"));
+ 2163: 
+ 2164:                     b.Property<string>("CompanyName")
+ 2165:                         .HasMaxLength(250)
+ 2166:                         .HasColumnType("nvarchar(250)");
+ 2167: 
+ 2168:                     b.Property<DateTime>("CreatedDate")
+ 2169:                         .HasColumnType("datetime2");
+ 2170: 
+ 2171:                     b.Property<string>("FirstName")
+ 2172:                         .IsRequired()
+ 2173:                         .HasMaxLength(100)
+ 2174:                         .HasColumnType("nvarchar(100)");
+ 2175: 
+ 2176:                     b.Property<bool>("IsBusinessAccount")
+ 2177:                         .HasColumnType("bit");
+ 2178: 
+ 2179:                     b.Property<string>("LastName")
+ 2180:                         .HasMaxLength(100)
+ 2181:                         .HasColumnType("nvarchar(100)");
+ 2182: 
+ 2183:                     b.Property<DateTime?>("ModifiedDate")
+ 2184:                         .HasColumnType("datetime2");
+ 2185: 
+ 2186:                     b.Property<string>("Nationality")
+ 2187:                         .HasMaxLength(100)
+ 2188:                         .HasColumnType("nvarchar(100)");
+ 2189: 
+ 2190:                     b.Property<string>("PreferredLanguage")
+ 2191:                         .IsRequired()
+ 2192:                         .ValueGeneratedOnAdd()
+ 2193:                         .HasMaxLength(10)
+ 2194:                         .HasColumnType("nvarchar(10)")
+ 2195:                         .HasDefaultValue("en");
+ 2196: 
+ 2197:                     b.Property<string>("ProfilePhotoURL")
+ 2198:                         .HasMaxLength(1000)
+ 2199:                         .HasColumnType("nvarchar(1000)");
+ 2200: 
+ 2201:                     b.Property<long>("UserID")
+ 2202:                         .HasColumnType("bigint");
+ 2203: 
+ 2204:                     b.HasKey("UserProfileID");
+ 2205: 
+ 2206:                     b.HasIndex("UserID")
+ 2207:                         .IsUnique();
+ 2208: 
+ 2209:                     b.ToTable("UserProfiles", (string)null);
+ 2210:                 });
+ 2211: 
+ 2212:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserRole", b =>
+ 2213:                 {
+ 2214:                     b.Property<long>("UserRoleID")
+ 2215:                         .ValueGeneratedOnAdd()
+ 2216:                         .HasColumnType("bigint");
+ 2217: 
+ 2218:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserRoleID"));
+ 2219: 
+ 2220:                     b.Property<DateTime>("CreatedDate")
+ 2221:                         .HasColumnType("datetime2");
+ 2222: 
+ 2223:                     b.Property<int>("RoleID")
+ 2224:                         .HasColumnType("int");
+ 2225: 
+ 2226:                     b.Property<long>("UserID")
+ 2227:                         .HasColumnType("bigint");
+ 2228: 
+ 2229:                     b.HasKey("UserRoleID");
+ 2230: 
+ 2231:                     b.HasIndex("RoleID");
+ 2232: 
+ 2233:                     b.HasIndex("UserID", "RoleID")
+ 2234:                         .IsUnique();
+ 2235: 
+ 2236:                     b.ToTable("UserRoles", (string)null);
+ 2237:                 });
+ 2238: 
+ 2239:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserSession", b =>
+ 2240:                 {
+ 2241:                     b.Property<long>("UserSessionID")
+ 2242:                         .ValueGeneratedOnAdd()
+ 2243:                         .HasColumnType("bigint");
+ 2244: 
+ 2245:                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserSessionID"));
+ 2246: 
+ 2247:                     b.Property<DateTime>("CreatedDate")
+ 2248:                         .HasColumnType("datetime2");
+ 2249: 
+ 2250:                     b.Property<string>("DeviceName")
+ 2251:                         .HasMaxLength(200)
+ 2252:                         .HasColumnType("nvarchar(200)");
+ 2253: 
+ 2254:                     b.Property<string>("DeviceType")
+ 2255:                         .HasMaxLength(50)
+ 2256:                         .HasColumnType("nvarchar(50)");
+ 2257: 
+ 2258:                     b.Property<DateTime?>("ExpiresAt")
+ 2259:                         .HasColumnType("datetime2");
+ 2260: 
+ 2261:                     b.Property<string>("IPAddress")
+ 2262:                         .HasMaxLength(100)
+ 2263:                         .HasColumnType("nvarchar(100)");
+ 2264: 
+ 2265:                     b.Property<DateTime>("LastActivityDate")
+ 2266:                         .HasColumnType("datetime2");
+ 2267: 
+ 2268:                     b.Property<DateTime?>("RevokedDate")
+ 2269:                         .HasColumnType("datetime2");
+ 2270: 
+ 2271:                     b.Property<string>("SessionTokenHash")
+ 2272:                         .IsRequired()
+ 2273:                         .HasMaxLength(500)
+ 2274:                         .HasColumnType("nvarchar(500)");
+ 2275: 
+ 2276:                     b.Property<long>("UserID")
+ 2277:                         .HasColumnType("bigint");
+ 2278: 
+ 2279:                     b.HasKey("UserSessionID");
+ 2280: 
+ 2281:                     b.HasIndex("SessionTokenHash")
+ 2282:                         .IsUnique();
+ 2283: 
+ 2284:                     b.HasIndex("UserID");
+ 2285: 
+ 2286:                     b.ToTable("UserSessions", (string)null);
+ 2287:                 });
+ 2288: 
+ 2289:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackagePurchaseRequest", b =>
+ 2290:                 {
+ 2291:                     b.HasOne("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", "EnquiryPackage")
+ 2292:                         .WithMany()
+ 2293:                         .HasForeignKey("EnquiryPackageID")
+ 2294:                         .OnDelete(DeleteBehavior.Restrict)
+ 2295:                         .IsRequired();
+ 2296: 
+ 2297:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2298:                         .WithMany()
+ 2299:                         .HasForeignKey("UserID")
+ 2300:                         .OnDelete(DeleteBehavior.Restrict)
+ 2301:                         .IsRequired();
+ 2302: 
+ 2303:                     b.Navigation("EnquiryPackage");
+ 2304: 
+ 2305:                     b.Navigation("User");
+ 2306:                 });
+ 2307: 
+ 2308:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+ 2309:                 {
+ 2310:                     b.HasOne("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", "UserPackageEntitlement")
+ 2311:                         .WithMany("Payments")
+ 2312:                         .HasForeignKey("UserPackageEntitlementID")
+ 2313:                         .OnDelete(DeleteBehavior.Restrict)
+ 2314:                         .IsRequired();
+ 2315: 
+ 2316:                     b.Navigation("UserPackageEntitlement");
+ 2317:                 });
+ 2318: 
+ 2319:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+ 2320:                 {
+ 2321:                     b.HasOne("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", "EnquiryPackage")
+ 2322:                         .WithMany("Entitlements")
+ 2323:                         .HasForeignKey("EnquiryPackageID")
+ 2324:                         .OnDelete(DeleteBehavior.Restrict)
+ 2325:                         .IsRequired();
+ 2326: 
+ 2327:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2328:                         .WithMany()
+ 2329:                         .HasForeignKey("UserID")
+ 2330:                         .OnDelete(DeleteBehavior.Restrict)
+ 2331:                         .IsRequired();
+ 2332: 
+ 2333:                     b.Navigation("EnquiryPackage");
+ 2334: 
+ 2335:                     b.Navigation("User");
+ 2336:                 });
+ 2337: 
+ 2338:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
+ 2339:                 {
+ 2340:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementType", "AdvertisementType")
+ 2341:                         .WithMany("Advertisements")
+ 2342:                         .HasForeignKey("AdvertisementTypeID")
+ 2343:                         .OnDelete(DeleteBehavior.Restrict)
+ 2344:                         .IsRequired();
+ 2345: 
+ 2346:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Area", "Area")
+ 2347:                         .WithMany("Advertisements")
+ 2348:                         .HasForeignKey("AreaID")
+ 2349:                         .OnDelete(DeleteBehavior.Restrict);
+ 2350: 
+ 2351:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", "Category")
+ 2352:                         .WithMany("Advertisements")
+ 2353:                         .HasForeignKey("CategoryID")
+ 2354:                         .OnDelete(DeleteBehavior.Restrict)
+ 2355:                         .IsRequired();
+ 2356: 
+ 2357:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.City", "City")
+ 2358:                         .WithMany("Advertisements")
+ 2359:                         .HasForeignKey("CityID")
+ 2360:                         .OnDelete(DeleteBehavior.Restrict);
+ 2361: 
+ 2362:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
+ 2363:                         .WithMany("Advertisements")
+ 2364:                         .HasForeignKey("CountryID")
+ 2365:                         .OnDelete(DeleteBehavior.Restrict);
+ 2366: 
+ 2367:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
+ 2368:                         .WithMany("Advertisements")
+ 2369:                         .HasForeignKey("StateID")
+ 2370:                         .OnDelete(DeleteBehavior.Restrict);
+ 2371: 
+ 2372:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementStatus", "Status")
+ 2373:                         .WithMany("Advertisements")
+ 2374:                         .HasForeignKey("StatusID")
+ 2375:                         .OnDelete(DeleteBehavior.Restrict)
+ 2376:                         .IsRequired();
+ 2377: 
+ 2378:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2379:                         .WithMany("Advertisements")
+ 2380:                         .HasForeignKey("UserID")
+ 2381:                         .OnDelete(DeleteBehavior.Restrict)
+ 2382:                         .IsRequired();
+ 2383: 
+ 2384:                     b.Navigation("AdvertisementType");
+ 2385: 
+ 2386:                     b.Navigation("Area");
+ 2387: 
+ 2388:                     b.Navigation("Category");
+ 2389: 
+ 2390:                     b.Navigation("City");
+ 2391: 
+ 2392:                     b.Navigation("Country");
+ 2393: 
+ 2394:                     b.Navigation("State");
+ 2395: 
+ 2396:                     b.Navigation("Status");
+ 2397: 
+ 2398:                     b.Navigation("User");
+ 2399:                 });
+ 2400: 
+ 2401:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementDocument", b =>
+ 2402:                 {
+ 2403:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2404:                         .WithMany("Documents")
+ 2405:                         .HasForeignKey("AdvertisementID")
+ 2406:                         .OnDelete(DeleteBehavior.Cascade)
+ 2407:                         .IsRequired();
+ 2408: 
+ 2409:                     b.Navigation("Advertisement");
+ 2410:                 });
+ 2411: 
+ 2412:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
+ 2413:                 {
+ 2414:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2415:                         .WithMany("Enquiries")
+ 2416:                         .HasForeignKey("AdvertisementID")
+ 2417:                         .OnDelete(DeleteBehavior.Cascade)
+ 2418:                         .IsRequired();
+ 2419: 
+ 2420:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "RecipientUser")
+ 2421:                         .WithMany()
+ 2422:                         .HasForeignKey("RecipientUserID")
+ 2423:                         .OnDelete(DeleteBehavior.Cascade)
+ 2424:                         .IsRequired();
+ 2425: 
+ 2426:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SenderUser")
+ 2427:                         .WithMany()
+ 2428:                         .HasForeignKey("SenderUserID")
+ 2429:                         .OnDelete(DeleteBehavior.Restrict)
+ 2430:                         .IsRequired();
+ 2431: 
+ 2432:                     b.Navigation("Advertisement");
+ 2433: 
+ 2434:                     b.Navigation("RecipientUser");
+ 2435: 
+ 2436:                     b.Navigation("SenderUser");
+ 2437:                 });
+ 2438: 
+ 2439:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiryMessage", b =>
+ 2440:                 {
+ 2441:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", "AdvertisementEnquiry")
+ 2442:                         .WithMany("Messages")
+ 2443:                         .HasForeignKey("AdvertisementEnquiryID")
+ 2444:                         .OnDelete(DeleteBehavior.Cascade)
+ 2445:                         .IsRequired();
+ 2446: 
+ 2447:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SenderUser")
+ 2448:                         .WithMany()
+ 2449:                         .HasForeignKey("SenderUserID")
+ 2450:                         .OnDelete(DeleteBehavior.Restrict)
+ 2451:                         .IsRequired();
+ 2452: 
+ 2453:                     b.Navigation("AdvertisementEnquiry");
+ 2454: 
+ 2455:                     b.Navigation("SenderUser");
+ 2456:                 });
+ 2457: 
+ 2458:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFavorite", b =>
+ 2459:                 {
+ 2460:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2461:                         .WithMany()
+ 2462:                         .HasForeignKey("AdvertisementID")
+ 2463:                         .OnDelete(DeleteBehavior.Cascade)
+ 2464:                         .IsRequired();
+ 2465: 
+ 2466:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2467:                         .WithMany()
+ 2468:                         .HasForeignKey("UserID")
+ 2469:                         .OnDelete(DeleteBehavior.Cascade)
+ 2470:                         .IsRequired();
+ 2471: 
+ 2472:                     b.Navigation("Advertisement");
+ 2473: 
+ 2474:                     b.Navigation("User");
+ 2475:                 });
+ 2476: 
+ 2477:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
+ 2478:                 {
+ 2479:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", "Category")
+ 2480:                         .WithMany()
+ 2481:                         .HasForeignKey("CategoryID")
+ 2482:                         .OnDelete(DeleteBehavior.Cascade)
+ 2483:                         .IsRequired();
+ 2484: 
+ 2485:                     b.Navigation("Category");
+ 2486:                 });
+ 2487: 
+ 2488:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureValue", b =>
+ 2489:                 {
+ 2490:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", "Feature")
+ 2491:                         .WithMany("Values")
+ 2492:                         .HasForeignKey("AdvertisementFeatureID")
+ 2493:                         .OnDelete(DeleteBehavior.Cascade)
+ 2494:                         .IsRequired();
+ 2495: 
+ 2496:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2497:                         .WithMany("FeatureValues")
+ 2498:                         .HasForeignKey("AdvertisementID")
+ 2499:                         .OnDelete(DeleteBehavior.Cascade)
+ 2500:                         .IsRequired();
+ 2501: 
+ 2502:                     b.Navigation("Advertisement");
+ 2503: 
+ 2504:                     b.Navigation("Feature");
+ 2505:                 });
+ 2506: 
+ 2507:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementImage", b =>
+ 2508:                 {
+ 2509:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2510:                         .WithMany("Images")
+ 2511:                         .HasForeignKey("AdvertisementID")
+ 2512:                         .OnDelete(DeleteBehavior.Cascade)
+ 2513:                         .IsRequired();
+ 2514: 
+ 2515:                     b.Navigation("Advertisement");
+ 2516:                 });
+ 2517: 
+ 2518:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementVideo", b =>
+ 2519:                 {
+ 2520:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2521:                         .WithMany("Videos")
+ 2522:                         .HasForeignKey("AdvertisementID")
+ 2523:                         .OnDelete(DeleteBehavior.Cascade)
+ 2524:                         .IsRequired();
+ 2525: 
+ 2526:                     b.Navigation("Advertisement");
+ 2527:                 });
+ 2528: 
+ 2529:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementView", b =>
+ 2530:                 {
+ 2531:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2532:                         .WithMany("Views")
+ 2533:                         .HasForeignKey("AdvertisementID")
+ 2534:                         .OnDelete(DeleteBehavior.Cascade)
+ 2535:                         .IsRequired();
+ 2536: 
+ 2537:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2538:                         .WithMany()
+ 2539:                         .HasForeignKey("UserID")
+ 2540:                         .OnDelete(DeleteBehavior.SetNull);
+ 2541: 
+ 2542:                     b.Navigation("Advertisement");
+ 2543: 
+ 2544:                     b.Navigation("User");
+ 2545:                 });
+ 2546: 
+ 2547:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalHistory", b =>
+ 2548:                 {
+ 2549:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "ActionedByUser")
+ 2550:                         .WithMany()
+ 2551:                         .HasForeignKey("ActionedByUserID")
+ 2552:                         .OnDelete(DeleteBehavior.Restrict)
+ 2553:                         .IsRequired();
+ 2554: 
+ 2555:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.ApprovalRequest", "ApprovalRequest")
+ 2556:                         .WithMany("ApprovalHistory")
+ 2557:                         .HasForeignKey("ApprovalRequestID")
+ 2558:                         .OnDelete(DeleteBehavior.Cascade)
+ 2559:                         .IsRequired();
+ 2560: 
+ 2561:                     b.Navigation("ActionedByUser");
+ 2562: 
+ 2563:                     b.Navigation("ApprovalRequest");
+ 2564:                 });
+ 2565: 
+ 2566:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalRequest", b =>
+ 2567:                 {
+ 2568:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2569:                         .WithMany("ApprovalRequests")
+ 2570:                         .HasForeignKey("AdvertisementID")
+ 2571:                         .OnDelete(DeleteBehavior.Cascade)
+ 2572:                         .IsRequired();
+ 2573: 
+ 2574:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "AssignedToUser")
+ 2575:                         .WithMany()
+ 2576:                         .HasForeignKey("AssignedToUserID")
+ 2577:                         .OnDelete(DeleteBehavior.SetNull);
+ 2578: 
+ 2579:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SubmittedByUser")
+ 2580:                         .WithMany()
+ 2581:                         .HasForeignKey("SubmittedByUserID")
+ 2582:                         .OnDelete(DeleteBehavior.Restrict)
+ 2583:                         .IsRequired();
+ 2584: 
+ 2585:                     b.Navigation("Advertisement");
+ 2586: 
+ 2587:                     b.Navigation("AssignedToUser");
+ 2588: 
+ 2589:                     b.Navigation("SubmittedByUser");
+ 2590:                 });
+ 2591: 
+ 2592:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Area", b =>
+ 2593:                 {
+ 2594:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.City", "City")
+ 2595:                         .WithMany("Areas")
+ 2596:                         .HasForeignKey("CityID")
+ 2597:                         .OnDelete(DeleteBehavior.Restrict)
+ 2598:                         .IsRequired();
+ 2599: 
+ 2600:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", null)
+ 2601:                         .WithMany("Areas")
+ 2602:                         .HasForeignKey("CountryID");
+ 2603: 
+ 2604:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.State", null)
+ 2605:                         .WithMany("Areas")
+ 2606:                         .HasForeignKey("StateID");
+ 2607: 
+ 2608:                     b.Navigation("City");
+ 2609:                 });
+ 2610: 
+ 2611:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AuditLog", b =>
+ 2612:                 {
+ 2613:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2614:                         .WithMany()
+ 2615:                         .HasForeignKey("UserID")
+ 2616:                         .OnDelete(DeleteBehavior.SetNull);
+ 2617: 
+ 2618:                     b.Navigation("User");
+ 2619:                 });
+ 2620: 
+ 2621:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.City", b =>
+ 2622:                 {
+ 2623:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", null)
+ 2624:                         .WithMany("Cities")
+ 2625:                         .HasForeignKey("CountryID");
+ 2626: 
+ 2627:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
+ 2628:                         .WithMany("Cities")
+ 2629:                         .HasForeignKey("StateID")
+ 2630:                         .OnDelete(DeleteBehavior.Restrict);
+ 2631: 
+ 2632:                     b.Navigation("State");
+ 2633:                 });
+ 2634: 
+ 2635:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Favorite", b =>
+ 2636:                 {
+ 2637:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2638:                         .WithMany("Favorites")
+ 2639:                         .HasForeignKey("AdvertisementID")
+ 2640:                         .OnDelete(DeleteBehavior.Cascade)
+ 2641:                         .IsRequired();
+ 2642: 
+ 2643:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2644:                         .WithMany()
+ 2645:                         .HasForeignKey("UserID")
+ 2646:                         .OnDelete(DeleteBehavior.Cascade)
+ 2647:                         .IsRequired();
+ 2648: 
+ 2649:                     b.Navigation("Advertisement");
+ 2650: 
+ 2651:                     b.Navigation("User");
+ 2652:                 });
+ 2653: 
+ 2654:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.LoginHistory", b =>
+ 2655:                 {
+ 2656:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2657:                         .WithMany()
+ 2658:                         .HasForeignKey("UserID")
+ 2659:                         .OnDelete(DeleteBehavior.SetNull);
+ 2660: 
+ 2661:                     b.Navigation("User");
+ 2662:                 });
+ 2663: 
+ 2664:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Message", b =>
+ 2665:                 {
+ 2666:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2667:                         .WithMany("Messages")
+ 2668:                         .HasForeignKey("AdvertisementID")
+ 2669:                         .OnDelete(DeleteBehavior.NoAction);
+ 2670: 
+ 2671:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", "Enquiry")
+ 2672:                         .WithMany()
+ 2673:                         .HasForeignKey("EnquiryID")
+ 2674:                         .OnDelete(DeleteBehavior.NoAction);
+ 2675: 
+ 2676:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "ReceiverUser")
+ 2677:                         .WithMany()
+ 2678:                         .HasForeignKey("ReceiverUserID")
+ 2679:                         .OnDelete(DeleteBehavior.NoAction)
+ 2680:                         .IsRequired();
+ 2681: 
+ 2682:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "SenderUser")
+ 2683:                         .WithMany()
+ 2684:                         .HasForeignKey("SenderUserID")
+ 2685:                         .OnDelete(DeleteBehavior.NoAction)
+ 2686:                         .IsRequired();
+ 2687: 
+ 2688:                     b.Navigation("Advertisement");
+ 2689: 
+ 2690:                     b.Navigation("Enquiry");
+ 2691: 
+ 2692:                     b.Navigation("ReceiverUser");
+ 2693: 
+ 2694:                     b.Navigation("SenderUser");
+ 2695:                 });
+ 2696: 
+ 2697:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Notification", b =>
+ 2698:                 {
+ 2699:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.NotificationTemplate", "NotificationTemplate")
+ 2700:                         .WithMany()
+ 2701:                         .HasForeignKey("NotificationTemplateID")
+ 2702:                         .OnDelete(DeleteBehavior.SetNull);
+ 2703: 
+ 2704:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2705:                         .WithMany()
+ 2706:                         .HasForeignKey("UserID")
+ 2707:                         .OnDelete(DeleteBehavior.Cascade)
+ 2708:                         .IsRequired();
+ 2709: 
+ 2710:                     b.Navigation("NotificationTemplate");
+ 2711: 
+ 2712:                     b.Navigation("User");
+ 2713:                 });
+ 2714: 
+ 2715:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.NotificationPreference", b =>
+ 2716:                 {
+ 2717:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2718:                         .WithOne("NotificationPreference")
+ 2719:                         .HasForeignKey("HRInfoAdvertisements.Domain.Entities.NotificationPreference", "UserID")
+ 2720:                         .OnDelete(DeleteBehavior.Cascade)
+ 2721:                         .IsRequired();
+ 2722: 
+ 2723:                     b.Navigation("User");
+ 2724:                 });
+ 2725: 
+ 2726:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.OTPRequest", b =>
+ 2727:                 {
+ 2728:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2729:                         .WithMany()
+ 2730:                         .HasForeignKey("UserID")
+ 2731:                         .OnDelete(DeleteBehavior.SetNull);
+ 2732: 
+ 2733:                     b.Navigation("User");
+ 2734:                 });
+ 2735: 
+ 2736:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RefreshToken", b =>
+ 2737:                 {
+ 2738:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2739:                         .WithMany("RefreshTokens")
+ 2740:                         .HasForeignKey("UserID")
+ 2741:                         .OnDelete(DeleteBehavior.Cascade)
+ 2742:                         .IsRequired();
+ 2743: 
+ 2744:                     b.Navigation("User");
+ 2745:                 });
+ 2746: 
+ 2747:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Report", b =>
+ 2748:                 {
+ 2749:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
+ 2750:                         .WithMany("Reports")
+ 2751:                         .HasForeignKey("AdvertisementID")
+ 2752:                         .OnDelete(DeleteBehavior.Cascade)
+ 2753:                         .IsRequired();
+ 2754: 
+ 2755:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.ReportReason", "ReportReason")
+ 2756:                         .WithMany("Reports")
+ 2757:                         .HasForeignKey("ReportReasonID")
+ 2758:                         .OnDelete(DeleteBehavior.Restrict)
+ 2759:                         .IsRequired();
+ 2760: 
+ 2761:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "ReportedByUser")
+ 2762:                         .WithMany()
+ 2763:                         .HasForeignKey("ReportedByUserID")
+ 2764:                         .OnDelete(DeleteBehavior.Restrict)
+ 2765:                         .IsRequired();
+ 2766: 
+ 2767:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "ReviewedByUser")
+ 2768:                         .WithMany()
+ 2769:                         .HasForeignKey("ReviewedByUserID")
+ 2770:                         .OnDelete(DeleteBehavior.SetNull);
+ 2771: 
+ 2772:                     b.Navigation("Advertisement");
+ 2773: 
+ 2774:                     b.Navigation("ReportReason");
+ 2775: 
+ 2776:                     b.Navigation("ReportedByUser");
+ 2777: 
+ 2778:                     b.Navigation("ReviewedByUser");
+ 2779:                 });
+ 2780: 
+ 2781:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.RolePermission", b =>
+ 2782:                 {
+ 2783:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Permission", "Permission")
+ 2784:                         .WithMany("RolePermissions")
+ 2785:                         .HasForeignKey("PermissionID")
+ 2786:                         .OnDelete(DeleteBehavior.Restrict)
+ 2787:                         .IsRequired();
+ 2788: 
+ 2789:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Role", "Role")
+ 2790:                         .WithMany("RolePermissions")
+ 2791:                         .HasForeignKey("RoleID")
+ 2792:                         .OnDelete(DeleteBehavior.Cascade)
+ 2793:                         .IsRequired();
+ 2794: 
+ 2795:                     b.Navigation("Permission");
+ 2796: 
+ 2797:                     b.Navigation("Role");
+ 2798:                 });
+ 2799: 
+ 2800:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.SavedSearch", b =>
+ 2801:                 {
+ 2802:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", null)
+ 2803:                         .WithMany("SavedSearches")
+ 2804:                         .HasForeignKey("AdvertisementID");
+ 2805: 
+ 2806:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2807:                         .WithMany()
+ 2808:                         .HasForeignKey("UserID")
+ 2809:                         .OnDelete(DeleteBehavior.Cascade)
+ 2810:                         .IsRequired();
+ 2811: 
+ 2812:                     b.Navigation("User");
+ 2813:                 });
+ 2814: 
+ 2815:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.State", b =>
+ 2816:                 {
+ 2817:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
+ 2818:                         .WithMany("States")
+ 2819:                         .HasForeignKey("CountryID")
+ 2820:                         .OnDelete(DeleteBehavior.Restrict)
+ 2821:                         .IsRequired();
+ 2822: 
+ 2823:                     b.Navigation("Country");
+ 2824:                 });
+ 2825: 
+ 2826:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserAddress", b =>
+ 2827:                 {
+ 2828:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Area", "Area")
+ 2829:                         .WithMany()
+ 2830:                         .HasForeignKey("AreaID")
+ 2831:                         .OnDelete(DeleteBehavior.Restrict);
+ 2832: 
+ 2833:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.City", "City")
+ 2834:                         .WithMany()
+ 2835:                         .HasForeignKey("CityID")
+ 2836:                         .OnDelete(DeleteBehavior.Restrict);
+ 2837: 
+ 2838:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
+ 2839:                         .WithMany()
+ 2840:                         .HasForeignKey("CountryID")
+ 2841:                         .OnDelete(DeleteBehavior.Restrict);
+ 2842: 
+ 2843:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
+ 2844:                         .WithMany()
+ 2845:                         .HasForeignKey("StateID")
+ 2846:                         .OnDelete(DeleteBehavior.Restrict);
+ 2847: 
+ 2848:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2849:                         .WithMany("UserAddresses")
+ 2850:                         .HasForeignKey("UserID")
+ 2851:                         .OnDelete(DeleteBehavior.Cascade)
+ 2852:                         .IsRequired();
+ 2853: 
+ 2854:                     b.Navigation("Area");
+ 2855: 
+ 2856:                     b.Navigation("City");
+ 2857: 
+ 2858:                     b.Navigation("Country");
+ 2859: 
+ 2860:                     b.Navigation("State");
+ 2861: 
+ 2862:                     b.Navigation("User");
+ 2863:                 });
+ 2864: 
+ 2865:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserProfile", b =>
+ 2866:                 {
+ 2867:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2868:                         .WithOne("UserProfile")
+ 2869:                         .HasForeignKey("HRInfoAdvertisements.Domain.Entities.UserProfile", "UserID")
+ 2870:                         .OnDelete(DeleteBehavior.Cascade)
+ 2871:                         .IsRequired();
+ 2872: 
+ 2873:                     b.Navigation("User");
+ 2874:                 });
+ 2875: 
+ 2876:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserRole", b =>
+ 2877:                 {
+ 2878:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Role", "Role")
+ 2879:                         .WithMany("UserRoles")
+ 2880:                         .HasForeignKey("RoleID")
+ 2881:                         .OnDelete(DeleteBehavior.Restrict)
+ 2882:                         .IsRequired();
+ 2883: 
+ 2884:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2885:                         .WithMany("UserRoles")
+ 2886:                         .HasForeignKey("UserID")
+ 2887:                         .OnDelete(DeleteBehavior.Cascade)
+ 2888:                         .IsRequired();
+ 2889: 
+ 2890:                     b.Navigation("Role");
+ 2891: 
+ 2892:                     b.Navigation("User");
+ 2893:                 });
+ 2894: 
+ 2895:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.UserSession", b =>
+ 2896:                 {
+ 2897:                     b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+ 2898:                         .WithMany()
+ 2899:                         .HasForeignKey("UserID")
+ 2900:                         .OnDelete(DeleteBehavior.Cascade)
+ 2901:                         .IsRequired();
+ 2902: 
+ 2903:                     b.Navigation("User");
+ 2904:                 });
+ 2905: 
+ 2906:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+ 2907:                 {
+ 2908:                     b.Navigation("Entitlements");
+ 2909:                 });
+ 2910: 
+ 2911:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+ 2912:                 {
+ 2913:                     b.Navigation("Payments");
+ 2914:                 });
+ 2915: 
+ 2916:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
+ 2917:                 {
+ 2918:                     b.Navigation("ApprovalRequests");
+ 2919: 
+ 2920:                     b.Navigation("Documents");
+ 2921: 
+ 2922:                     b.Navigation("Enquiries");
+ 2923: 
+ 2924:                     b.Navigation("Favorites");
+ 2925: 
+ 2926:                     b.Navigation("FeatureValues");
+ 2927: 
+ 2928:                     b.Navigation("Images");
+ 2929: 
+ 2930:                     b.Navigation("Messages");
+ 2931: 
+ 2932:                     b.Navigation("Reports");
+ 2933: 
+ 2934:                     b.Navigation("SavedSearches");
+ 2935: 
+ 2936:                     b.Navigation("Videos");
+ 2937: 
+ 2938:                     b.Navigation("Views");
+ 2939:                 });
+ 2940: 
+ 2941:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
+ 2942:                 {
+ 2943:                     b.Navigation("Advertisements");
+ 2944:                 });
+ 2945: 
+ 2946:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
+ 2947:                 {
+ 2948:                     b.Navigation("Messages");
+ 2949:                 });
+ 2950: 
+ 2951:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
+ 2952:                 {
+ 2953:                     b.Navigation("Values");
+ 2954:                 });
+ 2955: 
+ 2956:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementStatus", b =>
+ 2957:                 {
+ 2958:                     b.Navigation("Advertisements");
+ 2959:                 });
+ 2960: 
+ 2961:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementType", b =>
+ 2962:                 {
+ 2963:                     b.Navigation("Advertisements");
+ 2964:                 });
+ 2965: 
+ 2966:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalRequest", b =>
+ 2967:                 {
+ 2968:                     b.Navigation("ApprovalHistory");
+ 2969:                 });
+ 2970: 
+ 2971:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Area", b =>
+ 2972:                 {
+ 2973:                     b.Navigation("Advertisements");
+ 2974:                 });
+ 2975: 
+ 2976:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.City", b =>
+ 2977:                 {
+ 2978:                     b.Navigation("Advertisements");
+ 2979: 
+ 2980:                     b.Navigation("Areas");
+ 2981:                 });
+ 2982: 
+ 2983:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Country", b =>
+ 2984:                 {
+ 2985:                     b.Navigation("Advertisements");
+ 2986: 
+ 2987:                     b.Navigation("Areas");
+ 2988: 
+ 2989:                     b.Navigation("Cities");
+ 2990: 
+ 2991:                     b.Navigation("States");
+ 2992:                 });
+ 2993: 
+ 2994:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Permission", b =>
+ 2995:                 {
+ 2996:                     b.Navigation("RolePermissions");
+ 2997:                 });
+ 2998: 
+ 2999:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ReportReason", b =>
+ 3000:                 {
+ 3001:                     b.Navigation("Reports");
+ 3002:                 });
+ 3003: 
+ 3004:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Role", b =>
+ 3005:                 {
+ 3006:                     b.Navigation("RolePermissions");
+ 3007: 
+ 3008:                     b.Navigation("UserRoles");
+ 3009:                 });
+ 3010: 
+ 3011:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.State", b =>
+ 3012:                 {
+ 3013:                     b.Navigation("Advertisements");
+ 3014: 
+ 3015:                     b.Navigation("Areas");
+ 3016: 
+ 3017:                     b.Navigation("Cities");
+ 3018:                 });
+ 3019: 
+ 3020:             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.User", b =>
+ 3021:                 {
+ 3022:                     b.Navigation("Advertisements");
+ 3023: 
+ 3024:                     b.Navigation("NotificationPreference");
+ 3025: 
+ 3026:                     b.Navigation("RefreshTokens");
+ 3027: 
+ 3028:                     b.Navigation("UserAddresses");
+ 3029: 
+ 3030:                     b.Navigation("UserProfile");
+ 3031: 
+ 3032:                     b.Navigation("UserRoles");
+ 3033:                 });
+ 3034: #pragma warning restore 612, 618
+ 3035:         }
+ 3036:     }
+ 3037: }
+
+
+========== QUEUED PACKAGE REFERENCES ==========
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Application\Billing\DTOs\MyPackageBalanceResponse.cs:29: public List<QueuedPackageBalance> QueuedPackages { get; set; } = new();
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Application\Billing\DTOs\MyPackageBalanceResponse.cs:56: public sealed class QueuedPackageBalance
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:45: var paidEntitlement = await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:49: x.Status == UserPackageEntitlementStatuses.Active &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:222: response.QueuedPackages = await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:226: x.Status == UserPackageEntitlementStatuses.Pending &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:234: .Select(x => new QueuedPackageBalance
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:714: await PackageEntitlementActivation.ActivateDueAsync(
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:717: var activeEntitlements = await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:720: x.Status == UserPackageEntitlementStatuses.Active)
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:733: entitlement.Status = UserPackageEntitlementStatuses.Expired;
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:740: var latestScheduledEnd = await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:744: (x.Status == UserPackageEntitlementStatuses.Active ||
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:745: (x.Status == UserPackageEntitlementStatuses.Pending &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:777: ? UserPackageEntitlementStatuses.Active
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:778: : UserPackageEntitlementStatuses.Pending,
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:798: _context.UserPackageEntitlements.Add(newEntitlement);
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:944: entitlement.Status != UserPackageEntitlementStatuses.Expired)
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs:946: entitlement.Status = UserPackageEntitlementStatuses.Cancelled;
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:8: internal static class PackageEntitlementActivation
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:49: var expired = await context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:52: x.Status == UserPackageEntitlementStatuses.Active &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:59: item.Status = UserPackageEntitlementStatuses.Expired;
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:66: var hasActive = await context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:69: x.Status == UserPackageEntitlementStatuses.Active &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:77: var next = await context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:80: x.Status == UserPackageEntitlementStatuses.Pending &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:94: next.Status = UserPackageEntitlementStatuses.Active;
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs:101: next.Status = UserPackageEntitlementStatuses.Expired;
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\ApplicationDbContext.cs:79: public DbSet<UserPackageEntitlement> UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Configurations\UserPackageEntitlementConfiguration.cs:14: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Configurations\UserPackageEntitlementConfiguration.cs:18: "CK_UserPackageEntitlements_DateRange",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Configurations\UserPackageEntitlementConfiguration.cs:22: "CK_UserPackageEntitlements_Status",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Configurations\UserPackageEntitlementConfiguration.cs:26: "CK_UserPackageEntitlements_NonNegativeLimits",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:40: name: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:55: table.PrimaryKey("PK_UserPackageEntitlements", x => x.UserPackageEntitlementID);
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:56: table.CheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:57: table.CheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:59: name: "FK_UserPackageEntitlements_EnquiryPackages_EnquiryPackageID",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:65: name: "FK_UserPackageEntitlements_Users_UserID",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:95: name: "FK_PaymentTransactions_UserPackageEntitlements_UserPackageEntitlementID",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:97: principalTable: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:127: name: "IX_UserPackageEntitlements_EnquiryPackageID",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:128: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:132: name: "IX_UserPackageEntitlements_UserID",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:133: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:139: name: "IX_UserPackageEntitlements_UserID_Status_StartDate_EndDate",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:140: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.cs:151: name: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.Designer.cs:202: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.Designer.cs:204: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013084500_AddEnquiryBillingPackages.Designer.cs:206: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013141739_AddEnquiryPackageValidityDays.Designer.cs:207: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013141739_AddEnquiryPackageValidityDays.Designer.cs:209: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013141739_AddEnquiryPackageValidityDays.Designer.cs:211: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013164827_AddPackagePurchaseRequests.Designer.cs:259: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013164827_AddPackagePurchaseRequests.Designer.cs:261: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261013164827_AddPackagePurchaseRequests.Designer.cs:263: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014081421_EnforceOneOutstandingPackagePurchase.Designer.cs:259: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014081421_EnforceOneOutstandingPackagePurchase.Designer.cs:261: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014081421_EnforceOneOutstandingPackagePurchase.Designer.cs:263: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014153831_AddMonthlyReplyLimitToEnquiryPackages.Designer.cs:264: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014153831_AddMonthlyReplyLimitToEnquiryPackages.Designer.cs:266: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261014153831_AddMonthlyReplyLimitToEnquiryPackages.Designer.cs:268: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016091844_AddMonthlyAdvertisementPostLimit.Designer.cs:269: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016091844_AddMonthlyAdvertisementPostLimit.Designer.cs:271: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016091844_AddMonthlyAdvertisementPostLimit.Designer.cs:273: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:15: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:22: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:29: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:36: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:42: name: "CK_UserPackageEntitlements_NonNegativeLimits",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:43: table: "UserPackageEntitlements",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:51: name: "CK_UserPackageEntitlements_NonNegativeLimits",
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:52: table: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:56: table: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:60: table: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:64: table: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.cs:68: table: "UserPackageEntitlements");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.Designer.cs:289: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.Designer.cs:291: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.Designer.cs:293: t.HasCheckConstraint("CK_UserPackageEntitlements_NonNegativeLimits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016104559_AddPurchasedPackageLimitSnapshots.Designer.cs:295: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016170105_AddExternalRefundReferenceToPaymentTransactions.Designer.cs:298: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016170105_AddExternalRefundReferenceToPaymentTransactions.Designer.cs:300: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016170105_AddExternalRefundReferenceToPaymentTransactions.Designer.cs:302: t.HasCheckConstraint("CK_UserPackageEntitlements_NonNegativeLimits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\20261016170105_AddExternalRefundReferenceToPaymentTransactions.Designer.cs:304: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:295: b.ToTable("UserPackageEntitlements", null, t =>
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:297: t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:299: t.HasCheckConstraint("CK_UserPackageEntitlements_NonNegativeLimits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:301: t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:109: await PackageEntitlementActivation.ActivateDueAsync(
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:398: await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:576: var paidPackage = await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Enquiries\AdvertisementEnquiryService.cs:580: x.Status == UserPackageEntitlementStatuses.Active &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:916: await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:934: await _context.UserPackageEntitlements
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Infrastructure\Services\AdvertisementService.cs:937: x.Status == UserPackageEntitlementStatuses.Active &&
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:152: @if (packageBalance is not null && packageBalance.QueuedPackages.Count > 0)
+C:\Sethu Laptop\Applications\HRINFO Advertisements\HRInfoAdvertisements\HRInfoAdvertisements.Admin\Components\Pages\MyPackageRequests.razor:163: @foreach (var queued in packageBalance.QueuedPackages)

@@ -2,247 +2,412 @@
 
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.Billing.DTOs
+@using HRInfoAdvertisements.Application.DTOs.SystemSettings
 @using System.Globalization
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 
 @inject EnquiryBillingApiService BillingService
+@inject SiteSettingsService SiteSettings
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
 <PageTitle>My Package Requests</PageTitle>
 
-<div class="container my-requests-page">
+<!-- Full-width shell: the top bar lives OUTSIDE the width-limited page container -->
+<div class="my-requests-shell">
+
     <PublicTopBar />
 
-    <header class="my-requests-hero">
-        <div class="my-requests-hero-copy">
-            <span class="my-requests-eyebrow">
-                <span class="my-requests-eyebrow-dot"></span>
-                MY ACCOUNT
-            </span>
-            <h1>My Package Requests</h1>
-            <p>
-                Track your package requests, review their status,
-                and see what needs to happen next.
-            </p>
-        </div>
+    <div class="my-requests-page">
 
-        <a href="/enquiry-packages" class="my-requests-browse-link">
-            <span>Browse Packages</span>
-            <span aria-hidden="true">→</span>
-        </a>
-    </header>
+        <header class="my-requests-hero">
+            <div class="my-requests-hero-copy">
+                <span class="my-requests-eyebrow">
+                    <span class="my-requests-eyebrow-dot"></span>
+                    MY ACCOUNT
+                </span>
+                <h1>My Package Requests</h1>
+                <p>
+                    Track your package requests, review their status,
+                    and see what needs to happen next.
+                </p>
+            </div>
 
-    @if (!AuthenticationStateProvider.IsAuthenticated)
-    {
-        <section class="my-requests-state-card">
-            <div class="my-requests-state-icon" aria-hidden="true">↗</div>
-            <h2>Sign in to view your requests</h2>
-            <p>
-                Your package requests are private to your account.
-                Sign in to review your submissions and their latest status.
-            </p>
-            <button class="my-requests-primary-button"
-                    @onclick='() => Navigation.NavigateTo("/login")'>
-                Sign In
-            </button>
-        </section>
-    }
-    else
-    {
-        <section class="my-requests-content" aria-live="polite">
-            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            <a href="/enquiry-packages" class="my-requests-browse-link">
+                <span>Browse Packages</span>
+                <span aria-hidden="true">â†’</span>
+            </a>
+        </header>
+
+        @if (!AuthenticationStateProvider.IsAuthenticated)
+        {
+            <section class="my-requests-state-card">
+                <div class="my-requests-state-icon" aria-hidden="true">â†—</div>
+                <h2>Sign in to view your requests</h2>
+                <p>
+                    Your package requests are private to your account.
+                    Sign in to review your submissions and their latest status.
+                </p>
+                <button type="button"
+                        class="my-requests-primary-button"
+                        @onclick='() => Navigation.NavigateTo("/?auth=signin")'>
+                    Sign In
+                </button>
+            </section>
+        }
+        else
+        {
+            <section class="my-requests-content" aria-live="polite">
+            @if (packageBalance is not null)
             {
-                <div class="my-requests-error" role="alert">
-                    <div>
-                        <strong>We couldn't load your requests.</strong>
-                        <p>@errorMessage</p>
+                <section class="my-package-balance" aria-labelledby="package-balance-heading">
+                    <div class="my-package-balance-heading">
+                        <div>
+                            <span class="my-requests-section-kicker">YOUR CURRENT PLAN</span>
+                            <h2 id="package-balance-heading">@(string.IsNullOrWhiteSpace(packageBalance.PackageCombination) ? packageBalance.PackageName : packageBalance.PackageCombination)</h2>
+                            <p>
+                                Package code: @packageBalance.PackageCode
+                                <span class="my-package-balance-dot" aria-hidden="true">Â·</span>
+                                @(packageBalance.IsPaidPackage ? "Paid package" : "Free package")
+                            </p>
+                        </div>
+                        <span class="my-package-balance-status">
+                            @GetStatusLabel(packageBalance.EntitlementStatus)
+                        </span>
                     </div>
+
+                    <div class="my-package-balance-dates">
+                        <div>
+                            <span>Package starts</span>
+                            <strong>@FormatPackageDate(packageBalance.StartDate)</strong>
+                        </div>
+                        <div>
+                            <span>Package expires</span>
+                            <strong>@FormatPackageDate(packageBalance.EndDate)</strong>
+                        </div>
+                        <div>
+                            <span>Usage period</span>
+                            <strong>
+                                @FormatPackageDate(packageBalance.UsagePeriodStartUtc)
+                                â€“ @FormatPackageDate(packageBalance.UsagePeriodEndUtc)
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="my-package-usage-grid">
+                        <article class="my-package-usage-card">
+                            <span>Advertisements posted</span>
+                            <strong>@FormatUsageCount(packageBalance.AdvertisementPosts)</strong>
+                            <p>@GetUsageRemainingText(packageBalance.AdvertisementPosts)</p>
+                        </article>
+                        <article class="my-package-usage-card">
+                            <span>Enquiries sent</span>
+                            <strong>@FormatUsageCount(packageBalance.EnquiriesSent)</strong>
+                            <p>@GetUsageRemainingText(packageBalance.EnquiriesSent)</p>
+                        </article>
+                        <article class="my-package-usage-card">
+                            <span>Replies sent</span>
+                            <strong>@FormatUsageCount(packageBalance.RepliesSent)</strong>
+                            <p>@GetUsageRemainingText(packageBalance.RepliesSent)</p>
+                        </article>
+                    </div>
+
+                    <div class="my-package-received-usage">
+                        <div class="my-package-received-heading">
+                            <div>
+                                <span class="my-requests-section-kicker">PER ADVERTISEMENT</span>
+                                <h3>Enquiries received</h3>
+                            </div>
+                            <span class="my-package-received-period">Current usage period</span>
+                        </div>
+
+                        @if (packageBalance.AdvertisementEnquiriesReceived.Count == 0)
+                        {
+                            <p class="my-package-empty-usage">
+                                You do not have any advertisements to show enquiry usage for yet.
+                            </p>
+                        }
+                        else
+                        {
+                            <div class="my-package-ad-usage-list">
+                                @foreach (var usage in packageBalance.AdvertisementEnquiriesReceived)
+                                {
+                                    <article class="my-package-ad-usage" @key="usage.AdvertisementID">
+                                        <div class="my-package-ad-usage-title">
+                                            <strong>@usage.AdvertisementTitle</strong>
+                                            <span>Ad #@usage.AdvertisementID</span>
+                                        </div>
+                                        <div class="my-package-ad-usage-count">
+                                            <strong>@usage.Used.ToString("N0", CultureInfo.CurrentCulture) / @FormatUsageLimit(usage.Limit)</strong>
+                                            <span>@GetRemainingText(usage.Limit, usage.Remaining)</span>
+                                        </div>
+                                    </article>
+                                }
+                            </div>
+                        }
+                    </div>
+                </section>
+            }
+            @if (!string.IsNullOrWhiteSpace(balanceErrorMessage))
+            {
+                <div class="my-package-balance-error" role="alert">
+                    <strong>Package balance is temporarily unavailable.</strong>
+                    <p>@balanceErrorMessage</p>
                     <button type="button"
                             class="my-requests-retry-button"
-                            @onclick="LoadRequestsAsync"
+                            @onclick="LoadPackageBalanceAsync"
                             disabled="@isLoading">
-                        @(isLoading ? "Retrying..." : "Try again")
+                        Refresh balance
                     </button>
                 </div>
             }
-
-            @if (isLoading)
-            {
-                <div class="my-requests-state-card my-requests-loading">
-                    <div class="my-requests-spinner" role="status">
-                        <span class="visually-hidden">Loading</span>
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="my-requests-error" role="alert">
+                        <div>
+                            <strong>We couldn't load your requests.</strong>
+                            <p>@errorMessage</p>
+                        </div>
+                        <button type="button"
+                                class="my-requests-retry-button"
+                                @onclick="LoadRequestsAsync"
+                                disabled="@isLoading">
+                            @(isLoading ? "Retrying..." : "Try again")
+                        </button>
                     </div>
-                    <h2>Loading your requests</h2>
-                    <p>We're retrieving your package request history.</p>
-                </div>
-            }
-            else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
-            {
-                <div class="my-requests-state-card">
-                    <div class="my-requests-state-icon" aria-hidden="true">＋</div>
-                    <span class="my-requests-section-kicker">GET STARTED</span>
-                    <h2>No package requests yet</h2>
-                    <p>
-                        When you submit a paid package request, its status and
-                        details will appear here.
-                    </p>
-                    <a href="/enquiry-packages" class="my-requests-primary-button">
-                        Explore Packages
-                        <span aria-hidden="true">→</span>
-                    </a>
-                </div>
-            }
-            else if (requests.Count > 0)
-            {
-                <div class="my-requests-list-heading">
-                    <div>
-                        <span class="my-requests-section-kicker">YOUR ACTIVITY</span>
-                        <h2>Request history</h2>
+                }
+
+                @if (isLoading)
+                {
+                    <div class="my-requests-state-card my-requests-loading">
+                        <div class="my-requests-spinner" role="status">
+                            <span class="visually-hidden">Loading</span>
+                        </div>
+                        <h2>Loading your requests</h2>
+                        <p>We're retrieving your package request history.</p>
                     </div>
-                    <span class="my-requests-count">
-                        @requests.Count @(requests.Count == 1 ? "request" : "requests")
-                    </span>
-                </div>
+                }
+                else if (requests.Count == 0 && string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="my-requests-state-card">
+                        <div class="my-requests-state-icon" aria-hidden="true">ï¼‹</div>
+                        <span class="my-requests-section-kicker">GET STARTED</span>
+                        <h2>No package requests yet</h2>
+                        <p>
+                            When you submit a paid package request, its status and
+                            details will appear here.
+                        </p>
+                        <a href="/enquiry-packages" class="my-requests-primary-button">
+                            Explore Packages
+                            <span aria-hidden="true">â†’</span>
+                        </a>
+                    </div>
+                }
+                else if (requests.Count > 0)
+                {
+                    <div class="my-requests-list-heading">
+                        <div>
+                            <span class="my-requests-section-kicker">YOUR ACTIVITY</span>
+                            <h2>Request history</h2>
+                        </div>
+                        <span class="my-requests-count">
+                            @requests.Count @(requests.Count == 1 ? "request" : "requests")
+                        </span>
+                    </div>
 
-                <div class="my-requests-list">
-                    @foreach (var request in requests)
-                    {
-                        var normalizedStatus = NormalizeStatus(request.Status);
+                    <div class="my-requests-list">
+                        @foreach (var request in requests)
+                        {
+                            var normalizedStatus = NormalizeStatus(request.Status);
 
-                        <article class="my-request-card"
-                                 @key="request.PackagePurchaseRequestID">
-                            <div class="my-request-card-main">
-                                <div class="my-request-package-icon" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none">
-                                        <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"
-                                              stroke="currentColor"
-                                              stroke-width="1.7"
-                                              stroke-linejoin="round" />
-                                        <path d="m4.5 7.7 7.5 4.4 7.5-4.4M12 12.1V21M8 5.3l8 4.6"
-                                              stroke="currentColor"
-                                              stroke-width="1.7"
-                                              stroke-linejoin="round" />
-                                    </svg>
-                                </div>
-
-                                <div class="my-request-details">
-                                    <div class="my-request-title-line">
-                                        <h3>@request.PackageName</h3>
-                                        <span class="my-request-status @GetStatusClass(normalizedStatus)">
-                                            @GetStatusLabel(normalizedStatus)
-                                        </span>
+                            <article class="my-request-card"
+                                     @key="request.PackagePurchaseRequestID">
+                                <div class="my-request-card-main">
+                                    <div class="my-request-package-icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none">
+                                            <path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z"
+                                                  stroke="currentColor"
+                                                  stroke-width="1.7"
+                                                  stroke-linejoin="round" />
+                                            <path d="m4.5 7.7 7.5 4.4 7.5-4.4M12 12.1V21M8 5.3l8 4.6"
+                                                  stroke="currentColor"
+                                                  stroke-width="1.7"
+                                                  stroke-linejoin="round" />
+                                        </svg>
                                     </div>
 
-                                    <div class="my-request-meta">
-                                        <span>Request #@request.PackagePurchaseRequestID</span>
-                                        <span class="my-request-meta-separator" aria-hidden="true"></span>
-                                        <span>
-                                            Submitted
-                                            @request.CreatedDate.ToString(
-                                                "dd MMM yyyy, HH:mm",
-                                                CultureInfo.CurrentCulture)
-                                        </span>
+                                    <div class="my-request-details">
+                                        <div class="my-request-title-line">
+                                            <h3>@request.PackageName</h3>
+                                            <span class="my-request-status @GetStatusClass(normalizedStatus)">
+                                                @GetStatusLabel(normalizedStatus)
+                                            </span>
+                                        </div>
+
+                                        <div class="my-request-meta">
+                                            <span>Request #@request.PackagePurchaseRequestID</span>
+                                            <span class="my-request-meta-separator" aria-hidden="true"></span>
+                                            <span>
+                                                Submitted
+                                                @request.CreatedDate.ToString(
+                                                    "dd MMM yyyy, HH:mm",
+                                                    CultureInfo.CurrentCulture)
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="my-request-amount">
-                                <span class="my-request-amount-label">Request amount</span>
-                                <strong>
-                                    @request.Amount.ToString("N3")
-                                    <span>@request.CurrencyCode</span>
-                                </strong>
-                            </div>
+                                <div class="my-request-amount">
+                                    <span class="my-request-amount-label">Request amount</span>
+                                    <strong>
+                                        @request.Amount.ToString("N3")
+                                        <span>@request.CurrencyCode</span>
+                                    </strong>
+                                </div>
 
-                            <div class="my-request-next-step">
-                                @switch (normalizedStatus)
-                                {
-                                    case "PENDING":
-                                    case "PENDING_REVIEW":
-                                    case "SUBMITTED":
-                                        <span class="my-request-step-icon my-request-step-pending" aria-hidden="true">◷</span>
-                                        <div>
-                                            <strong>Awaiting review</strong>
-                                            <p>
-                                                Your request is awaiting administrator review.
-                                                Please wait for approval before making payment.
-                                            </p>
-                                        </div>
-                                        break;
+                                <div class="my-request-next-step">
+                                    @switch (normalizedStatus)
+                                    {
+                                        case "PENDING":
+                                        case "PENDING_REVIEW":
+                                        case "SUBMITTED":
+                                            <span class="my-request-step-icon my-request-step-pending" aria-hidden="true">â—·</span>
+                                            <div>
+                                                <strong>Awaiting review</strong>
+                                                <p>
+                                                    Your request is awaiting administrator review.
+                                                    Please wait for approval before making payment.
+                                                </p>
+                                            </div>
+                                            break;
 
-                                    case "APPROVED":
-                                        <span class="my-request-step-icon my-request-step-approved" aria-hidden="true">✓</span>
-                                        <div>
-                                            <strong>Approved — payment instructions next</strong>
-                                            <p>
-                                                Follow the payment instructions provided by the
-                                                administrator. Your payment is not confirmed until
-                                                the administrator verifies it.
-                                            </p>
-                                        </div>
-                                        break;
+                                        case "APPROVED":
+    <span class="my-request-step-icon my-request-step-approved" aria-hidden="true">âœ“</span>
+    <div>
+        <strong>Approved â€” payment instructions next</strong>
+        <p>
+            Follow the payment instructions provided by the
+            administrator. Your payment is not confirmed until
+            the administrator verifies it.
+        </p>
 
-                                    case "COMPLETED":
-                                    case "PAID":
-                                        <span class="my-request-step-icon my-request-step-complete" aria-hidden="true">✓</span>
-                                        <div>
-                                            <strong>Payment confirmed</strong>
-                                            <p>
-                                                Your payment has been confirmed. If your package
-                                                entitlement is not visible, contact support.
-                                            </p>
-                                        </div>
-                                        break;
+        @if (paymentSettings.BankTransferEnabled || paymentSettings.BenefitPayEnabled)
+        {
+            <div class="my-request-payment-instructions">
+                @if (paymentSettings.BankTransferEnabled)
+                {
+                    <section class="my-request-payment-method">
+                        <strong>Bank Transfer</strong>
 
-                                    case "REJECTED":
-                                        <span class="my-request-step-icon my-request-step-rejected" aria-hidden="true">!</span>
-                                        <div>
-                                            <strong>Request rejected</strong>
-                                            <p>
-                                                Contact support if you need clarification about
-                                                this decision.
-                                            </p>
-                                        </div>
-                                        break;
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BankTransferBankName))
+                        {
+                            <p><strong>Bank:</strong> @paymentSettings.BankTransferBankName</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BankTransferAccountHolder))
+                        {
+                            <p><strong>Account Holder:</strong> @paymentSettings.BankTransferAccountHolder</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BankTransferAccountNumber))
+                        {
+                            <p><strong>Account Number:</strong> @paymentSettings.BankTransferAccountNumber</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BankTransferIban))
+                        {
+                            <p><strong>IBAN:</strong> @paymentSettings.BankTransferIban</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BankTransferInstructions))
+                        {
+                            <p style="white-space: pre-line">@paymentSettings.BankTransferInstructions</p>
+                        }
+                    </section>
+                }
 
-                                    default:
-                                        <span class="my-request-step-icon my-request-step-default" aria-hidden="true">i</span>
-                                        <div>
-                                            <strong>Next step</strong>
-                                            <p>
-                                                Contact the administrator for guidance on this
-                                                request's current status.
-                                            </p>
-                                        </div>
-                                        break;
-                                }
-                            </div>
-                        </article>
-                    }
-                </div>
-            }
-        </section>
+                @if (paymentSettings.BenefitPayEnabled)
+                {
+                    <section class="my-request-payment-method">
+                        <strong>BenefitPay</strong>
 
-        <aside class="my-requests-payment-note">
-            <div class="my-requests-payment-note-icon" aria-hidden="true">i</div>
-            <div>
-                <strong>Payment and verification</strong>
-                <p>
-                    Bank transfers and BenefitPay are subject to administrator
-                    verification in the current workflow. This page does not collect
-                    card details or process payments through a live payment gateway.
-                </p>
+                        @if (!string.IsNullOrWhiteSpace(paymentSettings.BenefitPayInstructions))
+                        {
+                            <p style="white-space: pre-line">@paymentSettings.BenefitPayInstructions</p>
+                        }
+                    </section>
+                }
             </div>
-        </aside>
-    }
+        }
+        else
+        {
+            <p>No manual payment methods are currently enabled. Please contact support for assistance.</p>
+        }
+    </div>
+    break;
+
+                                        case "COMPLETED":
+                                        case "PAID":
+                                            <span class="my-request-step-icon my-request-step-complete" aria-hidden="true">âœ“</span>
+                                            <div>
+                                                <strong>Payment confirmed</strong>
+                                                <p>
+                                                    Your payment has been confirmed. If your package
+                                                    entitlement is not visible, contact support.
+                                                </p>
+                                            </div>
+                                            break;
+
+                                        case "REJECTED":
+                                            <span class="my-request-step-icon my-request-step-rejected" aria-hidden="true">!</span>
+                                            <div>
+                                                <strong>Request rejected</strong>
+                                                <p>
+                                                    Contact support if you need clarification about
+                                                    this decision.
+                                                </p>
+                                            </div>
+                                            break;
+
+                                        default:
+                                            <span class="my-request-step-icon my-request-step-default" aria-hidden="true">i</span>
+                                            <div>
+                                                <strong>Next step</strong>
+                                                <p>
+                                                    Contact the administrator for guidance on this
+                                                    request's current status.
+                                                </p>
+                                            </div>
+                                            break;
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                }
+            </section>
+
+            <aside class="my-requests-payment-note">
+                <div class="my-requests-payment-note-icon" aria-hidden="true">i</div>
+                <div>
+                    <strong>Payment and verification</strong>
+                    <p>
+                        Bank transfers and BenefitPay are subject to administrator
+                        verification in the current workflow. This page does not collect
+                        card details or process payments through a live payment gateway.
+                    </p>
+                </div>
+            </aside>
+        }
+
+    </div>
+
 </div>
 
 @code {
     private List<PackagePurchaseRequestResponse> requests = new();
+    private PublicSiteSettingsResponse paymentSettings = new();
+    private MyPackageBalanceResponse? packageBalance;
     private bool isLoading = true;
     private string? errorMessage;
+    private string? balanceErrorMessage;
 
     protected override async Task OnInitializedAsync()
     {
@@ -261,7 +426,7 @@
         if (!AuthenticationStateProvider.IsAuthenticated)
         {
             isLoading = false;
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo("/?auth=signin");
             return;
         }
 
@@ -270,7 +435,10 @@
 
         try
         {
+            paymentSettings = await SiteSettings.GetAsync();
             requests = await BillingService.GetMyPurchaseRequestsAsync();
+
+            await LoadPackageBalanceAsync();
         }
         catch (Exception ex)
         {
@@ -282,6 +450,49 @@
         }
     }
 
+    private async Task LoadPackageBalanceAsync()
+    {
+        if (!AuthenticationStateProvider.IsAuthenticated)
+        {
+            packageBalance = null;
+            balanceErrorMessage = "Please sign in to view your package balance.";
+            return;
+        }
+
+        try
+        {
+            packageBalance = await BillingService.GetMyPackageBalanceAsync();
+            balanceErrorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            packageBalance = null;
+            balanceErrorMessage = ex.Message;
+        }
+    }
+
+    private static string FormatPackageDate(DateTime? value) =>
+        value.HasValue
+            ? value.Value.ToLocalTime().ToString("dd MMM yyyy", CultureInfo.CurrentCulture)
+            : "Not scheduled";
+
+    private static string FormatUsageLimit(int limit) =>
+        limit < 0
+            ? "Unlimited"
+            : limit.ToString("N0", CultureInfo.CurrentCulture);
+
+    private static string FormatUsageCount(PackageUsageBalance usage) =>
+        $"{usage.Used.ToString("N0", CultureInfo.CurrentCulture)} / {FormatUsageLimit(usage.Limit)}";
+
+    private static string GetUsageRemainingText(PackageUsageBalance usage) =>
+        usage.Unlimited
+            ? "Unlimited allowance"
+            : $"{usage.Remaining.ToString("N0", CultureInfo.CurrentCulture)} remaining";
+
+    private static string GetRemainingText(int limit, int remaining) =>
+        limit < 0
+            ? "Unlimited allowance"
+            : $"{remaining.ToString("N0", CultureInfo.CurrentCulture)} remaining";
     private static string NormalizeStatus(string? status) =>
         (status ?? string.Empty).Trim().ToUpperInvariant();
 

@@ -49,6 +49,69 @@ public async Task<IActionResult> GetActionable(
     });
 }
 
+    [HttpGet("history")]
+    public async Task<IActionResult> GetHistory(
+        CancellationToken cancellationToken)
+    {
+        var result =
+            await _billingService.GetPurchaseRequestHistoryForAdminAsync(
+                cancellationToken);
+
+        return Ok(new
+        {
+            Success = true,
+            Data = result
+        });
+    }
+
+    [HttpPost("{purchaseRequestId:long}/cancel")]
+    public async Task<IActionResult> Cancel(
+        long purchaseRequestId,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var adminUserId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
+
+        try
+        {
+            var result =
+                await _billingService.CancelPurchaseRequestAsync(
+                    adminUserId,
+                    purchaseRequestId,
+                    cancellationToken);
+
+            if (result is null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Purchase request not found."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Unpaid purchase request cancelled.",
+                Data = result
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+    }
+
     [HttpPost("{purchaseRequestId:long}/approve")]
     public Task<IActionResult> Approve(
         long purchaseRequestId,
@@ -178,6 +241,61 @@ public async Task<IActionResult> GetActionable(
         }
     }
 
+    [HttpPost("payments/{paymentTransactionId:long}/refund")]
+    public async Task<IActionResult> RefundPayment(
+        long paymentTransactionId,
+        [FromBody] RefundPackagePaymentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var adminUserId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid administrator identity."
+            });
+        }
+
+        try
+        {
+            var result = await _billingService.RefundPackagePaymentAsync(
+                adminUserId,
+                paymentTransactionId,
+                request,
+                cancellationToken);
+
+            if (result is null)
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Payment transaction not found."
+                });
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Message = "Refund recorded. The external refund was not initiated by this application."
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new
+            {
+                Success = false,
+                Message = ex.Message
+            });
+        }
+        catch (Microsoft.EntityFrameworkCore.DbUpdateException)
+        {
+            return Conflict(new
+            {
+                Success = false,
+                Message = "The refund could not be recorded. Review the payment state and try again."
+            });
+        }
+    }
     private bool TryGetUserId(out long userId)
     {
         userId = 0;

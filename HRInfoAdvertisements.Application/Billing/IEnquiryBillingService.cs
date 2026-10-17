@@ -15,13 +15,24 @@ public interface IEnquiryBillingService
     Task<IReadOnlyList<PackagePurchaseRequestResponse>> GetMyPurchaseRequestsAsync(
         long userId,
         CancellationToken cancellationToken = default);
-
+    Task<MyPackageBalanceResponse> GetMyPackageBalanceAsync(
+        long userId,
+        CancellationToken cancellationToken = default);
     Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
         GetPendingPurchaseRequestsForAdminAsync(
             CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
     GetActionablePurchaseRequestsForAdminAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPurchaseRequestHistoryForAdminAsync(
+            CancellationToken cancellationToken = default);
+
+    Task<AdminPackagePurchaseRequestResponse?> CancelPurchaseRequestAsync(
+        long adminUserId,
+        long purchaseRequestId,
         CancellationToken cancellationToken = default);
 
     Task<AdminPackagePurchaseRequestResponse?> ReviewPurchaseRequestAsync(
@@ -35,5 +46,13 @@ public interface IEnquiryBillingService
         long purchaseRequestId,
         ConfirmPackagePaymentRequest request,
         CancellationToken cancellationToken = default);
+    Task<bool?> RefundPackagePaymentAsync(
+        long adminUserId,
+        long paymentTransactionId,
+        RefundPackagePaymentRequest request,
+        CancellationToken cancellationToken = default);
 }
+
+
+
 

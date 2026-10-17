@@ -1,0 +1,763 @@
+Package combination billing methods review
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs ==========
+
+--- Lines 10-85 ---
+   10: namespace HRInfoAdvertisements.Infrastructure.Billing;
+   11: 
+   12: public sealed class EnquiryBillingService : IEnquiryBillingService
+   13: {
+   14:     private readonly ApplicationDbContext _context;
+   15:     private readonly IApplicationSettingsService _settings;
+   16: 
+   17:     public EnquiryBillingService(
+   18:         ApplicationDbContext context,
+   19:         IApplicationSettingsService settings)
+   20:     {
+   21:         _context = context;
+   22:         _settings = settings;
+   23:     }
+   24: 
+   25:     public async Task<MyPackageBalanceResponse> GetMyPackageBalanceAsync(
+   26:         long userId,
+   27:         CancellationToken cancellationToken = default)
+   28:     {
+   29:         if (userId <= 0)
+   30:         {
+   31:             throw new ArgumentOutOfRangeException(nameof(userId));
+   32:         }
+   33: 
+   34:         var now = DateTime.UtcNow;
+   35:         var periodStart = new DateTime(
+   36:             now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+   37:         var periodEnd = periodStart.AddMonths(1);
+   38: 
+   39:         var response = new MyPackageBalanceResponse
+   40:         {
+   41:             UsagePeriodStartUtc = periodStart,
+   42:             UsagePeriodEndUtc = periodEnd
+   43:         };
+   44: 
+   45:         var paidEntitlement = await _context.UserPackageEntitlements
+   46:             .AsNoTracking()
+   47:             .Where(x =>
+   48:                 x.UserID == userId &&
+   49:                 x.Status == UserPackageEntitlementStatuses.Active &&
+   50:                 x.StartDate <= now &&
+   51:                 (x.EndDate == null || x.EndDate > now) &&
+   52:                 x.EnquiryPackage.PackageCode != "FREE" &&
+   53:                 x.Payments.Any(p =>
+   54:                     p.Status == PaymentTransactionStatuses.Confirmed &&
+   55:                     p.ConfirmedDate != null &&
+   56:                     p.RefundedDate == null))
+   57:             .OrderByDescending(x => x.StartDate)
+   58:             .Select(x => new
+   59:             {
+   60:                 x.EnquiryPackage.PackageCode,
+   61:                 x.EnquiryPackage.Name,
+   62:                 x.Status,
+   63:                 x.StartDate,
+   64:                 x.EndDate,
+   65:                 x.MonthlyAdvertisementPostLimit,
+   66:                 x.MonthlySenderEnquiryLimit,
+   67:                 x.MonthlyAdvertisementEnquiryLimit,
+   68:                 x.MonthlyReplyLimit
+   69:             })
+   70:             .FirstOrDefaultAsync(cancellationToken);
+   71: 
+   72:         int postLimit;
+   73:         int senderLimit;
+   74:         int receivedLimit;
+   75:         int replyLimit;
+   76: 
+   77:         if (paidEntitlement != null)
+   78:         {
+   79:             response.PackageCode = paidEntitlement.PackageCode;
+   80:             response.PackageName = paidEntitlement.Name;
+   81:             response.EntitlementStatus = paidEntitlement.Status;
+   82:             response.StartDate = paidEntitlement.StartDate;
+   83:             response.EndDate = paidEntitlement.EndDate;
+   84:             response.IsPaidPackage = true;
+   85: 
+
+--- Lines 207-262 ---
+  207:         response.AdvertisementEnquiriesReceived = ownedAdvertisements
+  208:             .Select(advertisement => new AdvertisementEnquiryUsageBalance
+  209:             {
+  210:                 AdvertisementID = advertisement.AdvertisementID,
+  211:                 AdvertisementTitle = advertisement.Title,
+  212:                 Limit = receivedLimit,
+  213:                 Used = receivedCountByAdvertisement.TryGetValue(
+  214:                     advertisement.AdvertisementID,
+  215:                     out var used)
+  216:                     ? used
+  217:                     : 0
+  218:             })
+  219:             .OrderBy(x => x.AdvertisementTitle)
+  220:             .ToList();
+  221: 
+  222:         response.QueuedPackages = await _context.UserPackageEntitlements
+  223:             .AsNoTracking()
+  224:             .Where(x =>
+  225:                 x.UserID == userId &&
+  226:                 x.Status == UserPackageEntitlementStatuses.Pending &&
+  227:                 x.StartDate > now &&
+  228:                 x.EnquiryPackage.PackageCode != "FREE" &&
+  229:                 x.Payments.Any(p =>
+  230:                     p.Status == PaymentTransactionStatuses.Confirmed &&
+  231:                     p.ConfirmedDate != null &&
+  232:                     p.RefundedDate == null))
+  233:             .OrderBy(x => x.StartDate)
+  234:             .Select(x => new QueuedPackageBalance
+  235:             {
+  236:                 PackageCode = x.EnquiryPackage.PackageCode,
+  237:                 PackageName = x.EnquiryPackage.Name,
+  238:                 EntitlementStatus = x.Status,
+  239:                 StartDate = x.StartDate,
+  240:                 EndDate = x.EndDate,
+  241:                 MonthlyAdvertisementPostLimit = x.MonthlyAdvertisementPostLimit,
+  242:                 MonthlySenderEnquiryLimit = x.MonthlySenderEnquiryLimit,
+  243:                 MonthlyAdvertisementEnquiryLimit = x.MonthlyAdvertisementEnquiryLimit,
+  244:                 MonthlyReplyLimit = x.MonthlyReplyLimit
+  245:             })
+  246:             .ToListAsync(cancellationToken);
+  247:         return response;
+  248:     }
+  249:     public async Task<IReadOnlyList<EnquiryPackageResponse>>
+  250:         GetAvailablePackagesAsync(
+  251:             CancellationToken cancellationToken = default)
+  252:     {
+  253:         var paidPackagesEnabled =
+  254:             await _settings.GetBoolAsync("PAID_PACKAGES_ENABLED", cancellationToken) ?? false;
+  255: 
+  256:         return await _context.EnquiryPackages
+  257:             .AsNoTracking()
+  258:             .Where(package => package.IsActive && (paidPackagesEnabled || package.PackageCode == "FREE"))
+  259:             .OrderBy(package => package.Price)
+  260:             .ThenBy(package => package.EnquiryPackageID)
+  261:             .Select(package => new EnquiryPackageResponse
+  262:             {
+
+--- Lines 591-642 ---
+  591:     OldValues = JsonSerializer.Serialize(oldValues),
+  592:     NewValues = JsonSerializer.Serialize(newValues),
+  593:     CreatedDate = now
+  594: });
+  595: 
+  596: await _context.SaveChangesAsync(cancellationToken);
+  597: await transaction.CommitAsync(cancellationToken);
+  598: 
+  599: // Approval permits the request to proceed to payment.
+  600: // It does not confirm payment or activate an entitlement.
+  601: return MapAdminPurchaseRequest(request);
+  602: 
+  603: }
+  604: 
+  605:     public async Task<AdminPackagePurchaseRequestResponse?>
+  606: ConfirmPackagePaymentAsync(
+  607: long adminUserId,
+  608: long purchaseRequestId,
+  609: ConfirmPackagePaymentRequest request,
+  610: CancellationToken cancellationToken = default)
+  611: {
+  612: if (adminUserId <= 0)
+  613: {
+  614: throw new InvalidOperationException(
+  615: "The authenticated administrator ID is invalid.");
+  616: }
+  617: 
+  618: if (purchaseRequestId <= 0)
+  619: {
+  620:     throw new InvalidOperationException(
+  621:         "The purchase request ID is invalid.");
+  622: }
+  623: 
+  624: ArgumentNullException.ThrowIfNull(request);
+  625: 
+  626: if (string.IsNullOrWhiteSpace(request.PaymentMethod))
+  627: {
+  628:     throw new InvalidOperationException(
+  629:         "Payment method is required.");
+  630: }
+  631: 
+  632: var paymentMethod =
+  633:     request.PaymentMethod.Trim().ToUpperInvariant();
+  634: 
+  635: if (paymentMethod != "BANK_TRANSFER" &&
+  636:     paymentMethod != "BENEFITPAY")
+  637: {
+  638:     throw new InvalidOperationException(
+  639:         "Payment method must be BANK_TRANSFER or BENEFITPAY.");
+  640: }
+  641: 
+  642: var settingKey = paymentMethod == "BANK_TRANSFER"
+
+--- Lines 699-1008 ---
+  699:     throw new InvalidOperationException(
+  700:         "The purchase request is not eligible for paid activation.");
+  701: }
+  702: 
+  703: // Validate paid-package validity before creating an entitlement.
+  704: if (!package.ValidityDays.HasValue ||
+  705:     package.ValidityDays.Value <= 0 ||
+  706:     package.ValidityDays.Value > 3650)
+  707: {
+  708:     throw new InvalidOperationException(
+  709:         "The paid package must have a validity period between 1 and 3650 days before payment can be confirmed.");
+  710: }
+  711: 
+  712: var now = DateTime.UtcNow;
+  713: 
+  714: await PackageEntitlementActivation.ActivateDueAsync(
+  715:     _context, purchaseRequest.UserID, now, cancellationToken);
+  716: 
+  717: var activeEntitlements = await _context.UserPackageEntitlements
+  718:     .Where(x =>
+  719:         x.UserID == purchaseRequest.UserID &&
+  720:         x.Status == UserPackageEntitlementStatuses.Active)
+  721:     .ToListAsync(cancellationToken);
+  722: 
+  723: foreach (var entitlement in activeEntitlements)
+  724: {
+  725:     if (!entitlement.EndDate.HasValue)
+  726:     {
+  727:         throw new InvalidOperationException(
+  728:             "A package without an expiry date cannot be queued behind.");
+  729:     }
+  730: 
+  731:     if (entitlement.EndDate.Value <= now)
+  732:     {
+  733:         entitlement.Status = UserPackageEntitlementStatuses.Expired;
+  734:         entitlement.ModifiedDate = now;
+  735:     }
+  736: }
+  737: 
+  738: await _context.SaveChangesAsync(cancellationToken);
+  739: 
+  740: var latestScheduledEnd = await _context.UserPackageEntitlements
+  741:     .Where(x =>
+  742:         x.UserID == purchaseRequest.UserID &&
+  743:         x.EndDate.HasValue &&
+  744:         (x.Status == UserPackageEntitlementStatuses.Active ||
+  745:          (x.Status == UserPackageEntitlementStatuses.Pending &&
+  746:           x.Payments.Any(p =>
+  747:               p.Status == PaymentTransactionStatuses.Confirmed &&
+  748:               p.ConfirmedDate.HasValue &&
+  749:               !p.RefundedDate.HasValue))))
+  750:     .MaxAsync(x => (DateTime?)x.EndDate, cancellationToken);
+  751: 
+  752: var scheduledStart =
+  753:     latestScheduledEnd.HasValue && latestScheduledEnd.Value > now
+  754:         ? latestScheduledEnd.Value
+  755:         : now;
+  756: var newEntitlement = new UserPackageEntitlement
+  757: {
+  758:     UserID = purchaseRequest.UserID,
+  759:     EnquiryPackageID = package.EnquiryPackageID,
+  760: 
+  761:     // Copy the package configuration at activation time.
+  762:     MonthlyAdvertisementPostLimit =
+  763:         package.MonthlyAdvertisementPostLimit,
+  764: 
+  765:     MonthlySenderEnquiryLimit =
+  766:         package.MonthlySenderEnquiryLimit,
+  767: 
+  768:     MonthlyAdvertisementEnquiryLimit =
+  769:         package.MonthlyAdvertisementEnquiryLimit,
+  770: 
+  771:     MonthlyReplyLimit =
+  772:         package.MonthlyReplyLimit,
+  773: 
+  774:     StartDate = scheduledStart,
+  775:     EndDate = scheduledStart.AddDays(package.ValidityDays.Value),
+  776:     Status = scheduledStart <= now
+  777:         ? UserPackageEntitlementStatuses.Active
+  778:         : UserPackageEntitlementStatuses.Pending,
+  779:     CreatedDate = now
+  780: };
+  781: 
+  782: var payment = new PaymentTransaction
+  783: {
+  784:     UserPackageEntitlement = newEntitlement,
+  785:     Amount = purchaseRequest.Amount,
+  786:     CurrencyCode = purchaseRequest.CurrencyCode,
+  787:     PaymentMethod = paymentMethod,
+  788:     PaymentProvider = paymentMethod == "BANK_TRANSFER"
+  789:         ? "MANUAL"
+  790:         : "BENEFITPAY",
+  791:     ProviderTransactionReference = reference,
+  792:     Status = PaymentTransactionStatuses.Confirmed,
+  793:     CreatedDate = now,
+  794:     ConfirmedDate = now
+  795: };
+  796: 
+  797: newEntitlement.Payments.Add(payment);
+  798: _context.UserPackageEntitlements.Add(newEntitlement);
+  799: 
+  800: var oldStatus = purchaseRequest.Status;
+  801: 
+  802: purchaseRequest.Status =
+  803:     PackagePurchaseRequestStatuses.Completed;
+  804: 
+  805: purchaseRequest.ModifiedDate = now;
+  806: 
+  807: // Save the entitlement and payment first so generated IDs are available.
+  808: // This save remains inside the transaction.
+  809: await _context.SaveChangesAsync(cancellationToken);
+  810: 
+  811: _context.AuditLogs.Add(new AuditLog
+  812: {
+  813:     UserID = adminUserId,
+  814:     Action = "PACKAGE_PAYMENT_CONFIRMED",
+  815:     EntityName = "PackagePurchaseRequest",
+  816:     EntityID = purchaseRequest.PackagePurchaseRequestID.ToString(),
+  817:     OldValues = JsonSerializer.Serialize(new
+  818:     {
+  819:         Status = oldStatus
+  820:     }),
+  821:     NewValues = JsonSerializer.Serialize(new
+  822:     {
+  823:         Status = purchaseRequest.Status,
+  824:         PaymentTransactionID = payment.PaymentTransactionID,
+  825:         PaymentMethod = payment.PaymentMethod,
+  826:         PaymentProvider = payment.PaymentProvider,
+  827:         ProviderTransactionReference =
+  828:             payment.ProviderTransactionReference,
+  829:         Amount = payment.Amount,
+  830:         CurrencyCode = payment.CurrencyCode,
+  831:         UserPackageEntitlementID =
+  832:             newEntitlement.UserPackageEntitlementID,
+  833:         ConfirmedDate = payment.ConfirmedDate,
+  834:         ModifiedDate = purchaseRequest.ModifiedDate
+  835:     }),
+  836:     CreatedDate = now
+  837: });
+  838: 
+  839: // Persist the audit record before committing the same transaction.
+  840: await _context.SaveChangesAsync(cancellationToken);
+  841: await transaction.CommitAsync(cancellationToken);
+  842: 
+  843: return MapAdminPurchaseRequest(purchaseRequest);
+  844: 
+  845: }
+  846: 
+  847:     public async Task<bool?> RefundPackagePaymentAsync(
+  848:         long adminUserId,
+  849:         long paymentTransactionId,
+  850:         RefundPackagePaymentRequest request,
+  851:         CancellationToken cancellationToken = default)
+  852:     {
+  853:         if (adminUserId <= 0)
+  854:         {
+  855:             throw new InvalidOperationException(
+  856:                 "A valid administrator identity is required.");
+  857:         }
+  858: 
+  859:         if (paymentTransactionId <= 0)
+  860:         {
+  861:             throw new InvalidOperationException(
+  862:                 "A valid payment transaction ID is required.");
+  863:         }
+  864: 
+  865:         if (request is null || !request.RefundProcessedExternally)
+  866:         {
+  867:             throw new InvalidOperationException(
+  868:                 "Confirm that the external refund has already been processed.");
+  869:         }
+  870: 
+  871:         var refundReference = request.ExternalRefundReference?.Trim();
+  872:         var reason = request.Reason?.Trim();
+  873: 
+  874:         if (string.IsNullOrWhiteSpace(refundReference) ||
+  875:             refundReference.Length > 200)
+  876:         {
+  877:             throw new InvalidOperationException(
+  878:                 "A valid external refund reference is required (maximum 200 characters).");
+  879:         }
+  880: 
+  881:         if (string.IsNullOrWhiteSpace(reason) ||
+  882:             reason.Length < 5 ||
+  883:             reason.Length > 1000)
+  884:         {
+  885:             throw new InvalidOperationException(
+  886:                 "The refund reason must be between 5 and 1000 characters.");
+  887:         }
+  888: 
+  889:         await using var transaction =
+  890:             await _context.Database.BeginTransactionAsync(
+  891:                 System.Data.IsolationLevel.Serializable,
+  892:                 cancellationToken);
+  893: 
+  894:         var payment = await _context.PaymentTransactions
+  895:             .Include(x => x.UserPackageEntitlement)
+  896:                 .ThenInclude(x => x.Payments)
+  897:             .SingleOrDefaultAsync(
+  898:                 x => x.PaymentTransactionID == paymentTransactionId,
+  899:                 cancellationToken);
+  900: 
+  901:         if (payment is null)
+  902:         {
+  903:             return null;
+  904:         }
+  905: 
+  906:         var refundReferenceInUse = await _context.PaymentTransactions
+  907:             .AnyAsync(x =>
+  908:                 x.PaymentTransactionID != paymentTransactionId &&
+  909:                 x.ExternalRefundReference == refundReference,
+  910:                 cancellationToken);
+  911: 
+  912:         if (refundReferenceInUse)
+  913:         {
+  914:             throw new InvalidOperationException(
+  915:                 "This external refund reference has already been recorded.");
+  916:         }
+  917: 
+  918:         if (payment.Status != PaymentTransactionStatuses.Confirmed ||
+  919:             !payment.ConfirmedDate.HasValue ||
+  920:             payment.RefundedDate.HasValue)
+  921:         {
+  922:             throw new InvalidOperationException(
+  923:                 "Only a confirmed payment that has not already been refunded can be refunded.");
+  924:         }
+  925: 
+  926:         var entitlement = payment.UserPackageEntitlement;
+  927:         var now = DateTime.UtcNow;
+  928: 
+  929:         var oldPaymentStatus = payment.Status;
+  930:         var oldRefundedDate = payment.RefundedDate;
+  931:         var oldEntitlementStatus = entitlement.Status;
+  932: 
+  933:         payment.Status = PaymentTransactionStatuses.Refunded;
+  934:         payment.RefundedDate = now;
+  935:         payment.ExternalRefundReference = refundReference;
+  936: 
+  937:         var hasOtherValidPayment = entitlement.Payments.Any(other =>
+  938:             other.PaymentTransactionID != payment.PaymentTransactionID &&
+  939:             other.Status == PaymentTransactionStatuses.Confirmed &&
+  940:             other.ConfirmedDate.HasValue &&
+  941:             !other.RefundedDate.HasValue);
+  942: 
+  943:         if (!hasOtherValidPayment &&
+  944:             entitlement.Status != UserPackageEntitlementStatuses.Expired)
+  945:         {
+  946:             entitlement.Status = UserPackageEntitlementStatuses.Cancelled;
+  947:         }
+  948: 
+  949:         entitlement.ModifiedDate = now;
+  950: 
+  951:         _context.AuditLogs.Add(new AuditLog
+  952:         {
+  953:             UserID = adminUserId,
+  954:             Action = "PACKAGE_PAYMENT_REFUNDED",
+  955:             EntityName = "PaymentTransaction",
+  956:             EntityID = payment.PaymentTransactionID.ToString(),
+  957:             OldValues = JsonSerializer.Serialize(new
+  958:             {
+  959:                 Status = oldPaymentStatus,
+  960:                 RefundedDate = oldRefundedDate,
+  961:                 EntitlementStatus = oldEntitlementStatus
+  962:             }),
+  963:             NewValues = JsonSerializer.Serialize(new
+  964:             {
+  965:                 Status = payment.Status,
+  966:                 RefundedDate = payment.RefundedDate,
+  967:                 ExternalRefundReference = refundReference,
+  968:                 Reason = reason,
+  969:                 Amount = payment.Amount,
+  970:                 CurrencyCode = payment.CurrencyCode,
+  971:                 UserPackageEntitlementID =
+  972:                     entitlement.UserPackageEntitlementID,
+  973:                 EntitlementStatus = entitlement.Status,
+  974:                 ModifiedDate = entitlement.ModifiedDate
+  975:             }),
+  976:             CreatedDate = now
+  977:         });
+  978: 
+  979:         await _context.SaveChangesAsync(cancellationToken);
+  980:         await transaction.CommitAsync(cancellationToken);
+  981: 
+  982:         return true;
+  983:     }
+  984:     private static AdminPackagePurchaseRequestResponse
+  985:         MapAdminPurchaseRequest(PackagePurchaseRequest request)
+  986:     {
+  987:         return new AdminPackagePurchaseRequestResponse
+  988:         {
+  989:             PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+  990:             UserID = request.UserID,
+  991:             EnquiryPackageID = request.EnquiryPackageID,
+  992:             PackageCode = request.EnquiryPackage.PackageCode,
+  993:             PackageName = request.EnquiryPackage.Name,
+  994:             Amount = request.Amount,
+  995:             CurrencyCode = request.CurrencyCode,
+  996:             Status = request.Status,
+  997:             CreatedDate = request.CreatedDate,
+  998:             ModifiedDate = request.ModifiedDate
+  999:         };
+ 1000:     }
+ 1001:     private static PackagePurchaseRequestResponse MapPurchaseRequest(
+ 1002:         PackagePurchaseRequest request)
+ 1003:     {
+ 1004:         return new PackagePurchaseRequestResponse
+ 1005:         {
+ 1006:             PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+ 1007:             EnquiryPackageID = request.EnquiryPackageID,
+ 1008:             PackageCode = request.EnquiryPackage.PackageCode,
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs ==========
+
+--- Lines 1-110 ---
+    1: using HRInfoAdvertisements.Domain.Billing;
+    2: using HRInfoAdvertisements.Infrastructure.Data;
+    3: using Microsoft.EntityFrameworkCore;
+    4: using Microsoft.EntityFrameworkCore.Storage;
+    5: 
+    6: namespace HRInfoAdvertisements.Infrastructure.Billing;
+    7: 
+    8: internal static class PackageEntitlementActivation
+    9: {
+   10:     public static async Task ActivateDueAsync(
+   11:         ApplicationDbContext context,
+   12:         long userId,
+   13:         DateTime now,
+   14:         CancellationToken cancellationToken = default)
+   15:     {
+   16:         var transaction = context.Database.CurrentTransaction
+   17:             ?? throw new InvalidOperationException(
+   18:                 "Package activation requires an active database transaction.");
+   19: 
+   20:         await using var command =
+   21:             context.Database.GetDbConnection().CreateCommand();
+   22: 
+   23:         command.Transaction = transaction.GetDbTransaction();
+   24:         command.CommandText = """
+   25:             DECLARE @result int;
+   26:             EXEC @result = sp_getapplock
+   27:                 @Resource = @resource,
+   28:                 @LockMode = 'Exclusive',
+   29:                 @LockOwner = 'Transaction',
+   30:                 @LockTimeout = 10000;
+   31:             SELECT @result;
+   32:             """;
+   33: 
+   34:         var parameter = command.CreateParameter();
+   35:         parameter.ParameterName = "@resource";
+   36:         parameter.Value =
+   37:             $"HRInfoAdvertisements:PackageActivation:User:{userId}";
+   38:         command.Parameters.Add(parameter);
+   39: 
+   40:         var lockResult = Convert.ToInt32(
+   41:             await command.ExecuteScalarAsync(cancellationToken));
+   42: 
+   43:         if (lockResult < 0)
+   44:             throw new InvalidOperationException(
+   45:                 "Could not acquire the package activation lock.");
+   46: 
+   47:         while (true)
+   48:         {
+   49:             var expired = await context.UserPackageEntitlements
+   50:                 .Where(x =>
+   51:                     x.UserID == userId &&
+   52:                     x.Status == UserPackageEntitlementStatuses.Active &&
+   53:                     x.EndDate.HasValue &&
+   54:                     x.EndDate.Value <= now)
+   55:                 .ToListAsync(cancellationToken);
+   56: 
+   57:             foreach (var item in expired)
+   58:             {
+   59:                 item.Status = UserPackageEntitlementStatuses.Expired;
+   60:                 item.ModifiedDate = now;
+   61:             }
+   62: 
+   63:             if (expired.Count > 0)
+   64:                 await context.SaveChangesAsync(cancellationToken);
+   65: 
+   66:             var hasActive = await context.UserPackageEntitlements
+   67:                 .AnyAsync(x =>
+   68:                     x.UserID == userId &&
+   69:                     x.Status == UserPackageEntitlementStatuses.Active &&
+   70:                     x.StartDate <= now &&
+   71:                     (!x.EndDate.HasValue || x.EndDate.Value > now),
+   72:                     cancellationToken);
+   73: 
+   74:             if (hasActive)
+   75:                 return;
+   76: 
+   77:             var next = await context.UserPackageEntitlements
+   78:                 .Where(x =>
+   79:                     x.UserID == userId &&
+   80:                     x.Status == UserPackageEntitlementStatuses.Pending &&
+   81:                     x.StartDate <= now &&
+   82:                     x.EnquiryPackage.PackageCode != "FREE" &&
+   83:                     x.Payments.Any(p =>
+   84:                         p.Status == PaymentTransactionStatuses.Confirmed &&
+   85:                         p.ConfirmedDate.HasValue &&
+   86:                         !p.RefundedDate.HasValue))
+   87:                 .OrderBy(x => x.StartDate)
+   88:                 .ThenBy(x => x.UserPackageEntitlementID)
+   89:                 .FirstOrDefaultAsync(cancellationToken);
+   90: 
+   91:             if (next == null)
+   92:                 return;
+   93: 
+   94:             next.Status = UserPackageEntitlementStatuses.Active;
+   95:             next.ModifiedDate = now;
+   96:             await context.SaveChangesAsync(cancellationToken);
+   97: 
+   98:             // If an old queued package has already expired, advance again.
+   99:             if (next.EndDate.HasValue && next.EndDate.Value <= now)
+  100:             {
+  101:                 next.Status = UserPackageEntitlementStatuses.Expired;
+  102:                 next.ModifiedDate = now;
+  103:                 await context.SaveChangesAsync(cancellationToken);
+  104:                 continue;
+  105:             }
+  106: 
+  107:             return;
+  108:         }
+  109:     }
+  110: }
+
+
+========== .\HRInfoAdvertisements.Domain\Billing\UserPackageEntitlement.cs ==========
+
+--- Lines 1-50 ---
+    1: 
+    2: using HRInfoAdvertisements.Domain.Entities;
+    3: 
+    4: namespace HRInfoAdvertisements.Domain.Billing;
+    5: 
+    6: public static class UserPackageEntitlementStatuses
+    7: {
+    8:     public const string Pending = "PENDING";
+    9:     public const string Active = "ACTIVE";
+   10:     public const string Cancelled = "CANCELLED";
+   11:     public const string Expired = "EXPIRED";
+   12: }
+   13: 
+   14: public class UserPackageEntitlement
+   15: {
+   16:     public long UserPackageEntitlementID { get; set; }
+   17: 
+   18:     public long UserID { get; set; }
+   19: 
+   20:     public int EnquiryPackageID { get; set; }
+   21: 
+   22:     // Limits are snapshotted when the paid entitlement is activated.
+   23:     // Later package configuration changes must not alter this entitlement.
+   24:     public int MonthlyAdvertisementPostLimit { get; set; }
+   25: 
+   26:     public int MonthlySenderEnquiryLimit { get; set; }
+   27: 
+   28:     public int MonthlyAdvertisementEnquiryLimit { get; set; }
+   29: 
+   30:     public int MonthlyReplyLimit { get; set; }
+   31: 
+   32:     // UTC timestamps: StartDate inclusive, EndDate exclusive.
+   33:     public DateTime StartDate { get; set; }
+   34: 
+   35:     public DateTime? EndDate { get; set; }
+   36: 
+   37:     public string Status { get; set; } =
+   38:         UserPackageEntitlementStatuses.Pending;
+   39: 
+   40:     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+   41: 
+   42:     public DateTime? ModifiedDate { get; set; }
+   43: 
+   44:     public User User { get; set; } = null!;
+   45: 
+   46:     public EnquiryPackage EnquiryPackage { get; set; } = null!;
+   47: 
+   48:     public ICollection<PaymentTransaction> Payments { get; set; }
+   49:         = new List<PaymentTransaction>();
+   50: }
+
+
+========== .\HRInfoAdvertisements.Domain\Billing\PackagePurchaseRequest.cs ==========
+
+--- Lines 1-39 ---
+    1: using HRInfoAdvertisements.Domain.Entities;
+    2: 
+    3: namespace HRInfoAdvertisements.Domain.Billing;
+    4: 
+    5: public static class PackagePurchaseRequestStatuses
+    6: {
+    7:     public const string Pending = "PENDING";
+    8:     public const string Approved = "APPROVED";
+    9:     public const string Completed = "COMPLETED";
+   10:     public const string Rejected = "REJECTED";
+   11:     public const string Cancelled = "CANCELLED";
+   12: }
+   13: 
+   14: public class PackagePurchaseRequest
+   15: {
+   16:     public long PackagePurchaseRequestID { get; set; }
+   17: 
+   18:     public long UserID { get; set; }
+   19: 
+   20:     public int EnquiryPackageID { get; set; }
+   21: 
+   22:     // Snapshot of the package price when the request was created.
+   23:     public decimal Amount { get; set; }
+   24: 
+   25:     // Snapshot of the package currency when the request was created.
+   26:     public string CurrencyCode { get; set; } = string.Empty;
+   27: 
+   28:     public string Status { get; set; } =
+   29:         PackagePurchaseRequestStatuses.Pending;
+   30: 
+   31:     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+   32: 
+   33:     public DateTime? ModifiedDate { get; set; }
+   34: 
+   35:     public User User { get; set; } = null!;
+   36: 
+   37:     public EnquiryPackage EnquiryPackage { get; set; } = null!;
+   38: }
+   39: 
+
+
+========== .\HRInfoAdvertisements.Domain\Billing\PaymentTransaction.cs ==========
+
+--- Lines 1-38 ---
+    1: namespace HRInfoAdvertisements.Domain.Billing;
+    2: 
+    3: public static class PaymentTransactionStatuses
+    4: {
+    5:     public const string Pending = "PENDING";
+    6:     public const string Confirmed = "CONFIRMED";
+    7:     public const string Failed = "FAILED";
+    8:     public const string Refunded = "REFUNDED";
+    9: }
+   10: 
+   11: public class PaymentTransaction
+   12: {
+   13:     public long PaymentTransactionID { get; set; }
+   14: 
+   15:     public long UserPackageEntitlementID { get; set; }
+   16: 
+   17:     public decimal Amount { get; set; }
+   18: 
+   19:     public string CurrencyCode { get; set; } = "BHD";
+   20: 
+   21:     public string PaymentMethod { get; set; } = string.Empty;
+   22: 
+   23:     public string PaymentProvider { get; set; } = string.Empty;
+   24: 
+   25:     public string? ProviderTransactionReference { get; set; }
+   26: 
+   27:     public string? ExternalRefundReference { get; set; }
+   28: 
+   29:     public string Status { get; set; } = PaymentTransactionStatuses.Pending;
+   30: 
+   31:     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+   32: 
+   33:     public DateTime? ConfirmedDate { get; set; }
+   34: 
+   35:     public DateTime? RefundedDate { get; set; }
+   36: 
+   37:     public UserPackageEntitlement UserPackageEntitlement { get; set; } = null!;
+   38: }

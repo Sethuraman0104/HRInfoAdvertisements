@@ -1,4 +1,5 @@
-﻿using HRInfoAdvertisements.Domain.Entities;
+﻿
+using HRInfoAdvertisements.Domain.Entities;
 
 namespace HRInfoAdvertisements.Domain.Billing;
 
@@ -18,8 +19,17 @@ public class UserPackageEntitlement
 
     public int EnquiryPackageID { get; set; }
 
-    // Store UTC timestamps. The entitlement is valid from StartDate inclusive
-    // until EndDate exclusive; a null EndDate means no scheduled end date.
+    // Limits are snapshotted when the paid entitlement is activated.
+    // Later package configuration changes must not alter this entitlement.
+    public int MonthlyAdvertisementPostLimit { get; set; }
+
+    public int MonthlySenderEnquiryLimit { get; set; }
+
+    public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+    public int MonthlyReplyLimit { get; set; }
+
+    // UTC timestamps: StartDate inclusive, EndDate exclusive.
     public DateTime StartDate { get; set; }
 
     public DateTime? EndDate { get; set; }

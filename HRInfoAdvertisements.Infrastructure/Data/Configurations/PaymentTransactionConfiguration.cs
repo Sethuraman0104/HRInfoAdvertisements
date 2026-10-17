@@ -1,4 +1,4 @@
-﻿using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Domain.Billing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -42,6 +42,14 @@ public class PaymentTransactionConfiguration
 
         builder.Property(x => x.ProviderTransactionReference)
             .HasMaxLength(200);
+
+        builder.Property(x => x.ExternalRefundReference)
+            .HasMaxLength(200);
+
+        builder.HasIndex(x => x.ExternalRefundReference)
+            .IsUnique()
+            .HasFilter("[ExternalRefundReference] IS NOT NULL")
+            .HasDatabaseName("IX_PaymentTransactions_ExternalRefundReference");
 
         builder.Property(x => x.Status)
             .HasMaxLength(20)

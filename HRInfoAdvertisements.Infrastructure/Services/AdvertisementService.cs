@@ -3,8 +3,10 @@ using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
-
+using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Infrastructure.Billing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace HRInfoAdvertisements.Infrastructure.Services;
 
@@ -906,6 +908,13 @@ public async Task<AdvertisementResponse?>
     var now = DateTime.UtcNow;
     var monthStart = new DateTime(now.Year, now.Month, 1);
     var nextMonthStart = monthStart.AddMonths(1);
+    var monthKey = monthStart.ToString("yyyyMM");
+
+await AcquireAdvertisementSubmissionLockAsync(
+    $"HRInfoAdvertisements:AdvertisementSubmission:User:{userId}:{monthKey}");
+
+    await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
+
     var entityId = advertisementId.ToString();
 
     var alreadyCounted =
@@ -918,23 +927,69 @@ public async Task<AdvertisementResponse?>
             x.CreatedDate < nextMonthStart);
 
     if (!alreadyCounted)
-    {
-        var monthlyCount =
-            await _context.AuditLogs
-                .Where(x =>
-                    x.UserID == userId &&
-                    x.Action == "ADVERTISEMENT_SUBMITTED" &&
-                    x.EntityName == "Advertisement" &&
-                    x.CreatedDate >= monthStart &&
-                    x.CreatedDate < nextMonthStart)
-                .Select(x => x.EntityID)
-                .Distinct()
-                .CountAsync();
+{
+    // Prefer the user's currently active paid package entitlement.
+    
+var paidPackageLimit =
+    await _context.UserPackageEntitlements
+        .Where(x =>
+            x.UserID == userId &&
+            x.Status == UserPackageEntitlementStatuses.Active &&
+            x.StartDate <= now &&
+            (!x.EndDate.HasValue || x.EndDate.Value > now) &&
+            x.EnquiryPackage.PackageCode != "FREE" &&
+            x.Payments.Any(payment =>
+                payment.Status == PaymentTransactionStatuses.Confirmed &&
+                payment.ConfirmedDate != null &&
+                payment.RefundedDate == null))
+        .OrderByDescending(x => x.StartDate)
+        .Select(x => (int?)x.MonthlyAdvertisementPostLimit)
+        .FirstOrDefaultAsync();
 
-        if (monthlyCount >= 5)
-            throw new InvalidOperationException(
-                "You have reached the five free advertisement submissions for this month. Paid posting is currently unavailable.");
+    int monthlyPostLimit;
+
+    if (paidPackageLimit.HasValue)
+    {
+        monthlyPostLimit = paidPackageLimit.Value;
     }
+    else
+    {
+        // No active paid entitlement: use the configured FREE allowance.
+        var freePackageLimit =
+            await _context.EnquiryPackages
+                .Where(x =>
+                    x.PackageCode == "FREE" &&
+                    x.IsActive)
+                .Select(x => (int?)x.MonthlyAdvertisementPostLimit)
+                .FirstOrDefaultAsync();
+
+        if (!freePackageLimit.HasValue)
+        {
+            throw new InvalidOperationException(
+                "The active FREE package is not configured. Please contact the administrator.");
+        }
+
+        monthlyPostLimit = freePackageLimit.Value;
+    }
+
+    var monthlyCount =
+        await _context.AuditLogs
+            .Where(x =>
+                x.UserID == userId &&
+                x.Action == "ADVERTISEMENT_SUBMITTED" &&
+                x.EntityName == "Advertisement" &&
+                x.CreatedDate >= monthStart &&
+                x.CreatedDate < nextMonthStart)
+            .Select(x => x.EntityID)
+            .Distinct()
+            .CountAsync();
+
+    if (monthlyCount >= monthlyPostLimit)
+    {
+        throw new InvalidOperationException(
+            $"You have reached your monthly advertisement submission limit of {monthlyPostLimit}. Please upgrade your package or contact the administrator.");
+    }
+}
 
     var pendingReviewStatus =
         await _context.AdvertisementStatuses
@@ -1277,4 +1332,46 @@ AreaName =
                 "An email address is required when email visibility is enabled.");
         }
     }
+
+    private async Task AcquireAdvertisementSubmissionLockAsync(
+    string resource)
+{
+    var transaction = _context.Database.CurrentTransaction
+        ?? throw new InvalidOperationException(
+            "An active database transaction is required to check the advertisement submission limit.");
+
+    await using var command =
+        _context.Database.GetDbConnection().CreateCommand();
+
+    command.Transaction = transaction.GetDbTransaction();
+    command.CommandType = System.Data.CommandType.Text;
+    command.CommandText = """
+        DECLARE @result int;
+
+        EXEC @result = sys.sp_getapplock
+            @Resource = @resource,
+            @LockMode = 'Exclusive',
+            @LockOwner = 'Transaction',
+            @LockTimeout = 10000,
+            @DbPrincipal = 'public';
+
+        SELECT @result;
+        """;
+
+    var parameter = command.CreateParameter();
+    parameter.ParameterName = "@resource";
+    parameter.DbType = System.Data.DbType.String;
+    parameter.Size = 255;
+    parameter.Value = resource;
+    command.Parameters.Add(parameter);
+
+    var result = await command.ExecuteScalarAsync();
+    var lockResult = Convert.ToInt32(result);
+
+    if (lockResult < 0)
+    {
+        throw new InvalidOperationException(
+            "The advertisement submission limit could not be checked because of concurrent activity. Please try again.");
+    }
+}
 }

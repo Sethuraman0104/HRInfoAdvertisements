@@ -1,5 +1,6 @@
 ﻿@using HRInfoAdvertisements.Admin.Services
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
 
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
@@ -7,151 +8,197 @@
 @inject AdvertisementApiService AdvertisementApiService
 @implements IDisposable
 
-<header class="public-topbar">
+<header class="pt-bar" @onkeydown="HandleKeyDown">
 
-    <div class="public-topbar-shell">
+    <div class="pt-shell">
 
-        <!-- BRAND -->
+        <!-- ===================== BRAND ===================== -->
         <button type="button"
-                class="public-topbar-brand"
+                class="pt-brand"
                 @onclick="GoHome"
                 title="@siteName"
-                aria-label="@siteName Home">
+                aria-label="@($"{siteName} Home")">
 
             <img src="/images/logo/admind_logo_transparent.png"
                  alt="@siteName"
-                 class="public-topbar-logo-image" />
+                 class="pt-logo" />
 
         </button>
 
 
-        <!-- MAIN NAVIGATION -->
-        <nav class="public-topbar-nav" aria-label="Main navigation">
+        <!-- ===================== MAIN NAV (desktop / tablet) ===================== -->
+        <nav class="pt-nav" aria-label="Main navigation">
 
-            <button type="button" class="@GetNavClass("home")" @onclick="GoHome">
-                Home
-            </button>
+            @foreach (var item in NavItems)
+            {
+                var current = item;
 
-            <button type="button" class="@GetNavClass("browse")" @onclick="GoBrowse">
-                Browse Ads
-            </button>
+                <button type="button"
+                        class="@GetNavClass(current.Key)"
+                        title="@current.Label"
+                        @onclick="@(() => GoTo(current.Url))">
 
-            <button type="button" class="@GetNavClass("categories")" @onclick="GoCategories">
-                Categories
-            </button>
+                    @Icon(current.Icon)
 
-            <button type="button" class="@GetNavClass("how")" @onclick="GoHowItWorks">
-                How It Works
-            </button>
-            <button type="button"
-                    class="@GetNavClass("packages")"
-                    @onclick="OpenPackages">
-                Enquiry Packages
-            </button>
+                    <span>@current.Label</span>
+
+                </button>
+            }
 
         </nav>
 
 
-        <!-- ACTIONS -->
-        <div class="public-topbar-actions">
+        <!-- ===================== ACTIONS ===================== -->
+        <div class="pt-actions">
 
-            <!-- FAVORITES -->
+            <!-- Favorites -->
             <button type="button"
-                    class="public-topbar-icon-button"
+                    class="pt-icon-btn pt-hide-mobile"
                     title="Favorites"
                     aria-label="Favorites"
                     @onclick="OpenFavorites">
 
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z" />
-                </svg>
+                @Icon("heart")
 
             </button>
 
             @if (IsAuthenticated)
             {
-                <!-- MY ADS -->
-                <button type="button"
-                        class="public-topbar-text-button"
-                        @onclick="OpenMyAdvertisements">
-                    My Advertisements
-                </button>
+                <!-- Account dropdown (desktop / tablet) -->
+                <div class="pt-account-wrap pt-hide-mobile">
 
-                <!-- MY ENQUIRIES -->
+                    <button type="button"
+                            class="pt-account-btn @(accountOpen ? "open" : "")"
+                            aria-haspopup="menu"
+                            aria-expanded="@accountOpen"
+                            @onclick="ToggleAccountMenu">
 
-<button type="button"
-        class="public-topbar-text-button public-topbar-enquiries-button"
-        @onclick="OpenMyEnquiries">
-    <span>My Enquiries</span>
+                        <span class="pt-avatar">@UserInitial</span>
 
-    @if (PendingEnquiryCount > 0)
-    {
-        <span class="public-topbar-enquiry-badge"
-              aria-label="@($"{PendingEnquiryCount} open received enquiries")">
-            @(PendingEnquiryCount > 99 ? "99+" : PendingEnquiryCount)
-        </span>
-    }
-</button>
+                        <span class="pt-account-name">@DisplayUserName</span>
 
+                        @if (PendingEnquiryCount > 0)
+                        {
+                            <span class="pt-dot" aria-hidden="true"></span>
+                        }
 
-                <!-- MY PACKAGE REQUESTS -->
-                <button type="button"
-                        class="public-topbar-text-button"
-                        @onclick="OpenMyPackageRequests">
-                    My Package Requests
-                </button>
-
-                <!-- ACCOUNT -->
-                <button type="button"
-                        class="public-topbar-account-button"
-                        @onclick="OpenAccount">
-
-                    <span class="public-topbar-account-icon">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <circle cx="12" cy="8" r="4" />
-                            <path d="M4 21c.8-4 3.4-6 8-6s7.2 2 8 6" />
+                        <svg class="pt-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="m6 9 6 6 6-6" />
                         </svg>
-                    </span>
 
-                    <span>@DisplayUserName</span>
+                    </button>
 
-                </button>
+                    @if (accountOpen)
+                    {
+                        <div class="pt-backdrop-clear" @onclick="CloseMenus"></div>
 
-                <!-- SIGN OUT -->
-                <button type="button"
-                        class="public-topbar-text-button"
-                        @onclick="HandleSignOut">
-                    Sign Out
-                </button>
+                        <div class="pt-dropdown" role="menu">
+
+                            <div class="pt-dropdown-head">
+                                <span class="pt-avatar large">@UserInitial</span>
+                                <div>
+                                    <strong>@DisplayUserName</strong>
+                                    <small>Signed in</small>
+                                </div>
+                            </div>
+
+                            <div class="pt-dropdown-list">
+
+                                @foreach (var item in AccountItems)
+                                {
+                                    var current = item;
+
+                                    <button type="button"
+                                            role="menuitem"
+                                            class="pt-menu-item"
+                                            @onclick="@(() => GoTo(current.Url))">
+
+                                        @Icon(current.Icon)
+
+                                        <span class="pt-menu-label">@current.Label</span>
+
+                                        @if (current.ShowEnquiryBadge && PendingEnquiryCount > 0)
+                                        {
+                                            <span class="pt-badge">@BadgeText</span>
+                                        }
+
+                                    </button>
+                                }
+
+                            </div>
+
+                            <div class="pt-dropdown-foot">
+                                <button type="button"
+                                        role="menuitem"
+                                        class="pt-menu-item danger"
+                                        @onclick="HandleSignOut">
+
+                                    @Icon("logout")
+
+                                    <span class="pt-menu-label">Sign Out</span>
+
+                                </button>
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
             }
             else
             {
-                <!-- SIGN IN -->
                 <button type="button"
-                        class="public-topbar-text-button"
+                        class="pt-link-btn pt-hide-mobile"
                         @onclick="OpenLogin">
-                    Sign In
+
+                    @Icon("login")
+
+                    <span>Sign In</span>
+
                 </button>
 
-                <!-- SIGN UP -->
                 <button type="button"
-                        class="public-topbar-signup-button"
+                        class="pt-outline-btn pt-hide-mobile"
                         @onclick="OpenSignup">
-                    Sign Up
+
+                    @Icon("user-plus")
+
+                    <span>Sign Up</span>
+
                 </button>
             }
 
-            <!-- POST ADVERTISEMENT -->
+            <!-- Post advertisement -->
             <button type="button"
-                    class="public-topbar-post-button"
+                    class="pt-post-btn"
+                    title="Post Advertisement"
+                    aria-label="Post Advertisement"
                     @onclick="HandlePostAdvertisement">
 
-                <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M12 5v14" />
-                    <path d="M5 12h14" />
-                </svg>
+                @Icon("plus")
 
                 <span>Post Advertisement</span>
+
+            </button>
+
+            <!-- Hamburger (mobile / small tablet) -->
+            <button type="button"
+                    class="pt-burger"
+                    aria-label="Open menu"
+                    aria-expanded="@mobileOpen"
+                    aria-controls="pt-drawer"
+                    @onclick="ToggleMobileMenu">
+
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16" />
+                    <path d="M4 12h16" />
+                    <path d="M4 17h16" />
+                </svg>
+
+                @if (PendingEnquiryCount > 0)
+                {
+                    <span class="pt-dot burger" aria-hidden="true"></span>
+                }
 
             </button>
 
@@ -160,6 +207,156 @@
     </div>
 
 </header>
+
+
+<!-- ===================== MOBILE DRAWER ===================== -->
+<div class="pt-overlay @(mobileOpen ? "open" : "")"
+     @onclick="CloseMenus"
+     aria-hidden="true"></div>
+
+<aside id="pt-drawer"
+       class="pt-drawer @(mobileOpen ? "open" : "")"
+       role="dialog"
+       aria-modal="true"
+       aria-label="Menu"
+       aria-hidden="@(!mobileOpen)">
+
+    <div class="pt-drawer-head">
+
+        <img src="/images/logo/admind_logo_transparent.png"
+             alt="@siteName"
+             class="pt-drawer-logo" />
+
+        <button type="button"
+                class="pt-icon-btn"
+                aria-label="Close menu"
+                @onclick="CloseMenus">
+
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6l12 12" />
+                <path d="M18 6 6 18" />
+            </svg>
+
+        </button>
+
+    </div>
+
+    <div class="pt-drawer-body">
+
+        @if (IsAuthenticated)
+        {
+            <div class="pt-drawer-user">
+                <span class="pt-avatar large">@UserInitial</span>
+                <div>
+                    <strong>@DisplayUserName</strong>
+                    <small>Signed in</small>
+                </div>
+            </div>
+        }
+
+        <span class="pt-drawer-title">Explore</span>
+
+        <div class="pt-drawer-list">
+
+            @foreach (var item in NavItems)
+            {
+                var current = item;
+
+                <button type="button"
+                        class="pt-menu-item @(IsActive(current.Key) ? "active" : "")"
+                        @onclick="@(() => GoTo(current.Url))">
+
+                    @Icon(current.Icon)
+
+                    <span class="pt-menu-label">@current.Label</span>
+
+                    <svg class="pt-go" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="m9 6 6 6-6 6" />
+                    </svg>
+
+                </button>
+            }
+
+        </div>
+
+        <span class="pt-drawer-title">My Space</span>
+
+        <div class="pt-drawer-list">
+
+            <button type="button" class="pt-menu-item" @onclick="OpenFavorites">
+                @Icon("heart")
+                <span class="pt-menu-label">Favorites</span>
+                <svg class="pt-go" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+            </button>
+
+            @if (IsAuthenticated)
+            {
+                @foreach (var item in AccountItems)
+                {
+                    var current = item;
+
+                    <button type="button"
+                            class="pt-menu-item"
+                            @onclick="@(() => GoTo(current.Url))">
+
+                        @Icon(current.Icon)
+
+                        <span class="pt-menu-label">@current.Label</span>
+
+                        @if (current.ShowEnquiryBadge && PendingEnquiryCount > 0)
+                        {
+                            <span class="pt-badge">@BadgeText</span>
+                        }
+
+                        <svg class="pt-go" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>
+
+                    </button>
+                }
+            }
+
+        </div>
+
+    </div>
+
+    <div class="pt-drawer-foot">
+
+        <button type="button"
+                class="pt-post-btn block"
+                @onclick="HandlePostAdvertisement">
+
+            @Icon("plus")
+
+            <span>Post Advertisement</span>
+
+        </button>
+
+        @if (IsAuthenticated)
+        {
+            <button type="button" class="pt-outline-btn block danger" @onclick="HandleSignOut">
+                @Icon("logout")
+                <span>Sign Out</span>
+            </button>
+        }
+        else
+        {
+            <div class="pt-drawer-auth">
+
+                <button type="button" class="pt-link-btn block" @onclick="OpenLogin">
+                    @Icon("login")
+                    <span>Sign In</span>
+                </button>
+
+                <button type="button" class="pt-outline-btn block" @onclick="OpenSignup">
+                    @Icon("user-plus")
+                    <span>Sign Up</span>
+                </button>
+
+            </div>
+        }
+
+    </div>
+
+</aside>
 
 
 @code {
@@ -176,17 +373,120 @@
 
 
     // ============================================================
-    // SITE SETTINGS (cached by SiteSettingsService)
+    // STATE
     // ============================================================
 
     private string siteName = "AdMind";
 
     private int PendingEnquiryCount { get; set; }
 
+    private bool mobileOpen;
+
+    private bool accountOpen;
+
+    private string BadgeText =>
+        PendingEnquiryCount > 99
+            ? "99+"
+            : PendingEnquiryCount.ToString();
+
+
+    // ============================================================
+    // MENU DEFINITIONS
+    // ============================================================
+
+    private sealed record NavItem(
+        string Key,
+        string Label,
+        string Icon,
+        string Url,
+        bool ShowEnquiryBadge = false);
+
+    private static readonly NavItem[] NavItems =
+    {
+        new("home",       "Home",             "home",       "/"),
+        new("browse",     "Browse Ads",       "search",     "/#browse"),
+        new("categories", "Categories",       "grid",       "/#categories"),
+        new("how",        "How It Works",     "info",       "/#how-it-works"),
+        new("packages",   "Enquiry Packages", "package",    "/enquiry-packages")
+    };
+
+    private static readonly NavItem[] AccountItems =
+    {
+        new("my-ads",       "My Advertisements",   "megaphone", "/my-ads"),
+        new("my-enquiries", "My Enquiries",        "message",   "/my-enquiries", true),
+        new("my-requests",  "My Package Requests", "receipt",   "/my-package-requests"),
+        new("favorites",    "My Favorites",        "heart",     "/my-favorites"),
+        new("account",      "My Account",          "user",      "/account")
+    };
+
+
+    // ============================================================
+    // ICONS
+    // ============================================================
+
+    private static string IconPaths(string name) => name switch
+    {
+        "home" =>
+            "<path d='M3 10.5 12 3l9 7.5'/><path d='M5 9.5V20h14V9.5'/><path d='M10 20v-6h4v6'/>",
+
+        "search" =>
+            "<circle cx='11' cy='11' r='7'/><path d='m20 20-4-4'/>",
+
+        "grid" =>
+            "<rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><rect x='14' y='14' width='7' height='7' rx='1.5'/>",
+
+        "info" =>
+            "<circle cx='12' cy='12' r='9'/><path d='M12 11v5'/><path d='M12 8h.01'/>",
+
+        "package" =>
+            "<path d='M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Z'/><path d='m4.5 7.7 7.5 4.4 7.5-4.4M12 12.1V21'/>",
+
+        "heart" =>
+            "<path d='M20.8 8.7c0 5.1-8.8 10.3-8.8 10.3S3.2 13.8 3.2 8.7A4.7 4.7 0 0 1 12 6.2a4.7 4.7 0 0 1 8.8 2.5Z'/>",
+
+        "megaphone" =>
+            "<path d='M3 11v3a1 1 0 0 0 1 1h2l8 4V6L6 10H4a1 1 0 0 0-1 1Z'/><path d='M18 9a4 4 0 0 1 0 6'/>",
+
+        "message" =>
+            "<path d='M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.2A8 8 0 1 1 21 12Z'/><path d='M8.5 11h7'/><path d='M8.5 14h4'/>",
+
+        "receipt" =>
+            "<path d='M6 3h12v18l-3-2-3 2-3-2-3 2V3Z'/><path d='M9 8h6'/><path d='M9 12h6'/>",
+
+        "user" =>
+            "<circle cx='12' cy='8' r='4'/><path d='M4 21c.8-4 3.4-6 8-6s7.2 2 8 6'/>",
+
+        "user-plus" =>
+            "<path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M19 8v6'/><path d='M22 11h-6'/>",
+
+        "login" =>
+            "<path d='M15 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9'/><path d='M10 12h10'/><path d='m17 8 4 4-4 4'/>",
+
+        "logout" =>
+            "<path d='M9 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3'/><path d='M14 12h7'/><path d='m18 8 4 4-4 4' transform='translate(-1 0)'/><path d='M10 12h4'/>",
+
+        "plus" =>
+            "<path d='M12 5v14'/><path d='M5 12h14'/>",
+
+        _ => "<circle cx='12' cy='12' r='9'/>"
+    };
+
+    private static RenderFragment Icon(string name) =>
+        @<svg class="pt-ico" viewBox="0 0 24 24" aria-hidden="true">
+            @((MarkupString)IconPaths(name))
+        </svg>;
+
+
+    // ============================================================
+    // LIFECYCLE
+    // ============================================================
+
     protected override async Task OnInitializedAsync()
     {
-        AuthenticationStateProvider.AuthenticationStateChanged
-        += OnAuthenticationStateChanged;
+        AuthenticationStateProvider.AuthenticationStateChanged +=
+            OnAuthenticationStateChanged;
+
+        Navigation.LocationChanged += OnLocationChanged;
 
         try
         {
@@ -206,66 +506,87 @@
         }
     }
 
-private async Task LoadPendingEnquiryCountAsync()
-{
-    if (!IsAuthenticated)
+    public void Dispose()
     {
-        PendingEnquiryCount = 0;
-        return;
+        AuthenticationStateProvider.AuthenticationStateChanged -=
+            OnAuthenticationStateChanged;
+
+        Navigation.LocationChanged -= OnLocationChanged;
     }
 
-    try
+    private void OnLocationChanged(
+        object? sender,
+        Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
-        var received =
-    await AdvertisementApiService.GetReceivedEnquiriesAsync();
-
-var sent =
-    await AdvertisementApiService.GetSentEnquiriesAsync();
-
-var currentUserId = AuthenticationStateProvider.CurrentUserId;
-
-var allEnquiries = received
-    .Concat(sent)
-    .GroupBy(x => x.AdvertisementEnquiryID)
-    .Select(g => g.First());
-
-PendingEnquiryCount = currentUserId.HasValue
-    ? allEnquiries.Count(x =>
-        string.Equals(
-            x.Status,
-            "OPEN",
-            StringComparison.OrdinalIgnoreCase)
-        &&
-        x.LastMessageSenderUserID.HasValue
-        &&
-        x.LastMessageSenderUserID.Value != currentUserId.Value)
-    : 0;
+        _ = InvokeAsync(() =>
+        {
+            mobileOpen = false;
+            accountOpen = false;
+            StateHasChanged();
+        });
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine(
-            $"TOPBAR ENQUIRY COUNT ERROR: {ex.Message}");
 
-        // A count-loading failure should not break navigation.
-        PendingEnquiryCount = 0;
+    private void OnAuthenticationStateChanged(
+        Task<AuthenticationState> authenticationStateTask)
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await LoadPendingEnquiryCountAsync();
+            StateHasChanged();
+        });
     }
-}
 
-private void OnAuthenticationStateChanged(
-    Task<AuthenticationState> authenticationStateTask)
-{
-    _ = InvokeAsync(async () =>
+
+    // ============================================================
+    // ENQUIRY COUNT
+    // ============================================================
+
+    private async Task LoadPendingEnquiryCountAsync()
     {
-        await LoadPendingEnquiryCountAsync();
-        StateHasChanged();
-    });
-}
+        if (!IsAuthenticated)
+        {
+            PendingEnquiryCount = 0;
+            return;
+        }
 
-public void Dispose()
-{
-    AuthenticationStateProvider.AuthenticationStateChanged
-        -= OnAuthenticationStateChanged;
-}
+        try
+        {
+            var received =
+                await AdvertisementApiService.GetReceivedEnquiriesAsync();
+
+            var sent =
+                await AdvertisementApiService.GetSentEnquiriesAsync();
+
+            var currentUserId = AuthenticationStateProvider.CurrentUserId;
+
+            var allEnquiries = received
+                .Concat(sent)
+                .GroupBy(x => x.AdvertisementEnquiryID)
+                .Select(g => g.First());
+
+            PendingEnquiryCount = currentUserId.HasValue
+                ? allEnquiries.Count(x =>
+                    string.Equals(
+                        x.Status,
+                        "OPEN",
+                        StringComparison.OrdinalIgnoreCase)
+                    &&
+                    x.LastMessageSenderUserID.HasValue
+                    &&
+                    x.LastMessageSenderUserID.Value != currentUserId.Value)
+                : 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"TOPBAR ENQUIRY COUNT ERROR: {ex.Message}");
+
+            // A count-loading failure should not break navigation.
+            PendingEnquiryCount = 0;
+        }
+    }
+
+
     // ============================================================
     // AUTHENTICATION
     // ============================================================
@@ -292,60 +613,87 @@ public void Dispose()
         }
     }
 
+    private string UserInitial
+    {
+        get
+        {
+            var name = DisplayUserName.Trim();
+
+            return name.Length > 0
+                ? name[..1].ToUpperInvariant()
+                : "A";
+        }
+    }
+
+
+    // ============================================================
+    // MENU STATE
+    // ============================================================
+
+    private void ToggleMobileMenu()
+    {
+        accountOpen = false;
+        mobileOpen = !mobileOpen;
+    }
+
+    private void ToggleAccountMenu()
+    {
+        mobileOpen = false;
+        accountOpen = !accountOpen;
+    }
+
+    private void CloseMenus()
+    {
+        mobileOpen = false;
+        accountOpen = false;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CloseMenus();
+        }
+    }
+
 
     // ============================================================
     // NAVIGATION
     // ============================================================
 
-    private void GoHome() => Navigation.NavigateTo("/");
-
-    private void GoBrowse() => Navigation.NavigateTo("/#browse");
-
-    private void GoCategories() => Navigation.NavigateTo("/#categories");
-
-    private void GoHowItWorks() => Navigation.NavigateTo("/#how-it-works");
-
-    private void OpenPackages() => Navigation.NavigateTo("/enquiry-packages");
-
-    private async Task OpenMyPackageRequests()
+    private void GoTo(string url)
     {
-        if (!IsAuthenticated)
-        {
-            await OpenLogin();
-            return;
-        }
-
-        Navigation.NavigateTo("/my-package-requests");
+        CloseMenus();
+        Navigation.NavigateTo(url);
     }
 
-
-    // ============================================================
-    // SIGN IN / SIGN UP
-    // ============================================================
+    private void GoHome() => GoTo("/");
 
     private async Task OpenLogin()
     {
+        CloseMenus();
+
         if (OnSignIn.HasDelegate)
         {
             await OnSignIn.InvokeAsync();
+            return;
         }
+
+        Navigation.NavigateTo("/?auth=signin");
     }
 
     private async Task OpenSignup()
     {
+        CloseMenus();
+
         if (OnSignUp.HasDelegate)
         {
             await OnSignUp.InvokeAsync();
             return;
         }
 
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/?auth=signup");
     }
-
-
-    // ============================================================
-    // PROTECTED DESTINATIONS
-    // ============================================================
 
     private async Task OpenFavorites()
     {
@@ -355,60 +703,24 @@ public void Dispose()
             return;
         }
 
-        Navigation.NavigateTo("/my-favorites");
-    }
-
-    private async Task OpenMyAdvertisements()
-    {
-        if (!IsAuthenticated)
-        {
-            await OpenLogin();
-            return;
-        }
-
-        Navigation.NavigateTo("/my-ads");
-    }
-
-    private async Task OpenMyEnquiries()
-{
-    if (!IsAuthenticated)
-    {
-        await OpenLogin();
-        return;
-    }
-
-    Navigation.NavigateTo("/my-enquiries");
-}
-
-    private async Task OpenAccount()
-    {
-        if (!IsAuthenticated)
-        {
-            await OpenLogin();
-            return;
-        }
-
-        Navigation.NavigateTo("/account");
+        GoTo("/my-favorites");
     }
 
     private async Task HandlePostAdvertisement()
     {
         if (IsAuthenticated)
         {
-            Navigation.NavigateTo("/my-ads/create");
+            GoTo("/my-ads/create");
             return;
         }
 
         await OpenLogin();
     }
 
-
-    // ============================================================
-    // SIGN OUT
-    // ============================================================
-
     private Task HandleSignOut()
     {
+        CloseMenus();
+
         AuthenticationStateProvider.SignOut();
 
         Navigation.NavigateTo("/", forceLoad: true);
@@ -421,27 +733,27 @@ public void Dispose()
     // ACTIVE NAVIGATION
     // ============================================================
 
-    private string GetNavClass(string item)
+    private bool IsActive(string key)
     {
         var relative =
-            Navigation.ToBaseRelativePath(Navigation.Uri);
+            Navigation.ToBaseRelativePath(Navigation.Uri)
+                .Split('?')[0]
+                .Split('#')[0]
+                .Trim('/')
+                .ToLowerInvariant();
 
-        relative =
-            relative.Split('?')[0]
-                    .Split('#')[0]
-                    .Trim('/')
-                    .ToLowerInvariant();
-
-        return item switch
+        return key switch
         {
-            "home" =>
-                string.IsNullOrEmpty(relative)
-                    ? "public-topbar-nav-link active"
-                    : "public-topbar-nav-link",
+            "home" => string.IsNullOrEmpty(relative),
 
-            _ =>
-                "public-topbar-nav-link"
+            "packages" => relative.StartsWith("enquiry-packages"),
+
+            _ => false
         };
     }
-}
 
+    private string GetNavClass(string key) =>
+        IsActive(key)
+            ? "pt-nav-link active"
+            : "pt-nav-link";
+}

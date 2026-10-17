@@ -63,10 +63,11 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
 
         if (request.MonthlySenderEnquiryLimit < 0 ||
             request.MonthlyAdvertisementEnquiryLimit < 0 ||
-            request.MonthlyReplyLimit < 0)
+            request.MonthlyReplyLimit < 0 ||
+            request.MonthlyAdvertisementPostLimit < 0)
         {
             throw new InvalidOperationException(
-                "Monthly enquiry and reply limits cannot be negative.");
+                "Monthly enquiry, reply, and advertisement post limits cannot be negative.");
         }
 
         if (request.ValidityDays is <= 0)
@@ -116,13 +117,14 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
                  (request.Price <= 0m ||
                   (request.MonthlySenderEnquiryLimit == 0 &&
                    request.MonthlyAdvertisementEnquiryLimit == 0 &&
-                   request.MonthlyReplyLimit == 0) ||
+                   request.MonthlyReplyLimit == 0 &&
+                   request.MonthlyAdvertisementPostLimit == 0) ||
                   !request.ValidityDays.HasValue ||
                   request.ValidityDays.Value <= 0))
         {
             throw new InvalidOperationException(
                 "An active paid package requires a positive price, " +
-                "at least one positive monthly enquiry or reply limit, " +
+                "at least one positive monthly usage limit, " +
                 "and a positive validity period.");
         }
 
@@ -138,6 +140,7 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
         }
 
         package.Name = name;
+
         package.Description = string.IsNullOrWhiteSpace(description)
             ? null
             : description;
@@ -150,6 +153,9 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
 
         package.MonthlyReplyLimit =
             request.MonthlyReplyLimit;
+
+        package.MonthlyAdvertisementPostLimit =
+            request.MonthlyAdvertisementPostLimit;
 
         package.ValidityDays = request.ValidityDays;
         package.Price = request.Price;
@@ -179,6 +185,9 @@ public sealed class EnquiryPackageAdminService : IEnquiryPackageAdminService
 
             MonthlyReplyLimit =
                 package.MonthlyReplyLimit,
+
+            MonthlyAdvertisementPostLimit =
+                package.MonthlyAdvertisementPostLimit,
 
             ValidityDays = package.ValidityDays,
             Price = package.Price,

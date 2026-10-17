@@ -62,6 +62,32 @@ public sealed class PackagePurchaseRequestAdminApiService
         return envelope?.Data ?? new();
     }
 
+    public async Task<List<AdminPackagePurchaseRequestResponse>>
+        GetHistoryAsync()
+    {
+        using var client = CreateClient();
+        using var response = await client.GetAsync(
+            "api/v1/admin/package-purchase-requests/history");
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Unable to load purchase-request history. HTTP {(int)response.StatusCode}: {body}");
+        }
+
+        var envelope =
+            JsonSerializer.Deserialize<ApiEnvelope<List<AdminPackagePurchaseRequestResponse>>>(
+                body, JsonOptions);
+
+        return envelope?.Data ?? new();
+    }
+
+    public Task CancelAsync(long requestId) =>
+        PostActionAsync(
+            $"api/v1/admin/package-purchase-requests/{requestId}/cancel");
+
     public Task ApproveAsync(long requestId) =>
         PostActionAsync(
             $"api/v1/admin/package-purchase-requests/{requestId}/approve");

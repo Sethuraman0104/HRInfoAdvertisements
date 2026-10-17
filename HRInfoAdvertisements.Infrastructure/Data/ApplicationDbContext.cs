@@ -82,6 +82,8 @@ public class ApplicationDbContext : DbContext
         => Set<PaymentTransaction>();
     public DbSet<PackagePurchaseRequest> PackagePurchaseRequests
         => Set<PackagePurchaseRequest>();
+    public DbSet<PackageEntitlementContribution> PackageEntitlementContributions
+        => Set<PackageEntitlementContribution>();
 
     // System
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -95,4 +97,5 @@ public class ApplicationDbContext : DbContext
             typeof(ApplicationDbContext).Assembly);
     }
 }
+
 

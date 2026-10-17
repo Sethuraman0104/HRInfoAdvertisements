@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using HRInfoAdvertisements.Application.Billing;
 using HRInfoAdvertisements.Application.Billing.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -76,6 +76,26 @@ public sealed class PackagePurchaseRequestsController : ControllerBase
 }
     }
 
+    [HttpGet("my-balance")]
+    [ProducesResponseType(typeof(MyPackageBalanceResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMyBalance(
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new
+            {
+                Success = false,
+                Message = "Invalid user identity."
+            });
+        }
+
+        var result = await _billingService.GetMyPackageBalanceAsync(
+            userId,
+            cancellationToken);
+
+        return Ok(result);
+    }
     [HttpGet("mine")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetMine(

@@ -1,4 +1,4 @@
-﻿namespace HRInfoAdvertisements.Domain.Billing;
+namespace HRInfoAdvertisements.Domain.Billing;
 
 public static class PaymentTransactionStatuses
 {
@@ -23,6 +23,8 @@ public class PaymentTransaction
     public string PaymentProvider { get; set; } = string.Empty;
 
     public string? ProviderTransactionReference { get; set; }
+
+    public string? ExternalRefundReference { get; set; }
 
     public string Status { get; set; } = PaymentTransactionStatuses.Pending;
 

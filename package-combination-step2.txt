@@ -1,0 +1,1870 @@
+
+========== .\HRInfoAdvertisements.Domain\Billing\UserPackageEntitlement.cs ==========
+
+using HRInfoAdvertisements.Domain.Entities;
+
+namespace HRInfoAdvertisements.Domain.Billing;
+
+public static class UserPackageEntitlementStatuses
+{
+    public const string Pending = "PENDING";
+    public const string Active = "ACTIVE";
+    public const string Cancelled = "CANCELLED";
+    public const string Expired = "EXPIRED";
+}
+
+public class UserPackageEntitlement
+{
+    public long UserPackageEntitlementID { get; set; }
+
+    public long UserID { get; set; }
+
+    public int EnquiryPackageID { get; set; }
+
+    // Limits are snapshotted when the paid entitlement is activated.
+    // Later package configuration changes must not alter this entitlement.
+    public int MonthlyAdvertisementPostLimit { get; set; }
+
+    public int MonthlySenderEnquiryLimit { get; set; }
+
+    public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+    public int MonthlyReplyLimit { get; set; }
+
+    // UTC timestamps: StartDate inclusive, EndDate exclusive.
+    public DateTime StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public string Status { get; set; } =
+        UserPackageEntitlementStatuses.Pending;
+
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ModifiedDate { get; set; }
+
+    public User User { get; set; } = null!;
+
+    public EnquiryPackage EnquiryPackage { get; set; } = null!;
+
+    public ICollection<PaymentTransaction> Payments { get; set; }
+        = new List<PaymentTransaction>();
+}
+
+========== .\HRInfoAdvertisements.Domain\Billing\PaymentTransaction.cs ==========
+namespace HRInfoAdvertisements.Domain.Billing;
+
+public static class PaymentTransactionStatuses
+{
+    public const string Pending = "PENDING";
+    public const string Confirmed = "CONFIRMED";
+    public const string Failed = "FAILED";
+    public const string Refunded = "REFUNDED";
+}
+
+public class PaymentTransaction
+{
+    public long PaymentTransactionID { get; set; }
+
+    public long UserPackageEntitlementID { get; set; }
+
+    public decimal Amount { get; set; }
+
+    public string CurrencyCode { get; set; } = "BHD";
+
+    public string PaymentMethod { get; set; } = string.Empty;
+
+    public string PaymentProvider { get; set; } = string.Empty;
+
+    public string? ProviderTransactionReference { get; set; }
+
+    public string? ExternalRefundReference { get; set; }
+
+    public string Status { get; set; } = PaymentTransactionStatuses.Pending;
+
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ConfirmedDate { get; set; }
+
+    public DateTime? RefundedDate { get; set; }
+
+    public UserPackageEntitlement UserPackageEntitlement { get; set; } = null!;
+}
+
+========== .\HRInfoAdvertisements.Domain\Billing\PackagePurchaseRequest.cs ==========
+using HRInfoAdvertisements.Domain.Entities;
+
+namespace HRInfoAdvertisements.Domain.Billing;
+
+public static class PackagePurchaseRequestStatuses
+{
+    public const string Pending = "PENDING";
+    public const string Approved = "APPROVED";
+    public const string Completed = "COMPLETED";
+    public const string Rejected = "REJECTED";
+    public const string Cancelled = "CANCELLED";
+}
+
+public class PackagePurchaseRequest
+{
+    public long PackagePurchaseRequestID { get; set; }
+
+    public long UserID { get; set; }
+
+    public int EnquiryPackageID { get; set; }
+
+    // Snapshot of the package price when the request was created.
+    public decimal Amount { get; set; }
+
+    // Snapshot of the package currency when the request was created.
+    public string CurrencyCode { get; set; } = string.Empty;
+
+    public string Status { get; set; } =
+        PackagePurchaseRequestStatuses.Pending;
+
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ModifiedDate { get; set; }
+
+    public User User { get; set; } = null!;
+
+    public EnquiryPackage EnquiryPackage { get; set; } = null!;
+}
+
+
+========== .\HRInfoAdvertisements.Domain\Billing\EnquiryPackage.cs ==========
+namespace HRInfoAdvertisements.Domain.Billing;
+
+public class EnquiryPackage
+{
+    public int EnquiryPackageID { get; set; }
+
+    // Stable identifier used by business rules, independent of display name.
+    public string PackageCode { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public string? Description { get; set; }
+
+    // Maximum new enquiries a subscriber may send per UTC calendar month.
+    public int MonthlySenderEnquiryLimit { get; set; }
+
+    // Maximum new enquiries an advertisement may receive per UTC calendar month.
+    public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+    // Maximum replies a user may send across all enquiries per UTC calendar month.
+public int MonthlyReplyLimit { get; set; }
+
+// Maximum new advertisement submissions per UTC calendar month.
+public int MonthlyAdvertisementPostLimit { get; set; }
+
+    public int? ValidityDays { get; set; }
+
+    public decimal Price { get; set; }
+
+    public string CurrencyCode { get; set; } = "BHD";
+
+    public bool IsActive { get; set; } = true;
+
+    public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+    public DateTime? ModifiedDate { get; set; }
+
+    public ICollection<UserPackageEntitlement> Entitlements { get; set; }
+        = new List<UserPackageEntitlement>();
+}
+
+
+========== .\HRInfoAdvertisements.Application\Billing\DTOs\MyPackageBalanceResponse.cs ==========
+namespace HRInfoAdvertisements.Application.Billing.DTOs;
+
+public sealed class MyPackageBalanceResponse
+{
+    public string PackageCode { get; set; } = string.Empty;
+
+    public string PackageName { get; set; } = string.Empty;
+
+    public string EntitlementStatus { get; set; } = string.Empty;
+
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public bool IsPaidPackage { get; set; }
+
+    public DateTime UsagePeriodStartUtc { get; set; }
+
+    public DateTime UsagePeriodEndUtc { get; set; }
+
+    public PackageUsageBalance AdvertisementPosts { get; set; } = new();
+
+    public PackageUsageBalance EnquiriesSent { get; set; } = new();
+
+    public PackageUsageBalance RepliesSent { get; set; } = new();
+
+    public List<AdvertisementEnquiryUsageBalance> AdvertisementEnquiriesReceived { get; set; }
+        = new();
+    public List<QueuedPackageBalance> QueuedPackages { get; set; } = new();
+}
+
+public sealed class PackageUsageBalance
+{
+    public int Limit { get; set; }
+
+    public int Used { get; set; }
+
+    public int Remaining => Math.Max(0, Limit - Used);
+
+    public bool Unlimited => Limit < 0;
+}
+
+public sealed class AdvertisementEnquiryUsageBalance
+{
+    public long AdvertisementID { get; set; }
+
+    public string AdvertisementTitle { get; set; } = string.Empty;
+
+    public int Limit { get; set; }
+
+    public int Used { get; set; }
+
+    public int Remaining => Math.Max(0, Limit - Used);
+}
+
+public sealed class QueuedPackageBalance
+{
+    public string PackageCode { get; set; } = string.Empty;
+
+    public string PackageName { get; set; } = string.Empty;
+
+    public string EntitlementStatus { get; set; } = string.Empty;
+
+    public DateTime StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public int MonthlyAdvertisementPostLimit { get; set; }
+
+    public int MonthlySenderEnquiryLimit { get; set; }
+
+    public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+    public int MonthlyReplyLimit { get; set; }
+}
+
+========== .\HRInfoAdvertisements.Infrastructure\Billing\PackageEntitlementActivation.cs ==========
+using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+
+namespace HRInfoAdvertisements.Infrastructure.Billing;
+
+internal static class PackageEntitlementActivation
+{
+    public static async Task ActivateDueAsync(
+        ApplicationDbContext context,
+        long userId,
+        DateTime now,
+        CancellationToken cancellationToken = default)
+    {
+        var transaction = context.Database.CurrentTransaction
+            ?? throw new InvalidOperationException(
+                "Package activation requires an active database transaction.");
+
+        await using var command =
+            context.Database.GetDbConnection().CreateCommand();
+
+        command.Transaction = transaction.GetDbTransaction();
+        command.CommandText = """
+            DECLARE @result int;
+            EXEC @result = sp_getapplock
+                @Resource = @resource,
+                @LockMode = 'Exclusive',
+                @LockOwner = 'Transaction',
+                @LockTimeout = 10000;
+            SELECT @result;
+            """;
+
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "@resource";
+        parameter.Value =
+            $"HRInfoAdvertisements:PackageActivation:User:{userId}";
+        command.Parameters.Add(parameter);
+
+        var lockResult = Convert.ToInt32(
+            await command.ExecuteScalarAsync(cancellationToken));
+
+        if (lockResult < 0)
+            throw new InvalidOperationException(
+                "Could not acquire the package activation lock.");
+
+        while (true)
+        {
+            var expired = await context.UserPackageEntitlements
+                .Where(x =>
+                    x.UserID == userId &&
+                    x.Status == UserPackageEntitlementStatuses.Active &&
+                    x.EndDate.HasValue &&
+                    x.EndDate.Value <= now)
+                .ToListAsync(cancellationToken);
+
+            foreach (var item in expired)
+            {
+                item.Status = UserPackageEntitlementStatuses.Expired;
+                item.ModifiedDate = now;
+            }
+
+            if (expired.Count > 0)
+                await context.SaveChangesAsync(cancellationToken);
+
+            var hasActive = await context.UserPackageEntitlements
+                .AnyAsync(x =>
+                    x.UserID == userId &&
+                    x.Status == UserPackageEntitlementStatuses.Active &&
+                    x.StartDate <= now &&
+                    (!x.EndDate.HasValue || x.EndDate.Value > now),
+                    cancellationToken);
+
+            if (hasActive)
+                return;
+
+            var next = await context.UserPackageEntitlements
+                .Where(x =>
+                    x.UserID == userId &&
+                    x.Status == UserPackageEntitlementStatuses.Pending &&
+                    x.StartDate <= now &&
+                    x.EnquiryPackage.PackageCode != "FREE" &&
+                    x.Payments.Any(p =>
+                        p.Status == PaymentTransactionStatuses.Confirmed &&
+                        p.ConfirmedDate.HasValue &&
+                        !p.RefundedDate.HasValue))
+                .OrderBy(x => x.StartDate)
+                .ThenBy(x => x.UserPackageEntitlementID)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (next == null)
+                return;
+
+            next.Status = UserPackageEntitlementStatuses.Active;
+            next.ModifiedDate = now;
+            await context.SaveChangesAsync(cancellationToken);
+
+            // If an old queued package has already expired, advance again.
+            if (next.EndDate.HasValue && next.EndDate.Value <= now)
+            {
+                next.Status = UserPackageEntitlementStatuses.Expired;
+                next.ModifiedDate = now;
+                await context.SaveChangesAsync(cancellationToken);
+                continue;
+            }
+
+            return;
+        }
+    }
+}
+
+========== .\HRInfoAdvertisements.Infrastructure\Billing\EnquiryBillingService.cs ==========
+using HRInfoAdvertisements.Application.Billing;
+using HRInfoAdvertisements.Application.Billing.DTOs;
+using HRInfoAdvertisements.Application.Services;
+using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using HRInfoAdvertisements.Domain.Entities;
+
+namespace HRInfoAdvertisements.Infrastructure.Billing;
+
+public sealed class EnquiryBillingService : IEnquiryBillingService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IApplicationSettingsService _settings;
+
+    public EnquiryBillingService(
+        ApplicationDbContext context,
+        IApplicationSettingsService settings)
+    {
+        _context = context;
+        _settings = settings;
+    }
+
+    public async Task<MyPackageBalanceResponse> GetMyPackageBalanceAsync(
+        long userId,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(userId));
+        }
+
+        var now = DateTime.UtcNow;
+        var periodStart = new DateTime(
+            now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var periodEnd = periodStart.AddMonths(1);
+
+        var response = new MyPackageBalanceResponse
+        {
+            UsagePeriodStartUtc = periodStart,
+            UsagePeriodEndUtc = periodEnd
+        };
+
+        var paidEntitlement = await _context.UserPackageEntitlements
+            .AsNoTracking()
+            .Where(x =>
+                x.UserID == userId &&
+                x.Status == UserPackageEntitlementStatuses.Active &&
+                x.StartDate <= now &&
+                (x.EndDate == null || x.EndDate > now) &&
+                x.EnquiryPackage.PackageCode != "FREE" &&
+                x.Payments.Any(p =>
+                    p.Status == PaymentTransactionStatuses.Confirmed &&
+                    p.ConfirmedDate != null &&
+                    p.RefundedDate == null))
+            .OrderByDescending(x => x.StartDate)
+            .Select(x => new
+            {
+                x.EnquiryPackage.PackageCode,
+                x.EnquiryPackage.Name,
+                x.Status,
+                x.StartDate,
+                x.EndDate,
+                x.MonthlyAdvertisementPostLimit,
+                x.MonthlySenderEnquiryLimit,
+                x.MonthlyAdvertisementEnquiryLimit,
+                x.MonthlyReplyLimit
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        int postLimit;
+        int senderLimit;
+        int receivedLimit;
+        int replyLimit;
+
+        if (paidEntitlement != null)
+        {
+            response.PackageCode = paidEntitlement.PackageCode;
+            response.PackageName = paidEntitlement.Name;
+            response.EntitlementStatus = paidEntitlement.Status;
+            response.StartDate = paidEntitlement.StartDate;
+            response.EndDate = paidEntitlement.EndDate;
+            response.IsPaidPackage = true;
+
+            postLimit = paidEntitlement.MonthlyAdvertisementPostLimit;
+            senderLimit = paidEntitlement.MonthlySenderEnquiryLimit;
+            receivedLimit = paidEntitlement.MonthlyAdvertisementEnquiryLimit;
+            replyLimit = paidEntitlement.MonthlyReplyLimit;
+        }
+        else
+        {
+            var freePackage = await _context.EnquiryPackages
+                .AsNoTracking()
+                .Where(x => x.PackageCode == "FREE" && x.IsActive)
+                .Select(x => new
+                {
+                    x.PackageCode,
+                    x.Name,
+                    x.MonthlyAdvertisementPostLimit,
+                    x.MonthlySenderEnquiryLimit,
+                    x.MonthlyAdvertisementEnquiryLimit,
+                    x.MonthlyReplyLimit
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (freePackage == null)
+            {
+                throw new InvalidOperationException(
+                    "The FREE package is unavailable. Please contact support.");
+            }
+
+            response.PackageCode = freePackage.PackageCode;
+            response.PackageName = freePackage.Name;
+            response.EntitlementStatus = "FREE";
+            response.IsPaidPackage = false;
+
+            postLimit = freePackage.MonthlyAdvertisementPostLimit;
+            senderLimit = freePackage.MonthlySenderEnquiryLimit;
+            receivedLimit = freePackage.MonthlyAdvertisementEnquiryLimit;
+            replyLimit = freePackage.MonthlyReplyLimit;
+        }
+
+        var postsUsed = await _context.AuditLogs
+            .AsNoTracking()
+            .Where(x =>
+                x.UserID == userId &&
+                x.Action == "ADVERTISEMENT_SUBMITTED" &&
+                x.EntityName == "Advertisement" &&
+                x.EntityID != null &&
+                x.CreatedDate >= periodStart &&
+                x.CreatedDate < periodEnd)
+            .Select(x => x.EntityID)
+            .Distinct()
+            .CountAsync(cancellationToken);
+
+        var enquiriesSent = await _context.AdvertisementEnquiries
+            .AsNoTracking()
+            .CountAsync(x =>
+                x.SenderUserID == userId &&
+                x.CreatedDate >= periodStart &&
+                x.CreatedDate < periodEnd,
+                cancellationToken);
+
+        var repliesSent = await _context.AdvertisementEnquiryMessages
+            .AsNoTracking()
+            .CountAsync(x =>
+                x.SenderUserID == userId &&
+                x.CreatedDate >= periodStart &&
+                x.CreatedDate < periodEnd,
+                cancellationToken);
+
+        response.AdvertisementPosts = new PackageUsageBalance
+        {
+            Limit = postLimit,
+            Used = postsUsed
+        };
+
+        response.EnquiriesSent = new PackageUsageBalance
+        {
+            Limit = senderLimit,
+            Used = enquiriesSent
+        };
+
+        response.RepliesSent = new PackageUsageBalance
+        {
+            Limit = replyLimit,
+            Used = repliesSent
+        };
+
+        var ownedAdvertisements = await _context.Advertisements
+            .AsNoTracking()
+            .Where(x => x.UserID == userId)
+            .Select(x => new
+            {
+                x.AdvertisementID,
+                x.Title
+            })
+            .ToListAsync(cancellationToken);
+
+        var ownedAdvertisementIds = ownedAdvertisements
+            .Select(x => x.AdvertisementID)
+            .ToList();
+
+        var receivedCounts = ownedAdvertisementIds.Count == 0
+            ? new List<(long AdvertisementID, int Used)>()
+            : (await _context.AdvertisementEnquiries
+                .AsNoTracking()
+                .Where(x =>
+                    ownedAdvertisementIds.Contains(x.AdvertisementID) &&
+                    x.CreatedDate >= periodStart &&
+                    x.CreatedDate < periodEnd)
+                .GroupBy(x => x.AdvertisementID)
+                .Select(g => new
+                {
+                    AdvertisementID = g.Key,
+                    Used = g.Count()
+                })
+                .ToListAsync(cancellationToken))
+                .Select(x => (x.AdvertisementID, x.Used))
+                .ToList();
+
+        var receivedCountByAdvertisement = receivedCounts.ToDictionary(
+            x => x.AdvertisementID,
+            x => x.Used);
+
+        response.AdvertisementEnquiriesReceived = ownedAdvertisements
+            .Select(advertisement => new AdvertisementEnquiryUsageBalance
+            {
+                AdvertisementID = advertisement.AdvertisementID,
+                AdvertisementTitle = advertisement.Title,
+                Limit = receivedLimit,
+                Used = receivedCountByAdvertisement.TryGetValue(
+                    advertisement.AdvertisementID,
+                    out var used)
+                    ? used
+                    : 0
+            })
+            .OrderBy(x => x.AdvertisementTitle)
+            .ToList();
+
+        response.QueuedPackages = await _context.UserPackageEntitlements
+            .AsNoTracking()
+            .Where(x =>
+                x.UserID == userId &&
+                x.Status == UserPackageEntitlementStatuses.Pending &&
+                x.StartDate > now &&
+                x.EnquiryPackage.PackageCode != "FREE" &&
+                x.Payments.Any(p =>
+                    p.Status == PaymentTransactionStatuses.Confirmed &&
+                    p.ConfirmedDate != null &&
+                    p.RefundedDate == null))
+            .OrderBy(x => x.StartDate)
+            .Select(x => new QueuedPackageBalance
+            {
+                PackageCode = x.EnquiryPackage.PackageCode,
+                PackageName = x.EnquiryPackage.Name,
+                EntitlementStatus = x.Status,
+                StartDate = x.StartDate,
+                EndDate = x.EndDate,
+                MonthlyAdvertisementPostLimit = x.MonthlyAdvertisementPostLimit,
+                MonthlySenderEnquiryLimit = x.MonthlySenderEnquiryLimit,
+                MonthlyAdvertisementEnquiryLimit = x.MonthlyAdvertisementEnquiryLimit,
+                MonthlyReplyLimit = x.MonthlyReplyLimit
+            })
+            .ToListAsync(cancellationToken);
+        return response;
+    }
+    public async Task<IReadOnlyList<EnquiryPackageResponse>>
+        GetAvailablePackagesAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var paidPackagesEnabled =
+            await _settings.GetBoolAsync("PAID_PACKAGES_ENABLED", cancellationToken) ?? false;
+
+        return await _context.EnquiryPackages
+            .AsNoTracking()
+            .Where(package => package.IsActive && (paidPackagesEnabled || package.PackageCode == "FREE"))
+            .OrderBy(package => package.Price)
+            .ThenBy(package => package.EnquiryPackageID)
+            .Select(package => new EnquiryPackageResponse
+            {
+                EnquiryPackageID = package.EnquiryPackageID,
+                PackageCode = package.PackageCode,
+                Name = package.Name,
+                Description = package.Description,
+                MonthlySenderEnquiryLimit =
+                    package.MonthlySenderEnquiryLimit,
+                MonthlyAdvertisementEnquiryLimit =
+                    package.MonthlyAdvertisementEnquiryLimit,
+                MonthlyReplyLimit = package.MonthlyReplyLimit,
+MonthlyAdvertisementPostLimit =
+    package.MonthlyAdvertisementPostLimit,
+                ValidityDays = package.ValidityDays,
+                Price = package.Price,
+                CurrencyCode = package.CurrencyCode,
+                IsActive = package.IsActive
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    
+public async Task<PackagePurchaseRequestResponse>
+    CreatePurchaseRequestAsync(
+        long userId,
+        int enquiryPackageId,
+        CancellationToken cancellationToken = default)
+{
+    if (userId <= 0)
+    {
+        throw new InvalidOperationException(
+            "The authenticated user ID is invalid.");
+    }
+
+    var paidPackagesEnabled =
+        await _settings.GetBoolAsync(
+            "PAID_PACKAGES_ENABLED",
+            cancellationToken) ?? false;
+
+    if (!paidPackagesEnabled)
+    {
+        throw new InvalidOperationException(
+            "Paid package purchases are currently disabled.");
+    }
+
+    var package = await _context.EnquiryPackages
+        .AsNoTracking()
+        .SingleOrDefaultAsync(
+            x => x.EnquiryPackageID == enquiryPackageId &&
+                 x.IsActive,
+            cancellationToken);
+
+    if (package == null)
+    {
+        throw new InvalidOperationException(
+            "The requested package does not exist or is inactive.");
+    }
+
+    if (string.Equals(
+        package.PackageCode,
+        "FREE",
+        StringComparison.OrdinalIgnoreCase) ||
+    package.Price <= 0m ||
+    (package.MonthlySenderEnquiryLimit <= 0 &&
+     package.MonthlyAdvertisementEnquiryLimit <= 0 &&
+     package.MonthlyReplyLimit <= 0 &&
+     package.MonthlyAdvertisementPostLimit <= 0))
+{
+    throw new InvalidOperationException(
+        "This package is not configured for paid purchase.");
+}
+
+    await using var transaction =
+        await _context.Database.BeginTransactionAsync(
+            System.Data.IsolationLevel.Serializable,
+            cancellationToken);
+
+    var hasOutstandingRequest =
+        await _context.PackagePurchaseRequests
+            .AnyAsync(
+                x => x.UserID == userId &&
+                     (x.Status == PackagePurchaseRequestStatuses.Pending ||
+                      x.Status == PackagePurchaseRequestStatuses.Approved),
+                cancellationToken);
+
+    if (hasOutstandingRequest)
+    {
+        throw new InvalidOperationException(
+            "You already have an outstanding package purchase request. " +
+            "Complete or resolve it before requesting another package.");
+    }
+
+    var request = new PackagePurchaseRequest
+    {
+        UserID = userId,
+        EnquiryPackageID = package.EnquiryPackageID,
+        Amount = package.Price,
+        CurrencyCode = package.CurrencyCode,
+        Status = PackagePurchaseRequestStatuses.Pending,
+        CreatedDate = DateTime.UtcNow
+    };
+
+    _context.PackagePurchaseRequests.Add(request);
+
+    await _context.SaveChangesAsync(cancellationToken);
+    await transaction.CommitAsync(cancellationToken);
+
+    request.EnquiryPackage = package;
+
+    return MapPurchaseRequest(request);
+}
+
+
+    public async Task<IReadOnlyList<PackagePurchaseRequestResponse>>
+        GetMyPurchaseRequestsAsync(
+            long userId,
+            CancellationToken cancellationToken = default)
+    {
+        if (userId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The authenticated user ID is invalid.");
+        }
+
+        var requests = await _context.PackagePurchaseRequests
+            .AsNoTracking()
+            .Include(x => x.EnquiryPackage)
+            .Where(x => x.UserID == userId)
+            .OrderByDescending(x => x.CreatedDate)
+            .ThenByDescending(x => x.PackagePurchaseRequestID)
+            .ToListAsync(cancellationToken);
+
+        return requests
+            .Select(MapPurchaseRequest)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPendingPurchaseRequestsForAdminAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var requests = await _context.PackagePurchaseRequests
+            .AsNoTracking()
+            .Include(x => x.EnquiryPackage)
+            .Where(x => x.Status == PackagePurchaseRequestStatuses.Pending)
+            .OrderBy(x => x.CreatedDate)
+            .ThenBy(x => x.PackagePurchaseRequestID)
+            .ToListAsync(cancellationToken);
+
+        return requests
+            .Select(MapAdminPurchaseRequest)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+    GetActionablePurchaseRequestsForAdminAsync(
+        CancellationToken cancellationToken = default)
+{
+    var requests = await _context.PackagePurchaseRequests
+        .AsNoTracking()
+        .Include(x => x.EnquiryPackage)
+        .Where(x =>
+            x.Status == PackagePurchaseRequestStatuses.Pending ||
+            x.Status == PackagePurchaseRequestStatuses.Approved)
+        .OrderBy(x => x.CreatedDate)
+        .ThenBy(x => x.PackagePurchaseRequestID)
+        .ToListAsync(cancellationToken);
+
+    return requests
+        .Select(MapAdminPurchaseRequest)
+        .ToList();
+}
+
+    public async Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPurchaseRequestHistoryForAdminAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var requests = await _context.PackagePurchaseRequests
+            .AsNoTracking()
+            .Include(x => x.EnquiryPackage)
+            .OrderByDescending(x => x.CreatedDate)
+            .ThenByDescending(x => x.PackagePurchaseRequestID)
+            .ToListAsync(cancellationToken);
+
+        return requests
+            .Select(MapAdminPurchaseRequest)
+            .ToList();
+    }
+
+    public async Task<AdminPackagePurchaseRequestResponse?>
+        CancelPurchaseRequestAsync(
+            long adminUserId,
+            long purchaseRequestId,
+            CancellationToken cancellationToken = default)
+    {
+        if (adminUserId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The authenticated administrator ID is invalid.");
+        }
+
+        if (purchaseRequestId <= 0)
+        {
+            throw new InvalidOperationException(
+                "The purchase request ID is invalid.");
+        }
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable,
+                cancellationToken);
+
+        var request = await _context.PackagePurchaseRequests
+            .Include(x => x.EnquiryPackage)
+            .SingleOrDefaultAsync(
+                x => x.PackagePurchaseRequestID == purchaseRequestId,
+                cancellationToken);
+
+        if (request is null)
+        {
+            return null;
+        }
+
+        if (request.Status != PackagePurchaseRequestStatuses.Pending &&
+            request.Status != PackagePurchaseRequestStatuses.Approved)
+        {
+            throw new InvalidOperationException(
+                "Only pending or approved unpaid purchase requests can be cancelled.");
+        }
+
+        var now = DateTime.UtcNow;
+        var oldStatus = request.Status;
+
+        request.Status = PackagePurchaseRequestStatuses.Cancelled;
+        request.ModifiedDate = now;
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            UserID = adminUserId,
+            Action = "PACKAGE_PURCHASE_CANCELLED",
+            EntityName = "PackagePurchaseRequest",
+            EntityID = request.PackagePurchaseRequestID.ToString(),
+            OldValues = JsonSerializer.Serialize(new
+            {
+                Status = oldStatus
+            }),
+            NewValues = JsonSerializer.Serialize(new
+            {
+                Status = request.Status,
+                ModifiedDate = request.ModifiedDate
+            }),
+            CreatedDate = now
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return MapAdminPurchaseRequest(request);
+    }
+    public async Task<AdminPackagePurchaseRequestResponse?>
+ReviewPurchaseRequestAsync(
+long adminUserId,
+long purchaseRequestId,
+bool approve,
+CancellationToken cancellationToken = default)
+{
+if (adminUserId <= 0)
+{
+throw new InvalidOperationException(
+"The authenticated administrator ID is invalid.");
+}
+
+if (purchaseRequestId <= 0)
+{
+    throw new InvalidOperationException(
+        "The purchase request ID is invalid.");
+}
+
+await using var transaction =
+    await _context.Database.BeginTransactionAsync(
+        System.Data.IsolationLevel.Serializable,
+        cancellationToken);
+
+var request = await _context.PackagePurchaseRequests
+    .Include(x => x.EnquiryPackage)
+    .SingleOrDefaultAsync(
+        x => x.PackagePurchaseRequestID == purchaseRequestId,
+        cancellationToken);
+
+if (request == null)
+{
+    return null;
+}
+
+if (request.Status != PackagePurchaseRequestStatuses.Pending)
+{
+    throw new InvalidOperationException(
+        "Only pending purchase requests can be reviewed.");
+}
+
+var now = DateTime.UtcNow;
+var oldStatus = request.Status;
+
+var newStatus = approve
+    ? PackagePurchaseRequestStatuses.Approved
+    : PackagePurchaseRequestStatuses.Rejected;
+
+var oldValues = new
+{
+    Status = oldStatus,
+    request.ModifiedDate
+};
+
+request.Status = newStatus;
+request.ModifiedDate = now;
+
+var newValues = new
+{
+    Status = request.Status,
+    request.ModifiedDate
+};
+
+_context.AuditLogs.Add(new AuditLog
+{
+    UserID = adminUserId,
+    Action = approve
+        ? "PACKAGE_PURCHASE_APPROVED"
+        : "PACKAGE_PURCHASE_REJECTED",
+    EntityName = "PackagePurchaseRequest",
+    EntityID = request.PackagePurchaseRequestID.ToString(),
+    OldValues = JsonSerializer.Serialize(oldValues),
+    NewValues = JsonSerializer.Serialize(newValues),
+    CreatedDate = now
+});
+
+await _context.SaveChangesAsync(cancellationToken);
+await transaction.CommitAsync(cancellationToken);
+
+// Approval permits the request to proceed to payment.
+// It does not confirm payment or activate an entitlement.
+return MapAdminPurchaseRequest(request);
+
+}
+
+    public async Task<AdminPackagePurchaseRequestResponse?>
+ConfirmPackagePaymentAsync(
+long adminUserId,
+long purchaseRequestId,
+ConfirmPackagePaymentRequest request,
+CancellationToken cancellationToken = default)
+{
+if (adminUserId <= 0)
+{
+throw new InvalidOperationException(
+"The authenticated administrator ID is invalid.");
+}
+
+if (purchaseRequestId <= 0)
+{
+    throw new InvalidOperationException(
+        "The purchase request ID is invalid.");
+}
+
+ArgumentNullException.ThrowIfNull(request);
+
+if (string.IsNullOrWhiteSpace(request.PaymentMethod))
+{
+    throw new InvalidOperationException(
+        "Payment method is required.");
+}
+
+var paymentMethod =
+    request.PaymentMethod.Trim().ToUpperInvariant();
+
+if (paymentMethod != "BANK_TRANSFER" &&
+    paymentMethod != "BENEFITPAY")
+{
+    throw new InvalidOperationException(
+        "Payment method must be BANK_TRANSFER or BENEFITPAY.");
+}
+
+var settingKey = paymentMethod == "BANK_TRANSFER"
+    ? "BANK_TRANSFER_ENABLED"
+    : "BENEFITPAY_ENABLED";
+
+var paymentMethodEnabled =
+    await _settings.GetBoolAsync(
+        settingKey,
+        cancellationToken) ?? false;
+
+if (!paymentMethodEnabled)
+{
+    throw new InvalidOperationException(
+        "The selected payment method is currently disabled.");
+}
+
+var reference =
+    request.ProviderTransactionReference?.Trim();
+
+if (string.IsNullOrWhiteSpace(reference) ||
+    reference.Length > 200)
+{
+    throw new InvalidOperationException(
+        "A payment reference is required and must not exceed 200 characters.");
+}
+
+await using var transaction =
+    await _context.Database.BeginTransactionAsync(
+        System.Data.IsolationLevel.Serializable,
+        cancellationToken);
+
+var purchaseRequest = await _context.PackagePurchaseRequests
+    .Include(x => x.EnquiryPackage)
+    .SingleOrDefaultAsync(
+        x => x.PackagePurchaseRequestID == purchaseRequestId,
+        cancellationToken);
+
+if (purchaseRequest == null)
+{
+    return null;
+}
+
+if (purchaseRequest.Status !=
+    PackagePurchaseRequestStatuses.Approved)
+{
+    throw new InvalidOperationException(
+        "Only approved purchase requests can have payment confirmed.");
+}
+
+var package = purchaseRequest.EnquiryPackage;
+
+if (!package.IsActive ||
+    string.Equals(
+        package.PackageCode,
+        "FREE",
+        StringComparison.OrdinalIgnoreCase) ||
+    purchaseRequest.Amount <= 0m)
+{
+    throw new InvalidOperationException(
+        "The purchase request is not eligible for paid activation.");
+}
+
+// Validate paid-package validity before creating an entitlement.
+if (!package.ValidityDays.HasValue ||
+    package.ValidityDays.Value <= 0 ||
+    package.ValidityDays.Value > 3650)
+{
+    throw new InvalidOperationException(
+        "The paid package must have a validity period between 1 and 3650 days before payment can be confirmed.");
+}
+
+var now = DateTime.UtcNow;
+
+await PackageEntitlementActivation.ActivateDueAsync(
+    _context, purchaseRequest.UserID, now, cancellationToken);
+
+var activeEntitlements = await _context.UserPackageEntitlements
+    .Where(x =>
+        x.UserID == purchaseRequest.UserID &&
+        x.Status == UserPackageEntitlementStatuses.Active)
+    .ToListAsync(cancellationToken);
+
+foreach (var entitlement in activeEntitlements)
+{
+    if (!entitlement.EndDate.HasValue)
+    {
+        throw new InvalidOperationException(
+            "A package without an expiry date cannot be queued behind.");
+    }
+
+    if (entitlement.EndDate.Value <= now)
+    {
+        entitlement.Status = UserPackageEntitlementStatuses.Expired;
+        entitlement.ModifiedDate = now;
+    }
+}
+
+await _context.SaveChangesAsync(cancellationToken);
+
+var latestScheduledEnd = await _context.UserPackageEntitlements
+    .Where(x =>
+        x.UserID == purchaseRequest.UserID &&
+        x.EndDate.HasValue &&
+        (x.Status == UserPackageEntitlementStatuses.Active ||
+         (x.Status == UserPackageEntitlementStatuses.Pending &&
+          x.Payments.Any(p =>
+              p.Status == PaymentTransactionStatuses.Confirmed &&
+              p.ConfirmedDate.HasValue &&
+              !p.RefundedDate.HasValue))))
+    .MaxAsync(x => (DateTime?)x.EndDate, cancellationToken);
+
+var scheduledStart =
+    latestScheduledEnd.HasValue && latestScheduledEnd.Value > now
+        ? latestScheduledEnd.Value
+        : now;
+var newEntitlement = new UserPackageEntitlement
+{
+    UserID = purchaseRequest.UserID,
+    EnquiryPackageID = package.EnquiryPackageID,
+
+    // Copy the package configuration at activation time.
+    MonthlyAdvertisementPostLimit =
+        package.MonthlyAdvertisementPostLimit,
+
+    MonthlySenderEnquiryLimit =
+        package.MonthlySenderEnquiryLimit,
+
+    MonthlyAdvertisementEnquiryLimit =
+        package.MonthlyAdvertisementEnquiryLimit,
+
+    MonthlyReplyLimit =
+        package.MonthlyReplyLimit,
+
+    StartDate = scheduledStart,
+    EndDate = scheduledStart.AddDays(package.ValidityDays.Value),
+    Status = scheduledStart <= now
+        ? UserPackageEntitlementStatuses.Active
+        : UserPackageEntitlementStatuses.Pending,
+    CreatedDate = now
+};
+
+var payment = new PaymentTransaction
+{
+    UserPackageEntitlement = newEntitlement,
+    Amount = purchaseRequest.Amount,
+    CurrencyCode = purchaseRequest.CurrencyCode,
+    PaymentMethod = paymentMethod,
+    PaymentProvider = paymentMethod == "BANK_TRANSFER"
+        ? "MANUAL"
+        : "BENEFITPAY",
+    ProviderTransactionReference = reference,
+    Status = PaymentTransactionStatuses.Confirmed,
+    CreatedDate = now,
+    ConfirmedDate = now
+};
+
+newEntitlement.Payments.Add(payment);
+_context.UserPackageEntitlements.Add(newEntitlement);
+
+var oldStatus = purchaseRequest.Status;
+
+purchaseRequest.Status =
+    PackagePurchaseRequestStatuses.Completed;
+
+purchaseRequest.ModifiedDate = now;
+
+// Save the entitlement and payment first so generated IDs are available.
+// This save remains inside the transaction.
+await _context.SaveChangesAsync(cancellationToken);
+
+_context.AuditLogs.Add(new AuditLog
+{
+    UserID = adminUserId,
+    Action = "PACKAGE_PAYMENT_CONFIRMED",
+    EntityName = "PackagePurchaseRequest",
+    EntityID = purchaseRequest.PackagePurchaseRequestID.ToString(),
+    OldValues = JsonSerializer.Serialize(new
+    {
+        Status = oldStatus
+    }),
+    NewValues = JsonSerializer.Serialize(new
+    {
+        Status = purchaseRequest.Status,
+        PaymentTransactionID = payment.PaymentTransactionID,
+        PaymentMethod = payment.PaymentMethod,
+        PaymentProvider = payment.PaymentProvider,
+        ProviderTransactionReference =
+            payment.ProviderTransactionReference,
+        Amount = payment.Amount,
+        CurrencyCode = payment.CurrencyCode,
+        UserPackageEntitlementID =
+            newEntitlement.UserPackageEntitlementID,
+        ConfirmedDate = payment.ConfirmedDate,
+        ModifiedDate = purchaseRequest.ModifiedDate
+    }),
+    CreatedDate = now
+});
+
+// Persist the audit record before committing the same transaction.
+await _context.SaveChangesAsync(cancellationToken);
+await transaction.CommitAsync(cancellationToken);
+
+return MapAdminPurchaseRequest(purchaseRequest);
+
+}
+
+    public async Task<bool?> RefundPackagePaymentAsync(
+        long adminUserId,
+        long paymentTransactionId,
+        RefundPackagePaymentRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (adminUserId <= 0)
+        {
+            throw new InvalidOperationException(
+                "A valid administrator identity is required.");
+        }
+
+        if (paymentTransactionId <= 0)
+        {
+            throw new InvalidOperationException(
+                "A valid payment transaction ID is required.");
+        }
+
+        if (request is null || !request.RefundProcessedExternally)
+        {
+            throw new InvalidOperationException(
+                "Confirm that the external refund has already been processed.");
+        }
+
+        var refundReference = request.ExternalRefundReference?.Trim();
+        var reason = request.Reason?.Trim();
+
+        if (string.IsNullOrWhiteSpace(refundReference) ||
+            refundReference.Length > 200)
+        {
+            throw new InvalidOperationException(
+                "A valid external refund reference is required (maximum 200 characters).");
+        }
+
+        if (string.IsNullOrWhiteSpace(reason) ||
+            reason.Length < 5 ||
+            reason.Length > 1000)
+        {
+            throw new InvalidOperationException(
+                "The refund reason must be between 5 and 1000 characters.");
+        }
+
+        await using var transaction =
+            await _context.Database.BeginTransactionAsync(
+                System.Data.IsolationLevel.Serializable,
+                cancellationToken);
+
+        var payment = await _context.PaymentTransactions
+            .Include(x => x.UserPackageEntitlement)
+                .ThenInclude(x => x.Payments)
+            .SingleOrDefaultAsync(
+                x => x.PaymentTransactionID == paymentTransactionId,
+                cancellationToken);
+
+        if (payment is null)
+        {
+            return null;
+        }
+
+        var refundReferenceInUse = await _context.PaymentTransactions
+            .AnyAsync(x =>
+                x.PaymentTransactionID != paymentTransactionId &&
+                x.ExternalRefundReference == refundReference,
+                cancellationToken);
+
+        if (refundReferenceInUse)
+        {
+            throw new InvalidOperationException(
+                "This external refund reference has already been recorded.");
+        }
+
+        if (payment.Status != PaymentTransactionStatuses.Confirmed ||
+            !payment.ConfirmedDate.HasValue ||
+            payment.RefundedDate.HasValue)
+        {
+            throw new InvalidOperationException(
+                "Only a confirmed payment that has not already been refunded can be refunded.");
+        }
+
+        var entitlement = payment.UserPackageEntitlement;
+        var now = DateTime.UtcNow;
+
+        var oldPaymentStatus = payment.Status;
+        var oldRefundedDate = payment.RefundedDate;
+        var oldEntitlementStatus = entitlement.Status;
+
+        payment.Status = PaymentTransactionStatuses.Refunded;
+        payment.RefundedDate = now;
+        payment.ExternalRefundReference = refundReference;
+
+        var hasOtherValidPayment = entitlement.Payments.Any(other =>
+            other.PaymentTransactionID != payment.PaymentTransactionID &&
+            other.Status == PaymentTransactionStatuses.Confirmed &&
+            other.ConfirmedDate.HasValue &&
+            !other.RefundedDate.HasValue);
+
+        if (!hasOtherValidPayment &&
+            entitlement.Status != UserPackageEntitlementStatuses.Expired)
+        {
+            entitlement.Status = UserPackageEntitlementStatuses.Cancelled;
+        }
+
+        entitlement.ModifiedDate = now;
+
+        _context.AuditLogs.Add(new AuditLog
+        {
+            UserID = adminUserId,
+            Action = "PACKAGE_PAYMENT_REFUNDED",
+            EntityName = "PaymentTransaction",
+            EntityID = payment.PaymentTransactionID.ToString(),
+            OldValues = JsonSerializer.Serialize(new
+            {
+                Status = oldPaymentStatus,
+                RefundedDate = oldRefundedDate,
+                EntitlementStatus = oldEntitlementStatus
+            }),
+            NewValues = JsonSerializer.Serialize(new
+            {
+                Status = payment.Status,
+                RefundedDate = payment.RefundedDate,
+                ExternalRefundReference = refundReference,
+                Reason = reason,
+                Amount = payment.Amount,
+                CurrencyCode = payment.CurrencyCode,
+                UserPackageEntitlementID =
+                    entitlement.UserPackageEntitlementID,
+                EntitlementStatus = entitlement.Status,
+                ModifiedDate = entitlement.ModifiedDate
+            }),
+            CreatedDate = now
+        });
+
+        await _context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return true;
+    }
+    private static AdminPackagePurchaseRequestResponse
+        MapAdminPurchaseRequest(PackagePurchaseRequest request)
+    {
+        return new AdminPackagePurchaseRequestResponse
+        {
+            PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+            UserID = request.UserID,
+            EnquiryPackageID = request.EnquiryPackageID,
+            PackageCode = request.EnquiryPackage.PackageCode,
+            PackageName = request.EnquiryPackage.Name,
+            Amount = request.Amount,
+            CurrencyCode = request.CurrencyCode,
+            Status = request.Status,
+            CreatedDate = request.CreatedDate,
+            ModifiedDate = request.ModifiedDate
+        };
+    }
+    private static PackagePurchaseRequestResponse MapPurchaseRequest(
+        PackagePurchaseRequest request)
+    {
+        return new PackagePurchaseRequestResponse
+        {
+            PackagePurchaseRequestID = request.PackagePurchaseRequestID,
+            EnquiryPackageID = request.EnquiryPackageID,
+            PackageCode = request.EnquiryPackage.PackageCode,
+            PackageName = request.EnquiryPackage.Name,
+            Amount = request.Amount,
+            CurrencyCode = request.CurrencyCode,
+            Status = request.Status,
+            CreatedDate = request.CreatedDate,
+            ModifiedDate = request.ModifiedDate
+        };
+    }
+}
+
+
+
+========== .\HRInfoAdvertisements.Application\Billing\IEnquiryBillingService.cs ==========
+using HRInfoAdvertisements.Application.Billing.DTOs;
+
+namespace HRInfoAdvertisements.Application.Billing;
+
+public interface IEnquiryBillingService
+{
+    Task<IReadOnlyList<EnquiryPackageResponse>> GetAvailablePackagesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<PackagePurchaseRequestResponse> CreatePurchaseRequestAsync(
+        long userId,
+        int enquiryPackageId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<PackagePurchaseRequestResponse>> GetMyPurchaseRequestsAsync(
+        long userId,
+        CancellationToken cancellationToken = default);
+    Task<MyPackageBalanceResponse> GetMyPackageBalanceAsync(
+        long userId,
+        CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPendingPurchaseRequestsForAdminAsync(
+            CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+    GetActionablePurchaseRequestsForAdminAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AdminPackagePurchaseRequestResponse>>
+        GetPurchaseRequestHistoryForAdminAsync(
+            CancellationToken cancellationToken = default);
+
+    Task<AdminPackagePurchaseRequestResponse?> CancelPurchaseRequestAsync(
+        long adminUserId,
+        long purchaseRequestId,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminPackagePurchaseRequestResponse?> ReviewPurchaseRequestAsync(
+        long adminUserId,
+        long purchaseRequestId,
+        bool approve,
+        CancellationToken cancellationToken = default);
+
+    Task<AdminPackagePurchaseRequestResponse?> ConfirmPackagePaymentAsync(
+        long adminUserId,
+        long purchaseRequestId,
+        ConfirmPackagePaymentRequest request,
+        CancellationToken cancellationToken = default);
+    Task<bool?> RefundPackagePaymentAsync(
+        long adminUserId,
+        long paymentTransactionId,
+        RefundPackagePaymentRequest request,
+        CancellationToken cancellationToken = default);
+}
+
+
+
+
+
+========== .\HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs ==========
+
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:25:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:26:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:27:                    b.Property<int>("EnquiryPackageID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:28:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:29:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:30:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:31:                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EnquiryPackageID"));
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:32:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:33:                    b.Property<DateTime>("CreatedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:34:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:35:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:36:                    b.Property<string>("CurrencyCode")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:37:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:38:                        .HasMaxLength(3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:39:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:40:                        .HasColumnType("varchar(3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:41:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:42:                    b.Property<string>("Description")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:43:                        .HasMaxLength(1000)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:44:                        .HasColumnType("nvarchar(1000)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:45:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:46:                    b.Property<bool>("IsActive")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:47:                        .HasColumnType("bit");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:48:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:49:                    b.Property<DateTime?>("ModifiedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:50:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:51:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:52:                    b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:53:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:54:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:55:                    b.Property<int>("MonthlyAdvertisementPostLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:56:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:57:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:58:                    b.Property<int>("MonthlyReplyLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:59:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:60:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:61:                    b.Property<int>("MonthlySenderEnquiryLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:62:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:63:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:64:                    b.Property<string>("Name")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:65:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:66:                        .HasMaxLength(100)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:67:                        .HasColumnType("nvarchar(100)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:68:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:69:                    b.Property<string>("PackageCode")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:70:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:71:                        .HasMaxLength(50)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:72:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:73:                        .HasColumnType("varchar(50)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:74:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:75:                    b.Property<decimal>("Price")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:76:                        .HasPrecision(18, 3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:77:                        .HasColumnType("decimal(18,3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:78:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:79:                    b.Property<int?>("ValidityDays")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:80:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:81:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:82:                    b.HasKey("EnquiryPackageID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:83:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:84:                    b.HasIndex("Name")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:85:                        .IsUnique();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:86:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:87:                    b.HasIndex("PackageCode")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:88:                        .IsUnique();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:89:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:90:                    b.ToTable("EnquiryPackages", null, t =>
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:106:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackagePurchaseRequest", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:107:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:108:                    b.Property<long>("PackagePurchaseRequestID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:109:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:110:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:111:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:112:                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PackagePurchaseRequestID"));
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:113:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:114:                    b.Property<decimal>("Amount")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:115:                        .HasPrecision(18, 3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:116:                        .HasColumnType("decimal(18,3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:117:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:118:                    b.Property<DateTime>("CreatedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:119:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:120:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:121:                    b.Property<string>("CurrencyCode")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:122:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:123:                        .HasMaxLength(3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:124:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:125:                        .HasColumnType("varchar(3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:126:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:127:                    b.Property<int>("EnquiryPackageID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:128:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:129:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:130:                    b.Property<DateTime?>("ModifiedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:131:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:132:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:133:                    b.Property<string>("Status")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:134:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:135:                        .HasMaxLength(20)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:136:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:137:                        .HasColumnType("varchar(20)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:138:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:139:                    b.Property<long>("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:140:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:141:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:142:                    b.HasKey("PackagePurchaseRequestID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:143:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:144:                    b.HasIndex("EnquiryPackageID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:145:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:146:                    b.HasIndex("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:147:                        .IsUnique()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:148:                        .HasFilter("[Status] IN ('PENDING', 'APPROVED')");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:149:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:150:                    b.ToTable("PackagePurchaseRequests", null, t =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:151:                        {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:152:                            t.HasCheckConstraint("CK_PackagePurchaseRequests_Amount", "[Amount] >= 0");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:153:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:154:                            t.HasCheckConstraint("CK_PackagePurchaseRequests_Status", "[Status] IN ('PENDING', 'APPROVED', 'COMPLETED', 
+'REJECTED', 'CANCELLED')");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:155:                        });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:156:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:157:
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:158:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:159:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:160:                    b.Property<long>("PaymentTransactionID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:161:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:162:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:163:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:164:                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PaymentTransactionID"));
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:165:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:166:                    b.Property<decimal>("Amount")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:167:                        .HasPrecision(18, 3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:168:                        .HasColumnType("decimal(18,3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:169:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:170:                    b.Property<DateTime?>("ConfirmedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:171:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:172:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:173:                    b.Property<DateTime>("CreatedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:174:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:175:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:176:                    b.Property<string>("CurrencyCode")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:177:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:178:                        .HasMaxLength(3)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:179:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:180:                        .HasColumnType("varchar(3)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:181:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:182:                    b.Property<string>("ExternalRefundReference")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:183:                        .HasMaxLength(200)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:184:                        .HasColumnType("nvarchar(200)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:185:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:186:                    b.Property<string>("PaymentMethod")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:187:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:188:                        .HasMaxLength(50)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:189:                        .HasColumnType("nvarchar(50)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:190:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:191:                    b.Property<string>("PaymentProvider")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:192:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:193:                        .HasMaxLength(50)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:194:                        .HasColumnType("nvarchar(50)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:195:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:196:                    b.Property<string>("ProviderTransactionReference")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:197:                        .HasMaxLength(200)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:198:                        .HasColumnType("nvarchar(200)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:199:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:200:                    b.Property<DateTime?>("RefundedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:201:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:202:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:203:                    b.Property<string>("Status")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:204:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:205:                        .HasMaxLength(20)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:206:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:207:                        .HasColumnType("varchar(20)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:208:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:209:                    b.Property<long>("UserPackageEntitlementID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:210:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:211:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:212:                    b.HasKey("PaymentTransactionID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:213:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:214:                    b.HasIndex("ExternalRefundReference")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:215:                        .IsUnique()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:216:                        .HasDatabaseName("IX_PaymentTransactions_ExternalRefundReference")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:217:                        .HasFilter("[ExternalRefundReference] IS NOT NULL");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:218:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:219:                    b.HasIndex("UserPackageEntitlementID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:220:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:221:                    b.HasIndex("PaymentProvider", "ProviderTransactionReference")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:222:                        .IsUnique()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:223:                        .HasFilter("[ProviderTransactionReference] IS NOT NULL");
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:233:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:234:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:235:                    b.Property<long>("UserPackageEntitlementID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:236:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:237:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:238:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:239:                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("UserPackageEntitlementID"));
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:240:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:241:                    b.Property<DateTime>("CreatedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:242:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:243:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:244:                    b.Property<DateTime?>("EndDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:245:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:246:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:247:                    b.Property<int>("EnquiryPackageID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:248:                        .HasColumnType("int");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:249:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:250:                    b.Property<DateTime?>("ModifiedDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:251:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:252:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:253:                    b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:254:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:255:                        .HasColumnType("int")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:256:                        .HasDefaultValue(0);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:257:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:258:                    b.Property<int>("MonthlyAdvertisementPostLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:259:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:260:                        .HasColumnType("int")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:261:                        .HasDefaultValue(0);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:262:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:263:                    b.Property<int>("MonthlyReplyLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:264:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:265:                        .HasColumnType("int")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:266:                        .HasDefaultValue(0);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:267:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:268:                    b.Property<int>("MonthlySenderEnquiryLimit")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:269:                        .ValueGeneratedOnAdd()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:270:                        .HasColumnType("int")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:271:                        .HasDefaultValue(0);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:272:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:273:                    b.Property<DateTime>("StartDate")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:274:                        .HasColumnType("datetime2");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:275:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:276:                    b.Property<string>("Status")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:277:                        .IsRequired()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:278:                        .HasMaxLength(20)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:279:                        .IsUnicode(false)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:280:                        .HasColumnType("varchar(20)");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:281:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:282:                    b.Property<long>("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:283:                        .HasColumnType("bigint");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:284:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:285:                    b.HasKey("UserPackageEntitlementID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:286:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:287:                    b.HasIndex("EnquiryPackageID");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:288:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:289:                    b.HasIndex("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:290:                        .IsUnique()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:291:                        .HasFilter("[Status] = 'ACTIVE'");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:292:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:293:                    b.HasIndex("UserID", "Status", "StartDate", "EndDate");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:294:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:295:                    b.ToTable("UserPackageEntitlements", null, t =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:296:                        {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:297:                            t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:298:
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2289:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackagePurchaseRequest", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2290:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2291:                    b.HasOne("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", "EnquiryPackage")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2292:                        .WithMany()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2293:                        .HasForeignKey("EnquiryPackageID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2294:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2295:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2296:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2297:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2298:                        .WithMany()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2299:                        .HasForeignKey("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2300:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2301:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2302:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2303:                    b.Navigation("EnquiryPackage");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2304:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2305:                    b.Navigation("User");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2306:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2307:
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2308:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2309:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2310:                    b.HasOne("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", "UserPackageEntitlement")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2311:                        .WithMany("Payments")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2312:                        .HasForeignKey("UserPackageEntitlementID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2313:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2314:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2315:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2316:                    b.Navigation("UserPackageEntitlement");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2317:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2318:
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2319:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2320:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2321:                    b.HasOne("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", "EnquiryPackage")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2322:                        .WithMany("Entitlements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2323:                        .HasForeignKey("EnquiryPackageID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2324:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2325:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2326:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2327:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2328:                        .WithMany()
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2329:                        .HasForeignKey("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2330:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2331:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2332:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2333:                    b.Navigation("EnquiryPackage");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2334:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2335:                    b.Navigation("User");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2336:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2337:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2338:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2339:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2340:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementType", "AdvertisementType")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2341:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2342:                        .HasForeignKey("AdvertisementTypeID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2343:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2344:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2345:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2346:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Area", "Area")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2347:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2348:                        .HasForeignKey("AreaID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2349:                        .OnDelete(DeleteBehavior.Restrict);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2350:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2351:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", "Category")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2352:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2353:                        .HasForeignKey("CategoryID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2354:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2355:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2356:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2357:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.City", "City")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2358:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2359:                        .HasForeignKey("CityID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2360:                        .OnDelete(DeleteBehavior.Restrict);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2361:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2362:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.Country", "Country")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2363:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2364:                        .HasForeignKey("CountryID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2365:                        .OnDelete(DeleteBehavior.Restrict);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2366:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2367:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.State", "State")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2368:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2369:                        .HasForeignKey("StateID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2370:                        .OnDelete(DeleteBehavior.Restrict);
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2371:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2372:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementStatus", "Status")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2373:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2374:                        .HasForeignKey("StatusID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2375:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2376:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2377:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2378:                    b.HasOne("HRInfoAdvertisements.Domain.Entities.User", "User")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2379:                        .WithMany("Advertisements")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2380:                        .HasForeignKey("UserID")
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2381:                        .OnDelete(DeleteBehavior.Restrict)
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2382:                        .IsRequired();
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2383:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2384:                    b.Navigation("AdvertisementType");
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2906:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.EnquiryPackage", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2907:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2908:                    b.Navigation("Entitlements");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2909:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2910:
+> HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2911:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2912:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2913:                    b.Navigation("Payments");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2914:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2915:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2916:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Advertisement", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2917:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2918:                    b.Navigation("ApprovalRequests");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2919:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2920:                    b.Navigation("Documents");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2921:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2922:                    b.Navigation("Enquiries");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2923:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2924:                    b.Navigation("Favorites");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2925:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2926:                    b.Navigation("FeatureValues");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2927:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2928:                    b.Navigation("Images");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2929:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2930:                    b.Navigation("Messages");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2931:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2932:                    b.Navigation("Reports");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2933:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2934:                    b.Navigation("SavedSearches");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2935:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2936:                    b.Navigation("Videos");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2937:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2938:                    b.Navigation("Views");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2939:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2940:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2941:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2942:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2943:                    b.Navigation("Advertisements");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2944:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2945:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2946:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2947:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2948:                    b.Navigation("Messages");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2949:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2950:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2951:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2952:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2953:                    b.Navigation("Values");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2954:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2955:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2956:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementStatus", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2957:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2958:                    b.Navigation("Advertisements");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2959:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2960:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2961:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementType", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2962:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2963:                    b.Navigation("Advertisements");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2964:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2965:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2966:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.ApprovalRequest", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2967:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2968:                    b.Navigation("ApprovalHistory");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2969:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2970:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2971:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.Area", b =>
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2972:                {
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2973:                    b.Navigation("Advertisements");
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2974:                });
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2975:
+  HRInfoAdvertisements.Infrastructure\Data\Migrations\ApplicationDbContextModelSnapshot.cs:2976:            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.City", b =>
+
+
+

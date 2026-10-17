@@ -19,6 +19,8 @@ public sealed class UpdateEnquiryPackageRequest
 
     [Range(0, int.MaxValue)]
     public int MonthlyReplyLimit { get; init; }
+    [Range(0, int.MaxValue)]
+public int MonthlyAdvertisementPostLimit { get; init; }
 
     [Range(1, 3650)]
     public int? ValidityDays { get; init; }

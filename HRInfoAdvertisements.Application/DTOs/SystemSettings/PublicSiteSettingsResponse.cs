@@ -14,4 +14,14 @@ public sealed class PublicSiteSettingsResponse
     public bool EmailEnabled { get; set; } = true;
     public int EmailOtpExpiryMinutes { get; set; } = 10;
     public string SupportEmail { get; set; } = string.Empty;
+
+    public bool BankTransferEnabled { get; set; }
+    public bool BenefitPayEnabled { get; set; }
+
+    public string BankTransferBankName { get; set; } = string.Empty;
+    public string BankTransferAccountHolder { get; set; } = string.Empty;
+    public string BankTransferAccountNumber { get; set; } = string.Empty;
+    public string BankTransferIban { get; set; } = string.Empty;
+    public string BankTransferInstructions { get; set; } = string.Empty;
+    public string BenefitPayInstructions { get; set; } = string.Empty;
 }

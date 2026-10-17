@@ -568,7 +568,15 @@ FavoriteAdvertisementEmailEnabled =
         "REQUIRE_EMAIL_VERIFICATION",
         "EMAIL_ENABLED",
         "EMAIL_OTP_EXPIRY_MINUTES",
-        "SUPPORT_EMAIL"
+        "SUPPORT_EMAIL",
+        "BANK_TRANSFER_ENABLED",
+        "BENEFITPAY_ENABLED",
+        "BANK_TRANSFER_BANK_NAME",
+        "BANK_TRANSFER_ACCOUNT_HOLDER",
+        "BANK_TRANSFER_ACCOUNT_NUMBER",
+        "BANK_TRANSFER_IBAN",
+        "BANK_TRANSFER_INSTRUCTIONS",
+        "BENEFITPAY_INSTRUCTIONS"
     };
 
     public async Task<PublicSiteSettingsResponse>
@@ -625,7 +633,31 @@ FavoriteAdvertisementEmailEnabled =
                 GetInt(settings, "EMAIL_OTP_EXPIRY_MINUTES", d.EmailOtpExpiryMinutes),
 
             SupportEmail =
-                GetString(settings, "SUPPORT_EMAIL", d.SupportEmail)
+                GetString(settings, "SUPPORT_EMAIL", d.SupportEmail),
+
+            BankTransferEnabled =
+                GetBool(settings, "BANK_TRANSFER_ENABLED", d.BankTransferEnabled),
+
+            BenefitPayEnabled =
+                GetBool(settings, "BENEFITPAY_ENABLED", d.BenefitPayEnabled),
+
+            BankTransferBankName =
+                GetString(settings, "BANK_TRANSFER_BANK_NAME", d.BankTransferBankName),
+
+            BankTransferAccountHolder =
+                GetString(settings, "BANK_TRANSFER_ACCOUNT_HOLDER", d.BankTransferAccountHolder),
+
+            BankTransferAccountNumber =
+                GetString(settings, "BANK_TRANSFER_ACCOUNT_NUMBER", d.BankTransferAccountNumber),
+
+            BankTransferIban =
+                GetString(settings, "BANK_TRANSFER_IBAN", d.BankTransferIban),
+
+            BankTransferInstructions =
+                GetString(settings, "BANK_TRANSFER_INSTRUCTIONS", d.BankTransferInstructions),
+
+            BenefitPayInstructions =
+                GetString(settings, "BENEFITPAY_INSTRUCTIONS", d.BenefitPayInstructions)
         };
     }
 

@@ -1,9 +1,10 @@
-﻿using HRInfoAdvertisements.Application.Enquiries;
+using HRInfoAdvertisements.Application.Enquiries;
 using HRInfoAdvertisements.Application.Enquiries.DTOs;
 using System.Text.Json;
 using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using HRInfoAdvertisements.Infrastructure.Data;
+using HRInfoAdvertisements.Infrastructure.Billing;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -100,6 +101,14 @@ public async Task<AdvertisementEnquiryResponse> CreateAsync(
                 await AcquireEnquiryLimitLockAsync(resource);
             }
 
+            // Activate any paid packages whose scheduled start has arrived.
+            foreach (var packageUserId in new[] { senderUserId, advertisement.UserID }
+                .Distinct()
+                .OrderBy(x => x))
+            {
+                await PackageEntitlementActivation.ActivateDueAsync(
+                    _context, packageUserId, now);
+            }
             // Resolve package entitlements while the limit locks are held.
             var senderPackage =
                 await ResolveEnquiryPackageAsync(senderUserId, now);
@@ -386,6 +395,7 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
         try
         {
             await AcquireEnquiryLimitLockAsync(replyLock);
+            await PackageEntitlementActivation.ActivateDueAsync(_context, userId, now);
 
             var package = await ResolveEnquiryPackageAsync(userId, now);
             packageCode = package.PackageCode;
@@ -558,7 +568,8 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
         return true;
     }
 
-    private async Task<EnquiryPackage> ResolveEnquiryPackageAsync(
+    
+private async Task<ResolvedEnquiryPackage> ResolveEnquiryPackageAsync(
     long userId,
     DateTime now)
 {
@@ -569,16 +580,17 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
             x.Status == UserPackageEntitlementStatuses.Active &&
             x.StartDate <= now &&
             (x.EndDate == null || x.EndDate > now) &&
-            x.EnquiryPackage.IsActive &&
             x.EnquiryPackage.PackageCode != "FREE" &&
-            x.EnquiryPackage.Price > 0m &&
             x.Payments.Any(p =>
                 p.Status == PaymentTransactionStatuses.Confirmed &&
-                p.Status != PaymentTransactionStatuses.Refunded &&
                 p.ConfirmedDate != null &&
                 p.RefundedDate == null))
         .OrderByDescending(x => x.StartDate)
-        .Select(x => x.EnquiryPackage)
+        .Select(x => new ResolvedEnquiryPackage(
+            x.EnquiryPackage.PackageCode,
+            x.MonthlySenderEnquiryLimit,
+            x.MonthlyAdvertisementEnquiryLimit,
+            x.MonthlyReplyLimit))
         .FirstOrDefaultAsync();
 
     if (paidPackage != null)
@@ -586,13 +598,26 @@ createdEnquiryId = enquiry.AdvertisementEnquiryID;
 
     var freePackage = await _context.EnquiryPackages
         .AsNoTracking()
-        .FirstOrDefaultAsync(x =>
+        .Where(x =>
             x.PackageCode == "FREE" &&
-            x.IsActive);
+            x.IsActive)
+        .Select(x => new ResolvedEnquiryPackage(
+            x.PackageCode,
+            x.MonthlySenderEnquiryLimit,
+            x.MonthlyAdvertisementEnquiryLimit,
+            x.MonthlyReplyLimit))
+        .FirstOrDefaultAsync();
 
     return freePackage ?? throw new InvalidOperationException(
         "The FREE enquiry package is unavailable. Please contact support.");
 }
+
+private sealed record ResolvedEnquiryPackage(
+    string PackageCode,
+    int MonthlySenderEnquiryLimit,
+    int MonthlyAdvertisementEnquiryLimit,
+    int MonthlyReplyLimit);
+
 
 private async Task AcquireEnquiryLimitLockAsync(
     string resource)

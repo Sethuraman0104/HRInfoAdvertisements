@@ -1,0 +1,78 @@
+﻿namespace HRInfoAdvertisements.Application.Billing.DTOs;
+
+public sealed class MyPackageBalanceResponse
+{
+    public string PackageCode { get; set; } = string.Empty;
+
+    public string PackageName { get; set; } = string.Empty;
+
+    public string PackageCombination { get; set; } = string.Empty;
+
+    public string EntitlementStatus { get; set; } = string.Empty;
+
+    public DateTime? StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public bool IsPaidPackage { get; set; }
+
+    public DateTime UsagePeriodStartUtc { get; set; }
+
+    public DateTime UsagePeriodEndUtc { get; set; }
+
+    public PackageUsageBalance AdvertisementPosts { get; set; } = new();
+
+    public PackageUsageBalance EnquiriesSent { get; set; } = new();
+
+    public PackageUsageBalance RepliesSent { get; set; } = new();
+
+    public List<AdvertisementEnquiryUsageBalance> AdvertisementEnquiriesReceived { get; set; }
+        = new();
+    public List<QueuedPackageBalance> QueuedPackages { get; set; } = new();
+}
+
+public sealed class PackageUsageBalance
+{
+    public int Limit { get; set; }
+
+    public int Used { get; set; }
+
+    public int Remaining => Math.Max(0, Limit - Used);
+
+    public bool Unlimited => Limit < 0;
+}
+
+public sealed class AdvertisementEnquiryUsageBalance
+{
+    public long AdvertisementID { get; set; }
+
+    public string AdvertisementTitle { get; set; } = string.Empty;
+
+    public int Limit { get; set; }
+
+    public int Used { get; set; }
+
+    public int Remaining => Math.Max(0, Limit - Used);
+}
+
+public sealed class QueuedPackageBalance
+{
+    public string PackageCode { get; set; } = string.Empty;
+
+    public string PackageName { get; set; } = string.Empty;
+
+    public string EntitlementStatus { get; set; } = string.Empty;
+
+    public DateTime StartDate { get; set; }
+
+    public DateTime? EndDate { get; set; }
+
+    public int MonthlyAdvertisementPostLimit { get; set; }
+
+    public int MonthlySenderEnquiryLimit { get; set; }
+
+    public int MonthlyAdvertisementEnquiryLimit { get; set; }
+
+    public int MonthlyReplyLimit { get; set; }
+}
+

@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -136,6 +136,35 @@ public sealed class EnquiryBillingApiService
             "Check My Package Requests before submitting again.");
     }
 
+    public async Task<MyPackageBalanceResponse> GetMyPackageBalanceAsync(
+        CancellationToken cancellationToken = default)
+    {
+        using var client = CreateClient(requireAuthentication: true);
+
+        using var response = await client.GetAsync(
+            "api/v1/billing/purchase-requests/my-balance",
+            cancellationToken);
+
+        var body = await response.Content.ReadAsStringAsync(
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                BuildErrorMessage(
+                    body,
+                    "Unable to load your package balance.",
+                    response.StatusCode),
+                null,
+                response.StatusCode);
+        }
+
+        return JsonSerializer.Deserialize<MyPackageBalanceResponse>(
+                   body,
+                   JsonOptions)
+               ?? throw new InvalidOperationException(
+                   "The package balance response could not be read.");
+    }
     public async Task<List<PackagePurchaseRequestResponse>>
         GetMyPurchaseRequestsAsync(
             CancellationToken cancellationToken = default)

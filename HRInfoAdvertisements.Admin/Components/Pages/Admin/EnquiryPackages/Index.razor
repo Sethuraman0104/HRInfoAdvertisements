@@ -1,9 +1,11 @@
-
 @page "/admin/enquiry-packages"
 
+@using Microsoft.AspNetCore.Components
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.Billing.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
 
 @inject EnquiryPackageAdminApiService PackageService
 @inject AdminAuthenticationStateProvider Auth
@@ -11,193 +13,779 @@
 
 <PageTitle>Enquiry Package Management</PageTitle>
 
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1>Enquiry Packages</h1>
-            <p>Manage package pricing, enquiry limits, validity and availability.</p>
-        </div>
+<div class="admin-epk">
 
-        <button class="btn btn-outline-primary"
-                @onclick="LoadAsync"
-                disabled="@loading">
-            Refresh
-        </button>
-    </div>
+    @* ============================================================
+       BANNERS (page level)
+       ============================================================ *@
+
+    @if (!string.IsNullOrWhiteSpace(error) && editing is null)
+    {
+        <div class="epk-banner epk-banner-error" role="alert">
+
+            <div class="epk-banner-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="epk-banner-content">
+                <strong>Something went wrong</strong>
+                <span>@error</span>
+            </div>
+
+            <button type="button"
+                    class="epk-banner-retry"
+                    @onclick="LoadAsync"
+                    disabled="@loading">
+
+                <i class="bi bi-arrow-clockwise @(loading ? "epk-spin" : "")"></i>
+
+                <span>Retry</span>
+
+            </button>
+
+            <button type="button"
+                    class="epk-banner-close"
+                    @onclick="ClearError"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
 
     @if (!string.IsNullOrWhiteSpace(message))
     {
-        <div class="alert alert-success">@message</div>
-    }
+        <div class="epk-banner epk-banner-success" role="status">
 
-    @if (!string.IsNullOrWhiteSpace(error))
-    {
-        <div class="alert alert-danger">
-            @error
+            <div class="epk-banner-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+
+            <div class="epk-banner-content">
+                <strong>Done</strong>
+                <span>@message</span>
+            </div>
+
+            <button type="button"
+                    class="epk-banner-close"
+                    @onclick="ClearMessage"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
         </div>
     }
 
-    @if (loading)
-    {
-        <p>Loading packages...</p>
-    }
-    else if (packages.Count == 0)
-    {
-        <div class="alert alert-info">No packages were returned by the API.</div>
-    }
-    else
-    {
-        <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle">
-                <thead>
-                    <tr>
-                        <th>Package</th>
-                        <th>Sender Limit</th>
-                        <th>Advertisement Limit</th>
-                        <th>Reply Limit</th>
-                        <th>Validity</th>
-                        <th>Price</th>
-                        <th>Status</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var package in packages)
-                    {
-                        <tr @key="package.EnquiryPackageID">
-                            <td>
-                                <strong>@package.Name</strong>
-                                <div class="text-muted small">@package.PackageCode</div>
-                            </td>
-                            <td>@package.MonthlySenderEnquiryLimit</td>
-                            <td>@package.MonthlyAdvertisementEnquiryLimit</td>
-                            <td>@package.MonthlyReplyLimit</td>
-                            <td>
-                                @(package.ValidityDays.HasValue
-                                    ? $"{package.ValidityDays} days"
-                                    : "Not specified")
-                            </td>
-                            <td>@package.Price.ToString("N3") @package.CurrencyCode</td>
-                            <td>
-                                <span class="badge @(package.IsActive
-                                    ? "text-bg-success"
-                                    : "text-bg-secondary")">
-                                    @(package.IsActive ? "Active" : "Inactive")
-                                </span>
-                            </td>
-                            <td>
-                                <button class="btn btn-sm btn-outline-primary"
-                                        @onclick="() => StartEdit(package)"
-                                        disabled="@saving">
-                                    Edit
-                                </button>
-                            </td>
+
+    @* ============================================================
+       PAGE HEADER
+       ============================================================ *@
+
+    <PageHeader Title="Enquiry Packages">
+
+        <DescriptionContent>
+
+            <p class="epk-page-description">
+                Manage package pricing, enquiry limits, advertisement post limits,
+                validity and availability.
+            </p>
+
+        </DescriptionContent>
+
+
+        <ActionContent>
+
+            <div class="epk-header-actions">
+
+                <button type="button"
+                        class="epk-btn epk-btn-secondary"
+                        @onclick="LoadAsync"
+                        disabled="@(loading || saving)">
+
+                    <i class="bi bi-arrow-clockwise @(loading ? "epk-spin" : "")"></i>
+
+                    <span>Refresh</span>
+
+                </button>
+
+            </div>
+
+        </ActionContent>
+
+    </PageHeader>
+
+
+    @* ============================================================
+       STAT CARDS
+       ============================================================ *@
+
+    <section class="epk-stats" aria-label="Summary">
+
+        <div class="epk-stat">
+
+            <span class="epk-stat-icon epk-stat-icon-maroon">
+                <i class="bi bi-box-seam-fill"></i>
+            </span>
+
+            <div>
+                <strong>@packages.Count</strong>
+                <small>Total packages</small>
+            </div>
+
+        </div>
+
+        <div class="epk-stat">
+
+            <span class="epk-stat-icon epk-stat-icon-green">
+                <i class="bi bi-check-circle-fill"></i>
+            </span>
+
+            <div>
+                <strong>@ActiveCount</strong>
+                <small>Active</small>
+            </div>
+
+        </div>
+
+        <div class="epk-stat">
+
+            <span class="epk-stat-icon epk-stat-icon-gray">
+                <i class="bi bi-dash-circle-fill"></i>
+            </span>
+
+            <div>
+                <strong>@(packages.Count - ActiveCount)</strong>
+                <small>Inactive</small>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    @* ============================================================
+       RESULTS PANEL
+       ============================================================ *@
+
+    <section class="epk-results">
+
+        <div class="epk-results-header">
+
+            <div class="epk-results-title">
+
+                <div class="epk-results-icon">
+                    <i class="bi bi-boxes"></i>
+                </div>
+
+                <div>
+
+                    <h2>Packages</h2>
+
+                    <span>
+                        @packages.Count
+                        @(packages.Count == 1 ? "package" : "packages")
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @* ========================================================
+           LOADING
+           ======================================================== *@
+
+        @if (loading)
+        {
+            <div class="epk-loading">
+
+                <div class="epk-loading-spinner"></div>
+
+                <div class="epk-loading-text">
+
+                    <strong>Loading packages</strong>
+
+                    <span>Please wait...</span>
+
+                </div>
+
+            </div>
+        }
+
+        @* ========================================================
+           EMPTY
+           ======================================================== *@
+
+        else if (packages.Count == 0)
+        {
+            <div class="epk-empty">
+
+                <div class="epk-empty-icon">
+                    <i class="bi bi-box"></i>
+                </div>
+
+                <h3>No packages found</h3>
+
+                <p>No packages were returned by the API.</p>
+
+                <button type="button"
+                        class="epk-btn epk-btn-secondary"
+                        @onclick="LoadAsync">
+
+                    <i class="bi bi-arrow-clockwise"></i>
+
+                    <span>Try Again</span>
+
+                </button>
+
+            </div>
+        }
+
+        @* ========================================================
+           TABLE
+           ======================================================== *@
+
+        else
+        {
+            <div class="epk-table-wrapper">
+
+                <table class="epk-table">
+
+                    <thead>
+
+                        <tr>
+                            <th class="epk-col-package">Package</th>
+                            <th class="epk-col-num">Sender limit</th>
+                            <th class="epk-col-num">Advert. limit</th>
+                            <th class="epk-col-num">Reply limit</th>
+                            <th class="epk-col-num">Monthly ad posts</th>
+                            <th class="epk-col-validity">Validity</th>
+                            <th class="epk-col-price">Price</th>
+                            <th class="epk-col-status">Status</th>
+                            <th class="epk-col-actions">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var item in packages)
+                        {
+                            var package = item;
+
+                            <tr @key="package.EnquiryPackageID">
+
+                                @* PACKAGE *@
+
+                                <td class="epk-cell-package">
+
+                                    <div class="epk-package-icon @(package.IsActive ? "" : "epk-package-icon-off")">
+                                        <i class="bi bi-box-seam-fill"></i>
+                                    </div>
+
+                                    <div class="epk-package-info">
+
+                                        <span class="epk-package-name" title="@package.Name">
+                                            @package.Name
+                                        </span>
+
+                                        <span class="epk-package-code">
+                                            @package.PackageCode
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* LIMITS *@
+
+                                <td class="epk-cell-num epk-cell-sender" data-label="Sender limit">
+
+                                    <span class="epk-limit">@package.MonthlySenderEnquiryLimit</span>
+
+                                </td>
+
+                                <td class="epk-cell-num epk-cell-advert" data-label="Advert. limit">
+
+                                    <span class="epk-limit">@package.MonthlyAdvertisementEnquiryLimit</span>
+
+                                </td>
+
+                                <td class="epk-cell-num epk-cell-reply" data-label="Reply limit">
+
+                                    <span class="epk-limit">@package.MonthlyReplyLimit</span>
+
+                                </td>
+
+                                <td class="epk-cell-num epk-cell-posts" data-label="Monthly ad posts">
+
+                                    <span class="epk-limit">@package.MonthlyAdvertisementPostLimit</span>
+
+                                </td>
+
+
+                                @* VALIDITY *@
+
+                                <td class="epk-cell-validity" data-label="Validity">
+
+                                    @if (package.ValidityDays.HasValue)
+                                    {
+                                        <span class="epk-validity">
+                                            <i class="bi bi-calendar-event"></i>
+                                            @package.ValidityDays days
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="epk-muted">Not specified</span>
+                                    }
+
+                                </td>
+
+
+                                @* PRICE *@
+
+                                <td class="epk-cell-price" data-label="Price">
+
+                                    <strong>@package.Price.ToString("N3")</strong>
+
+                                    <span>@package.CurrencyCode</span>
+
+                                </td>
+
+
+                                @* STATUS *@
+
+                                <td class="epk-cell-status">
+
+                                    @if (package.IsActive)
+                                    {
+                                        <span class="epk-status epk-status-active">
+
+                                            <span class="epk-status-dot"></span>
+
+                                            Active
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="epk-status epk-status-inactive">
+
+                                            <span class="epk-status-dot"></span>
+
+                                            Inactive
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* ACTIONS *@
+
+                                <td class="epk-cell-actions">
+
+                                    <div class="epk-row-actions">
+
+                                        <button type="button"
+                                                class="epk-action epk-action-edit"
+                                                title="Edit package"
+                                                @onclick="() => StartEdit(package)"
+                                                disabled="@saving">
+
+                                            <i class="bi bi-pencil-fill"></i>
+
+                                            <span>Edit</span>
+
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </section>
+
+
+    @* ============================================================
+       EDIT PACKAGE MODAL
+       ============================================================ *@
 
     @if (editing is not null)
     {
-        <section class="card mt-4">
-            <div class="card-header">
-                <h2 class="h5 mb-0">Edit: @editing.PackageName</h2>
-            </div>
+        <div class="epk-modal-backdrop"
+             @onclick="CancelEdit">
 
-            <div class="card-body">
-                <EditForm Model="editing" OnValidSubmit="SaveAsync">
-                    <DataAnnotationsValidator />
-                    <ValidationSummary />
+            <div class="epk-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="epk-modal-title"
+                 @onclick:stopPropagation="true">
 
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Package name</label>
-                            <InputText class="form-control"
-                                       @bind-Value="editing.Name" />
-                            <ValidationMessage For="@(() => editing.Name)" />
+                <div class="epk-modal-header">
+
+                    <div class="epk-modal-title">
+
+                        <div class="epk-modal-icon">
+                            <i class="bi bi-pencil-fill"></i>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Currency code</label>
-                            <InputText class="form-control"
-                                       @bind-Value="editing.CurrencyCode" />
-                            <ValidationMessage For="@(() => editing.CurrencyCode)" />
+                        <div>
+
+                            <span class="epk-modal-eyebrow">PACKAGE MANAGEMENT</span>
+
+                            <h2 id="epk-modal-title">Edit Package</h2>
+
+                            <p>@editing.PackageName</p>
+
                         </div>
 
-                        <div class="col-12">
-                            <label class="form-label">Description</label>
-                            <InputTextArea class="form-control"
-                                           @bind-Value="editing.Description" />
-                            <ValidationMessage For="@(() => editing.Description)" />
-                        </div>
-
-                        <div class="col-md-6">
-    <label class="form-label">Monthly sender enquiry limit</label>
-    <InputNumber class="form-control"
-                 @bind-Value="editing.MonthlySenderEnquiryLimit" />
-    <ValidationMessage For="@(() => editing.MonthlySenderEnquiryLimit)" />
-</div>
-
-<div class="col-md-6">
-    <label class="form-label">Monthly advertisement enquiry limit</label>
-    <InputNumber class="form-control"
-                 @bind-Value="editing.MonthlyAdvertisementEnquiryLimit" />
-    <ValidationMessage For="@(() => editing.MonthlyAdvertisementEnquiryLimit)" />
-</div>
-
-<div class="col-md-6">
-    <label class="form-label">Monthly reply limit</label>
-    <InputNumber class="form-control"
-                 @bind-Value="editing.MonthlyReplyLimit" />
-    <ValidationMessage For="@(() => editing.MonthlyReplyLimit)" />
-    <div class="form-text">
-        Maximum replies this user can send per UTC calendar month.
-    </div>
-</div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Validity in days</label>
-                            <InputNumber class="form-control"
-                                         @bind-Value="editing.ValidityDays" />
-                            <ValidationMessage For="@(() => editing.ValidityDays)" />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Price</label>
-                            <InputNumber class="form-control"
-                                         @bind-Value="editing.Price" />
-                            <ValidationMessage For="@(() => editing.Price)" />
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label d-block">Availability</label>
-                            <InputCheckbox @bind-Value="editing.IsActive" />
-                            <span class="ms-2">
-                                @(editing.IsActive ? "Active" : "Inactive")
-                            </span>
-                        </div>
                     </div>
 
-                    <div class="mt-4 d-flex gap-2">
-                        <button class="btn btn-primary"
-                                type="submit"
-                                disabled="@saving">
-                            @(saving ? "Saving..." : "Save changes")
-                        </button>
+                    <button type="button"
+                            class="epk-modal-close"
+                            @onclick="CancelEdit"
+                            disabled="@saving"
+                            aria-label="Close">
 
-                        <button class="btn btn-outline-secondary"
-                                type="button"
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+
+                @if (!string.IsNullOrWhiteSpace(error))
+                {
+                    <div class="epk-modal-error" role="alert">
+
+                        <i class="bi bi-exclamation-circle-fill"></i>
+
+                        <span>@error</span>
+
+                    </div>
+                }
+
+
+                <EditForm Model="editing"
+                          OnValidSubmit="SaveAsync">
+
+                    <DataAnnotationsValidator />
+
+                    <div class="epk-modal-body">
+
+                        @* ---------- GENERAL ---------- *@
+
+                        <div class="epk-section-label">General</div>
+
+                        <div class="epk-form-grid">
+
+                            <div class="epk-form-field">
+
+                                <label for="epkName">
+                                    Package name
+                                    <span class="epk-required">*</span>
+                                </label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-box-seam-fill"></i>
+
+                                    <InputText id="epkName"
+                                               class="epk-input"
+                                               @bind-Value="editing.Name"
+                                               maxlength="100"
+                                               disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.Name)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <label for="epkCurrency">
+                                    Currency code
+                                    <span class="epk-required">*</span>
+                                </label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-currency-exchange"></i>
+
+                                    <InputText id="epkCurrency"
+                                               class="epk-input"
+                                               @bind-Value="editing.CurrencyCode"
+                                               maxlength="3"
+                                               placeholder="BHD"
+                                               disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.CurrencyCode)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field epk-full">
+
+                                <label for="epkDescription">
+                                    Description
+                                    <span class="epk-optional">Optional</span>
+                                </label>
+
+                                <div class="epk-textarea-wrapper">
+
+                                    <i class="bi bi-card-text"></i>
+
+                                    <InputTextArea id="epkDescription"
+                                                   class="epk-textarea"
+                                                   @bind-Value="editing.Description"
+                                                   rows="3"
+                                                   maxlength="1000"
+                                                   placeholder="Describe what this package includes..."
+                                                   disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.Description)" />
+
+                            </div>
+
+                        </div>
+
+
+                        @* ---------- LIMITS ---------- *@
+
+                        <div class="epk-section-label">Monthly limits</div>
+
+                        <div class="epk-form-grid">
+
+                            <div class="epk-form-field">
+
+                                <label for="epkSender">Sender enquiries</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-send-fill"></i>
+
+                                    <InputNumber id="epkSender"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.MonthlySenderEnquiryLimit"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.MonthlySenderEnquiryLimit)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <label for="epkAdvert">Advertisement enquiries</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-megaphone-fill"></i>
+
+                                    <InputNumber id="epkAdvert"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.MonthlyAdvertisementEnquiryLimit"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.MonthlyAdvertisementEnquiryLimit)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <label for="epkReply">Replies</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-reply-fill"></i>
+
+                                    <InputNumber id="epkReply"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.MonthlyReplyLimit"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.MonthlyReplyLimit)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <label for="epkPostLimit">Advertisement posts</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-file-earmark-plus-fill"></i>
+
+                                    <InputNumber id="epkPostLimit"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.MonthlyAdvertisementPostLimit"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.MonthlyAdvertisementPostLimit)" />
+
+                            </div>
+
+                        </div>
+
+                        <span class="epk-form-hint">
+                            Reply limit: maximum replies this user can send per UTC calendar month.
+                            Advertisement posts: maximum advertisements this user can post per month.
+                        </span>
+
+
+                        @* ---------- PRICING ---------- *@
+
+                        <div class="epk-section-label">Pricing &amp; availability</div>
+
+                        <div class="epk-form-grid epk-form-grid-3">
+
+                            <div class="epk-form-field">
+
+                                <label for="epkValidity">Validity in days</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-calendar-event-fill"></i>
+
+                                    <InputNumber id="epkValidity"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.ValidityDays"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.ValidityDays)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <label for="epkPrice">Price</label>
+
+                                <div class="epk-input-wrapper">
+
+                                    <i class="bi bi-cash-coin"></i>
+
+                                    <InputNumber id="epkPrice"
+                                                 class="epk-input"
+                                                 @bind-Value="editing.Price"
+                                                 disabled="@saving" />
+
+                                </div>
+
+                                <ValidationMessage For="@(() => editing.Price)" />
+
+                            </div>
+
+
+                            <div class="epk-form-field">
+
+                                <span class="epk-label">Availability</span>
+
+                                <div class="epk-availability">
+
+                                    <label class="epk-switch"
+                                           title="@(editing.IsActive ? "Set inactive" : "Set active")">
+
+                                        <input type="checkbox"
+                                               role="switch"
+                                               aria-label="Package availability"
+                                               @bind="editing.IsActive"
+                                               disabled="@saving" />
+
+                                        <span class="epk-switch-slider"></span>
+
+                                    </label>
+
+                                    <span class="epk-availability-text @(editing.IsActive ? "on" : "")">
+                                        @(editing.IsActive ? "Active" : "Inactive")
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="epk-modal-footer">
+
+                        <button type="button"
+                                class="epk-btn epk-btn-secondary"
                                 @onclick="CancelEdit"
                                 disabled="@saving">
-                            Cancel
+
+                            <span>Cancel</span>
+
                         </button>
+
+
+                        <button type="submit"
+                                class="epk-btn epk-btn-primary"
+                                disabled="@saving">
+
+                            @if (saving)
+                            {
+                                <span class="epk-button-spinner"></span>
+
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-lg"></i>
+
+                                <span>Save Changes</span>
+                            }
+
+                        </button>
+
                     </div>
+
                 </EditForm>
+
             </div>
-        </section>
+
+        </div>
     }
+
 </div>
 
 @code {
@@ -207,6 +795,8 @@
     private bool saving;
     private string? message;
     private string? error;
+
+    private int ActiveCount => packages.Count(x => x.IsActive);
 
     protected override async Task OnInitializedAsync()
     {
@@ -220,6 +810,10 @@
 
         await LoadAsync();
     }
+
+    private void ClearError() => error = null;
+
+    private void ClearMessage() => message = null;
 
     private async Task LoadAsync()
     {
@@ -262,6 +856,7 @@
             MonthlySenderEnquiryLimit = package.MonthlySenderEnquiryLimit,
             MonthlyAdvertisementEnquiryLimit = package.MonthlyAdvertisementEnquiryLimit,
             MonthlyReplyLimit = package.MonthlyReplyLimit,
+            MonthlyAdvertisementPostLimit = package.MonthlyAdvertisementPostLimit,
             ValidityDays = package.ValidityDays,
             Price = package.Price,
             CurrencyCode = package.CurrencyCode,
@@ -288,6 +883,7 @@
                 MonthlySenderEnquiryLimit = editing.MonthlySenderEnquiryLimit,
                 MonthlyAdvertisementEnquiryLimit = editing.MonthlyAdvertisementEnquiryLimit,
                 MonthlyReplyLimit = editing.MonthlyReplyLimit,
+                MonthlyAdvertisementPostLimit = editing.MonthlyAdvertisementPostLimit,
                 ValidityDays = editing.ValidityDays,
                 Price = editing.Price,
                 CurrencyCode = editing.CurrencyCode.Trim().ToUpperInvariant(),
@@ -297,8 +893,13 @@
             await PackageService.UpdateAsync(editing.EnquiryPackageID, request);
 
             editing = null;
-            message = "Package updated successfully.";
             await LoadAsync();
+
+            // LoadAsync clears messages, so set the success message afterwards.
+            if (string.IsNullOrWhiteSpace(error))
+            {
+                message = "Package updated successfully.";
+            }
         }
         catch (Exception ex)
         {
@@ -312,13 +913,17 @@
 
     private void CancelEdit()
     {
-        if (!saving)
-            editing = null;
+        if (saving)
+            return;
+
+        editing = null;
+        error = null;
     }
 
     private sealed class PackageEditModel
     {
         public int EnquiryPackageID { get; set; }
+
         public string PackageName { get; set; } = string.Empty;
 
         [Required, StringLength(100, MinimumLength = 2)]
@@ -334,7 +939,10 @@
         public int MonthlyAdvertisementEnquiryLimit { get; set; }
 
         [Range(0, int.MaxValue)]
-public int MonthlyReplyLimit { get; set; }
+        public int MonthlyReplyLimit { get; set; }
+
+        [Range(0, int.MaxValue)]
+        public int MonthlyAdvertisementPostLimit { get; set; }
 
         [Range(1, 3650)]
         public int? ValidityDays { get; set; }

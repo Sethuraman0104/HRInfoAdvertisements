@@ -1,19 +1,51 @@
-﻿.my-requests-page {
+/* ============================================================
+   MY PACKAGE REQUESTS - fully responsive
+   ============================================================ */
+
+/* ---------- Full-width shell (top bar sits here, edge to edge) ---------- */
+
+.my-requests-shell {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: clip;
+    background: linear-gradient(180deg, #f3f7fe 0, #ffffff 420px);
+}
+
+/* ---------- Width-limited, fluid content column ---------- */
+
+.my-requests-page {
+    width: 100%;
     max-width: 1120px;
-    padding-top: 1.5rem;
-    padding-bottom: 3.5rem;
+    margin: 0 auto;
+    padding: 1.5rem clamp(1rem, 4vw, 2rem) 3.5rem;
+    box-sizing: border-box;
     color: #182943;
 }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- Hero ---------- */
 
 .my-requests-hero {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 1.5rem;
-    padding: 2.5rem 0 2rem;
+    padding: clamp(1.25rem, 4vw, 2.5rem) 0 clamp(1.25rem, 3vw, 2rem);
 }
 
 .my-requests-hero-copy {
+    min-width: 0;
     max-width: 690px;
 }
 
@@ -39,17 +71,18 @@
 .my-requests-hero h1 {
     margin: 0.65rem 0 0.7rem;
     color: #153a7c;
-    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-size: clamp(1.75rem, 5vw, 2.75rem);
     font-weight: 800;
     letter-spacing: -0.045em;
     line-height: 1.12;
+    overflow-wrap: anywhere;
 }
 
 .my-requests-hero p {
     max-width: 600px;
     margin: 0;
     color: #68758a;
-    font-size: 1rem;
+    font-size: clamp(0.92rem, 2.4vw, 1rem);
     line-height: 1.75;
 }
 
@@ -82,6 +115,8 @@
 .my-requests-content {
     min-width: 0;
 }
+
+/* ---------- List heading ---------- */
 
 .my-requests-list-heading {
     display: flex;
@@ -119,7 +154,10 @@
     gap: 1rem;
 }
 
+/* ---------- Request card (mobile first: stacked) ---------- */
+
 .my-request-card {
+    min-width: 0;
     overflow: hidden;
     border: 1px solid #e4eaf3;
     border-radius: 18px;
@@ -168,7 +206,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.65rem 0.85rem;
+    gap: 0.5rem 0.85rem;
 }
 
 .my-request-title-line h3 {
@@ -190,43 +228,20 @@
     font-size: 0.73rem;
     font-weight: 800;
     line-height: 1.2;
+    white-space: nowrap;
 }
 
-.status-pending {
-    border-color: #f4dfac;
-    background: #fff7e5;
-    color: #8a5a00;
-}
-
-.status-approved {
-    border-color: #c8ddff;
-    background: #edf4ff;
-    color: #1e55a4;
-}
-
-.status-completed {
-    border-color: #bce8d0;
-    background: #eaf9f0;
-    color: #187344;
-}
-
-.status-rejected {
-    border-color: #f4caca;
-    background: #fff0f0;
-    color: #a62e36;
-}
-
-.status-default {
-    border-color: #dce3ed;
-    background: #f3f6fa;
-    color: #53657c;
-}
+.status-pending   { border-color: #f4dfac; background: #fff7e5; color: #8a5a00; }
+.status-approved  { border-color: #c8ddff; background: #edf4ff; color: #1e55a4; }
+.status-completed { border-color: #bce8d0; background: #eaf9f0; color: #187344; }
+.status-rejected  { border-color: #f4caca; background: #fff0f0; color: #a62e36; }
+.status-default   { border-color: #dce3ed; background: #f3f6fa; color: #53657c; }
 
 .my-request-meta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.45rem 0.65rem;
+    gap: 0.35rem 0.65rem;
     margin-top: 0.55rem;
     color: #748198;
     font-size: 0.79rem;
@@ -240,12 +255,14 @@
     background: #a9b5c6;
 }
 
+/* amount: row layout on mobile (label left, value right) */
 .my-request-amount {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.3rem;
-    padding: 1.1rem 1.5rem 1.05rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.95rem 1.5rem;
     border-top: 1px solid #edf1f7;
     background: #fbfcff;
 }
@@ -261,6 +278,7 @@
     font-size: 1.25rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 .my-request-amount strong span {
@@ -278,6 +296,10 @@
     border-top: 1px solid #edf1f7;
 }
 
+.my-request-next-step > div {
+    min-width: 0;
+}
+
 .my-request-step-icon {
     display: inline-flex;
     flex: 0 0 27px;
@@ -290,30 +312,11 @@
     font-weight: 800;
 }
 
-.my-request-step-pending {
-    background: #fff5dc;
-    color: #966400;
-}
-
-.my-request-step-approved {
-    background: #eaf2ff;
-    color: #2868d7;
-}
-
-.my-request-step-complete {
-    background: #e5f7ed;
-    color: #187344;
-}
-
-.my-request-step-rejected {
-    background: #fff0f0;
-    color: #a62e36;
-}
-
-.my-request-step-default {
-    background: #eef2f8;
-    color: #52647d;
-}
+.my-request-step-pending  { background: #fff5dc; color: #966400; }
+.my-request-step-approved { background: #eaf2ff; color: #2868d7; }
+.my-request-step-complete { background: #e5f7ed; color: #187344; }
+.my-request-step-rejected { background: #fff0f0; color: #a62e36; }
+.my-request-step-default  { background: #eef2f8; color: #52647d; }
 
 .my-request-next-step strong {
     display: block;
@@ -329,6 +332,8 @@
     font-size: 0.84rem;
     line-height: 1.65;
 }
+
+/* ---------- State cards (empty / loading / sign in) ---------- */
 
 .my-requests-state-card {
     display: flex;
@@ -410,6 +415,8 @@
     outline-offset: 3px;
 }
 
+/* ---------- Error ---------- */
+
 .my-requests-error {
     display: flex;
     align-items: center;
@@ -452,6 +459,8 @@
     cursor: wait;
 }
 
+/* ---------- Loading ---------- */
+
 .my-requests-loading {
     min-height: 240px;
 }
@@ -470,6 +479,12 @@
     animation: my-requests-spin 0.8s linear infinite;
 }
 
+@keyframes my-requests-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---------- Payment note ---------- */
+
 .my-requests-payment-note {
     display: flex;
     align-items: flex-start;
@@ -479,6 +494,10 @@
     border: 1px solid #dfe8f5;
     border-radius: 14px;
     background: #f0f5fc;
+}
+
+.my-requests-payment-note > div:last-child {
+    min-width: 0;
 }
 
 .my-requests-payment-note-icon {
@@ -510,13 +529,13 @@
     line-height: 1.7;
 }
 
-@keyframes my-requests-spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 
+/* ---- Tablet and up: card becomes two-column grid ---- */
 @media (min-width: 760px) {
+
     .my-request-card {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto;
@@ -532,8 +551,10 @@
     .my-request-amount {
         grid-column: 2;
         grid-row: 1;
+        flex-direction: column;
         align-items: flex-end;
         justify-content: center;
+        gap: 0.3rem;
         min-width: 185px;
         padding: 1.35rem 1.5rem;
         border-top: 0;
@@ -547,20 +568,13 @@
     }
 }
 
-@media (max-width: 600px) {
-    .my-requests-page {
-        padding-top: 1rem;
-        padding-bottom: 2rem;
-    }
+/* ---- Small tablet / large phone ---- */
+@media (max-width: 759px) {
 
     .my-requests-hero {
         align-items: flex-start;
         flex-direction: column;
-        padding: 2rem 0 1.5rem;
-    }
-
-    .my-requests-hero h1 {
-        font-size: 2rem;
+        gap: 1.1rem;
     }
 
     .my-requests-browse-link {
@@ -568,8 +582,334 @@
     }
 
     .my-request-card-main {
+        padding: 1.2rem 1.15rem 1rem;
+    }
+
+    .my-request-amount {
+        padding: 0.9rem 1.15rem;
+    }
+
+    .my-request-next-step {
+        padding: 1rem 1.15rem 1.15rem;
+    }
+}
+
+/* ---------- Current package balance ---------- */
+
+.my-package-balance {
+    margin: 0 0 2rem;
+    padding: clamp(1rem, 3vw, 1.6rem);
+    border: 1px solid #dce7f7;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(28, 62, 112, 0.06);
+}
+
+.my-package-balance-heading,
+.my-package-received-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.my-package-balance-heading h2,
+.my-package-received-heading h3 {
+    margin: 0.45rem 0;
+    color: #153a7c;
+    font-weight: 800;
+}
+
+.my-package-balance-heading p {
+    margin: 0;
+    color: #68758a;
+    overflow-wrap: anywhere;
+}
+
+.my-package-balance-dot {
+    margin: 0 0.3rem;
+}
+
+.my-package-balance-status {
+    flex-shrink: 0;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid #dce7f7;
+    border-radius: 999px;
+    background: #f3f7fe;
+    color: #1d4fa8;
+    font-size: 0.8rem;
+    font-weight: 750;
+}
+
+.my-package-balance-dates {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+    margin: 1.25rem 0;
+    padding: 1rem 0;
+    border-top: 1px solid #edf1f7;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.my-package-balance-dates div,
+.my-package-usage-card {
+    min-width: 0;
+}
+
+.my-package-balance-dates span,
+.my-package-usage-card > span {
+    display: block;
+    margin-bottom: 0.4rem;
+    color: #68758a;
+    font-size: 0.82rem;
+}
+
+.my-package-balance-dates strong {
+    color: #253c5e;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.my-package-usage-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+.my-package-usage-card {
+    padding: 1rem;
+    border: 1px solid #e3eaf5;
+    border-radius: 14px;
+    background: #f8faff;
+}
+
+.my-package-usage-card > strong {
+    display: block;
+    color: #153a7c;
+    font-size: clamp(1.15rem, 2.8vw, 1.55rem);
+    font-weight: 850;
+    overflow-wrap: anywhere;
+}
+
+.my-package-usage-card p {
+    margin: 0.45rem 0 0;
+    color: #58708f;
+    font-size: 0.82rem;
+}
+
+.my-package-received-usage {
+    margin-top: 1.5rem;
+}
+
+.my-package-received-heading {
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.my-package-received-heading h3 {
+    font-size: 1.05rem;
+}
+
+.my-package-received-period {
+    color: #68758a;
+    font-size: 0.8rem;
+    text-align: right;
+}
+
+.my-package-ad-usage-list {
+    border-top: 1px solid #edf1f7;
+}
+
+.my-package-ad-usage {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.my-package-ad-usage-title,
+.my-package-ad-usage-count {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.my-package-ad-usage-title strong {
+    color: #253c5e;
+    overflow-wrap: anywhere;
+}
+
+.my-package-ad-usage-title span,
+.my-package-ad-usage-count span {
+    color: #68758a;
+    font-size: 0.8rem;
+}
+
+.my-package-ad-usage-count {
+    flex-shrink: 0;
+    text-align: right;
+}
+
+.my-package-ad-usage-count strong {
+    color: #153a7c;
+}
+
+.my-package-empty-usage {
+    margin: 0;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f8faff;
+    color: #68758a;
+}
+
+.my-package-balance-error {
+    margin-bottom: 1.25rem;
+    padding: 1rem;
+    border: 1px solid #f1d8a8;
+    border-radius: 12px;
+    background: #fffaf0;
+    color: #674b16;
+}
+
+.my-package-balance-error p {
+    margin: 0.4rem 0 0.8rem;
+    overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+    .my-package-balance-dates {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+    }
+
+    .my-package-usage-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .my-package-usage-card {
+        padding: 0.9rem 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .my-package-balance-heading,
+    .my-package-received-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .my-package-received-period {
+        text-align: left;
+    }
+
+    .my-package-ad-usage {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .my-package-ad-usage-count {
+        text-align: left;
+    }
+}
+.my-package-queued-packages {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 1rem;
+    background: var(--surface-color, #fff);
+}
+
+.my-package-queued-label,
+.my-package-queued-status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #f3f4f6;
+    color: #374151;
+}
+
+.my-package-queued-card {
+    margin-top: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--border-color, #e5e7eb);
+    border-radius: 0.75rem;
+}
+
+.my-package-queued-heading,
+.my-package-queued-dates {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.my-package-queued-heading h4 {
+    margin: 0;
+}
+
+.my-package-queued-heading p {
+    margin: 0.35rem 0 0;
+    color: var(--muted-text-color, #6b7280);
+}
+
+.my-package-queued-dates {
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.my-package-queued-dates > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.my-package-queued-dates span {
+    color: var(--muted-text-color, #6b7280);
+    font-size: 0.85rem;
+}
+
+.my-package-queued-limits {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, #e5e7eb);
+}
+
+.my-package-queued-limits span {
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .my-package-queued-limits {
+        grid-template-columns: 1fr;
+    }
+}
+/* ---- Phone ---- */
+@media (max-width: 600px) {
+
+    .my-requests-page {
+        padding-top: 0.75rem;
+        padding-bottom: 2rem;
+    }
+
+    .my-requests-list-heading {
+        flex-wrap: wrap;
+    }
+
+    .my-request-card {
+        border-radius: 16px;
+    }
+
+    .my-request-card-main {
         gap: 0.75rem;
-        padding: 1.1rem 1rem 1rem;
+        padding: 1.05rem 1rem 0.9rem;
     }
 
     .my-request-package-icon {
@@ -584,16 +924,25 @@
     }
 
     .my-request-amount {
-        align-items: flex-start;
-        padding: 0.9rem 1rem;
+        padding: 0.85rem 1rem;
+    }
+
+    .my-request-amount strong {
+        font-size: 1.12rem;
     }
 
     .my-request-next-step {
+        gap: 0.65rem;
         padding: 0.95rem 1rem 1.1rem;
     }
 
     .my-requests-state-card {
         padding: 2.25rem 1.1rem;
+        border-radius: 18px;
+    }
+
+    .my-requests-state-card .my-requests-primary-button {
+        width: 100%;
     }
 
     .my-requests-error {
@@ -610,7 +959,25 @@
     }
 }
 
+/* ---- Very small phones ---- */
+@media (max-width: 380px) {
+
+    .my-request-package-icon {
+        display: none;
+    }
+
+    .my-request-meta-separator {
+        display: none;
+    }
+
+    .my-request-meta {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
+
     .my-requests-spinner {
         animation-duration: 1.8s;
     }

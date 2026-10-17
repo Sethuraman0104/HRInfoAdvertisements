@@ -1,0 +1,874 @@
+@page "/admin/package-purchase-requests"
+
+@using Microsoft.AspNetCore.Components
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.Billing.DTOs
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.MainLayout
+
+@inject PackagePurchaseRequestAdminApiService PurchaseRequestService
+@inject AdminAuthenticationStateProvider Auth
+
+<PageTitle>Package Purchase Requests | HR Info Admin</PageTitle>
+
+<div class="admin-ppr">
+
+    @* ============================================================
+       BANNERS (page level)
+       ============================================================ *@
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage) && selectedRequest is null)
+    {
+        <div class="ppr-banner ppr-banner-error" role="alert">
+
+            <div class="ppr-banner-icon">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+
+            <div class="ppr-banner-content">
+                <strong>Unable to complete the operation</strong>
+                <span>@errorMessage</span>
+            </div>
+
+            <button type="button"
+                    class="ppr-banner-retry"
+                    @onclick="LoadAsync"
+                    disabled="@(isBusy || isLoading)">
+
+                <i class="bi bi-arrow-clockwise @(isLoading ? "ppr-spin" : "")"></i>
+
+                <span>Retry</span>
+
+            </button>
+
+            <button type="button"
+                    class="ppr-banner-close"
+                    @onclick="ClearError"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <div class="ppr-banner ppr-banner-success" role="status">
+
+            <div class="ppr-banner-icon">
+                <i class="bi bi-check-circle-fill"></i>
+            </div>
+
+            <div class="ppr-banner-content">
+                <strong>Done</strong>
+                <span>@successMessage</span>
+            </div>
+
+            <button type="button"
+                    class="ppr-banner-close"
+                    @onclick="ClearSuccess"
+                    aria-label="Close">
+
+                <i class="bi bi-x-lg"></i>
+
+            </button>
+
+        </div>
+    }
+
+
+    @* ============================================================
+       PAGE HEADER
+       ============================================================ *@
+
+    <PageHeader Title="Package Purchase Requests">
+
+        <DescriptionContent>
+
+            <p class="ppr-page-description">
+                Review requests and confirm payments to activate package entitlements.
+            </p>
+
+        </DescriptionContent>
+
+
+        <ActionContent>
+
+            <div class="ppr-header-actions">
+
+                <button type="button"
+                        class="ppr-btn ppr-btn-secondary"
+                        @onclick="LoadAsync"
+                        disabled="@(isBusy || isLoading)">
+
+                    <i class="bi bi-arrow-clockwise @(isLoading ? "ppr-spin" : "")"></i>
+
+                    <span>Refresh</span>
+
+                </button>
+
+            </div>
+
+        </ActionContent>
+
+    </PageHeader>
+
+
+    @* ============================================================
+       WORKFLOW NOTE
+       ============================================================ *@
+
+    <div class="ppr-workflow">
+
+        <div class="ppr-workflow-icon">
+            <i class="bi bi-diagram-3-fill"></i>
+        </div>
+
+        <div class="ppr-workflow-text">
+
+            <strong>Payment workflow</strong>
+
+            <p>
+                Approval does not activate a package. Confirm the actual payment and
+                record its transaction reference to activate the entitlement.
+                BenefitPay confirmation is manual; this page does not verify a live
+                gateway payment.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    @* ============================================================
+       STAT CARDS
+       ============================================================ *@
+
+    <section class="ppr-stats" aria-label="Summary">
+
+        <div class="ppr-stat">
+
+            <span class="ppr-stat-icon ppr-stat-icon-amber">
+                <i class="bi bi-hourglass-split"></i>
+            </span>
+
+            <div>
+                <strong>@PendingCount</strong>
+                <small>Pending review</small>
+            </div>
+
+        </div>
+
+        <div class="ppr-stat">
+
+            <span class="ppr-stat-icon ppr-stat-icon-blue">
+                <i class="bi bi-credit-card-2-front-fill"></i>
+            </span>
+
+            <div>
+                <strong>@ApprovedCount</strong>
+                <small>Awaiting payment confirmation</small>
+            </div>
+
+        </div>
+
+        <div class="ppr-stat">
+
+            <span class="ppr-stat-icon ppr-stat-icon-maroon">
+                <i class="bi bi-inboxes-fill"></i>
+            </span>
+
+            <div>
+                <strong>@requests.Count</strong>
+                <small>Actionable requests</small>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    @* ============================================================
+       RESULTS PANEL
+       ============================================================ *@
+
+    <section class="ppr-results">
+
+        <div class="ppr-results-header">
+
+            <div class="ppr-results-title">
+
+                <div class="ppr-results-icon">
+                    <i class="bi bi-receipt-cutoff"></i>
+                </div>
+
+                <div>
+
+                    <h2>Requests awaiting action</h2>
+
+                    <span>
+                        @requests.Count
+                        @(requests.Count == 1 ? "request" : "requests")
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        @* ========================================================
+           LOADING
+           ======================================================== *@
+
+        @if (isLoading)
+        {
+            <div class="ppr-loading">
+
+                <div class="ppr-loading-spinner"></div>
+
+                <div class="ppr-loading-text">
+
+                    <strong>Loading purchase requests</strong>
+
+                    <span>Please wait...</span>
+
+                </div>
+
+            </div>
+        }
+
+        @* ========================================================
+           EMPTY
+           ======================================================== *@
+
+        else if (requests.Count == 0)
+        {
+            <div class="ppr-empty">
+
+                <div class="ppr-empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+
+                <h3>No actionable requests</h3>
+
+                <p>
+                    New requests and approved requests awaiting payment will appear here.
+                </p>
+
+            </div>
+        }
+
+        @* ========================================================
+           TABLE
+           ======================================================== *@
+
+        else
+        {
+            <div class="ppr-table-wrapper">
+
+                <table class="ppr-table">
+
+                    <thead>
+
+                        <tr>
+                            <th class="ppr-col-request">Request</th>
+                            <th class="ppr-col-customer">Customer</th>
+                            <th class="ppr-col-package">Package</th>
+                            <th class="ppr-col-amount">Amount</th>
+                            <th class="ppr-col-created">Created</th>
+                            <th class="ppr-col-status">Status</th>
+                            <th class="ppr-col-actions">Actions</th>
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        @foreach (var item in requests)
+                        {
+                            var current = item;
+
+                            <tr @key="current.PackagePurchaseRequestID">
+
+                                @* REQUEST *@
+
+                                <td class="ppr-cell-request">
+
+                                    <span class="ppr-request-id">
+                                        #@current.PackagePurchaseRequestID
+                                    </span>
+
+                                </td>
+
+
+                                @* CUSTOMER *@
+
+                                <td class="ppr-cell-customer">
+
+                                    <div class="ppr-customer">
+
+                                        <span class="ppr-customer-icon">
+                                            <i class="bi bi-person-fill"></i>
+                                        </span>
+
+                                        <span>User @current.UserID</span>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* PACKAGE *@
+
+                                <td class="ppr-cell-package">
+
+                                    <div class="ppr-package-icon">
+                                        <i class="bi bi-box-seam-fill"></i>
+                                    </div>
+
+                                    <div class="ppr-package-info">
+
+                                        <span class="ppr-package-name">
+                                            @current.PackageName
+                                        </span>
+
+                                        <span class="ppr-package-code">
+                                            @current.PackageCode
+                                        </span>
+
+                                    </div>
+
+                                </td>
+
+
+                                @* AMOUNT *@
+
+                                <td class="ppr-cell-amount">
+
+                                    <strong>@current.Amount.ToString("N2")</strong>
+
+                                    <span>@current.CurrencyCode</span>
+
+                                </td>
+
+
+                                @* CREATED *@
+
+                                <td class="ppr-cell-created">
+
+                                    <span class="ppr-date">
+                                        @current.CreatedDate.ToString("dd MMM yyyy")
+                                    </span>
+
+                                    <span class="ppr-time">
+                                        @current.CreatedDate.ToString("HH:mm")
+                                    </span>
+
+                                </td>
+
+
+                                @* STATUS *@
+
+                                <td class="ppr-cell-status">
+
+                                    @if (IsPending(current))
+                                    {
+                                        <span class="ppr-status ppr-status-pending">
+
+                                            <span class="ppr-status-dot"></span>
+
+                                            Pending review
+
+                                        </span>
+                                    }
+                                    else if (IsApproved(current))
+                                    {
+                                        <span class="ppr-status ppr-status-approved">
+
+                                            <span class="ppr-status-dot"></span>
+
+                                            Awaiting payment
+
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ppr-status ppr-status-default">
+
+                                            <span class="ppr-status-dot"></span>
+
+                                            @current.Status
+
+                                        </span>
+                                    }
+
+                                </td>
+
+
+                                @* ACTIONS *@
+
+                                <td class="ppr-cell-actions">
+
+                                    <div class="ppr-row-actions">
+
+                                        @if (IsPending(current))
+                                        {
+                                            <button type="button"
+                                                    class="ppr-action ppr-action-approve"
+                                                    @onclick="() => ReviewAsync(current, true)"
+                                                    disabled="@isBusy">
+
+                                                <i class="bi bi-check-lg"></i>
+
+                                                <span>Approve</span>
+
+                                            </button>
+
+                                            <button type="button"
+                                                    class="ppr-action ppr-action-reject"
+                                                    @onclick="() => ReviewAsync(current, false)"
+                                                    disabled="@isBusy">
+
+                                                <i class="bi bi-x-lg"></i>
+
+                                                <span>Reject</span>
+
+                                            </button>
+                                        }
+                                        else if (IsApproved(current))
+                                        {
+                                            <button type="button"
+                                                    class="ppr-action ppr-action-confirm"
+                                                    @onclick="() => SelectForPayment(current)"
+                                                    disabled="@isBusy">
+
+                                                <i class="bi bi-credit-card-fill"></i>
+
+                                                <span>Confirm payment</span>
+
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        }
+
+    </section>
+
+
+    @* ============================================================
+       CONFIRM PAYMENT DIALOG
+       ============================================================ *@
+
+    @if (selectedRequest is not null)
+    {
+        <div class="ppr-modal-backdrop"
+             @onclick="CancelPaymentSelection">
+
+            <div class="ppr-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="ppr-modal-title"
+                 @onclick:stopPropagation="true">
+
+                <div class="ppr-modal-header">
+
+                    <div class="ppr-modal-title">
+
+                        <div class="ppr-modal-icon">
+                            <i class="bi bi-credit-card-2-front-fill"></i>
+                        </div>
+
+                        <div>
+
+                            <span class="ppr-modal-eyebrow">PAYMENT</span>
+
+                            <h2 id="ppr-modal-title">Confirm payment</h2>
+
+                            <p>Activate the package entitlement for this request.</p>
+
+                        </div>
+
+                    </div>
+
+                    <button type="button"
+                            class="ppr-modal-close"
+                            @onclick="CancelPaymentSelection"
+                            disabled="@isBusy"
+                            aria-label="Close">
+
+                        <i class="bi bi-x-lg"></i>
+
+                    </button>
+
+                </div>
+
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="ppr-modal-error" role="alert">
+
+                        <i class="bi bi-exclamation-circle-fill"></i>
+
+                        <span>@errorMessage</span>
+
+                    </div>
+                }
+
+
+                <div class="ppr-modal-body">
+
+                    @* REQUEST SUMMARY *@
+
+                    <div class="ppr-summary">
+
+                        <div class="ppr-summary-item">
+                            <span>Request</span>
+                            <strong>#@selectedRequest.PackagePurchaseRequestID</strong>
+                        </div>
+
+                        <div class="ppr-summary-item">
+                            <span>Package</span>
+                            <strong>@selectedRequest.PackageName</strong>
+                        </div>
+
+                        <div class="ppr-summary-item">
+                            <span>Amount</span>
+                            <strong>
+                                @selectedRequest.Amount.ToString("N2")
+                                @selectedRequest.CurrencyCode
+                            </strong>
+                        </div>
+
+                    </div>
+
+
+                    <div class="ppr-warning">
+
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+
+                        <span>
+                            Only confirm after you have independently verified receipt of
+                            payment. Confirmation activates the package entitlement.
+                        </span>
+
+                    </div>
+
+
+                    @* PAYMENT METHOD *@
+
+                    <div class="ppr-form-field">
+
+                        <label for="paymentMethod">
+                            Payment method
+                        </label>
+
+                        <div class="ppr-input-wrapper">
+
+                            <i class="bi bi-wallet2"></i>
+
+                            <select id="paymentMethod"
+                                    class="ppr-input ppr-select"
+                                    @bind="paymentMethod"
+                                    disabled="@isBusy">
+
+                                <option value="BANK_TRANSFER">Bank transfer</option>
+                                <option value="BENEFITPAY">BenefitPay</option>
+
+                            </select>
+
+                            <i class="bi bi-chevron-down ppr-select-arrow"></i>
+
+                        </div>
+
+                        <span class="ppr-form-hint">
+                            The API will reject a method disabled in system settings.
+                        </span>
+
+                    </div>
+
+
+                    @* TRANSACTION REFERENCE *@
+
+                    <div class="ppr-form-field">
+
+                        <label for="transactionReference">
+                            Transaction reference
+                            <span class="ppr-required">*</span>
+                        </label>
+
+                        <div class="ppr-input-wrapper">
+
+                            <i class="bi bi-hash"></i>
+
+                            <input id="transactionReference"
+                                   type="text"
+                                   class="ppr-input"
+                                   maxlength="200"
+                                   @bind="transactionReference"
+                                   disabled="@isBusy"
+                                   placeholder="Enter verified bank/payment reference" />
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="ppr-modal-footer">
+
+                    <button type="button"
+                            class="ppr-btn ppr-btn-secondary"
+                            @onclick="CancelPaymentSelection"
+                            disabled="@isBusy">
+
+                        <span>Cancel</span>
+
+                    </button>
+
+
+                    <button type="button"
+                            class="ppr-btn ppr-btn-primary"
+                            @onclick="ConfirmPaymentAsync"
+                            disabled="@isBusy">
+
+                        @if (isBusy)
+                        {
+                            <span class="ppr-button-spinner"></span>
+
+                            <span>Confirming...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg"></i>
+
+                            <span>Confirm &amp; activate package</span>
+                        }
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<AdminPackagePurchaseRequestResponse> requests = new();
+
+    private AdminPackagePurchaseRequestResponse? selectedRequest;
+
+    private string paymentMethod = "BANK_TRANSFER";
+    private string transactionReference = string.Empty;
+
+    private string? errorMessage;
+    private string? successMessage;
+
+    private bool isLoading;
+    private bool isBusy;
+
+    private int PendingCount =>
+        requests.Count(IsPending);
+
+    private int ApprovedCount =>
+        requests.Count(IsApproved);
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (string.IsNullOrWhiteSpace(Auth.AccessToken))
+        {
+            errorMessage =
+                "Your administrator session is missing. Please sign in again.";
+            return;
+        }
+
+        await LoadAsync();
+    }
+
+    private void ClearError() => errorMessage = null;
+
+    private void ClearSuccess() => successMessage = null;
+
+    private async Task LoadAsync()
+    {
+        if (isBusy || isLoading)
+            return;
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            requests = await PurchaseRequestService.GetActionableAsync();
+
+            if (selectedRequest is not null)
+            {
+                selectedRequest = requests.FirstOrDefault(
+                    x => x.PackagePurchaseRequestID ==
+                         selectedRequest.PackagePurchaseRequestID);
+
+                if (selectedRequest is null)
+                    CancelPaymentSelection();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ReviewAsync(
+        AdminPackagePurchaseRequestResponse item,
+        bool approve)
+    {
+        if (isBusy)
+            return;
+
+        isBusy = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            if (approve)
+            {
+                await PurchaseRequestService.ApproveAsync(
+                    item.PackagePurchaseRequestID);
+
+                successMessage =
+                    $"Request #{item.PackagePurchaseRequestID} approved. Payment has not been confirmed.";
+            }
+            else
+            {
+                await PurchaseRequestService.RejectAsync(
+                    item.PackagePurchaseRequestID);
+
+                successMessage =
+                    $"Request #{item.PackagePurchaseRequestID} rejected.";
+            }
+
+            await ReloadAfterActionAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private void SelectForPayment(
+        AdminPackagePurchaseRequestResponse item)
+    {
+        selectedRequest = item;
+        paymentMethod = "BANK_TRANSFER";
+        transactionReference = string.Empty;
+        errorMessage = null;
+        successMessage = null;
+    }
+
+    private async Task ConfirmPaymentAsync()
+    {
+        if (isBusy || selectedRequest is null)
+            return;
+
+        if (string.IsNullOrWhiteSpace(transactionReference))
+        {
+            errorMessage = "Enter the verified payment transaction reference.";
+            return;
+        }
+
+        if (transactionReference.Trim().Length > 200)
+        {
+            errorMessage = "The transaction reference cannot exceed 200 characters.";
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+        successMessage = null;
+
+        var requestId = selectedRequest.PackagePurchaseRequestID;
+
+        try
+        {
+            await PurchaseRequestService.ConfirmPaymentAsync(
+                requestId,
+                new ConfirmPackagePaymentRequest
+                {
+                    PaymentMethod = paymentMethod,
+                    ProviderTransactionReference = transactionReference.Trim()
+                });
+
+            selectedRequest = null;
+            transactionReference = string.Empty;
+
+            successMessage =
+                $"Payment confirmed for request #{requestId}. The API reported success; verify the entitlement and transaction records during testing.";
+
+            await ReloadAfterActionAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+
+    private async Task ReloadAfterActionAsync()
+    {
+        requests = await PurchaseRequestService.GetActionableAsync();
+    }
+
+    private void CancelPaymentSelection()
+    {
+        if (isBusy)
+            return;
+
+        selectedRequest = null;
+        transactionReference = string.Empty;
+        errorMessage = null;
+    }
+
+    private static bool IsPending(
+        AdminPackagePurchaseRequestResponse item) =>
+        string.Equals(
+            item.Status,
+            "PENDING",
+            StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsApproved(
+        AdminPackagePurchaseRequestResponse item) =>
+        string.Equals(
+            item.Status,
+            "APPROVED",
+            StringComparison.OrdinalIgnoreCase);
+}

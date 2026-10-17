@@ -52,6 +52,9 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<int>("MonthlyAdvertisementEnquiryLimit")
                         .HasColumnType("int");
 
+                    b.Property<int>("MonthlyAdvertisementPostLimit")
+                        .HasColumnType("int");
+
                     b.Property<int>("MonthlyReplyLimit")
                         .HasColumnType("int");
 
@@ -88,6 +91,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         {
                             t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementLimit", "[MonthlyAdvertisementEnquiryLimit] >= 0");
 
+                            t.HasCheckConstraint("CK_EnquiryPackages_AdvertisementPostLimit", "[MonthlyAdvertisementPostLimit] >= 0");
+
                             t.HasCheckConstraint("CK_EnquiryPackages_Price", "[Price] >= 0");
 
                             t.HasCheckConstraint("CK_EnquiryPackages_ReplyLimit", "[MonthlyReplyLimit] >= 0");
@@ -95,6 +100,81 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                             t.HasCheckConstraint("CK_EnquiryPackages_SenderLimit", "[MonthlySenderEnquiryLimit] >= 0");
 
                             t.HasCheckConstraint("CK_EnquiryPackages_ValidityDays", "[ValidityDays] IS NULL OR [ValidityDays] > 0");
+                        });
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackageEntitlementContribution", b =>
+                {
+                    b.Property<long>("PackageEntitlementContributionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("PackageEntitlementContributionID"));
+
+                    b.Property<DateTime>("ContributionEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ContributionStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("EnquiryPackageID")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsLegacyBaseline")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthlyAdvertisementPostLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthlyReplyLimit")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MonthlySenderEnquiryLimit")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PackageCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("PackageName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<long?>("PaymentTransactionID")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("UserPackageEntitlementID")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("ValidityDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("PackageEntitlementContributionID");
+
+                    b.HasIndex("PaymentTransactionID")
+                        .IsUnique()
+                        .HasFilter("[PaymentTransactionID] IS NOT NULL");
+
+                    b.HasIndex("UserPackageEntitlementID")
+                        .IsUnique()
+                        .HasFilter("[IsLegacyBaseline] = 1");
+
+                    b.HasIndex("UserPackageEntitlementID", "ContributionStartDate", "ContributionEndDate");
+
+                    b.ToTable("PackageEntitlementContributions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PackageEntitlementContributions_Limits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
+
+                            t.HasCheckConstraint("CK_PackageEntitlementContributions_Validity", "[ValidityDays] > 0 AND [ContributionEndDate] > [ContributionStartDate]");
                         });
                 });
 
@@ -174,6 +254,10 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(3)");
 
+                    b.Property<string>("ExternalRefundReference")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
                     b.Property<string>("PaymentMethod")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -201,6 +285,11 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("PaymentTransactionID");
+
+                    b.HasIndex("ExternalRefundReference")
+                        .IsUnique()
+                        .HasDatabaseName("IX_PaymentTransactions_ExternalRefundReference")
+                        .HasFilter("[ExternalRefundReference] IS NOT NULL");
 
                     b.HasIndex("UserPackageEntitlementID");
 
@@ -236,6 +325,26 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<DateTime?>("ModifiedDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("MonthlyAdvertisementEnquiryLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MonthlyAdvertisementPostLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MonthlyReplyLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("MonthlySenderEnquiryLimit")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
@@ -261,6 +370,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.ToTable("UserPackageEntitlements", null, t =>
                         {
                             t.HasCheckConstraint("CK_UserPackageEntitlements_DateRange", "[EndDate] IS NULL OR [EndDate] > [StartDate]");
+
+                            t.HasCheckConstraint("CK_UserPackageEntitlements_NonNegativeLimits", "[MonthlyAdvertisementPostLimit] >= 0 AND [MonthlySenderEnquiryLimit] >= 0 AND [MonthlyAdvertisementEnquiryLimit] >= 0 AND [MonthlyReplyLimit] >= 0");
 
                             t.HasCheckConstraint("CK_UserPackageEntitlements_Status", "[Status] IN ('PENDING', 'ACTIVE', 'CANCELLED', 'EXPIRED')");
                         });
@@ -2248,6 +2359,24 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.HasIndex("UserID");
 
                     b.ToTable("UserSessions", (string)null);
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackageEntitlementContribution", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Billing.PaymentTransaction", "PaymentTransaction")
+                        .WithOne()
+                        .HasForeignKey("HRInfoAdvertisements.Domain.Billing.PackageEntitlementContribution", "PaymentTransactionID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("HRInfoAdvertisements.Domain.Billing.UserPackageEntitlement", "UserPackageEntitlement")
+                        .WithMany()
+                        .HasForeignKey("UserPackageEntitlementID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("PaymentTransaction");
+
+                    b.Navigation("UserPackageEntitlement");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Billing.PackagePurchaseRequest", b =>
