@@ -10,6 +10,13 @@ public class AdvertisementCategory
 
     public string? Description { get; set; }
 
+    public int? ParentCategoryID { get; set; }
+
+    public AdvertisementCategory? ParentCategory { get; set; }
+
+    public ICollection<AdvertisementCategory> SubCategories { get; set; }
+        = new List<AdvertisementCategory>();
+
     public bool IsActive { get; set; } = true;
 
     public int DisplayOrder { get; set; }

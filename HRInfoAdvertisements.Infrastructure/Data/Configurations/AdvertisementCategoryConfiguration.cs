@@ -23,6 +23,11 @@ public class AdvertisementCategoryConfiguration
         builder.Property(x => x.Description)
             .HasMaxLength(500);
 
+        builder.HasOne(x => x.ParentCategory)
+            .WithMany(x => x.SubCategories)
+            .HasForeignKey(x => x.ParentCategoryID)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.CategoryName)
             .IsUnique();
     }

@@ -73,4 +73,6 @@ public bool ShowEmailToPublic { get; set; }
     public int? PropertyAge { get; set; }
 
     public DateTime? ExpiryDate { get; set; }
+
+    public List<AdvertisementFeatureValueRequest>? FeatureValues { get; set; }
 }

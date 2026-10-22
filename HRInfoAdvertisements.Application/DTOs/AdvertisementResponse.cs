@@ -98,4 +98,7 @@ public string? AreaName { get; set; }
 
     public List<AdvertisementImageResponse> Images { get; set; }
         = new();
+
+    public List<AdvertisementFeatureValueResponse> FeatureValues { get; set; }
+        = new();
 }

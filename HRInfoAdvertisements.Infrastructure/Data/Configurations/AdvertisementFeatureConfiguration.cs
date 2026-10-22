@@ -20,6 +20,10 @@ public class AdvertisementFeatureConfiguration
         builder.Property(x => x.FeatureNameAr)
             .HasMaxLength(150);
 
+        builder.Property(x => x.HelpText).HasMaxLength(500);
+        builder.Property(x => x.HelpTextAr).HasMaxLength(500);
+        builder.Property(x => x.ValidationPattern).HasMaxLength(1000);
+
         builder.Property(x => x.DataType)
             .HasMaxLength(30)
             .IsRequired();

@@ -3,11 +3,14 @@
 @using System.ComponentModel.DataAnnotations
 @using HRInfoAdvertisements.Admin.Services
 @using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Application.DTOs.CategoryManagement
+@using System.Text.Json
 @using Microsoft.AspNetCore.Components.Forms
 
 @layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
 @inject SiteSettingsService SiteSettingsService
 @inject AdvertisementApiService AdvertisementApiService
+@inject CategoryManagementApiService CategoryManagementApiService
 @inject PublicAuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
@@ -2954,8 +2957,11 @@ else
 
                             <i class="bi bi-tags input-icon"></i>
 
-                            <InputSelect class="form-control has-icon"
-                                         @bind-Value="model.CategoryID">
+                            <InputSelect TValue="int"
+                                         class="form-control has-icon"
+                                         Value="model.CategoryID"
+                                         ValueChanged="OnCategoryChangedAsync"
+                                         ValueExpression="@(() => model.CategoryID)">
 
                                 <option value="0">
                                     Select category
@@ -2976,6 +2982,115 @@ else
                             For="@(() => model.CategoryID)" />
 
                     </div>
+
+                    @if (isLoadingCategoryFeatures)
+                    {
+                        <div class="form-group">
+                            <p>Loading category features...</p>
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(categoryFeatureError))
+                    {
+                        <div class="form-group">
+                            <p class="text-danger">@categoryFeatureError</p>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var feature in categoryFeatures)
+                        {
+                            <div class="form-group" @key="feature.AdvertisementFeatureID">
+                                <label>
+                                    @feature.FeatureName
+                                    @if (feature.IsRequired)
+                                    {
+                                        <span class="required">*</span>
+                                    }
+                                </label>
+
+                                @if (!string.IsNullOrWhiteSpace(feature.HelpText))
+                                {
+                                    <small class="form-text text-muted">@feature.HelpText</small>
+                                }
+
+                                @if (IsFeatureType(feature, "Select"))
+                                {
+                                    <InputSelect TValue="string"
+                                                 class="form-control"
+                                                 Value="GetFeatureValue(feature.AdvertisementFeatureID)"
+                                                 ValueChanged="value => SetFeatureValue(feature.AdvertisementFeatureID, value)"
+                                                 ValueExpression="@(() => GetFeatureValue(feature.AdvertisementFeatureID))">
+                                        <option value="">Select an option</option>
+                                        @foreach (var option in feature.Options)
+                                        {
+                                            <option value="@option.OptionValue">@option.OptionValue</option>
+                                        }
+                                    </InputSelect>
+                                }
+                                else if (IsFeatureType(feature, "Radio"))
+                                {
+                                    @foreach (var option in feature.Options)
+                                    {
+                                        <label class="checkbox-label">
+                                            <input type="radio"
+                                                   name="@($"feature_{feature.AdvertisementFeatureID}")"
+                                                   checked="@(GetFeatureValue(feature.AdvertisementFeatureID) == option.OptionValue)"
+                                                   @onchange="() => SetFeatureValue(feature.AdvertisementFeatureID, option.OptionValue)" />
+                                            @option.OptionValue
+                                        </label>
+                                    }
+                                }
+                                else if (IsFeatureType(feature, "MultiSelect"))
+                                {
+                                    @foreach (var option in feature.Options)
+                                    {
+                                        var selectedValues = GetMultiSelectValues(feature.AdvertisementFeatureID);
+                                        <label class="checkbox-label">
+                                            <input type="checkbox"
+                                                   checked="@selectedValues.Contains(option.OptionValue, StringComparer.OrdinalIgnoreCase)"
+                                                   @onchange="args => ToggleMultiSelectValue(feature.AdvertisementFeatureID, option.OptionValue, args.Value is bool selected && selected)" />
+                                            @option.OptionValue
+                                        </label>
+                                    }
+                                }
+                                else if (IsFeatureType(feature, "Boolean") || IsFeatureType(feature, "Bool"))
+                                {
+                                    <InputSelect TValue="string"
+                                                 class="form-control"
+                                                 Value="GetFeatureValue(feature.AdvertisementFeatureID)"
+                                                 ValueChanged="value => SetFeatureValue(feature.AdvertisementFeatureID, value)"
+                                                 ValueExpression="@(() => GetFeatureValue(feature.AdvertisementFeatureID))">
+                                        <option value="">Select</option>
+                                        <option value="true">Yes</option>
+                                        <option value="false">No</option>
+                                    </InputSelect>
+                                }
+                                else
+                                {
+                                    <InputText class="form-control"
+                                               type="@GetFeatureInputType(feature)"
+                                               maxlength="@feature.MaxLength"
+                                               placeholder="@feature.FeatureName"
+                                               Value="GetFeatureValue(feature.AdvertisementFeatureID)"
+                                               ValueChanged="value => SetFeatureValue(feature.AdvertisementFeatureID, value)"
+                                               ValueExpression="@(() => GetFeatureValue(feature.AdvertisementFeatureID))" />
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(feature.HelpTextAr))
+                                {
+                                    <small class="form-text text-muted" dir="rtl">@feature.HelpTextAr</small>
+                                }
+
+                                <label>@(feature.FeatureNameAr ?? feature.FeatureName) (العربية)</label>
+                                <InputText class="form-control"
+                                           dir="rtl"
+                                           maxlength="1000"
+                                           Value="GetFeatureValueAr(feature.AdvertisementFeatureID)"
+                                           ValueChanged="value => SetFeatureValueAr(feature.AdvertisementFeatureID, value)"
+                                           ValueExpression="@(() => GetFeatureValueAr(feature.AdvertisementFeatureID))" />
+                            </div>
+                        }
+                    }
 
                 </div>
 
@@ -4339,6 +4454,12 @@ private CreateAdvertisementRequest model = new();
 private List<LookupItemResponse> categories =
     new();
 
+private List<CategoryFeatureResponse> categoryFeatures = new();
+private readonly Dictionary<int, string?> featureValues = new();
+private readonly Dictionary<int, string?> featureValuesAr = new();
+private bool isLoadingCategoryFeatures;
+private string? categoryFeatureError;
+
 private List<LookupItemResponse> advertisementTypes =
     new();
 
@@ -4805,6 +4926,10 @@ private async Task LoadExistingAdvertisementAsync(
 
         model.ShowEmailToPublic =
             advertisement.ShowEmailToPublic;
+
+        await LoadCategoryFeaturesAsync(
+            advertisement.CategoryID,
+            advertisement.FeatureValues);
 
 
         // ----------------------------------------------------
@@ -5588,6 +5713,184 @@ private bool ValidateContactInformation(
 
 
 // ============================================================
+// DYNAMIC CATEGORY FEATURES
+// ============================================================
+
+private async Task OnCategoryChangedAsync(int newCategoryId)
+{
+    if (model.CategoryID == newCategoryId)
+    {
+        return;
+    }
+
+    model.CategoryID = newCategoryId;
+    await LoadCategoryFeaturesAsync(newCategoryId);
+}
+
+private async Task LoadCategoryFeaturesAsync(
+    int categoryId,
+    IEnumerable<AdvertisementFeatureValueResponse>? existingValues = null)
+{
+    isLoadingCategoryFeatures = true;
+    categoryFeatureError = null;
+    categoryFeatures.Clear();
+    featureValues.Clear();
+    featureValuesAr.Clear();
+
+    try
+    {
+        if (categoryId <= 0)
+        {
+            return;
+        }
+
+        categoryFeatures = (await CategoryManagementApiService
+            .GetCategoryFeaturesAsync(categoryId))
+            .OrderBy(x => x.DisplayOrder)
+            .ToList();
+
+        if (existingValues is null)
+        {
+            return;
+        }
+
+        foreach (var saved in existingValues)
+        {
+            if (!categoryFeatures.Any(x =>
+                x.AdvertisementFeatureID == saved.AdvertisementFeatureID))
+            {
+                continue;
+            }
+
+            featureValues[saved.AdvertisementFeatureID] = saved.FeatureValue;
+            featureValuesAr[saved.AdvertisementFeatureID] = saved.FeatureValueAr;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"LOAD CATEGORY FEATURES ERROR: {ex}");
+        categoryFeatureError =
+            "Category features could not be loaded. Please try again.";
+    }
+    finally
+    {
+        isLoadingCategoryFeatures = false;
+    }
+}
+
+private static bool IsFeatureType(CategoryFeatureResponse feature, string type)
+{
+    var normalized = feature.DataType
+        .Replace("_", "")
+        .Replace("-", "")
+        .Replace(" ", "")
+        .Trim();
+
+    return normalized.Equals(
+        type.Replace(" ", ""),
+        StringComparison.OrdinalIgnoreCase);
+}
+
+private static string GetFeatureInputType(CategoryFeatureResponse feature)
+{
+    var type = feature.DataType.Trim().ToLowerInvariant();
+
+    if (type is "number" or "decimal" or "numeric" or
+        "integer" or "int" or "wholenumber")
+    {
+        return "number";
+    }
+
+    if (type is "date" or "datetime")
+    {
+        return "date";
+    }
+
+    return "text";
+}
+
+private string? GetFeatureValue(int featureId) =>
+    featureValues.TryGetValue(featureId, out var value) ? value : null;
+
+private string? GetFeatureValueAr(int featureId) =>
+    featureValuesAr.TryGetValue(featureId, out var value) ? value : null;
+
+private void SetFeatureValue(int featureId, string? value) =>
+    featureValues[featureId] = value;
+
+private void SetFeatureValueAr(int featureId, string? value) =>
+    featureValuesAr[featureId] = value;
+
+private List<string> GetMultiSelectValues(int featureId)
+{
+    var raw = GetFeatureValue(featureId);
+
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        return new List<string>();
+    }
+
+    try
+    {
+        return JsonSerializer.Deserialize<List<string>>(raw) ?? new List<string>();
+    }
+    catch (JsonException)
+    {
+        return new List<string>();
+    }
+}
+
+private void ToggleMultiSelectValue(int featureId, string optionValue, bool selected)
+{
+    var values = GetMultiSelectValues(featureId);
+
+    values.RemoveAll(x => string.Equals(
+        x, optionValue, StringComparison.OrdinalIgnoreCase));
+
+    if (selected)
+    {
+        values.Add(optionValue);
+    }
+
+    featureValues[featureId] = values.Count == 0
+        ? null
+        : JsonSerializer.Serialize(values);
+}
+
+private List<AdvertisementFeatureValueRequest> BuildFeatureValueRequests()
+{
+    var requests = new List<AdvertisementFeatureValueRequest>();
+
+    foreach (var feature in categoryFeatures)
+    {
+        var value = GetFeatureValue(feature.AdvertisementFeatureID);
+        var valueAr = GetFeatureValueAr(feature.AdvertisementFeatureID);
+
+        if (IsFeatureType(feature, "MultiSelect"))
+        {
+            var selected = GetMultiSelectValues(feature.AdvertisementFeatureID);
+            value = selected.Count == 0 ? null : JsonSerializer.Serialize(selected);
+        }
+
+        if (string.IsNullOrWhiteSpace(value) &&
+            string.IsNullOrWhiteSpace(valueAr))
+        {
+            continue;
+        }
+
+        requests.Add(new AdvertisementFeatureValueRequest
+        {
+            AdvertisementFeatureID = feature.AdvertisementFeatureID,
+            FeatureValue = value,
+            FeatureValueAr = valueAr
+        });
+    }
+
+    return requests;
+}
+
+
+// ============================================================
 // CREATE UPDATE REQUEST
 // ============================================================
 
@@ -5665,7 +5968,10 @@ private UpdateAdvertisementRequest BuildUpdateRequest()
             model.ShowWhatsAppToPublic,
 
         ShowEmailToPublic =
-            model.ShowEmailToPublic
+            model.ShowEmailToPublic,
+
+        FeatureValues =
+            BuildFeatureValueRequests()
     };
 }
 
@@ -5770,6 +6076,8 @@ private async Task SaveDraft()
         // ----------------------------------------------------
         // CREATE NEW
         // ----------------------------------------------------
+
+        model.FeatureValues = BuildFeatureValueRequests();
 
         var createResult =
             await AdvertisementApiService

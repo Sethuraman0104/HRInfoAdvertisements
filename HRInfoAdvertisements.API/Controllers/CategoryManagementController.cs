@@ -61,6 +61,34 @@ public class CategoryManagementController : ControllerBase
     }
 
     // ------------------------------------------------------------
+    // Get Category Features
+    // ------------------------------------------------------------
+
+    [HttpGet("{categoryId:int}/features")]
+    [Authorize(Policy = "ADVERTISEMENT_VIEW")]
+    public async Task<IActionResult> GetCategoryFeatures(
+        int categoryId)
+    {
+        var category =
+            await _categoryManagementService
+                .GetCategoryByIdAsync(categoryId);
+
+        if (category == null || !category.IsActive)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Active category not found."
+            });
+        }
+
+        var result =
+            await _categoryManagementService
+                .GetCategoryFeaturesAsync(categoryId);
+
+        return Ok(result);
+    }
+    // ------------------------------------------------------------
     // Create Category
     // ------------------------------------------------------------
 
@@ -185,6 +213,177 @@ public class CategoryManagementController : ControllerBase
         });
     }
 
+    // ------------------------------------------------------------
+    // Create Feature
+    // ------------------------------------------------------------
+
+    [HttpPost("{categoryId:int}/features")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> CreateCategoryFeature(
+        int categoryId,
+        [FromBody] CreateCategoryFeatureRequest request)
+    {
+        try
+        {
+            var featureId = await _categoryManagementService
+                .CreateFeatureAsync(categoryId, request);
+
+            if (featureId == null)
+                return NotFound(new { success = false, message = "Active category not found." });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Feature created successfully.",
+                featureId = featureId.Value
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Update Feature
+    // ------------------------------------------------------------
+
+    [HttpPut("{categoryId:int}/features/{featureId:int}")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> UpdateCategoryFeature(
+        int categoryId,
+        int featureId,
+        [FromBody] UpdateCategoryFeatureRequest request)
+    {
+        try
+        {
+            var updated = await _categoryManagementService
+                .UpdateFeatureAsync(categoryId, featureId, request);
+
+            if (!updated)
+                return NotFound(new { success = false, message = "Feature not found in this category." });
+
+            return Ok(new { success = true, message = "Feature updated successfully." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Update Feature Status
+    // ------------------------------------------------------------
+
+    [HttpPut("{categoryId:int}/features/{featureId:int}/status")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> UpdateCategoryFeatureStatus(
+        int categoryId,
+        int featureId,
+        [FromBody] CategoryFeatureStatusRequest request)
+    {
+        var updated = await _categoryManagementService
+            .UpdateFeatureStatusAsync(categoryId, featureId, request.IsActive);
+
+        if (!updated)
+            return NotFound(new { success = false, message = "Feature not found in this category." });
+
+        return Ok(new
+        {
+            success = true,
+            message = request.IsActive
+                ? "Feature activated successfully."
+                : "Feature deactivated successfully."
+        });
+    }
+
+    // ------------------------------------------------------------
+    // Create Feature Option
+    // ------------------------------------------------------------
+
+    [HttpPost("{categoryId:int}/features/{featureId:int}/options")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> CreateCategoryFeatureOption(
+        int categoryId,
+        int featureId,
+        [FromBody] CategoryFeatureOptionRequest request)
+    {
+        try
+        {
+            var optionId = await _categoryManagementService
+                .CreateFeatureOptionAsync(categoryId, featureId, request);
+
+            if (optionId == null)
+                return NotFound(new { success = false, message = "Feature not found in this category." });
+
+            return Ok(new
+            {
+                success = true,
+                message = "Feature option created successfully.",
+                optionId = optionId.Value
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Update Feature Option
+    // ------------------------------------------------------------
+
+    [HttpPut("{categoryId:int}/features/{featureId:int}/options/{optionId:int}")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> UpdateCategoryFeatureOption(
+        int categoryId,
+        int featureId,
+        int optionId,
+        [FromBody] CategoryFeatureOptionRequest request)
+    {
+        try
+        {
+            var updated = await _categoryManagementService
+                .UpdateFeatureOptionAsync(categoryId, featureId, optionId, request);
+
+            if (!updated)
+                return NotFound(new { success = false, message = "Feature or option not found in this category." });
+
+            return Ok(new { success = true, message = "Feature option updated successfully." });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    // ------------------------------------------------------------
+    // Update Feature Option Status
+    // ------------------------------------------------------------
+
+    [HttpPut("{categoryId:int}/features/{featureId:int}/options/{optionId:int}/status")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> UpdateCategoryFeatureOptionStatus(
+        int categoryId,
+        int featureId,
+        int optionId,
+        [FromBody] CategoryFeatureStatusRequest request)
+    {
+        var updated = await _categoryManagementService
+            .UpdateFeatureOptionStatusAsync(
+                categoryId, featureId, optionId, request.IsActive);
+
+        if (!updated)
+            return NotFound(new { success = false, message = "Feature or option not found in this category." });
+
+        return Ok(new
+        {
+            success = true,
+            message = request.IsActive
+                ? "Feature option activated successfully."
+                : "Feature option deactivated successfully."
+        });
+    }
     private long? GetCurrentUserId()
     {
         var userIdClaim =

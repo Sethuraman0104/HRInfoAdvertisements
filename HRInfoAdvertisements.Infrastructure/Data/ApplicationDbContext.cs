@@ -1,4 +1,4 @@
-﻿using HRInfoAdvertisements.Domain.Billing;
+using HRInfoAdvertisements.Domain.Billing;
 using HRInfoAdvertisements.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,6 +27,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<AdvertisementType> AdvertisementTypes => Set<AdvertisementType>();
     public DbSet<AdvertisementStatus> AdvertisementStatuses => Set<AdvertisementStatus>();
     public DbSet<AdvertisementFeature> AdvertisementFeatures => Set<AdvertisementFeature>();
+    public DbSet<AdvertisementFeatureOption> AdvertisementFeatureOptions => Set<AdvertisementFeatureOption>();
     public DbSet<AdvertisementFeatureValue> AdvertisementFeatureValues => Set<AdvertisementFeatureValue>();
     public DbSet<AdvertisementImage> AdvertisementImages => Set<AdvertisementImage>();
     public DbSet<AdvertisementVideo> AdvertisementVideos => Set<AdvertisementVideo>();

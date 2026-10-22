@@ -1,0 +1,30 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=(localdb)\\MSSQLLocalDB;Database=HRInfoAdvertisements;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
+  },
+
+  "JwtSettings": {
+    "SecretKey": "CHANGE_THIS_TO_A_LONG_RANDOM_SECRET_KEY",
+    "Issuer": "HRInfoAdvertisements",
+    "Audience": "HRInfoAdvertisementsClient",
+    "AccessTokenMinutes": 60,
+    "RefreshTokenDays": 30
+  },
+
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.EntityFrameworkCore": "Warning"
+    }
+  },
+
+ "Email": {
+  "Provider": "Brevo",
+  "FromAddress": "sethuraman0104@gmail.com",
+  "FromName": "AdMind",
+  "Smtp": { "Host": "smtp.gmail.com", "Port": 587 }
+},
+
+  "AllowedHosts": "*"
+}

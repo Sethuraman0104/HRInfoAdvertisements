@@ -232,6 +232,18 @@ public class AdvertisementService : IAdvertisementService
                 userId
         };
 
+        if (request.FeatureValues != null)
+        {
+            var featureValues = await BuildFeatureValuesAsync(
+                request.CategoryID,
+                request.FeatureValues);
+
+            foreach (var featureValue in featureValues)
+            {
+                advertisement.FeatureValues.Add(featureValue);
+            }
+        }
+
         _context.Advertisements.Add(advertisement);
 
         await _context.SaveChangesAsync();
@@ -263,6 +275,8 @@ public async Task<AdvertisementResponse?>
 
             .Include(x => x.Images)
             .Include(x => x.FeatureValues)
+                .ThenInclude(x => x.Feature)
+                    .ThenInclude(x => x.Options)
 
             .FirstOrDefaultAsync(x =>
                 x.AdvertisementID == advertisementId
@@ -295,6 +309,9 @@ public async Task<AdvertisementResponse?>
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
                 .Include(x => x.Images)
+                .Include(x => x.FeatureValues)
+                    .ThenInclude(x => x.Feature)
+                        .ThenInclude(x => x.Options)
                 .Where(x =>
                     x.AdvertisementID == advertisementId);
 
@@ -363,6 +380,9 @@ public async Task<AdvertisementResponse?>
                 .Include(x => x.AdvertisementType)
                 .Include(x => x.Status)
                 .Include(x => x.Images)
+                .Include(x => x.FeatureValues)
+                    .ThenInclude(x => x.Feature)
+                        .ThenInclude(x => x.Options)
                 .Where(x =>
                     x.UserID == userId);
 
@@ -437,6 +457,9 @@ public async Task<AdvertisementResponse?>
         .Include(x => x.AdvertisementType)
         .Include(x => x.Status)
         .Include(x => x.Images)
+        .Include(x => x.FeatureValues)
+            .ThenInclude(x => x.Feature)
+                .ThenInclude(x => x.Options)
         .Include(x => x.Country)
         .Include(x => x.State)
         .Include(x => x.City)
@@ -587,6 +610,7 @@ public async Task<AdvertisementResponse?>
     {
         var advertisement =
             await _context.Advertisements
+                .Include(x => x.FeatureValues)
                 .FirstOrDefaultAsync(x =>
                     x.AdvertisementID == advertisementId &&
                     x.UserID == userId);
@@ -595,6 +619,8 @@ public async Task<AdvertisementResponse?>
         {
             return null;
         }
+
+        var originalCategoryId = advertisement.CategoryID;
 
         // --------------------------------------------------------
         // Get Current Status
@@ -679,6 +705,31 @@ public async Task<AdvertisementResponse?>
             contactEmail,
             request.ShowWhatsAppToPublic,
             request.ShowEmailToPublic);
+
+        // --------------------------------------------------------
+        // Synchronize Feature Values
+        // --------------------------------------------------------
+
+        if (request.FeatureValues != null ||
+            originalCategoryId != request.CategoryID)
+        {
+            _context.AdvertisementFeatureValues.RemoveRange(
+                advertisement.FeatureValues.ToList());
+
+            advertisement.FeatureValues.Clear();
+
+            if (request.FeatureValues != null)
+            {
+                var featureValues = await BuildFeatureValuesAsync(
+                    request.CategoryID,
+                    request.FeatureValues);
+
+                foreach (var featureValue in featureValues)
+                {
+                    advertisement.FeatureValues.Add(featureValue);
+                }
+            }
+        }
 
         // --------------------------------------------------------
         // Update Fields
@@ -788,7 +839,7 @@ public async Task<AdvertisementResponse?>
             userId;
 
         // --------------------------------------------------------
-        // Rejected → Draft after editing
+        // Rejected â†’ Draft after editing
         // --------------------------------------------------------
 
         if (status.StatusCode == "REJECTED")
@@ -884,6 +935,10 @@ public async Task<AdvertisementResponse?>
     if (string.IsNullOrWhiteSpace(advertisement.Title) ||
         string.IsNullOrWhiteSpace(advertisement.Description))
         return false;
+
+    await ValidateAdvertisementFeatureValuesAsync(
+        advertisement.AdvertisementID,
+        advertisement.CategoryID);
 
     var hasWhatsApp =
         !string.IsNullOrWhiteSpace(advertisement.WhatsAppNumber);
@@ -1070,7 +1125,7 @@ var paidPackageLimit =
     }
 
     // ============================================================
-    // MAP ENTITY → DTO
+    // MAP ENTITY â†’ DTO
     // ============================================================
 
     private static AdvertisementResponse
@@ -1260,6 +1315,33 @@ AreaName =
             // Advertisement Images
             // ----------------------------------------------------
 
+            FeatureValues =
+                advertisement.FeatureValues
+                    .Where(x => x.Feature != null)
+                    .OrderBy(x => x.Feature.DisplayOrder)
+                    .Select(x => new AdvertisementFeatureValueResponse
+                    {
+                        AdvertisementFeatureID = x.AdvertisementFeatureID,
+                        FeatureName = x.Feature.FeatureName,
+                        FeatureNameAr = x.Feature.FeatureNameAr,
+                        DataType = x.Feature.DataType,
+                        IsRequired = x.Feature.IsRequired,
+                        FeatureValue = x.FeatureValue,
+                        FeatureValueAr = x.FeatureValueAr,
+                        Options = x.Feature.Options
+                            .Where(o => o.IsActive)
+                            .OrderBy(o => o.DisplayOrder)
+                            .Select(o => new AdvertisementFeatureOptionResponse
+                            {
+                                AdvertisementFeatureOptionID = o.AdvertisementFeatureOptionID,
+                                OptionValue = o.OptionValue,
+                                OptionValueAr = o.OptionValueAr,
+                                DisplayOrder = o.DisplayOrder
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
+
             Images =
                 advertisement.Images
                     .OrderBy(x => x.DisplayOrder)
@@ -1300,6 +1382,401 @@ AreaName =
     // NORMALIZE OPTIONAL VALUE
     // ============================================================
 
+    private async Task ValidateAdvertisementFeatureValuesAsync(
+        long advertisementId,
+        int categoryId)
+    {
+        var features = await _context.AdvertisementFeatures
+            .Include(x => x.Options)
+            .Where(x =>
+                x.CategoryID == categoryId &&
+                x.IsActive)
+            .OrderBy(x => x.DisplayOrder)
+            .ToListAsync();
+
+        var savedValues = await _context.AdvertisementFeatureValues
+            .Where(x => x.AdvertisementID == advertisementId)
+            .ToDictionaryAsync(x => x.AdvertisementFeatureID);
+
+        foreach (var feature in features)
+        {
+            savedValues.TryGetValue(
+                feature.AdvertisementFeatureID,
+                out var saved);
+
+            var value = saved?.FeatureValue?.Trim();
+            var valueAr = saved?.FeatureValueAr?.Trim();
+
+            var hasValue = !string.IsNullOrWhiteSpace(value) ||
+                           !string.IsNullOrWhiteSpace(valueAr);
+
+            var selectionDataType = (feature.DataType ?? string.Empty).Trim();
+            var isSelectionFeature =
+                string.Equals(selectionDataType, "Select", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(selectionDataType, "Radio", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(selectionDataType, "MultiSelect", StringComparison.OrdinalIgnoreCase);
+
+            if (feature.IsRequired && !hasValue)
+            {
+                throw new InvalidOperationException(
+                    $"The required feature '{feature.FeatureName}' must have a value before submission.");
+            }
+
+            if (isSelectionFeature && !feature.Options.Any(x => x.IsActive))
+            {
+                throw new InvalidOperationException(
+                    $"The feature '{feature.FeatureName}' requires at least one active option.");
+            }
+
+            // Empty optional values do not need value validation.
+            if (!hasValue)
+            {
+                continue;
+            }
+
+            // Validate each supplied value against the configured data type.
+            foreach (var languageValue in new[] { value, valueAr })
+            {
+                if (string.IsNullOrWhiteSpace(languageValue))
+                    continue;
+
+                var dataType = (feature.DataType ?? string.Empty)
+                    .Trim()
+                    .ToLowerInvariant();
+
+                bool validType;
+
+                switch (dataType)
+                {
+                    case "number":
+                    case "decimal":
+                    case "numeric":
+                        validType = decimal.TryParse(
+                            languageValue,
+                            System.Globalization.NumberStyles.Number,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out _);
+                        break;
+
+                    case "integer":
+                    case "int":
+                    case "wholenumber":
+                        validType = long.TryParse(
+                            languageValue,
+                            System.Globalization.NumberStyles.Integer,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            out _);
+                        break;
+
+                    case "date":
+                    case "datetime":
+                        validType = DateTime.TryParse(
+                            languageValue,
+                            System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.None,
+                            out _);
+                        break;
+
+                    case "boolean":
+                    case "bool":
+                        validType = bool.TryParse(languageValue, out _);
+                        break;
+
+                    default:
+                        // Keep Text and unrecognized types compatible.
+                        validType = true;
+                        break;
+                }
+
+                if (!validType)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' is not a valid '{feature.DataType}' value.");
+                }
+            }
+
+            // Validate lengths for each supplied language value.
+            foreach (var languageValue in new[] { value, valueAr })
+            {
+                if (string.IsNullOrWhiteSpace(languageValue))
+                {
+                    continue;
+                }
+
+                if (feature.MinLength.HasValue &&
+                    languageValue.Length < feature.MinLength.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must contain at least {feature.MinLength.Value} characters.");
+                }
+
+                if (feature.MaxLength.HasValue &&
+                    languageValue.Length > feature.MaxLength.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' cannot exceed {feature.MaxLength.Value} characters.");
+                }
+            }
+
+            // Apply numeric bounds when configured.
+            if (feature.MinValue.HasValue || feature.MaxValue.HasValue)
+            {
+                var numericValue = !string.IsNullOrWhiteSpace(value)
+                    ? value
+                    : valueAr;
+
+                if (!decimal.TryParse(
+                    numericValue,
+                    System.Globalization.NumberStyles.Number,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out var parsedValue))
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must be a valid number.");
+                }
+
+                if (feature.MinValue.HasValue &&
+                    parsedValue < feature.MinValue.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must be at least {feature.MinValue.Value}.");
+                }
+
+                if (feature.MaxValue.HasValue &&
+                    parsedValue > feature.MaxValue.Value)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must not exceed {feature.MaxValue.Value}.");
+                }
+            }
+
+            // Apply the configured pattern to the primary value when present.
+            if (!string.IsNullOrWhiteSpace(feature.ValidationPattern))
+            {
+                var patternValue = !string.IsNullOrWhiteSpace(value)
+                    ? value
+                    : valueAr;
+
+                bool matches;
+
+                try
+                {
+                    matches = System.Text.RegularExpressions.Regex.IsMatch(
+                        patternValue!,
+                        feature.ValidationPattern,
+                        System.Text.RegularExpressions.RegexOptions.None,
+                        TimeSpan.FromSeconds(1));
+                }
+                catch (ArgumentException)
+                {
+                    throw new InvalidOperationException(
+                        $"The validation pattern configured for '{feature.FeatureName}' is invalid.");
+                }
+                catch (System.Text.RegularExpressions.RegexMatchTimeoutException)
+                {
+                    throw new InvalidOperationException(
+                        $"Validation for '{feature.FeatureName}' took too long. Please contact the administrator.");
+                }
+
+                if (!matches)
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' does not match its required format.");
+                }
+            }
+
+            // Validate selection-based features against active options.
+            var selectionType = (feature.DataType ?? string.Empty).Trim();
+
+            var isSelect = string.Equals(
+                selectionType, "Select", StringComparison.OrdinalIgnoreCase);
+            var isRadio = string.Equals(
+                selectionType, "Radio", StringComparison.OrdinalIgnoreCase);
+            var isMultiSelect = string.Equals(
+                selectionType, "MultiSelect", StringComparison.OrdinalIgnoreCase);
+
+            var activeOptions = feature.Options
+                .Where(x => x.IsActive)
+                .ToList();
+
+            if (isMultiSelect)
+            {
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    ValidateMultiSelectOptionValue(
+                        value, feature.FeatureName, activeOptions);
+                }
+
+                if (!string.IsNullOrWhiteSpace(valueAr))
+                {
+                    ValidateMultiSelectOptionValue(
+                        valueAr, feature.FeatureName, activeOptions);
+                }
+            }
+            else if (isSelect || isRadio)
+            {
+                if (!string.IsNullOrWhiteSpace(value) &&
+                    !IsConfiguredOptionValue(value, activeOptions))
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must match an active configured option.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(valueAr) &&
+                    !IsConfiguredOptionValue(valueAr, activeOptions))
+                {
+                    throw new InvalidOperationException(
+                        $"The Arabic value for '{feature.FeatureName}' must match an active configured option.");
+                }
+            }
+            else if (activeOptions.Count > 0)
+            {
+                // Preserve option validation for other feature types.
+                if (!string.IsNullOrWhiteSpace(value) &&
+                    !IsConfiguredOptionValue(value, activeOptions))
+                {
+                    throw new InvalidOperationException(
+                        $"The value for '{feature.FeatureName}' must match a configured option.");
+                }
+
+                if (!string.IsNullOrWhiteSpace(valueAr) &&
+                    !IsConfiguredOptionValue(valueAr, activeOptions))
+                {
+                    throw new InvalidOperationException(
+                        $"The Arabic value for '{feature.FeatureName}' must match a configured option.");
+                }
+            }
+        }
+    }
+    private static bool IsConfiguredOptionValue(
+        string value,
+        IReadOnlyCollection<AdvertisementFeatureOption> activeOptions)
+    {
+        return activeOptions.Any(option =>
+            string.Equals(
+                value.Trim(),
+                option.OptionValue,
+                StringComparison.OrdinalIgnoreCase) ||
+            (!string.IsNullOrWhiteSpace(option.OptionValueAr) &&
+             string.Equals(
+                 value.Trim(),
+                 option.OptionValueAr.Trim(),
+                 StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static void ValidateMultiSelectOptionValue(
+        string jsonValue,
+        string featureName,
+        IReadOnlyCollection<AdvertisementFeatureOption> activeOptions)
+    {
+        System.Text.Json.JsonDocument document;
+
+        try
+        {
+            document = System.Text.Json.JsonDocument.Parse(jsonValue);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            throw new InvalidOperationException(
+                $"The value for '{featureName}' must be a JSON array of selected options.");
+        }
+
+        using (document)
+        {
+            if (document.RootElement.ValueKind != System.Text.Json.JsonValueKind.Array)
+            {
+                throw new InvalidOperationException(
+                    $"The value for '{featureName}' must be a JSON array of selected options.");
+            }
+
+            var selectedValues = new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var item in document.RootElement.EnumerateArray())
+            {
+                if (item.ValueKind != System.Text.Json.JsonValueKind.String)
+                {
+                    throw new InvalidOperationException(
+                        $"Every selection for '{featureName}' must be a string.");
+                }
+
+                var selectedValue = item.GetString()?.Trim();
+
+                if (string.IsNullOrWhiteSpace(selectedValue))
+                {
+                    throw new InvalidOperationException(
+                        $"The selections for '{featureName}' cannot contain empty values.");
+                }
+
+                if (!selectedValues.Add(selectedValue))
+                {
+                    throw new InvalidOperationException(
+                        $"The selections for '{featureName}' cannot contain duplicates.");
+                }
+
+                if (!IsConfiguredOptionValue(selectedValue, activeOptions))
+                {
+                    throw new InvalidOperationException(
+                        $"A selection for '{featureName}' does not match an active configured option.");
+                }
+            }
+
+            if (selectedValues.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"Select at least one option for '{featureName}'.");
+            }
+        }
+    }
+    private async Task<List<AdvertisementFeatureValue>> BuildFeatureValuesAsync(
+        int categoryId,
+        IReadOnlyCollection<AdvertisementFeatureValueRequest> requests)
+    {
+        var duplicateFeatureIds = requests
+            .GroupBy(x => x.AdvertisementFeatureID)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToList();
+
+        if (duplicateFeatureIds.Count > 0)
+        {
+            throw new InvalidOperationException(
+                "A feature can only be supplied once per advertisement.");
+        }
+
+        var requestedIds = requests
+            .Select(x => x.AdvertisementFeatureID)
+            .Distinct()
+            .ToList();
+
+        var features = await _context.AdvertisementFeatures
+            .Where(x =>
+                x.CategoryID == categoryId &&
+                x.IsActive &&
+                requestedIds.Contains(x.AdvertisementFeatureID))
+            .ToDictionaryAsync(x => x.AdvertisementFeatureID);
+
+        if (features.Count != requestedIds.Count)
+        {
+            throw new InvalidOperationException(
+                "One or more advertisement features are invalid, inactive, or do not belong to the selected category.");
+        }
+
+        return requests
+            .Select(request =>
+            {
+                var feature = features[request.AdvertisementFeatureID];
+
+                return new AdvertisementFeatureValue
+                {
+                    AdvertisementFeatureID = feature.AdvertisementFeatureID,
+                    Feature = feature,
+                    FeatureValue = NormalizeOptionalValue(request.FeatureValue),
+                    FeatureValueAr = NormalizeOptionalValue(request.FeatureValueAr)
+                };
+            })
+            .ToList();
+    }
     private static string? NormalizeOptionalValue(
         string? value)
     {

@@ -14,6 +14,16 @@ public class AdvertisementFeature
 
     public bool IsRequired { get; set; }
 
+    public string? HelpText { get; set; }
+    public string? HelpTextAr { get; set; }
+    public decimal? MinValue { get; set; }
+    public decimal? MaxValue { get; set; }
+    public int? MinLength { get; set; }
+    public int? MaxLength { get; set; }
+    public string? ValidationPattern { get; set; }
+    public bool IsSearchable { get; set; }
+    public bool IsFilterable { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public int DisplayOrder { get; set; }
@@ -22,4 +32,7 @@ public class AdvertisementFeature
 
     public ICollection<AdvertisementFeatureValue> Values { get; set; }
         = new List<AdvertisementFeatureValue>();
+
+    public ICollection<AdvertisementFeatureOption> Options { get; set; }
+        = new List<AdvertisementFeatureOption>();
 }

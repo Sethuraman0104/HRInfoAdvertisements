@@ -632,6 +632,13 @@ OnTokenValidated = async context =>
                 new Claim("permission", permission));
         }
 
+        logger.LogInformation(
+    "AUTHORIZATION DIAGNOSTIC | UserId={UserId} | Roles={Roles} | HasAdvertisementView={HasView} | HasAdvertisementEdit={HasEdit}",
+    userId,
+    string.Join(", ", roles),
+    permissions.Contains("ADVERTISEMENT_VIEW"),
+    permissions.Contains("ADVERTISEMENT_EDIT"));
+
         logger.LogDebug(
             "JWT account and authorization claims validated for user {UserId}.",
             userId);

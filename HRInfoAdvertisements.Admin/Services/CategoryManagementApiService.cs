@@ -183,6 +183,54 @@ public class CategoryManagementApiService
     }
 
     // ============================================================
+    // GET CATEGORY FEATURES
+    // ============================================================
+
+    public async Task<List<CategoryFeatureResponse>>
+        GetCategoryFeaturesAsync(int categoryId)
+    {
+        if (categoryId <= 0)
+        {
+            return new List<CategoryFeatureResponse>();
+        }
+
+        var client = CreateClient();
+
+        var response =
+            await client.GetAsync(
+                $"api/v1/categories/{categoryId}/features");
+
+        var responseBody =
+            await response.Content.ReadAsStringAsync();
+
+        if (response.StatusCode ==
+            System.Net.HttpStatusCode.NotFound)
+        {
+            return new List<CategoryFeatureResponse>();
+        }
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Unable to retrieve category features. " +
+                $"HTTP {(int)response.StatusCode} " +
+                $"({response.StatusCode}). " +
+                $"Response: {responseBody}");
+        }
+
+        if (string.IsNullOrWhiteSpace(responseBody))
+        {
+            return new List<CategoryFeatureResponse>();
+        }
+
+        return JsonSerializer.Deserialize<List<CategoryFeatureResponse>>(
+                   responseBody,
+                   JsonOptions)
+               ?? new List<CategoryFeatureResponse>();
+    }
+
+
+    // ============================================================
     // CREATE CATEGORY
     // ============================================================
 
