@@ -1,0 +1,3046 @@
+@page "/my-ads/{AdvertisementId:long}/edit"
+
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using Microsoft.AspNetCore.Components.Forms
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+@inject SiteSettingsService SiteSettingsService
+@inject AdvertisementApiService AdvertisementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Edit Advertisement | @siteName</PageTitle>
+<div class="my-ad-edit-page">
+
+    <!-- =========================================================
+         SHARED PUBLIC TOP BAR
+         ========================================================= -->
+
+    <PublicTopBar />
+
+
+    <!-- =========================================================
+         PAGE CONTEXT
+         ========================================================= -->
+
+    <section class="my-ad-edit-page-context">
+
+        <div class="my-ad-edit-context-left">
+
+            <span class="my-ad-edit-context-icon">
+                <i class="bi bi-pencil-square"></i>
+            </span>
+
+            <div class="my-ad-edit-context-text">
+
+                <span class="my-ad-edit-context-eyebrow">
+                    EDIT ADVERTISEMENT
+                </span>
+
+                <span class="my-ad-edit-context-description">
+                    Update your advertisement details, photos and contact information.
+                </span>
+
+            </div>
+
+        </div>
+
+        <button type="button"
+                class="my-ad-edit-back-button"
+                @onclick="GoBack"
+                disabled="@IsBusy">
+
+            <i class="bi bi-arrow-left"></i>
+
+            <span>
+                Back to Advertisement
+            </span>
+
+        </button>
+
+    </section>
+
+
+    <!-- =========================================================
+         MAIN EDIT CONTENT
+         ========================================================= -->
+
+    <main class="my-ad-edit-main">
+
+        <!-- =====================================================
+             ALERTS
+             ===================================================== -->
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="edit-alert edit-alert-error">
+
+                <i class="bi bi-exclamation-triangle-fill"></i>
+
+                <div>
+                    @errorMessage
+                </div>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="edit-alert edit-alert-success">
+
+                <i class="bi bi-check-circle-fill"></i>
+
+                <div>
+                    @successMessage
+                </div>
+
+            </div>
+        }
+
+
+        <!-- =====================================================
+             LOADING
+             ===================================================== -->
+
+        @if (isLoading)
+        {
+            <div class="edit-loading-card">
+
+                <div class="edit-loading-spinner"></div>
+
+                <strong>
+                    Loading advertisement
+                </strong>
+
+                <span>
+                    Please wait while we load your advertisement details.
+                </span>
+
+            </div>
+        }
+        else if (advertisementLoaded)
+        {
+            <EditForm Model="model"
+                      OnValidSubmit="SaveChanges">
+
+                <DataAnnotationsValidator />
+
+
+                <!-- =================================================
+                     BASIC INFORMATION
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-card-text"></i>
+                        </div>
+
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                LISTING INFORMATION
+                            </span>
+
+                            <h3>
+                                Basic Information
+                            </h3>
+
+                            <p>
+                                Update the main information displayed on your advertisement.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid">
+
+                        <!-- CATEGORY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Category
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap edit-select-wrap">
+
+                                <i class="bi bi-grid input-icon edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="model.CategoryID">
+
+                                    <option value="0">
+                                        Select category
+                                    </option>
+
+                                    @foreach (var item in categories)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.CategoryID)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ADVERTISEMENT TYPE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Advertisement Type
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap edit-select-wrap">
+
+                                <i class="bi bi-megaphone edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="model.AdvertisementTypeID">
+
+                                    <option value="0">
+                                        Select advertisement type
+                                    </option>
+
+                                    @foreach (var item in advertisementTypes)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.AdvertisementTypeID)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ENGLISH TITLE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Advertisement Title
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-type edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.Title"
+                                           placeholder="Enter a clear advertisement title" />
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.Title)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ARABIC TITLE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Arabic Title
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputText class="edit-input rtl"
+                                           @bind-Value="model.TitleAr"
+                                           placeholder="أدخل عنوان الإعلان"
+                                           dir="rtl" />
+
+                                <i class="bi bi-translate edit-input-icon-right"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ENGLISH DESCRIPTION -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Description
+                                <span class="edit-required">*</span>
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputTextArea class="edit-textarea"
+                                               @bind-Value="model.Description"
+                                               rows="6"
+                                               placeholder="Provide detailed information about your advertisement" />
+
+                            </div>
+
+                            <ValidationMessage For="@(() => model.Description)"
+                                               class="validation-message" />
+
+                        </div>
+
+
+                        <!-- ARABIC DESCRIPTION -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Arabic Description
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <InputTextArea class="edit-textarea rtl"
+                                               @bind-Value="model.DescriptionAr"
+                                               rows="6"
+                                               placeholder="أدخل وصفاً تفصيلياً للإعلان"
+                                               dir="rtl" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PRICE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Price
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-cash-stack edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Price"
+                                             placeholder="Enter price" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CURRENCY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Currency
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-currency-exchange edit-input-icon"></i>
+
+                                <InputText class="edit-input currency-readonly"
+                                           @bind-Value="model.CurrencyCode"
+                                           readonly />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Currency is controlled by the advertisement system.
+                            </small>
+
+                        </div>
+
+
+                        <!-- NEGOTIABLE -->
+
+                        <label class="edit-negotiable-card">
+
+                            <InputCheckbox @bind-Value="model.IsNegotiable" />
+
+                            <div class="edit-negotiable-content">
+
+                                <strong>
+                                    Price is negotiable
+                                </strong>
+
+                                <span>
+                                    Let buyers know that the listed price can be discussed.
+                                </span>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     LOCATION
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                LOCATION
+                            </span>
+
+                            <h3>
+                                Location
+                            </h3>
+
+                            <p>
+                                Update the location and address information.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid">
+
+                        <!-- COUNTRY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Country
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-globe2 edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+                                             class="edit-select"
+                                             Value="selectedCountryId"
+                                             ValueChanged="OnCountryChanged"
+                                             ValueExpression="@(() => selectedCountryId)">
+
+                                    <option value="0">
+                                        Select country
+                                    </option>
+
+                                    @foreach (var item in countries)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- STATE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                State / Governorate
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-map edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+                                             class="edit-select"
+                                             Value="selectedStateId"
+                                             ValueChanged="OnStateChanged"
+                                             ValueExpression="@(() => selectedStateId)"
+                                             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select state
+                                    </option>
+
+                                    @foreach (var item in states)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- CITY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                City
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-buildings edit-input-icon"></i>
+
+                                <InputSelect TValue="int"
+                                             class="edit-select"
+                                             Value="selectedCityId"
+                                             ValueChanged="OnCityChanged"
+                                             ValueExpression="@(() => selectedCityId)"
+                                             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select city
+                                    </option>
+
+                                    @foreach (var item in cities)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- AREA -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Area
+                            </label>
+
+                            <div class="edit-select-wrap">
+
+                                <i class="bi bi-pin-map edit-input-icon"></i>
+
+                                <InputSelect class="edit-select"
+                                             @bind-Value="selectedAreaId"
+                                             disabled="@(selectedCountryId <= 0)">
+
+                                    <option value="0">
+                                        Select area
+                                    </option>
+
+                                    @foreach (var item in areas)
+                                    {
+                                        <option value="@item.ID">
+                                            @item.Name
+                                        </option>
+                                    }
+
+                                </InputSelect>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ADDRESS -->
+
+                        <div class="edit-form-group full">
+
+                            <label>
+                                Address
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-signpost-2 edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.AddressLine"
+                                           placeholder="Building, road, block or other address details" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PLOT -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Plot Number
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-hash edit-input-icon"></i>
+
+                                <InputText class="edit-input"
+                                           @bind-Value="model.PlotNumber"
+                                           placeholder="Enter plot number" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LATITUDE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Latitude
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-crosshair edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Latitude"
+                                             placeholder="Latitude" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- LONGITUDE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Longitude
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-crosshair2 edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Longitude"
+                                             placeholder="Longitude" />
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     PROPERTY DETAILS
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-house-door"></i>
+                        </div>
+
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                PROPERTY
+                            </span>
+
+                            <h3>
+                                Property Details
+                            </h3>
+
+                            <p>
+                                Update property specifications where applicable.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-form-grid three">
+
+                        <!-- LAND AREA -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Land Area
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-bounding-box edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.LandArea"
+                                             placeholder="Land area" />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Enter the land area in square metres.
+                            </small>
+
+                        </div>
+
+
+                        <!-- BUILT UP -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Built-up Area
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-aspect-ratio edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.BuiltUpArea"
+                                             placeholder="Built-up area" />
+
+                            </div>
+
+                            <small class="edit-help">
+                                Enter the built-up area in square metres.
+                            </small>
+
+                        </div>
+
+
+                        <!-- BEDROOMS -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Bedrooms
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-door-open edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Bedrooms"
+                                             placeholder="Bedrooms" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- BATHROOMS -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Bathrooms
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-droplet edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.Bathrooms"
+                                             placeholder="Bathrooms" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- PROPERTY AGE -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Property Age
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-calendar3 edit-input-icon"></i>
+
+                                <InputNumber class="edit-input"
+                                             @bind-Value="model.PropertyAge"
+                                             placeholder="Age in years" />
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- EXPIRY -->
+
+                        <div class="edit-form-group">
+
+                            <label>
+                                Expiry Date
+                            </label>
+
+                            <div class="edit-input-wrap">
+
+                                <i class="bi bi-calendar-event edit-input-icon"></i>
+
+                                <InputDate class="edit-input"
+                                            @bind-Value="model.ExpiryDate" />
+
+                            </div>
+
+                            <small class="edit-help">
+    New advertisements stay live for @expiryDays days by default.
+</small>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     CONTACT INFORMATION
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                CONTACT
+                            </span>
+
+                            <h3>
+                                Contact Information
+                            </h3>
+
+                            <p>
+                                Manage the contact details visitors can use to reach you.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-contact-intro">
+
+                        <div class="edit-contact-intro-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                Control your contact visibility
+                            </strong>
+
+                            <span>
+                                Your contact details are always visible to you.
+                                Choose which contact methods should be visible to
+                                visitors.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-contact-grid">
+
+                        <!-- WHATSAPP -->
+
+                        <div class="edit-contact-card">
+
+                            <div class="edit-contact-card-header">
+
+                                <div class="edit-contact-method-icon whatsapp">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
+
+                                <div class="edit-contact-method-heading">
+
+                                    <strong>
+                                        WhatsApp
+                                    </strong>
+
+                                    <span>
+                                        Allow visitors to contact you on WhatsApp.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="edit-form-group">
+
+                                <label>
+                                    WhatsApp Number
+                                </label>
+
+                                <div class="edit-input-wrap">
+
+                                    <i class="bi bi-whatsapp edit-input-icon"></i>
+
+                                    <InputText class="edit-input"
+                                               @bind-Value="model.WhatsAppNumber"
+                                               placeholder="Enter WhatsApp number" />
+
+                                </div>
+
+                                <small class="edit-help">
+                                    Include the country code, for example +973 XXXXXXXX.
+                                </small>
+
+                            </div>
+
+
+                            <label class="edit-contact-visibility">
+
+                                <InputCheckbox @bind-Value="model.ShowWhatsAppToPublic" />
+
+                                <div class="edit-contact-visibility-content">
+
+                                    <div class="edit-contact-visibility-title">
+
+                                        <span>
+                                            Show WhatsApp to visitors
+                                        </span>
+
+                                        @if (model.ShowWhatsAppToPublic)
+                                        {
+                                            <span class="edit-contact-public-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="edit-contact-private-badge">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                                Private
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                    <small>
+                                        Visitors can see this number when enabled.
+                                    </small>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+
+                        <!-- EMAIL -->
+
+                        <div class="edit-contact-card">
+
+                            <div class="edit-contact-card-header">
+
+                                <div class="edit-contact-method-icon email">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
+
+                                <div class="edit-contact-method-heading">
+
+                                    <strong>
+                                        Email
+                                    </strong>
+
+                                    <span>
+                                        Allow visitors to contact you by email.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="edit-form-group">
+
+                                <label>
+                                    Email Address
+                                </label>
+
+                                <div class="edit-input-wrap">
+
+                                    <i class="bi bi-envelope edit-input-icon"></i>
+
+                                    <InputText class="edit-input"
+                                               type="email"
+                                               @bind-Value="model.ContactEmail"
+                                               placeholder="Enter contact email address" />
+
+                                </div>
+
+                                <small class="edit-help">
+                                    Use an email address that you regularly monitor.
+                                </small>
+
+                            </div>
+
+
+                            <label class="edit-contact-visibility">
+
+                                <InputCheckbox @bind-Value="model.ShowEmailToPublic" />
+
+                                <div class="edit-contact-visibility-content">
+
+                                    <div class="edit-contact-visibility-title">
+
+                                        <span>
+                                            Show email to visitors
+                                        </span>
+
+                                        @if (model.ShowEmailToPublic)
+                                        {
+                                            <span class="edit-contact-public-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="edit-contact-private-badge">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                                Private
+                                            </span>
+                                        }
+
+                                    </div>
+
+                                    <small>
+                                        Visitors can see this email address when enabled.
+                                    </small>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-contact-note">
+
+                        <i class="bi bi-info-circle-fill"></i>
+
+                        <span>
+    At least one contact method must be provided and at least
+    one contact method must be visible to visitors before the
+    advertisement can be @(requireAdminApproval ? "submitted for approval" : "published").
+</span>
+
+                    </div>
+
+                </section>
+
+
+                <!-- =================================================
+                     PHOTOS
+                     ================================================= -->
+
+                <section class="edit-form-section">
+
+                    <div class="edit-section-heading">
+
+                        <div class="edit-section-icon">
+                            <i class="bi bi-images"></i>
+                        </div>
+
+                        <div class="edit-section-heading-content">
+
+                            <span class="edit-section-eyebrow">
+                                MEDIA
+                            </span>
+
+                            <h3>
+                                Advertisement Photos
+                            </h3>
+
+                            <p>
+                                Manage existing photos or add new photos to your advertisement.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="edit-photo-summary">
+
+                        <div class="edit-photo-summary-left">
+
+                            <i class="bi bi-images"></i>
+
+                            <span>
+                                Photos
+                            </span>
+
+                            <span class="edit-photo-count">
+                                @TotalPhotoCount / @MaxImages
+                            </span>
+
+                        </div>
+
+                        <span>
+                            Maximum 10 MB per photo
+                        </span>
+
+                    </div>
+
+
+                    @if (savedImages.Count > 0)
+                    {
+                        <div class="edit-photo-grid">
+
+                            @foreach (var image in savedImages)
+                            {
+                                <div class="edit-photo-card">
+
+                                    <div class="edit-photo-image-wrap">
+
+                                        <img src="@image.FileURL"
+                                             class="edit-photo-image"
+                                             alt="@image.FileName" />
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="edit-primary-badge">
+
+                                                <i class="bi bi-star-fill"></i>
+
+                                                Main Photo
+
+                                            </div>
+                                        }
+
+                                    </div>
+
+
+                                    <div class="edit-photo-card-body">
+
+                                        <div class="edit-photo-name"
+                                             title="@image.FileName">
+
+                                            @image.FileName
+
+                                        </div>
+
+
+                                        <div class="edit-photo-actions">
+
+                                            @if (!image.IsPrimary)
+                                            {
+                                                <button type="button"
+                                                        class="edit-photo-action"
+                                                        @onclick="() => SetPrimarySavedImage(image)"
+                                                        disabled="@IsBusy">
+
+                                                    <i class="bi bi-star"></i>
+
+                                                    Main
+
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button"
+                                                        class="edit-photo-action"
+                                                        disabled>
+
+                                                    <i class="bi bi-star-fill"></i>
+
+                                                    Main
+
+                                                </button>
+                                            }
+
+
+                                            <button type="button"
+                                                    class="edit-photo-action delete"
+                                                    @onclick="() => DeleteSavedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi bi-trash3"></i>
+
+                                                Delete
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="edit-upload-area edit-upload-empty">
+
+                            <span class="edit-upload-content">
+
+                                <span class="edit-upload-icon">
+
+                                    <i class="bi bi-images"></i>
+
+                                </span>
+
+                                <strong>
+                                    No photos uploaded yet
+                                </strong>
+
+                                <span>
+                                    Add photos below to make your advertisement more attractive.
+                                </span>
+
+                            </span>
+
+                        </div>
+                    }
+
+
+                    <!-- NEW SELECTED PHOTOS -->
+
+                    @if (selectedImages.Count > 0)
+                    {
+                        <div class="edit-photo-grid edit-new-photo-grid">
+
+                            @foreach (var image in selectedImages)
+                            {
+                                <div class="edit-new-photo">
+
+                                    <div class="edit-photo-image-wrap">
+
+                                        <img src="@image.PreviewUrl"
+                                             class="edit-photo-image"
+                                             alt="@image.FileName" />
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="edit-primary-badge">
+
+                                                <i class="bi bi-star-fill"></i>
+
+                                                Main Photo
+
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="edit-new-photo-badge">
+                                                New
+                                            </div>
+                                        }
+
+                                    </div>
+
+
+                                    <div class="edit-photo-card-body">
+
+                                        <div class="edit-photo-name"
+                                             title="@image.FileName">
+
+                                            @image.FileName
+
+                                        </div>
+
+
+                                        <div class="edit-photo-actions">
+
+                                            <button type="button"
+                                                    class="edit-photo-action"
+                                                    @onclick="() => SetPrimarySelectedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi @(image.IsPrimary ? "bi-star-fill" : "bi-star")"></i>
+
+                                                @(image.IsPrimary ? "Main" : "Set Main")
+
+                                            </button>
+
+
+                                            <button type="button"
+                                                    class="edit-photo-action delete"
+                                                    @onclick="() => RemoveSelectedImage(image)"
+                                                    disabled="@IsBusy">
+
+                                                <i class="bi bi-x-lg"></i>
+
+                                                Remove
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+
+
+                    <!-- UPLOAD AREA -->
+
+                    @if (RemainingPhotoSlots > 0)
+{
+    <div class="edit-upload-area">
+
+        <InputFile id="advertisement-photo-upload"
+                   class="edit-upload-file-input"
+                   OnChange="HandleImageSelection"
+                   multiple
+                   accept="image/jpeg,image/png,image/webp" />
+
+        <label for="advertisement-photo-upload"
+               class="edit-upload-label">
+
+            <span class="edit-upload-icon">
+                <i class="bi bi-cloud-arrow-up"></i>
+            </span>
+
+            <span class="edit-upload-title">
+                Add more photos
+            </span>
+
+            <span class="edit-upload-description">
+                Select additional photos for your advertisement
+            </span>
+
+            <span class="edit-upload-formats">
+                <span>JPG</span>
+                <span class="edit-upload-dot">•</span>
+                <span>PNG</span>
+                <span class="edit-upload-dot">•</span>
+                <span>WEBP</span>
+                <span class="edit-upload-divider"></span>
+                <span>Maximum 10 MB per photo</span>
+            </span>
+
+            <span class="edit-upload-button">
+                <i class="bi bi-folder2-open"></i>
+                <span>Browse Photos</span>
+            </span>
+
+            <span class="edit-upload-remaining">
+                @RemainingPhotoSlots photo@(RemainingPhotoSlots == 1 ? "" : "s") remaining
+            </span>
+
+        </label>
+
+    </div>
+}
+
+
+                    @if (RemainingPhotoSlots == 0)
+                    {
+                        <div class="edit-alert edit-alert-success edit-photo-limit-alert">
+
+                            <i class="bi bi-check-circle-fill"></i>
+
+                            <div>
+                                You have reached the maximum of @MaxImages photos.
+                            </div>
+
+                        </div>
+                    }
+
+
+                    @if (isUploadingImages)
+                    {
+                        <div class="edit-upload-progress">
+
+                            <div class="edit-upload-progress-top">
+
+                                <div class="edit-upload-progress-icon">
+
+                                    <i class="bi bi-cloud-arrow-up"></i>
+
+                                </div>
+
+                                <div class="edit-upload-progress-content">
+
+                                    <strong>
+                                        Uploading your photos
+                                    </strong>
+
+                                    <span>
+                                        Please keep this page open while the upload completes.
+                                    </span>
+
+                                </div>
+
+                                <div class="edit-upload-progress-count">
+
+                                    @uploadedImageCount /
+                                    @totalImagesToUpload
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="edit-progress-track">
+
+                                <div class="edit-progress-value"
+                                     style="width:@GetUploadProgressPercentage()%;">
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </section>
+
+
+                <!-- =================================================
+                     ACTION BAR
+                     ================================================= -->
+
+                <div class="edit-action-bar">
+
+                    <div class="edit-action-left">
+
+                        <span class="edit-action-security-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </span>
+
+                        <span>
+                            Your changes will be saved securely.
+                        </span>
+
+                    </div>
+
+
+                    <div class="edit-action-buttons">
+
+                        <button type="button"
+                                class="edit-button edit-button-cancel"
+                                @onclick="GoBack"
+                                disabled="@IsBusy">
+
+                            <i class="bi bi-x-lg"></i>
+
+                            Cancel
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="edit-button edit-button-save"
+                                disabled="@IsBusy">
+
+                            @if (isSaving || isUploadingImages)
+                            {
+                                <span class="edit-button-spinner"></span>
+
+                                <span>
+                                    Saving...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check2-circle"></i>
+
+                                <span>
+                                    Save Changes
+                                </span>
+                            }
+
+                        </button>
+
+
+                        <button type="button"
+                                class="edit-button edit-button-submit"
+                                @onclick="SaveAndSubmit"
+                                disabled="@IsBusy">
+
+                            @if (isSubmitting)
+                            {
+                                <span class="edit-button-spinner"></span>
+
+                                <span>
+                                    Submitting...
+                                </span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send"></i>
+
+                                <span>
+    @(requireAdminApproval ? "Save & Submit" : "Save & Publish")
+</span>
+                            }
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </EditForm>
+        }
+
+    </main>
+
+</div>
+
+
+@code {
+
+    // ============================================================
+    // ROUTE
+    // ============================================================
+
+    [Parameter]
+    public long AdvertisementId { get; set; }
+
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+
+    private bool isAuthenticated;
+
+
+    // ============================================================
+    // LOADING
+    // ============================================================
+
+    private bool isLoading = true;
+
+    private bool advertisementLoaded;
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private readonly UpdateAdvertisementRequest model = new();
+
+
+    // ============================================================
+    // LOOKUPS
+    // ============================================================
+
+    private List<LookupItemResponse> categories =
+        new();
+
+    private List<LookupItemResponse> advertisementTypes =
+        new();
+
+    private List<LookupItemResponse> countries =
+        new();
+
+    private List<LookupItemResponse> states =
+        new();
+
+    private List<LookupItemResponse> cities =
+        new();
+
+    private List<LookupItemResponse> areas =
+        new();
+
+
+    // ============================================================
+    // LOCATION
+    // ============================================================
+
+    private int selectedCountryId;
+
+    private int selectedStateId;
+
+    private int selectedCityId;
+
+    private int selectedAreaId;
+
+
+    // ============================================================
+    // IMAGES
+    // ============================================================
+
+    private readonly List<SelectedImage> selectedImages =
+        new();
+
+    private readonly List<SavedAdvertisementImage> savedImages =
+        new();
+
+
+    // ============================================================
+    // FORM STATE
+    // ============================================================
+
+    private bool isSaving;
+
+    private bool isUploadingImages;
+
+    private bool isSubmitting;
+
+    private string? errorMessage;
+
+    private string? successMessage;
+
+
+    private bool IsBusy =>
+        isSaving ||
+        isUploadingImages ||
+        isSubmitting;
+
+
+    // ============================================================
+    // UPLOAD STATE
+    // ============================================================
+
+    private int uploadedImageCount;
+
+    private int totalImagesToUpload;
+
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+
+    private const long MaxImageSize =
+        10 * 1024 * 1024;
+
+    // ============================================================
+// SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+// Defaults are used if the API is unavailable.
+// ============================================================
+
+private string siteName = "AdMind";
+private string defaultCurrency = "INR";
+private int MaxImages = 5;
+private int expiryDays = 30;
+private bool requireAdminApproval = true;
+
+private async Task LoadSiteSettingsAsync()
+{
+    try
+    {
+        var settings = await SiteSettingsService.GetAsync();
+
+        if (settings is not null)
+        {
+            siteName = settings.SiteName;
+            defaultCurrency = settings.DefaultCurrency;
+            MaxImages = Math.Max(1, settings.MaxImagesPerAdvertisement);
+            expiryDays = settings.AdvertisementExpiryDays;
+            requireAdminApproval = settings.RequireAdminApproval;
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine(
+            $"EDIT AD SETTINGS ERROR: {ex.Message}");
+    }
+}
+
+
+    // ============================================================
+    // PHOTO COUNTERS
+    // ============================================================
+
+    private int TotalPhotoCount =>
+        savedImages.Count +
+        selectedImages.Count;
+
+    private int RemainingPhotoSlots =>
+        Math.Max(
+            0,
+            MaxImages - TotalPhotoCount);
+
+
+    // ============================================================
+    // SELECTED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SelectedImage
+    {
+        public string FileName { get; init; } =
+            string.Empty;
+
+        public string ContentType { get; init; } =
+            string.Empty;
+
+        public byte[] FileBytes { get; init; } =
+            Array.Empty<byte>();
+
+        public string PreviewUrl { get; set; } =
+            string.Empty;
+
+        public bool IsPrimary { get; set; }
+
+        public long FileSize =>
+            FileBytes.LongLength;
+    }
+
+
+    // ============================================================
+    // SAVED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SavedAdvertisementImage
+    {
+        public long AdvertisementImageID { get; init; }
+
+        public long AdvertisementID { get; init; }
+
+        public string FileName { get; init; } =
+            string.Empty;
+
+        public string FileURL { get; init; } =
+            string.Empty;
+
+        public long? FileSize { get; init; }
+
+        public bool IsPrimary { get; set; }
+
+        public int DisplayOrder { get; init; }
+
+        public DateTime CreatedDate { get; init; }
+    }
+
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authenticationState =
+                await AuthenticationStateProvider
+                    .GetAuthenticationStateAsync();
+
+            isAuthenticated =
+                authenticationState.User.Identity?.IsAuthenticated == true;
+
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/");
+                return;
+            }
+
+            await LoadSiteSettingsAsync();
+
+            await LoadLookupsAsync();
+
+            await LoadAdvertisementAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"EDIT PAGE INITIALIZATION ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement right now. " +
+                "Please refresh the page and try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD LOOKUPS
+    // ============================================================
+
+    private async Task LoadLookupsAsync()
+    {
+        categories =
+            await AdvertisementApiService
+                .GetCategoriesAsync();
+
+        advertisementTypes =
+            await AdvertisementApiService
+                .GetAdvertisementTypesAsync();
+
+        countries =
+            await AdvertisementApiService
+                .GetCountriesAsync();
+    }
+
+
+    // ============================================================
+    // LOAD ADVERTISEMENT
+    // ============================================================
+
+    private async Task LoadAdvertisementAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(
+                        AdvertisementId);
+
+            if (advertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be found.";
+
+                advertisementLoaded = false;
+
+                return;
+            }
+
+
+            model.CategoryID =
+                advertisement.CategoryID;
+
+            model.AdvertisementTypeID =
+                advertisement.AdvertisementTypeID;
+
+            model.Title =
+                advertisement.Title ?? string.Empty;
+
+            model.TitleAr =
+                advertisement.TitleAr;
+
+            model.Description =
+                advertisement.Description ?? string.Empty;
+
+            model.DescriptionAr =
+                advertisement.DescriptionAr;
+
+            model.Price =
+                advertisement.Price;
+
+            model.CurrencyCode =
+    string.IsNullOrWhiteSpace(
+        advertisement.CurrencyCode)
+        ? defaultCurrency
+        : advertisement.CurrencyCode;
+
+            model.IsNegotiable =
+                advertisement.IsNegotiable;
+
+
+            model.WhatsAppNumber =
+                advertisement.WhatsAppNumber;
+
+            model.ContactEmail =
+                advertisement.ContactEmail;
+
+            model.ShowWhatsAppToPublic =
+                advertisement.ShowWhatsAppToPublic;
+
+            model.ShowEmailToPublic =
+                advertisement.ShowEmailToPublic;
+
+
+            selectedCountryId =
+                advertisement.CountryID ?? 0;
+
+            selectedStateId =
+                advertisement.StateID ?? 0;
+
+            selectedCityId =
+                advertisement.CityID ?? 0;
+
+            selectedAreaId =
+                advertisement.AreaID ?? 0;
+
+
+            model.CountryID =
+                advertisement.CountryID;
+
+            model.StateID =
+                advertisement.StateID;
+
+            model.CityID =
+                advertisement.CityID;
+
+            model.AreaID =
+                advertisement.AreaID;
+
+            model.AddressLine =
+                advertisement.AddressLine;
+
+            model.PlotNumber =
+                advertisement.PlotNumber;
+
+            model.Latitude =
+                advertisement.Latitude;
+
+            model.Longitude =
+                advertisement.Longitude;
+
+
+            model.LandArea =
+                advertisement.LandArea;
+
+            model.BuiltUpArea =
+                advertisement.BuiltUpArea;
+
+            model.Bedrooms =
+                advertisement.Bedrooms;
+
+            model.Bathrooms =
+                advertisement.Bathrooms;
+
+            model.PropertyAge =
+                advertisement.PropertyAge;
+
+            model.ExpiryDate =
+                advertisement.ExpiryDate;
+
+
+            if (selectedCountryId > 0)
+            {
+                states =
+                    await AdvertisementApiService
+                        .GetStatesAsync(
+                            selectedCountryId);
+            }
+
+            if (selectedCountryId > 0)
+            {
+                cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null);
+            }
+
+            if (selectedCountryId > 0)
+            {
+                areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            selectedCountryId,
+                            selectedStateId > 0
+                                ? selectedStateId
+                                : null,
+                            selectedCityId > 0
+                                ? selectedCityId
+                                : null);
+            }
+
+
+            LoadSavedImagesFromAdvertisement(
+                advertisement);
+
+
+            advertisementLoaded = true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD ADVERTISEMENT ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement details. " +
+                "Please refresh the page and try again.";
+
+            advertisementLoaded = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD SAVED IMAGES
+    // ============================================================
+
+    private void LoadSavedImagesFromAdvertisement(
+        AdvertisementResponse advertisement)
+    {
+        savedImages.Clear();
+
+        if (advertisement.Images is null)
+        {
+            return;
+        }
+
+        foreach (var image in advertisement.Images
+                     .OrderBy(x => x.DisplayOrder))
+        {
+            savedImages.Add(
+                new SavedAdvertisementImage
+                {
+                    AdvertisementImageID =
+                        image.AdvertisementImageID,
+
+                    AdvertisementID =
+                        image.AdvertisementID,
+
+                    FileName =
+                        image.FileName ?? string.Empty,
+
+                    FileURL =
+                        image.FileURL ?? string.Empty,
+
+                    FileSize =
+                        image.FileSize,
+
+                    IsPrimary =
+                        image.IsPrimary,
+
+                    DisplayOrder =
+                        image.DisplayOrder,
+
+                    CreatedDate =
+                        image.CreatedDate
+                });
+        }
+    }
+
+
+    // ============================================================
+    // COUNTRY
+    // ============================================================
+
+    private async Task OnCountryChanged(
+        int value)
+    {
+        selectedCountryId = value;
+
+        selectedStateId = 0;
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.CountryID =
+            selectedCountryId > 0
+                ? selectedCountryId
+                : null;
+
+        model.StateID = null;
+        model.CityID = null;
+        model.AreaID = null;
+
+        states.Clear();
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            states =
+                await AdvertisementApiService
+                    .GetStatesAsync(
+                        selectedCountryId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD STATES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available states. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private async Task OnStateChanged(
+        int value)
+    {
+        selectedStateId = value;
+
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.StateID =
+            selectedStateId > 0
+                ? selectedStateId
+                : null;
+
+        model.CityID = null;
+        model.AreaID = null;
+
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            cities =
+                await AdvertisementApiService
+                    .GetCitiesAsync(
+                        selectedCountryId,
+                        selectedStateId > 0
+                            ? selectedStateId
+                            : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD CITIES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available cities. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // CITY
+    // ============================================================
+
+    private async Task OnCityChanged(
+        int value)
+    {
+        selectedCityId = value;
+
+        selectedAreaId = 0;
+
+        model.CityID =
+            selectedCityId > 0
+                ? selectedCityId
+                : null;
+
+        model.AreaID = null;
+
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            areas =
+                await AdvertisementApiService
+                    .GetAreasAsync(
+                        selectedCountryId,
+                        selectedStateId > 0
+                            ? selectedStateId
+                            : null,
+                        selectedCityId > 0
+                            ? selectedCityId
+                            : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"LOAD AREAS ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available areas. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE SELECTION
+    // ============================================================
+
+    private async Task HandleImageSelection(
+        InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        var availableSlots =
+            RemainingPhotoSlots;
+
+        if (availableSlots <= 0)
+        {
+            errorMessage =
+                $"You can upload a maximum of {MaxImages} photos " +
+                "for one advertisement.";
+
+            return;
+        }
+
+        IReadOnlyList<IBrowserFile> files;
+
+        try
+        {
+            files =
+                e.GetMultipleFiles(
+                    availableSlots);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"IMAGE SELECTION ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t read the selected photos. " +
+                "Please try selecting them again.";
+
+            return;
+        }
+
+        var addedCount = 0;
+        var rejectedCount = 0;
+
+        foreach (var file in files)
+        {
+            if (file.Size <= 0)
+            {
+                rejectedCount++;
+                continue;
+            }
+
+            if (file.Size > MaxImageSize)
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it exceeds " +
+                    "the maximum file size of 10 MB.";
+
+                continue;
+            }
+
+            if (!IsSupportedImageType(
+                    file.ContentType,
+                    file.Name))
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it is not " +
+                    "a supported image format. Please use JPG, PNG or WEBP.";
+
+                continue;
+            }
+
+            var duplicate =
+                selectedImages.Any(x =>
+                    string.Equals(
+                        x.FileName,
+                        file.Name,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    x.FileSize == file.Size);
+
+            if (duplicate)
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' is already selected.";
+
+                continue;
+            }
+
+            try
+            {
+                await using var browserStream =
+                    file.OpenReadStream(
+                        maxAllowedSize: MaxImageSize);
+
+                using var memoryStream =
+                    new MemoryStream();
+
+                await browserStream.CopyToAsync(
+                    memoryStream);
+
+                var bytes =
+                    memoryStream.ToArray();
+
+                var mimeType =
+                    GetImageMimeType(
+                        file.ContentType,
+                        file.Name);
+
+                var previewUrl =
+                    $"data:{mimeType};base64," +
+                    Convert.ToBase64String(bytes);
+
+                var hasExistingPrimary =
+                    savedImages.Any(
+                        x => x.IsPrimary);
+
+                var hasSelectedPrimary =
+                    selectedImages.Any(
+                        x => x.IsPrimary);
+
+                var makePrimary =
+                    !hasExistingPrimary &&
+                    !hasSelectedPrimary &&
+                    selectedImages.Count == 0;
+
+                selectedImages.Add(
+                    new SelectedImage
+                    {
+                        FileName =
+                            file.Name,
+
+                        ContentType =
+                            mimeType,
+
+                        FileBytes =
+                            bytes,
+
+                        PreviewUrl =
+                            previewUrl,
+
+                        IsPrimary =
+                            makePrimary
+                    });
+
+                addedCount++;
+            }
+            catch (Exception ex)
+            {
+                rejectedCount++;
+
+                Console.WriteLine(
+                    $"Unable to prepare image: {file.Name}");
+
+                Console.WriteLine(ex);
+
+                errorMessage =
+                    $"We couldn’t prepare '{file.Name}'. " +
+                    "Please try selecting the image again.";
+            }
+        }
+
+        if (addedCount > 0)
+        {
+            successMessage =
+                $"{addedCount} photo" +
+                $"{(addedCount == 1 ? "" : "s")} added successfully. " +
+                $"{TotalPhotoCount} of {MaxImages} photos are ready.";
+        }
+
+        if (rejectedCount > 0 &&
+            addedCount == 0 &&
+            string.IsNullOrWhiteSpace(errorMessage))
+        {
+            errorMessage =
+                "None of the selected photos could be added. " +
+                "Please check the file type and size.";
+        }
+    }
+
+
+    // ============================================================
+    // SET PRIMARY SELECTED IMAGE
+    // ============================================================
+
+    private void SetPrimarySelectedImage(
+        SelectedImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (savedImages.Any(x => x.IsPrimary))
+        {
+            errorMessage =
+                "Please change the main photo from the existing " +
+                "advertisement photos first.";
+
+            return;
+        }
+
+        foreach (var item in selectedImages)
+        {
+            item.IsPrimary = false;
+        }
+
+        image.IsPrimary = true;
+
+        errorMessage = null;
+
+        successMessage =
+            $"'{image.FileName}' has been selected as the main photo.";
+    }
+
+
+    // ============================================================
+    // REMOVE SELECTED IMAGE
+    // ============================================================
+
+    private void RemoveSelectedImage(
+        SelectedImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var wasPrimary =
+            image.IsPrimary;
+
+        selectedImages.Remove(image);
+
+        if (wasPrimary &&
+            !savedImages.Any(x => x.IsPrimary) &&
+            selectedImages.Count > 0)
+        {
+            foreach (var item in selectedImages)
+            {
+                item.IsPrimary = false;
+            }
+
+            selectedImages[0].IsPrimary = true;
+        }
+
+        errorMessage = null;
+
+        successMessage =
+            selectedImages.Count == 0
+                ? "All newly selected photos have been removed."
+                : $"{selectedImages.Count} new photo" +
+                  $"{(selectedImages.Count == 1 ? "" : "s")} ready to upload.";
+    }
+
+
+    // ============================================================
+    // SET PRIMARY SAVED IMAGE
+    // ============================================================
+
+    private async Task SetPrimarySavedImage(
+        SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            errorMessage =
+                "The selected photo could not be identified.";
+
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .SetPrimaryImageAsync(
+                        AdvertisementId,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The main photo could not be changed. " +
+                    "Please try again.";
+
+                return;
+            }
+
+            foreach (var savedImage in savedImages)
+            {
+                savedImage.IsPrimary =
+                    savedImage.AdvertisementImageID ==
+                    image.AdvertisementImageID;
+            }
+
+            foreach (var selectedImage in selectedImages)
+            {
+                selectedImage.IsPrimary = false;
+            }
+
+            successMessage =
+                $"'{image.FileName}' is now the main advertisement photo.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SET PRIMARY IMAGE ERROR: {ex}");
+
+            errorMessage =
+                "The main photo could not be changed right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // DELETE SAVED IMAGE
+    // ============================================================
+
+    private async Task DeleteSavedImage(
+        SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            return;
+        }
+
+        if (savedImages.Count <= 1 &&
+            image.IsPrimary)
+        {
+            errorMessage =
+                "An advertisement must keep at least one main photo. " +
+                "Add another photo and set it as main before deleting this photo.";
+
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .DeleteAdvertisementImageAsync(
+                        AdvertisementId,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The photo could not be deleted. " +
+                    "Please try again.";
+
+                return;
+            }
+
+            savedImages.Remove(image);
+
+            successMessage =
+                $"'{image.FileName}' has been removed.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"DELETE IMAGE ERROR: {ex}");
+
+            errorMessage =
+                "The photo could not be deleted right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // SAVE CHANGES
+    // ============================================================
+
+    private async Task<bool> SaveChanges()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        isSaving = true;
+
+        try
+        {
+            model.CountryID =
+                selectedCountryId > 0
+                    ? selectedCountryId
+                    : null;
+
+            model.StateID =
+                selectedStateId > 0
+                    ? selectedStateId
+                    : null;
+
+            model.CityID =
+                selectedCityId > 0
+                    ? selectedCityId
+                    : null;
+
+            model.AreaID =
+                selectedAreaId > 0
+                    ? selectedAreaId
+                    : null;
+
+            var updatedAdvertisement =
+                await AdvertisementApiService
+                    .UpdateAdvertisementAsync(
+                        AdvertisementId,
+                        model);
+
+            if (updatedAdvertisement is null)
+            {
+                errorMessage =
+                    "The advertisement could not be updated. " +
+                    "Please review the information and try again.";
+
+                return false;
+            }
+
+            if (selectedImages.Count > 0)
+            {
+                await UploadSelectedImagesAsync();
+
+                if (string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    successMessage =
+    requireAdminApproval
+        ? "Your advertisement has been updated and submitted for approval."
+        : "Your advertisement has been updated and submitted.";
+                }
+            }
+            else
+            {
+                successMessage =
+    requireAdminApproval
+        ? "Your advertisement has been updated and submitted for approval."
+        : "Your advertisement has been updated and submitted.";
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                "================================================");
+
+            Console.WriteLine(
+                "UPDATE ADVERTISEMENT ERROR");
+
+            Console.WriteLine(ex);
+
+            Console.WriteLine(
+                "================================================");
+
+            errorMessage =
+                "We couldn’t update your advertisement right now. " +
+                "Please try again.";
+
+            return false;
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // UPLOAD SELECTED IMAGES
+    // ============================================================
+
+    private async Task UploadSelectedImagesAsync()
+    {
+        if (selectedImages.Count == 0)
+        {
+            return;
+        }
+
+        isUploadingImages = true;
+
+        uploadedImageCount = 0;
+
+        totalImagesToUpload =
+            selectedImages.Count;
+
+        var failedImages =
+            new List<SelectedImage>();
+
+        try
+        {
+            var imagesToUpload =
+                selectedImages.ToList();
+
+            foreach (var selectedImage in imagesToUpload)
+            {
+                try
+                {
+                    await using var stream =
+                        new MemoryStream(
+                            selectedImage.FileBytes,
+                            writable: false);
+
+                    var success =
+                        await AdvertisementApiService
+                            .UploadAdvertisementImageAsync(
+                                AdvertisementId,
+                                stream,
+                                selectedImage.FileName,
+                                selectedImage.ContentType,
+                                selectedImage.IsPrimary);
+
+                    if (success)
+                    {
+                        uploadedImageCount++;
+                    }
+                    else
+                    {
+                        failedImages.Add(
+                            selectedImage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(
+                        $"IMAGE UPLOAD FAILED: {selectedImage.FileName}");
+
+                    Console.WriteLine(ex);
+
+                    failedImages.Add(
+                        selectedImage);
+                }
+
+                await InvokeAsync(
+                    StateHasChanged);
+            }
+
+            await ReloadSavedImagesAsync();
+
+            if (failedImages.Count == 0)
+            {
+                selectedImages.Clear();
+
+                errorMessage = null;
+
+                successMessage =
+                    uploadedImageCount > 0
+                        ? $"{uploadedImageCount} photo" +
+                          $"{(uploadedImageCount == 1 ? "" : "s")} uploaded successfully."
+                        : successMessage;
+            }
+            else
+            {
+                selectedImages.Clear();
+
+                selectedImages.AddRange(
+                    failedImages);
+
+                errorMessage =
+                    $"{failedImages.Count} photo" +
+                    $"{(failedImages.Count == 1 ? "" : "s")} could not be uploaded. " +
+                    "Please try again.";
+
+                if (uploadedImageCount > 0)
+                {
+                    successMessage =
+                        $"{uploadedImageCount} photo" +
+                        $"{(uploadedImageCount == 1 ? "" : "s")} uploaded successfully.";
+                }
+            }
+        }
+        finally
+        {
+            isUploadingImages = false;
+        }
+    }
+
+
+    // ============================================================
+    // RELOAD SAVED IMAGES
+    // ============================================================
+
+    private async Task ReloadSavedImagesAsync()
+    {
+        try
+        {
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(
+                        AdvertisementId);
+
+            if (advertisement is null)
+            {
+                return;
+            }
+
+            LoadSavedImagesFromAdvertisement(
+                advertisement);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"RELOAD IMAGES ERROR: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // SAVE AND SUBMIT
+    // ============================================================
+
+    private async Task SaveAndSubmit()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        var saved =
+            await SaveChanges();
+
+        if (!saved)
+        {
+            return;
+        }
+
+        if (isUploadingImages)
+        {
+            errorMessage =
+                "Please wait until all photos finish uploading.";
+
+            return;
+        }
+
+        errorMessage = null;
+
+        successMessage = null;
+
+        isSubmitting = true;
+
+        try
+        {
+            var success =
+                await AdvertisementApiService
+                    .SubmitAdvertisementAsync(
+                        AdvertisementId);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The advertisement was saved, but it could not " +
+                    "be submitted for approval. Please try again.";
+
+                return;
+            }
+
+            successMessage =
+                "Your advertisement has been updated and submitted for approval.";
+
+            await Task.Delay(900);
+
+            Navigation.NavigateTo(
+                $"/my-ads/{AdvertisementId}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"SUBMIT ADVERTISEMENT ERROR: {ex}");
+
+            errorMessage =
+                "The advertisement was saved, but submission failed. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE TYPE VALIDATION
+    // ============================================================
+
+    private static bool IsSupportedImageType(
+        string? contentType,
+        string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized =
+                contentType
+                    .Trim()
+                    .ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return true;
+            }
+        }
+
+        var extension =
+            Path.GetExtension(fileName)
+                .ToLowerInvariant();
+
+        return extension is
+            ".jpg" or
+            ".jpeg" or
+            ".png" or
+            ".webp";
+    }
+
+
+    // ============================================================
+    // MIME TYPE
+    // ============================================================
+
+    private static string GetImageMimeType(
+        string? contentType,
+        string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized =
+                contentType
+                    .Trim()
+                    .ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return normalized == "image/jpg"
+                    ? "image/jpeg"
+                    : normalized;
+            }
+        }
+
+        var extension =
+            Path.GetExtension(fileName)
+                .ToLowerInvariant();
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" =>
+                "image/jpeg",
+
+            ".png" =>
+                "image/png",
+
+            ".webp" =>
+                "image/webp",
+
+            _ =>
+                "image/jpeg"
+        };
+    }
+
+
+    // ============================================================
+    // UPLOAD PROGRESS
+    // ============================================================
+
+    private int GetUploadProgressPercentage()
+    {
+        if (totalImagesToUpload <= 0)
+        {
+            return 0;
+        }
+
+        return
+            (int)Math.Round(
+                uploadedImageCount *
+                100d /
+                totalImagesToUpload);
+    }
+
+
+    // ============================================================
+    // BACK
+    // ============================================================
+
+    private void GoBack()
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo(
+            $"/my-ads/{AdvertisementId}");
+    }
+}

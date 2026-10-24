@@ -89,6 +89,26 @@ public class CategoryManagementController : ControllerBase
         return Ok(result);
     }
     // ------------------------------------------------------------
+    [HttpGet("{categoryId:int}/features/manage")]
+    [Authorize(Policy = "ADVERTISEMENT_EDIT")]
+    public async Task<IActionResult> GetCategoryFeaturesForAdmin(int categoryId)
+    {
+        var category = await _categoryManagementService.GetCategoryByIdAsync(categoryId);
+
+        if (category == null)
+        {
+            return NotFound(new
+            {
+                success = false,
+                message = "Category not found."
+            });
+        }
+
+        var result = await _categoryManagementService
+            .GetCategoryFeaturesForAdminAsync(categoryId);
+
+        return Ok(result);
+    }
     // Create Category
     // ------------------------------------------------------------
 

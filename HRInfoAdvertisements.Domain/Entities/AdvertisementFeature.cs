@@ -4,7 +4,7 @@ public class AdvertisementFeature
 {
     public int AdvertisementFeatureID { get; set; }
 
-    public int CategoryID { get; set; }
+    public int? CategoryID { get; set; }
 
     public string FeatureName { get; set; } = string.Empty;
 
@@ -28,7 +28,7 @@ public class AdvertisementFeature
 
     public int DisplayOrder { get; set; }
 
-    public AdvertisementCategory Category { get; set; } = null!;
+    public AdvertisementCategory? Category { get; set; }
 
     public ICollection<AdvertisementFeatureValue> Values { get; set; }
         = new List<AdvertisementFeatureValue>();

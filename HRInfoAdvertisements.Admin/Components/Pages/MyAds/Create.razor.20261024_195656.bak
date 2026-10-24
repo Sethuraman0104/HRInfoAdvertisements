@@ -1,0 +1,3218 @@
+@page "/my-ads/create"
+
+@using System.ComponentModel.DataAnnotations
+@using HRInfoAdvertisements.Admin.Services
+@using HRInfoAdvertisements.Application.DTOs.Advertisements
+@using HRInfoAdvertisements.Application.DTOs.CategoryManagement
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Forms
+
+@layout HRInfoAdvertisements.Admin.Components.Layout.PublicLayout
+@inject SiteSettingsService SiteSettingsService
+@inject AdvertisementApiService AdvertisementApiService
+@inject CategoryManagementApiService CategoryManagementApiService
+@inject PublicAuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>@(isEditMode ? "Edit Advertisement" : "Post Advertisement") | @siteName</PageTitle>
+<style>
+    /* ============================================================
+       AdMind - CREATE ADVERTISEMENT PAGE - COMPLETE PAGE STYLING
+       (formatting compacted; every rule from the previous version is kept)
+       ============================================================ */
+
+    /* ---------- PAGE HEADER ---------- */
+    .create-ad-page-header { position: relative; width: 100%; background: linear-gradient(135deg, #ffffff 0%, #fffdfb 55%, #faf5f2 100%); border-bottom: 1px solid rgba(102, 51, 51, 0.10); box-shadow: 0 4px 16px rgba(54, 30, 30, 0.055); overflow: hidden; }
+    .create-ad-page-header::before { content: ""; position: absolute; width: 220px; height: 220px; top: -150px; right: 8%; border-radius: 50%; background: radial-gradient(circle, rgba(204, 51, 51, 0.07) 0%, rgba(204, 51, 51, 0) 70%); pointer-events: none; }
+    .create-ad-page-header::after { content: ""; position: absolute; width: 160px; height: 160px; bottom: -125px; left: 22%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 191, 0, 0.055) 0%, rgba(255, 191, 0, 0) 70%); pointer-events: none; }
+    .create-ad-page-header-inner { position: relative; z-index: 1; width: min(100%, 1480px); min-height: 104px; margin: 0 auto; padding: 20px 28px; display: flex; align-items: center; justify-content: space-between; gap: 30px; box-sizing: border-box; }
+    .create-ad-page-title { display: flex; align-items: center; gap: 15px; min-width: 0; }
+    .create-ad-page-icon { position: relative; width: 54px; height: 54px; flex: 0 0 54px; display: flex; align-items: center; justify-content: center; border-radius: 15px; background: linear-gradient(145deg, #663333 0%, #8e3b3b 55%, #cc3333 100%); color: #ffffff; box-shadow: 0 8px 18px rgba(102, 51, 51, 0.20); overflow: hidden; }
+    .create-ad-page-icon::before { content: ""; position: absolute; width: 70px; height: 18px; top: -8px; left: -20px; background: rgba(255, 255, 255, 0.18); transform: rotate(-35deg); pointer-events: none; }
+    .create-ad-page-icon::after { content: ""; position: absolute; width: 7px; height: 7px; right: 8px; bottom: 8px; border-radius: 50%; background: #ffbf00; box-shadow: 0 0 0 3px rgba(255, 191, 0, 0.15); pointer-events: none; }
+    .create-ad-page-icon i { position: relative; z-index: 1; font-size: 23px; line-height: 1; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12)); }
+    .create-ad-page-heading { color: #663333; font-size: 24px; font-weight: 750; line-height: 1.2; letter-spacing: -0.45px; }
+    .create-ad-page-description { margin-top: 6px; color: #886666; font-size: 13px; font-weight: 500; line-height: 1.4; }
+
+    /* ---------- BACK BUTTON (header version) ---------- */
+    .create-ad-back-button { position: relative; flex: 0 0 auto; height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 17px; border: 1px solid rgba(102, 51, 51, 0.15); border-radius: 11px; background: #ffffff; color: #663333; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 9px rgba(54, 30, 30, 0.055); overflow: hidden; transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+    .create-ad-back-button::before { content: ""; position: absolute; top: 0; left: -110%; width: 75%; height: 100%; background: linear-gradient(90deg, transparent, rgba(102, 51, 51, 0.06), transparent); transform: skewX(-20deg); transition: left 0.5s ease; }
+    .create-ad-back-button:hover { background: linear-gradient(135deg, #663333, #8e3b3b); color: #ffffff; border-color: #663333; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(102, 51, 51, 0.18); }
+    .create-ad-back-button:hover::before { left: 135%; }
+    .create-ad-back-button i { position: relative; z-index: 1; font-size: 16px; transition: transform 0.2s ease; }
+    .create-ad-back-button span { position: relative; z-index: 1; }
+    .create-ad-back-button:hover i { transform: translateX(-3px); }
+    .create-ad-back-button:focus-visible { outline: 3px solid rgba(204, 51, 51, 0.20); outline-offset: 3px; }
+
+    /* ---------- FORM SECTION / GRID ---------- */
+    .create-ad-page .form-section { background: #ffffff !important; border: 1px solid #e7dddd !important; border-radius: 20px !important; padding: 30px !important; margin-top: 24px !important; box-shadow: 0 8px 25px rgba(54, 30, 30, 0.045) !important; }
+    .create-ad-page .form-grid { display: grid !important; gap: 20px !important; }
+    .create-ad-page .form-grid.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .create-ad-page .form-grid.three-columns { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    .create-ad-page .form-grid.four-columns { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    .create-ad-page .form-group { width: 100% !important; min-width: 0 !important; margin-bottom: 20px !important; }
+
+    /* ---------- LABEL ---------- */
+    .create-ad-page .form-group > label { display: flex !important; align-items: center !important; gap: 4px !important; margin: 0 0 8px !important; color: #4a3636 !important; font-size: 12.5px !important; font-weight: 700 !important; line-height: 1.3 !important; }
+    .create-ad-page .required { color: #cc3333 !important; font-weight: 800 !important; }
+
+    /* ---------- INPUT WRAPPER / ICON ---------- */
+    .create-ad-page .input-wrapper { position: relative !important; width: 100% !important; }
+    .create-ad-page .input-icon { position: absolute !important; left: 14px !important; top: 50% !important; z-index: 3 !important; width: 18px !important; transform: translateY(-50%) !important; color: #886666 !important; font-size: 15px !important; pointer-events: none !important; transition: color .2s ease, transform .2s ease !important; }
+    .create-ad-page .input-wrapper:focus-within .input-icon { color: #663333 !important; transform: translateY(-50%) scale(1.05) !important; }
+
+    /* ---------- FORM CONTROLS ---------- */
+    .create-ad-page input.form-control,
+    .create-ad-page select.form-control,
+    .create-ad-page textarea.form-control { display: block !important; width: 100% !important; box-sizing: border-box !important; border: 1px solid #d9cccc !important; border-radius: 12px !important; background: #ffffff !important; color: #342727 !important; font-family: inherit !important; font-size: 13.5px !important; font-weight: 500 !important; outline: none !important; box-shadow: 0 1px 3px rgba(54, 30, 30, 0.035) !important; transition: border-color .2s ease, box-shadow .2s ease, background .2s ease, transform .2s ease !important; }
+    .create-ad-page input.form-control { height: 48px !important; min-height: 48px !important; padding: 0 14px 0 44px !important; }
+    .create-ad-page input.form-control:hover { border-color: #bdaaaa !important; box-shadow: 0 4px 10px rgba(54, 30, 30, 0.055) !important; }
+    .create-ad-page input.form-control:focus { border-color: #663333 !important; background: #ffffff !important; box-shadow: 0 0 0 4px rgba(102, 51, 51, 0.09), 0 6px 16px rgba(102, 51, 51, 0.07) !important; transform: translateY(-1px) !important; }
+    .create-ad-page .form-control::placeholder { color: #a99a9a !important; opacity: 1 !important; font-weight: 450 !important; }
+
+    /* ---------- SELECT ---------- */
+    .create-ad-page select.form-control { height: 48px !important; min-height: 48px !important; padding: 0 42px 0 44px !important; cursor: pointer !important; appearance: none !important; -webkit-appearance: none !important; -moz-appearance: none !important; background-color: #ffffff !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 16 16'%3E%3Cpath fill='%23886666' d='M3.2 5.5 8 10.3l4.8-4.8 1.2 1.2L8 12.7 2 6.7z'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 14px center !important; background-size: 15px !important; }
+    .create-ad-page select.form-control:hover { border-color: #bdaaaa !important; }
+    .create-ad-page select.form-control:focus { border-color: #663333 !important; box-shadow: 0 0 0 4px rgba(102, 51, 51, 0.09), 0 6px 16px rgba(102, 51, 51, 0.07) !important; }
+    .create-ad-page select.form-control:disabled { background-color: #f7f3f3 !important; color: #9a8b8b !important; border-color: #e5dede !important; cursor: not-allowed !important; opacity: 1 !important; }
+
+    /* ---------- TEXTAREA ---------- */
+    .create-ad-page textarea.form-control { min-height: 145px !important; padding: 14px 14px 14px 44px !important; resize: vertical !important; line-height: 1.55 !important; }
+    .create-ad-page textarea.form-control:focus { border-color: #663333 !important; box-shadow: 0 0 0 4px rgba(102, 51, 51, 0.09), 0 6px 16px rgba(102, 51, 51, 0.07) !important; }
+    .create-ad-page .textarea-wrapper { position: relative !important; }
+    .create-ad-page .textarea-icon { position: absolute !important; left: 14px !important; top: 17px !important; z-index: 3 !important; color: #886666 !important; font-size: 15px !important; pointer-events: none !important; }
+    .create-ad-page .textarea-wrapper:focus-within .textarea-icon { color: #663333 !important; }
+
+    /* ---------- RTL ---------- */
+    .create-ad-page .rtl-wrapper { position: relative !important; }
+    .create-ad-page input[dir="rtl"], .create-ad-page textarea[dir="rtl"] { direction: rtl !important; text-align: right !important; padding-left: 44px !important; padding-right: 14px !important; }
+    .create-ad-page .input-icon-right, .create-ad-page .textarea-icon-right { position: absolute !important; right: 14px !important; color: #886666 !important; pointer-events: none !important; }
+    .create-ad-page .input-icon-right { top: 50% !important; transform: translateY(-50%) !important; }
+    .create-ad-page .textarea-icon-right { top: 17px !important; }
+
+    /* ---------- NUMBER / READONLY ---------- */
+    .create-ad-page input[type="number"].form-control { padding-right: 14px !important; }
+    .create-ad-page input.form-control[readonly] { background: linear-gradient(180deg, #f8f4f4 0%, #f1ebeb 100%) !important; color: #665757 !important; border-color: #dfd5d5 !important; cursor: default !important; }
+
+    /* ---------- CHECKBOX ---------- */
+    .create-ad-page .checkbox-form-group { display: flex !important; align-items: flex-end !important; }
+    .create-ad-page .checkbox-label { position: relative !important; display: flex !important; align-items: center !important; gap: 12px !important; width: 100% !important; min-height: 48px !important; box-sizing: border-box !important; margin: 0 !important; padding: 9px 14px !important; border: 1px solid #d9cccc !important; border-radius: 12px !important; background: #fdfafa !important; cursor: pointer !important; transition: border-color .2s ease, background .2s ease, box-shadow .2s ease !important; }
+    .create-ad-page .checkbox-label:hover { border-color: #bdaaaa !important; background: #ffffff !important; box-shadow: 0 4px 10px rgba(54, 30, 30, 0.05) !important; }
+    .create-ad-page .checkbox-label input[type="checkbox"] { position: absolute !important; width: 1px !important; height: 1px !important; opacity: 0 !important; }
+    .create-ad-page .custom-checkbox { width: 21px !important; height: 21px !important; flex: 0 0 21px !important; display: flex !important; align-items: center !important; justify-content: center !important; border: 1.5px solid #c7b8b8 !important; border-radius: 6px !important; background: #ffffff !important; color: transparent !important; transition: background .2s ease, border-color .2s ease, box-shadow .2s ease !important; }
+    .create-ad-page .checkbox-label input[type="checkbox"]:checked + .custom-checkbox { background: linear-gradient(135deg, #663333, #cc3333) !important; border-color: #663333 !important; color: #ffffff !important; box-shadow: 0 4px 9px rgba(102, 51, 51, 0.20) !important; }
+    .create-ad-page .custom-checkbox i { font-size: 13px !important; font-weight: 800 !important; }
+    .create-ad-page .checkbox-text { display: flex !important; flex-direction: column !important; gap: 3px !important; }
+    .create-ad-page .checkbox-text strong { color: #4a3636 !important; font-size: 12px !important; font-weight: 700 !important; }
+    .create-ad-page .checkbox-text small { color: #918383 !important; font-size: 10px !important; font-weight: 500 !important; }
+
+    /* ---------- FIELD HELP / VALIDATION ---------- */
+    .create-ad-page .field-help { display: flex !important; align-items: center !important; gap: 5px !important; margin-top: 6px !important; color: #918383 !important; font-size: 10.5px !important; }
+    .create-ad-page .field-help i { color: #886666 !important; }
+    .create-ad-page .validation-message { display: block !important; margin-top: 6px !important; color: #cc3333 !important; font-size: 11px !important; font-weight: 600 !important; }
+
+    /* ---------- PHOTO UPLOAD ---------- */
+    .create-ad-page .upload-area { position: relative !important; display: flex !important; align-items: center !important; justify-content: center !important; width: 100% !important; min-height: 230px !important; box-sizing: border-box !important; overflow: hidden !important; border: 2px dashed #c9baba !important; border-radius: 18px !important; background: linear-gradient(180deg, #fffdfd 0%, #f8f3f3 100%) !important; cursor: pointer !important; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease, transform .25s ease !important; }
+    .create-ad-page .upload-area:hover { border-color: #663333 !important; background: linear-gradient(180deg, #fffafa 0%, #f7eeee 100%) !important; box-shadow: 0 12px 30px rgba(102, 51, 51, 0.10) !important; transform: translateY(-2px) !important; }
+    .create-ad-page .upload-file-input { position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important; opacity: 0 !important; cursor: pointer !important; z-index: 10 !important; }
+    .create-ad-page .upload-content { position: relative !important; z-index: 2 !important; display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; width: 100% !important; padding: 35px !important; text-align: center !important; pointer-events: none !important; }
+    .create-ad-page .upload-icon { width: 64px !important; height: 64px !important; display: flex !important; align-items: center !important; justify-content: center !important; margin-bottom: 14px !important; border-radius: 18px !important; background: linear-gradient(135deg, #663333 0%, #cc3333 100%) !important; color: #ffffff !important; font-size: 25px !important; box-shadow: 0 9px 22px rgba(102, 51, 51, 0.22) !important; }
+    .create-ad-page .upload-content > strong { color: #342727 !important; font-size: 16px !important; font-weight: 800 !important; }
+    .create-ad-page .upload-content > span:not(.upload-icon) { color: #837575 !important; font-size: 11.5px !important; margin-top: 5px !important; }
+    .create-ad-page .upload-hint { display: inline-flex !important; align-items: center !important; gap: 7px !important; margin-top: 10px !important; padding: 6px 11px !important; border-radius: 20px !important; background: #f5eded !important; color: #725f5f !important; font-size: 10px !important; font-weight: 600 !important; }
+    .create-ad-page .upload-separator { color: #ad9e9e !important; }
+
+    /* ---------- PHOTO GRID ---------- */
+    .create-ad-page .photo-grid { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 16px !important; }
+    .create-ad-page .photo-card { overflow: hidden !important; border: 1px solid #e5dcdc !important; border-radius: 15px !important; background: #ffffff !important; box-shadow: 0 3px 9px rgba(54, 30, 30, 0.045) !important; transition: transform .22s ease, box-shadow .22s ease !important; }
+    .create-ad-page .photo-card:hover { transform: translateY(-3px) !important; box-shadow: 0 12px 24px rgba(54, 30, 30, 0.09) !important; }
+    .create-ad-page .photo-preview { position: relative !important; width: 100% !important; aspect-ratio: 16 / 10 !important; overflow: hidden !important; background: #f2ecec !important; }
+    .create-ad-page .photo-preview img { display: block !important; width: 100% !important; height: 100% !important; object-fit: cover !important; transition: transform .3s ease !important; }
+    .create-ad-page .photo-card:hover .photo-preview img { transform: scale(1.04) !important; }
+    .create-ad-page .photo-details { padding: 12px !important; }
+    .create-ad-page .photo-name { display: flex !important; align-items: center !important; gap: 7px !important; overflow: hidden !important; color: #4a3636 !important; font-size: 11.5px !important; font-weight: 700 !important; }
+    .create-ad-page .photo-name span { overflow: hidden !important; white-space: nowrap !important; text-overflow: ellipsis !important; }
+    .create-ad-page .photo-name i { color: #663333 !important; }
+
+    /* ---------- CONTACT SECTION ---------- */
+    .contact-section { position: relative; }
+    .contact-intro { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding: 16px 18px; border: 1px solid rgba(102, 51, 51, 0.10); border-radius: 14px; background: linear-gradient(135deg, rgba(255, 248, 248, 0.95), rgba(255, 255, 255, 0.98)); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+    .contact-intro:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(54, 30, 30, 0.05); }
+    .contact-intro-icon { width: 44px; height: 44px; flex: 0 0 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: linear-gradient(135deg, #663333, #cc3333); color: #ffffff; font-size: 20px; box-shadow: 0 6px 14px rgba(102, 51, 51, 0.18); }
+    .contact-intro-content { display: flex; flex-direction: column; gap: 3px; }
+    .contact-intro-content strong { color: #3a1d1d; font-size: 14px; font-weight: 700; }
+    .contact-intro-content span { color: #777; font-size: 13px; line-height: 1.5; }
+    .contact-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .contact-card { position: relative; overflow: hidden; border: 1px solid #e7dddd; border-radius: 16px; background: #ffffff; box-shadow: 0 4px 18px rgba(54, 30, 30, 0.04); transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease; }
+    .contact-card:hover { transform: translateY(-2px); border-color: rgba(102, 51, 51, 0.25); box-shadow: 0 12px 28px rgba(54, 30, 30, 0.07); }
+    .contact-card-active { border-color: rgba(102, 51, 51, 0.35); box-shadow: 0 10px 28px rgba(102, 51, 51, 0.08); }
+    .contact-card-header { display: flex; align-items: flex-start; gap: 14px; padding: 20px 20px 16px; border-bottom: 1px solid #f0e8e8; background: linear-gradient(180deg, #fffafa, #ffffff); }
+    .contact-card-icon { width: 46px; height: 46px; flex: 0 0 46px; display: flex; align-items: center; justify-content: center; border-radius: 13px; font-size: 21px; }
+    .whatsapp-icon { color: #ffffff; background: linear-gradient(135deg, #663333, #886666); box-shadow: 0 6px 14px rgba(102, 51, 51, 0.18); }
+    .email-icon { color: #ffffff; background: linear-gradient(135deg, #735626, #996600); box-shadow: 0 6px 14px rgba(115, 86, 38, 0.18); }
+    .contact-card-title { min-width: 0; flex: 1; }
+    .contact-card-title-row { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+    .contact-card-title h3 { margin: 0; color: #2e2222; font-size: 16px; font-weight: 700; }
+    .contact-card-title p { margin: 5px 0 0; color: #777; font-size: 12.5px; line-height: 1.5; }
+    .visibility-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border-radius: 20px; background: rgba(51, 217, 128, 0.12); color: #248f5a; font-size: 10px; font-weight: 700; line-height: 1; }
+    .visibility-badge i { font-size: 10px; }
+    .contact-card-body { padding: 20px; }
+    .contact-field-label { display: block; margin-bottom: 8px; color: #4b3b3b; font-size: 12px; font-weight: 700; }
+    .contact-input-wrapper { position: relative; display: flex; align-items: center; }
+    .contact-input-icon { position: absolute; left: 13px; width: 20px; display: flex; align-items: center; justify-content: center; color: #886666; font-size: 15px; pointer-events: none; z-index: 2; }
+    .contact-input { height: 46px; padding-left: 42px; border: 1px solid #ded3d3; border-radius: 10px; color: #342727; background: #ffffff; font-size: 13px; transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease; }
+    .contact-input::placeholder { color: #b5aaaa; }
+    .contact-input:hover { border-color: #bdaaaa; }
+    .contact-input:focus { border-color: #663333; outline: none; background: #fffdfd; box-shadow: 0 0 0 3px rgba(102, 51, 51, 0.08); }
+    .contact-option { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid #f0e8e8; }
+    .visibility-toggle { position: relative; width: 44px; height: 24px; flex: 0 0 44px; margin: 0; cursor: pointer; }
+    .visibility-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; border-radius: 30px; background: #d7cece; transition: background 0.25s ease, box-shadow 0.25s ease; }
+    .toggle-slider::before { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 50%; background: #ffffff; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18); transition: transform 0.25s ease; }
+    .visibility-toggle input:checked + .toggle-slider { background: linear-gradient(90deg, #663333, #cc3333); box-shadow: 0 3px 10px rgba(102, 51, 51, 0.20); }
+    .visibility-toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+    .visibility-text { display: flex; flex-direction: column; gap: 3px; }
+    .visibility-text strong { color: #453636; font-size: 12px; font-weight: 700; }
+    .visibility-text span { color: #8a7e7e; font-size: 11px; line-height: 1.4; }
+    .contact-privacy-note { display: flex; align-items: center; gap: 12px; margin-top: 20px; padding: 14px 16px; border: 1px solid rgba(51, 217, 128, 0.20); border-radius: 12px; background: linear-gradient(135deg, rgba(51, 217, 128, 0.06), rgba(255, 255, 255, 0.95)); }
+    .contact-privacy-icon { width: 38px; height: 38px; flex: 0 0 38px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: rgba(51, 217, 128, 0.13); color: #248f5a; font-size: 17px; }
+    .contact-privacy-content { display: flex; flex-direction: column; gap: 2px; }
+    .contact-privacy-content strong { color: #315b45; font-size: 12px; font-weight: 700; }
+    .contact-privacy-content span { color: #708077; font-size: 11px; line-height: 1.5; }
+    .contact-section .section-header { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 22px; }
+    .contact-section .section-number { width: 42px; height: 42px; flex: 0 0 42px; display: flex; align-items: center; justify-content: center; margin-top: 1px; border-radius: 10px; background: linear-gradient(135deg, #663333, #cc3333); color: #ffffff; font-size: 13px; font-weight: 700; line-height: 1; box-shadow: 0 5px 12px rgba(102, 51, 51, 0.16); }
+    .contact-section .section-heading { display: flex; flex-direction: column; justify-content: center; min-height: 42px; }
+    .contact-section .section-heading h2 { margin: 0; color: #2e2222; font-size: 20px; font-weight: 700; line-height: 1.25; }
+    .contact-section .section-heading p { margin: 4px 0 0; color: #777; font-size: 13px; line-height: 1.45; }
+
+    /* ---------- FORM ACTIONS ---------- */
+    .create-ad-page .form-actions { display: flex !important; align-items: center !important; justify-content: flex-end !important; gap: 10px !important; margin-top: 25px !important; padding-bottom: 40px !important; }
+    .create-ad-page .form-button { min-height: 46px !important; display: inline-flex !important; align-items: center !important; justify-content: center !important; gap: 8px !important; padding: 0 18px !important; border-radius: 10px !important; font-family: inherit !important; font-size: 12.5px !important; font-weight: 700 !important; cursor: pointer !important; transition: transform .2s ease, box-shadow .2s ease, background .2s ease !important; }
+    .create-ad-page .form-button:hover:not(:disabled) { transform: translateY(-2px) !important; }
+    .create-ad-page .form-button.secondary { background: #ffffff !important; border: 1px solid #d5caca !important; color: #5a4949 !important; }
+    .create-ad-page .form-button.secondary:hover { border-color: #a98e8e !important; background: #fffafa !important; }
+    .create-ad-page .form-button.draft-button { background: linear-gradient(135deg, #735626, #996600) !important; border: 1px solid #735626 !important; color: #ffffff !important; box-shadow: 0 5px 14px rgba(115, 86, 38, 0.20) !important; }
+    .create-ad-page .form-button.submit-button { background: linear-gradient(135deg, #663333, #cc3333) !important; border: 1px solid #663333 !important; color: #ffffff !important; box-shadow: 0 5px 14px rgba(102, 51, 51, 0.20) !important; }
+    .create-ad-page .form-button:disabled { opacity: 0.55 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; }
+
+    /* ============================================================
+       CATEGORY DETAILS (dynamic fields)
+       ============================================================ */
+    .create-ad-page .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 20px; }
+    .create-ad-page .feature-field { min-width: 0; }
+    .create-ad-page .feature-field.span-full { grid-column: 1 / -1; }
+    .create-ad-page .feature-label { display: block; margin-bottom: 8px; color: #4a3636; font-size: 12.5px; font-weight: 700; line-height: 1.3; }
+    .create-ad-page .feature-input { display: block; width: 100%; height: 46px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d9cccc; border-radius: 12px; background: #ffffff; color: #342727; font: inherit; font-size: 13.5px; transition: border-color .2s ease, box-shadow .2s ease; }
+    .create-ad-page select.feature-input { cursor: pointer; }
+    .create-ad-page .feature-input:hover { border-color: #bdaaaa; }
+    .create-ad-page .feature-input:focus { outline: none; border-color: #663333; box-shadow: 0 0 0 4px rgba(102, 51, 51, .09); }
+    .create-ad-page .feature-input::placeholder { color: #a99a9a; opacity: 1; }
+    .create-ad-page .feature-input-ar { margin-top: 8px; text-align: right; background: #fdfafa; }
+    .create-ad-page .feature-help { display: block; margin-top: 6px; color: #918383; font-size: 10.5px; }
+    .create-ad-page .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .create-ad-page .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 14px; border: 1px solid #d9cccc; border-radius: 999px; background: #ffffff; color: #4a3636; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease; }
+    .create-ad-page .chip:hover { border-color: #663333; background: #fffafa; }
+    .create-ad-page .chip:focus-visible, .create-ad-page .segmented button:focus-visible { outline: 3px solid rgba(204, 51, 51, .22); outline-offset: 2px; }
+    .create-ad-page .chip.is-selected { border-color: #663333; color: #ffffff; background: linear-gradient(135deg, #663333, #cc3333); box-shadow: 0 4px 10px rgba(102, 51, 51, .2); }
+    .create-ad-page .segmented { display: inline-flex; padding: 3px; gap: 3px; border: 1px solid #d9cccc; border-radius: 12px; background: #f8f3f3; }
+    .create-ad-page .segmented button { min-width: 76px; height: 38px; border: 0; border-radius: 9px; background: transparent; color: #5a4949; font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .create-ad-page .segmented button.is-selected { background: #ffffff; color: #663333; box-shadow: 0 2px 6px rgba(54, 30, 30, .12); }
+    .create-ad-page .feature-field.is-invalid .feature-input, .create-ad-page .feature-field.is-invalid .segmented { border-color: #cc3333; }
+    .create-ad-page .feature-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 28px; border: 1.5px dashed #d9cccc; border-radius: 14px; background: #fdfafa; text-align: center; color: #886666; }
+    .create-ad-page .feature-empty i { font-size: 22px; }
+    .create-ad-page .feature-empty strong { color: #4a3636; font-size: 13px; }
+    .create-ad-page .feature-empty span { font-size: 11.5px; }
+    .create-ad-page .feature-empty-error { border-color: #f0c4c4; background: #fff7f7; }
+    .create-ad-page .feature-skeleton { height: 70px; border-radius: 12px; background: linear-gradient(90deg, #f3eded 25%, #faf6f6 50%, #f3eded 75%); background-size: 200% 100%; animation: featureShimmer 1.2s linear infinite; }
+    @@keyframes featureShimmer { to { background-position: -200% 0; } }
+    @@media (prefers-reduced-motion: reduce) { .create-ad-page .feature-skeleton { animation: none; } }
+    .create-ad-page .feature-lang-toggle { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #663333; cursor: pointer; }
+
+    /* ---------- RESPONSIVE — 1100 ---------- */
+    @@media (max-width: 1100px) {
+        .create-ad-page .form-grid.four-columns { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+        .create-ad-page .photo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+        .create-ad-page .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* ---------- RESPONSIVE — 900 ---------- */
+    @@media (max-width: 900px) {
+        .contact-methods { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- RESPONSIVE — 850 ---------- */
+    @@media (max-width: 850px) {
+        .create-ad-page-header-inner { min-height: 94px; padding: 17px 20px; gap: 20px; }
+        .create-ad-page-icon { width: 48px; height: 48px; flex-basis: 48px; border-radius: 13px; }
+        .create-ad-page-icon i { font-size: 21px; }
+        .create-ad-page-heading { font-size: 21px; }
+        .create-ad-page-description { font-size: 12px; }
+        .create-ad-back-button { height: 42px; padding: 0 14px; }
+        .create-ad-page .form-grid.two-columns, .create-ad-page .form-grid.three-columns { grid-template-columns: 1fr !important; }
+        .create-ad-page .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    }
+
+    /* ---------- RESPONSIVE — 620 ---------- */
+    @@media (max-width: 620px) {
+        .create-ad-page-header-inner { min-height: auto; padding: 16px; align-items: flex-start; }
+        .create-ad-page-title { gap: 11px; }
+        .create-ad-page-icon { width: 44px; height: 44px; flex-basis: 44px; border-radius: 12px; }
+        .create-ad-page-icon i { font-size: 19px; }
+        .create-ad-page-heading { font-size: 19px; }
+        .create-ad-page-description { margin-top: 4px; font-size: 11px; }
+        .create-ad-back-button { width: 42px; height: 42px; padding: 0; border-radius: 10px; }
+        .create-ad-back-button span { display: none; }
+        .create-ad-back-button i { font-size: 17px; }
+        .create-ad-page .form-section { padding: 20px 15px !important; }
+        .create-ad-page .form-grid.four-columns { grid-template-columns: 1fr !important; }
+        .create-ad-page .photo-grid { grid-template-columns: 1fr !important; }
+        .create-ad-page .form-actions { flex-direction: column-reverse !important; align-items: stretch !important; }
+        .create-ad-page .form-button { width: 100% !important; }
+        .create-ad-page .feature-grid { grid-template-columns: 1fr; }
+        .contact-intro { align-items: flex-start; padding: 14px; }
+        .contact-card-header { padding: 17px 16px 14px; }
+        .contact-card-body { padding: 17px 16px; }
+        .contact-card-icon { width: 42px; height: 42px; flex-basis: 42px; font-size: 19px; }
+        .contact-option { align-items: flex-start; }
+        .contact-privacy-note { align-items: flex-start; }
+        .contact-section .section-header { gap: 11px; }
+        .contact-section .section-number { width: 38px; height: 38px; flex-basis: 38px; font-size: 12px; }
+        .contact-section .section-heading { min-height: 38px; }
+        .contact-section .section-heading h2 { font-size: 18px; }
+        .contact-section .section-heading p { font-size: 12px; }
+    }
+
+    /* ---------- RESPONSIVE — 400 ---------- */
+    @@media (max-width: 400px) {
+        .create-ad-page-header-inner { padding: 13px; }
+        .create-ad-page-icon { width: 40px; height: 40px; flex-basis: 40px; }
+        .create-ad-page-heading { font-size: 17px; }
+        .create-ad-page-description { font-size: 10px; }
+        .create-ad-back-button { width: 38px; height: 38px; }
+    }
+
+    /* ============================================================
+       CREATE ADVERTISEMENT - PAGE CONTEXT
+       ============================================================ */
+    .create-ad-page-context { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; padding: 16px 20px; margin-bottom: 20px; background: #ffffff; border: 1px solid rgba(102, 51, 51, 0.10); border-radius: 12px; box-shadow: 0 3px 12px rgba(54, 30, 30, 0.045); }
+    .create-ad-context-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .create-ad-context-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #663333 0%, #8e3b3b 55%, #cc3333 100%); color: #ffffff; font-size: 17px; box-shadow: 0 4px 10px rgba(102, 51, 51, 0.14); }
+    .create-ad-context-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .create-ad-context-eyebrow { color: #663333; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .create-ad-context-description { color: #886666; font-size: 13px; font-weight: 500; }
+
+    /* back button (context version - overrides header version above) */
+    .create-ad-back-button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; flex: 0 0 auto; min-height: 38px; padding: 8px 15px; border: 1px solid rgba(102, 51, 51, 0.15); border-radius: 9px; background: #ffffff; color: #663333; font-size: 13px; font-weight: 650; white-space: nowrap; cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
+    .create-ad-back-button i { font-size: 15px; transition: transform 0.2s ease; }
+    .create-ad-back-button:hover { background: #fff8f6; border-color: rgba(102, 51, 51, 0.28); color: #cc3333; transform: translateY(-1px); box-shadow: 0 5px 14px rgba(102, 51, 51, 0.10); }
+    .create-ad-back-button:hover i { transform: translateX(-3px); }
+    .create-ad-back-button:active { transform: translateY(0); box-shadow: none; }
+    .create-ad-back-button:focus-visible { outline: 3px solid rgba(204, 51, 51, 0.18); outline-offset: 2px; }
+
+    @@media (max-width: 800px) {
+        .create-ad-page-context { padding: 14px 16px; }
+        .create-ad-context-description { font-size: 12px; }
+        .create-ad-back-button { padding: 8px 13px; }
+    }
+
+    @@media (max-width: 600px) {
+        .create-ad-page-context { align-items: stretch; flex-direction: column; gap: 14px; padding: 14px; }
+        .create-ad-context-left { align-items: flex-start; }
+        .create-ad-context-icon { width: 36px; height: 36px; font-size: 16px; }
+        .create-ad-back-button { width: 100%; }
+    }
+</style>
+@if (!isAuthenticated)
+{
+    <div class="create-ad-page">
+
+        <PublicTopBar />
+
+        <div class="create-ad-container">
+            <div class="auth-required-card">
+                <div class="auth-required-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <div>
+                    <h2>Sign in required</h2>
+                    <p>Please sign in to post an advertisement.</p>
+                </div>
+                <button type="button" class="primary-action" @onclick="Cancel">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Home
+                </button>
+            </div>
+        </div>
+
+    </div>
+}
+else
+{
+    <div class="create-ad-page">
+
+        <PublicTopBar />
+
+        <main class="create-ad-container">
+
+            <!-- =================================================
+                 PAGE CONTEXT
+                 ================================================= -->
+            <div class="create-ad-page-context">
+                <div class="create-ad-context-left">
+                    <span class="create-ad-context-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </span>
+                    <div class="create-ad-context-text">
+                        <span class="create-ad-context-eyebrow">
+                            @(isEditMode ? "EDIT LISTING" : "CREATE NEW LISTING")
+                        </span>
+                        <span class="create-ad-context-description">
+                            @(isEditMode
+                                ? "Update your advertisement information."
+                                : "Enter your advertisement details.")
+                        </span>
+                    </div>
+                </div>
+
+                <button type="button" class="create-ad-back-button" @onclick="Cancel">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>My Advertisements</span>
+                </button>
+            </div>
+
+            <!-- =================================================
+                 FEEDBACK
+                 ================================================= -->
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="feedback-message feedback-error">
+                    <div class="feedback-icon">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                    <div class="feedback-content">
+                        <strong>Please review</strong>
+                        <span>@errorMessage</span>
+                    </div>
+                    <button type="button" class="feedback-close" @onclick="() => errorMessage = null" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(successMessage))
+            {
+                <div class="feedback-message feedback-success">
+                    <div class="feedback-icon">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <div class="feedback-content">
+                        <strong>All set</strong>
+                        <span>@successMessage</span>
+                    </div>
+                    <button type="button" class="feedback-close" @onclick="() => successMessage = null" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            }
+
+            <!-- =================================================
+                 LOAD PROGRESS
+                 ================================================= -->
+            @if (isLoadingAdvertisement)
+            {
+                <div class="upload-progress-card">
+                    <div class="upload-progress-top">
+                        <div class="upload-progress-icon">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </div>
+                        <div class="upload-progress-content">
+                            <strong>Loading advertisement</strong>
+                            <span>Please wait while your advertisement information is loaded.</span>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =================================================
+                 UPLOAD PROGRESS
+                 ================================================= -->
+            @if (isUploadingImages)
+            {
+                <div class="upload-progress-card">
+                    <div class="upload-progress-top">
+                        <div class="upload-progress-icon">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                        </div>
+                        <div class="upload-progress-content">
+                            <strong>Uploading your photos</strong>
+                            <span>Please keep this page open while the upload completes.</span>
+                        </div>
+                        <div class="upload-progress-count">
+                            @uploadedImageCount / @totalImagesToUpload
+                        </div>
+                    </div>
+                    <div class="upload-progress-track">
+                        <div class="upload-progress-value" style="width:@GetUploadProgressPercentage()%;"></div>
+                    </div>
+                </div>
+            }
+
+            <!-- =================================================
+                 FORM
+                 ================================================= -->
+            <EditForm Model="model" OnSubmit="SaveDraft">
+
+                <DataAnnotationsValidator />
+
+                <!-- =============================================
+                     01 BASIC INFORMATION
+                     ============================================= -->
+                <section class="form-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">01</div>
+                        <div class="section-heading-text">
+                            <h2>Basic Information</h2>
+                            <p>Tell buyers what you are advertising.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid two-columns">
+
+                        <!-- TYPE -->
+                        <div class="form-group">
+                            <label>
+                                Advertisement Type
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-megaphone input-icon"></i>
+                                <InputSelect TValue="int"
+                                             class="form-control has-icon"
+                                             Value="model.AdvertisementTypeID"
+                                             ValueChanged="OnAdvertisementTypeChangedAsync"
+                                             ValueExpression="@(() => model.AdvertisementTypeID)">
+                                    <option value="0">Select advertisement type</option>
+                                    @foreach (var item in advertisementTypes)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <ValidationMessage For="@(() => model.AdvertisementTypeID)" />
+                        </div>
+
+                        <!-- CATEGORY -->
+                        <div class="form-group">
+                            <label>
+                                Category
+                                <span class="required">*</span>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-tags input-icon"></i>
+                                <InputSelect TValue="int"
+                                             class="form-control has-icon"
+                                             Value="model.CategoryID"
+                                             ValueChanged="OnCategoryChangedAsync"
+                                             ValueExpression="@(() => model.CategoryID)">
+                                    <option value="0">Select category</option>
+                                    @foreach (var item in categories)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <ValidationMessage For="@(() => model.CategoryID)" />
+                        </div>
+
+                    </div>
+
+                    <!-- TITLE -->
+                    <div class="form-group">
+                        <label>
+                            Advertisement Title
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper">
+                            <i class="bi bi-type input-icon"></i>
+                            <InputText class="form-control has-icon"
+                                       @bind-Value="model.Title"
+                                       placeholder="Enter a clear and attractive title" />
+                        </div>
+                        <ValidationMessage For="@(() => model.Title)" />
+                    </div>
+
+                    <!-- ARABIC TITLE -->
+                    <div class="form-group">
+                        <label>Arabic Title</label>
+                        <div class="input-wrapper rtl-wrapper">
+                            <InputText class="form-control"
+                                       @bind-Value="model.TitleAr"
+                                       placeholder="أدخل عنوان الإعلان"
+                                       dir="rtl" />
+                            <i class="bi bi-translate input-icon-right"></i>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPTION -->
+                    <div class="form-group">
+                        <label>
+                            Description
+                            <span class="required">*</span>
+                        </label>
+                        <div class="input-wrapper textarea-wrapper">
+                            <i class="bi bi-card-text textarea-icon"></i>
+                            <InputTextArea class="form-control textarea has-icon"
+                                           @bind-Value="model.Description"
+                                           placeholder="Provide detailed information about your advertisement"
+                                           rows="6" />
+                        </div>
+                        <ValidationMessage For="@(() => model.Description)" />
+                    </div>
+
+                    <!-- ARABIC DESCRIPTION -->
+                    <div class="form-group">
+                        <label>Arabic Description</label>
+                        <div class="input-wrapper textarea-wrapper rtl-wrapper">
+                            <InputTextArea class="form-control textarea"
+                                           @bind-Value="model.DescriptionAr"
+                                           placeholder="اكتب وصفاً تفصيلياً للإعلان"
+                                           rows="5"
+                                           dir="rtl" />
+                            <i class="bi bi-translate textarea-icon-right"></i>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- =============================================
+                     02 CATEGORY DETAILS (dynamic fields)
+                     ============================================= -->
+                <section class="form-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">02</div>
+                        <div class="section-heading-text">
+                            <h2>@GetSelectedCategoryName() Details</h2>
+                            <p>These details change with the category and advertisement type you choose.</p>
+                        </div>
+
+                        @if (categoryFeatures.Any())
+                        {
+                            <label class="feature-lang-toggle">
+                                <input type="checkbox" @bind="showFeatureArabic" />
+                                <span>Add Arabic</span>
+                            </label>
+                        }
+                    </div>
+
+                    @if (model.CategoryID <= 0 || model.AdvertisementTypeID <= 0)
+                    {
+                        <div class="feature-empty">
+                            <i class="bi bi-ui-checks-grid"></i>
+                            <strong>Choose a type and category first</strong>
+                            <span>Extra details for your listing will appear here.</span>
+                        </div>
+                    }
+                    else if (isLoadingCategoryFeatures)
+                    {
+                        <div class="feature-grid">
+                            @for (var i = 0; i < 6; i++)
+                            {
+                                <div class="feature-skeleton"></div>
+                            }
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(categoryFeatureError))
+                    {
+                        <div class="feature-empty feature-empty-error">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>@categoryFeatureError</strong>
+                            <button type="button" class="make-primary-button"
+                                    @onclick="() => LoadCategoryFeaturesAsync(model.CategoryID)">
+                                Try again
+                            </button>
+                        </div>
+                    }
+                    else if (!categoryFeatures.Any())
+                    {
+                        <div class="feature-empty">
+                            <i class="bi bi-check2-circle"></i>
+                            <strong>No extra details needed</strong>
+                            <span>This category doesn't require additional information.</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="feature-grid">
+                            @foreach (var feature in categoryFeatures)
+                            {
+                                var id = feature.AdvertisementFeatureID;
+                                var invalid = invalidFeatureIds.Contains(id);
+
+                                <div class="feature-field @(IsWideFeature(feature) ? "span-full" : "") @(invalid ? "is-invalid" : "")"
+                                     @key="id">
+
+                                    <label class="feature-label">
+                                        @feature.FeatureName
+                                        @if (feature.IsRequired)
+                                        {
+                                            <span class="required">*</span>
+                                        }
+                                    </label>
+
+                                    @if (IsFeatureType(feature, "Select"))
+                                    {
+                                        <select class="feature-input"
+                                                value="@GetFeatureValue(id)"
+                                                @onchange="args => SetFeatureValue(id, args.Value?.ToString())">
+                                            <option value="">Select</option>
+                                            @foreach (var option in feature.Options)
+                                            {
+                                                <option value="@option.OptionValue">@option.OptionValue</option>
+                                            }
+                                        </select>
+                                    }
+                                    else if (IsFeatureType(feature, "Radio"))
+                                    {
+                                        <div class="chip-group" role="radiogroup">
+                                            @foreach (var option in feature.Options)
+                                            {
+                                                var isOn = GetFeatureValue(id) == option.OptionValue;
+                                                <button type="button"
+                                                        class="chip @(isOn ? "is-selected" : "")"
+                                                        role="radio"
+                                                        aria-checked="@(isOn ? "true" : "false")"
+                                                        @onclick="() => SetFeatureValue(id, option.OptionValue)">
+                                                    @option.OptionValue
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else if (IsFeatureType(feature, "MultiSelect"))
+                                    {
+                                        var selected = GetMultiSelectValues(id);
+                                        <div class="chip-group">
+                                            @foreach (var option in feature.Options)
+                                            {
+                                                var isOn = selected.Contains(option.OptionValue, StringComparer.OrdinalIgnoreCase);
+                                                <button type="button"
+                                                        class="chip @(isOn ? "is-selected" : "")"
+                                                        aria-pressed="@(isOn ? "true" : "false")"
+                                                        @onclick="() => ToggleMultiSelectValue(id, option.OptionValue, !isOn)">
+                                                    @if (isOn)
+                                                    {
+                                                        <i class="bi bi-check2"></i>
+                                                    }
+                                                    @option.OptionValue
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else if (IsFeatureType(feature, "Boolean") || IsFeatureType(feature, "Bool"))
+                                    {
+                                        var boolValue = GetFeatureValue(id);
+                                        <div class="segmented">
+                                            <button type="button"
+                                                    class="@(boolValue == "true" ? "is-selected" : "")"
+                                                    @onclick='() => SetFeatureValue(id, "true")'>Yes</button>
+                                            <button type="button"
+                                                    class="@(boolValue == "false" ? "is-selected" : "")"
+                                                    @onclick='() => SetFeatureValue(id, "false")'>No</button>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <input class="feature-input"
+                                               type="@GetFeatureInputType(feature)"
+                                               step="@(GetFeatureInputType(feature) == "number" ? "any" : null)"
+                                               min="@(GetFeatureInputType(feature) == "number" ? "0" : null)"
+                                               maxlength="@feature.MaxLength"
+                                               placeholder="@feature.FeatureName"
+                                               value="@GetFeatureValue(id)"
+                                               @onchange="args => SetFeatureValue(id, args.Value?.ToString())" />
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(feature.HelpText))
+                                    {
+                                        <small class="feature-help">@feature.HelpText</small>
+                                    }
+
+                                    @if (showFeatureArabic)
+                                    {
+                                        <input class="feature-input feature-input-ar"
+                                               dir="rtl"
+                                               maxlength="1000"
+                                               placeholder="@(feature.FeatureNameAr ?? feature.FeatureName)"
+                                               value="@GetFeatureValueAr(id)"
+                                               @onchange="args => SetFeatureValueAr(id, args.Value?.ToString())" />
+                                    }
+
+                                    @if (invalid)
+                                    {
+                                        <span class="validation-message">This field is required.</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+
+                </section>
+
+                <!-- =============================================
+                     03 PRICING
+                     ============================================= -->
+                <section class="form-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">03</div>
+                        <div class="section-heading-text">
+                            <h2>Pricing</h2>
+                            <p>Set your asking price and negotiation preference.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid three-columns">
+
+                        <div class="form-group">
+                            <label>Price</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-cash-stack input-icon"></i>
+                                <InputNumber class="form-control has-icon" @bind-Value="model.Price" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Currency</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-currency-exchange input-icon"></i>
+                                <InputText class="form-control has-icon" @bind-Value="model.CurrencyCode" readonly />
+                            </div>
+                        </div>
+
+                        <div class="form-group checkbox-form-group">
+                            <label class="checkbox-label">
+                                <InputCheckbox @bind-Value="model.IsNegotiable" />
+                                <span class="custom-checkbox">
+                                    <i class="bi bi-check"></i>
+                                </span>
+                                <span class="checkbox-text">
+                                    <strong>Price is negotiable</strong>
+                                    <small>Allow buyers to negotiate</small>
+                                </span>
+                            </label>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- =============================================
+                     04 LOCATION
+                     ============================================= -->
+                <section class="form-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">04</div>
+                        <div class="section-heading-text">
+                            <h2>Location</h2>
+                            <p>Help potential buyers find your advertisement.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid two-columns">
+
+                        <!-- COUNTRY -->
+                        <div class="form-group">
+                            <label>Country</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-globe2 input-icon"></i>
+                                <InputSelect TValue="int"
+                                             class="form-control has-icon"
+                                             Value="@selectedCountryId"
+                                             ValueChanged="@OnCountryChanged"
+                                             ValueExpression="@(() => selectedCountryId)">
+                                    <option value="0">Select country</option>
+                                    @foreach (var item in countries)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <!-- STATE -->
+                        <div class="form-group">
+                            <label>State / Province</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-map input-icon"></i>
+                                <InputSelect TValue="int"
+                                             class="form-control has-icon"
+                                             Value="@selectedStateId"
+                                             ValueChanged="@OnStateChanged"
+                                             ValueExpression="@(() => selectedStateId)"
+                                             disabled="@(selectedCountryId <= 0)">
+                                    <option value="0">Select state</option>
+                                    @foreach (var item in states)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <!-- CITY -->
+                        <div class="form-group">
+                            <label>City</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-buildings input-icon"></i>
+                                <InputSelect TValue="int"
+                                             class="form-control has-icon"
+                                             Value="@selectedCityId"
+                                             ValueChanged="@OnCityChanged"
+                                             ValueExpression="@(() => selectedCityId)"
+                                             disabled="@(selectedCountryId <= 0)">
+                                    <option value="0">Select city</option>
+                                    @foreach (var item in cities)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <!-- AREA -->
+                        <div class="form-group">
+                            <label>Area</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-geo-alt input-icon"></i>
+                                <InputSelect class="form-control has-icon"
+                                             @bind-Value="selectedAreaId"
+                                             disabled="@(selectedCityId <= 0)">
+                                    <option value="0">Select area</option>
+                                    @foreach (var item in areas)
+                                    {
+                                        <option value="@item.ID">@item.Name</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="form-grid two-columns">
+
+                        <div class="form-group">
+                            <label>Address</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-signpost-2 input-icon"></i>
+                                <InputText class="form-control has-icon"
+                                           @bind-Value="model.AddressLine"
+                                           placeholder="Building, road or address" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Plot Number</label>
+                            <div class="input-wrapper">
+                                <i class="bi bi-grid-3x3-gap input-icon"></i>
+                                <InputText class="form-control has-icon"
+                                           @bind-Value="model.PlotNumber"
+                                           placeholder="Optional plot number" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+
+                <!-- =============================================
+                     05 CONTACT INFORMATION
+                     ============================================= -->
+                <section class="form-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">05</div>
+                        <div class="section-heading-text">
+                            <h2>Contact Information</h2>
+                            <p>Choose how interested buyers can contact you.</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-intro">
+                        <div class="contact-intro-icon">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </div>
+                        <div class="contact-intro-content">
+                            <strong>Make it easy for buyers to reach you</strong>
+                            <span>
+                                Add at least one contact method and choose which
+                                details you want to display publicly.
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="contact-methods">
+
+                        <!-- WHATSAPP -->
+                        <div class="contact-card @(model.ShowWhatsAppToPublic ? "contact-card-active" : "")">
+
+                            <div class="contact-card-header">
+                                <div class="contact-card-icon whatsapp-icon">
+                                    <i class="bi bi-whatsapp"></i>
+                                </div>
+                                <div class="contact-card-title">
+                                    <div class="contact-card-title-row">
+                                        <h3>WhatsApp</h3>
+                                        @if (model.ShowWhatsAppToPublic)
+                                        {
+                                            <span class="visibility-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                    </div>
+                                    <p>
+                                        Let interested buyers contact you directly
+                                        through WhatsApp.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="contact-card-body">
+
+                                <label class="contact-field-label">WhatsApp Number</label>
+
+                                <div class="contact-input-wrapper">
+                                    <div class="contact-input-icon">
+                                        <i class="bi bi-whatsapp"></i>
+                                    </div>
+                                    <InputText class="form-control contact-input"
+                                               @bind-Value="model.WhatsAppNumber"
+                                               placeholder="+973 XXXXXXXX"
+                                               autocomplete="tel" />
+                                </div>
+
+                                <div class="contact-option">
+                                    <label class="visibility-toggle">
+                                        <input type="checkbox" @bind="model.ShowWhatsAppToPublic" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <div class="visibility-text">
+                                        <strong>Show WhatsApp to public</strong>
+                                        <span>
+                                            Buyers will be able to see this number
+                                            on your advertisement.
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <!-- EMAIL -->
+                        <div class="contact-card @(model.ShowEmailToPublic ? "contact-card-active" : "")">
+
+                            <div class="contact-card-header">
+                                <div class="contact-card-icon email-icon">
+                                    <i class="bi bi-envelope-fill"></i>
+                                </div>
+                                <div class="contact-card-title">
+                                    <div class="contact-card-title-row">
+                                        <h3>Email</h3>
+                                        @if (model.ShowEmailToPublic)
+                                        {
+                                            <span class="visibility-badge">
+                                                <i class="bi bi-eye-fill"></i>
+                                                Public
+                                            </span>
+                                        }
+                                    </div>
+                                    <p>
+                                        Allow interested buyers to contact you
+                                        by email.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="contact-card-body">
+
+                                <label class="contact-field-label">Email Address</label>
+
+                                <div class="contact-input-wrapper">
+                                    <div class="contact-input-icon">
+                                        <i class="bi bi-envelope"></i>
+                                    </div>
+                                    <InputText class="form-control contact-input"
+                                               @bind-Value="model.ContactEmail"
+                                               placeholder="yourname@example.com"
+                                               autocomplete="email" />
+                                </div>
+
+                                <div class="contact-option">
+                                    <label class="visibility-toggle">
+                                        <input type="checkbox" @bind="model.ShowEmailToPublic" />
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                    <div class="visibility-text">
+                                        <strong>Show email to public</strong>
+                                        <span>
+                                            Buyers will be able to see this email
+                                            address on your advertisement.
+                                        </span>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- PRIVACY INFORMATION -->
+                    <div class="contact-privacy-note">
+                        <div class="contact-privacy-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="contact-privacy-content">
+                            <strong>Your privacy is in your control</strong>
+                            <span>
+                                Your contact details are stored securely.
+                                Only the contact methods you choose to make public
+                                will be displayed to other users.
+                            </span>
+                        </div>
+                    </div>
+
+                </section>
+
+                <!-- =============================================
+                     06 PHOTOS
+                     ============================================= -->
+                <section class="form-section photos-section">
+
+                    <div class="section-heading">
+                        <div class="section-number">06</div>
+                        <div class="section-heading-text">
+                            <h2>Photos &amp; Media</h2>
+                            <p>Add clear photos to make your advertisement stand out.</p>
+                        </div>
+                    </div>
+
+                    <!-- PHOTO SUMMARY -->
+                    <div class="photo-summary">
+                        <div class="photo-summary-icon">
+                            <i class="bi bi-images"></i>
+                        </div>
+                        <div class="photo-summary-content">
+                            <strong>Add up to @MaxImages photos</strong>
+                            <span>
+                                Add clear, high-quality photos.
+                                JPG, PNG and WEBP are supported.
+                            </span>
+                        </div>
+                        <div class="photo-counter">
+                            <strong>@TotalPhotoCount</strong>
+                            <span>/ @MaxImages</span>
+                        </div>
+                    </div>
+
+                    <!-- UPLOAD -->
+                    @if (RemainingPhotoSlots > 0)
+                    {
+                        <label class="upload-area">
+
+                            <InputFile class="upload-file-input"
+                                       OnChange="HandleImageSelection"
+                                       multiple
+                                       accept="image/jpeg,image/png,image/webp" />
+
+                            <span class="upload-content">
+
+                                <span class="upload-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </span>
+
+                                <strong>Add photos</strong>
+
+                                <span>Select one or multiple photos</span>
+
+                                <span class="upload-hint">
+                                    JPG, PNG or WEBP
+                                    <span class="upload-separator">•</span>
+                                    Maximum 10 MB per image
+                                </span>
+
+                            </span>
+
+                        </label>
+                    }
+                    else
+                    {
+                        <div class="upload-limit-message">
+                            <span class="upload-limit-icon">
+                                <i class="bi bi-check-lg"></i>
+                            </span>
+                            <div>
+                                <strong>Maximum number of photos selected</strong>
+                                <span>
+                                    You have selected all @MaxImages available
+                                    photos for this advertisement.
+                                </span>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- PHOTO GALLERY -->
+                    @if (savedImages.Count > 0 || selectedImages.Count > 0)
+                    {
+                        <div class="photo-gallery-header">
+                            <div class="photo-gallery-title">
+                                <strong>Advertisement Photos</strong>
+                                <span>
+                                    @TotalPhotoCount
+                                    photo@(TotalPhotoCount == 1 ? "" : "s")
+                                </span>
+                            </div>
+                            <small>
+                                <i class="bi bi-shield-check"></i>
+                                Uploaded photos are saved with your advertisement.
+                            </small>
+                        </div>
+
+                        <div class="photo-grid">
+
+                            <!-- SAVED -->
+                            @foreach (var image in savedImages
+                                .OrderByDescending(x => x.IsPrimary)
+                                .ThenBy(x => x.DisplayOrder))
+                            {
+                                <div class="photo-card @(image.IsPrimary ? "is-primary" : "")">
+
+                                    <div class="photo-preview">
+                                        <img src="@image.FileURL" alt="@image.FileName" loading="lazy" />
+                                        @if (image.IsPrimary)
+                                        {
+                                            <span class="primary-badge">
+                                                <i class="bi bi-star-fill"></i>
+                                                Main Photo
+                                            </span>
+                                        }
+                                    </div>
+
+                                    <div class="photo-details">
+
+                                        <div class="photo-name" title="@image.FileName">
+                                            <i class="bi bi-image"></i>
+                                            <span>@image.FileName</span>
+                                        </div>
+
+                                        <div class="photo-meta">
+                                            @if (image.FileSize.HasValue)
+                                            {
+                                                <span>@FormatFileSize(image.FileSize.Value)</span>
+                                            }
+                                            <span>Photo @image.DisplayOrder</span>
+                                        </div>
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="primary-label">
+                                                <i class="bi bi-check-circle"></i>
+                                                Main advertisement photo
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button type="button"
+                                                    class="make-primary-button"
+                                                    @onclick="() => SetPrimarySavedImage(image)"
+                                                    disabled="@IsBusy">
+                                                <i class="bi bi-star"></i>
+                                                Set as main photo
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </div>
+                            }
+
+                            <!-- NEW -->
+                            @foreach (var image in selectedImages)
+                            {
+                                <div class="photo-card @(image.IsPrimary ? "is-primary" : "")">
+
+                                    <div class="photo-preview">
+                                        <img src="@image.PreviewUrl" alt="@image.FileName" />
+
+                                        <span class="uploading-badge">
+                                            <i class="bi bi-cloud-check"></i>
+                                            Ready to upload
+                                        </span>
+
+                                        <button type="button"
+                                                class="remove-photo-button"
+                                                title="Remove photo"
+                                                @onclick="() => RemoveSelectedImage(image)"
+                                                disabled="@IsBusy">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+
+                                    <div class="photo-details">
+
+                                        <div class="photo-name" title="@image.FileName">
+                                            <i class="bi bi-image"></i>
+                                            <span>@image.FileName</span>
+                                        </div>
+
+                                        <div class="photo-meta">
+                                            <span>@FormatFileSize(image.FileSize)</span>
+                                            @if (image.Width > 0 && image.Height > 0)
+                                            {
+                                                <span>@image.Width × @image.Height</span>
+                                            }
+                                        </div>
+
+                                        @if (image.IsPrimary)
+                                        {
+                                            <div class="primary-label">
+                                                <i class="bi bi-check-circle"></i>
+                                                Main advertisement photo
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <button type="button"
+                                                    class="make-primary-button"
+                                                    @onclick="() => SetPrimaryImage(image)"
+                                                    disabled="@IsBusy">
+                                                <i class="bi bi-star"></i>
+                                                Set as main photo
+                                            </button>
+                                        }
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="photo-empty-state">
+                            <div class="photo-empty-icon">
+                                <i class="bi bi-images"></i>
+                            </div>
+                            <strong>No photos added yet</strong>
+                            <span>
+                                Add photos to make your advertisement
+                                more attractive.
+                            </span>
+                        </div>
+                    }
+
+                </section>
+
+                <!-- =============================================
+                     ACTIONS
+                     ============================================= -->
+                <div class="form-actions">
+
+                    <button type="button"
+                            class="form-button secondary"
+                            @onclick="Cancel"
+                            disabled="@IsBusy">
+                        <i class="bi bi-x-lg"></i>
+                        <span>Cancel</span>
+                    </button>
+
+                    <button type="submit"
+                            class="form-button draft-button"
+                            disabled="@IsBusy">
+
+                        @if (isSaving)
+                        {
+                            <span class="button-spinner"></span>
+                            <span>
+                                @if (isUploadingImages)
+                                {
+                                    <text>Uploading images...</text>
+                                }
+                                else if (isEditMode)
+                                {
+                                    <text>Updating...</text>
+                                }
+                                else
+                                {
+                                    <text>Saving...</text>
+                                }
+                            </span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark-check"></i>
+                            <span>
+                                @(isEditMode ? "Save Changes" : "Save as Draft")
+                            </span>
+                        }
+
+                    </button>
+
+                    @if (draftAdvertisementId.HasValue &&
+                         !isUploadingImages &&
+                         !isSaving)
+                    {
+                        <button type="button"
+                                class="form-button submit-button"
+                                @onclick="SubmitForApproval"
+                                disabled="@isSubmitting">
+
+                            @if (isSubmitting)
+                            {
+                                <span class="button-spinner"></span>
+                                <span>Submitting...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-send"></i>
+                                <span>
+                                    @(requireAdminApproval
+                                        ? "Submit for Approval"
+                                        : "Publish Advertisement")
+                                </span>
+                            }
+
+                        </button>
+                    }
+
+                </div>
+
+            </EditForm>
+
+        </main>
+
+    </div>
+}
+
+@code {
+
+    // ============================================================
+    // AUTHENTICATION
+    // ============================================================
+
+    private bool isAuthenticated;
+
+
+    // ============================================================
+    // EDIT MODE
+    // ============================================================
+
+    private bool isEditMode;
+
+    private bool isLoadingAdvertisement;
+
+
+    // ============================================================
+    // FORM MODEL
+    // ============================================================
+
+    private CreateAdvertisementRequest model = new();
+
+
+    // ============================================================
+    // LOOKUPS
+    // ============================================================
+
+    private List<LookupItemResponse> categories = new();
+
+    private List<CategoryFeatureResponse> categoryFeatures = new();
+    private readonly Dictionary<int, string?> featureValues = new();
+    private readonly Dictionary<int, string?> featureValuesAr = new();
+    private readonly HashSet<int> invalidFeatureIds = new();
+    private bool isLoadingCategoryFeatures;
+    private bool showFeatureArabic;
+    private string? categoryFeatureError;
+
+    private List<LookupItemResponse> advertisementTypes = new();
+
+    private List<LookupItemResponse> countries = new();
+
+    private List<LookupItemResponse> states = new();
+
+    private List<LookupItemResponse> cities = new();
+
+    private List<LookupItemResponse> areas = new();
+
+
+    // ============================================================
+    // LOCATION
+    // ============================================================
+
+    private int selectedCountryId;
+
+    private int selectedStateId;
+
+    private int selectedCityId;
+
+    private int selectedAreaId;
+
+
+    // ============================================================
+    // IMAGES
+    // ============================================================
+
+    private readonly List<SelectedImage> selectedImages = new();
+
+    private readonly List<SavedAdvertisementImage> savedImages = new();
+
+    private long? draftAdvertisementId;
+
+    private bool isUploadingImages;
+
+    private int uploadedImageCount;
+
+    private int totalImagesToUpload;
+
+
+    // ============================================================
+    // FORM STATE
+    // ============================================================
+
+    private bool isSaving;
+
+    private bool isSubmitting;
+
+    private string? errorMessage;
+
+    private string? successMessage;
+
+    private bool showContactValidation;
+
+
+    // ============================================================
+    // BUSY
+    // ============================================================
+
+    private bool IsBusy =>
+        isSaving ||
+        isUploadingImages ||
+        isSubmitting ||
+        isLoadingAdvertisement;
+
+
+    // ============================================================
+    // CONSTANTS
+    // ============================================================
+
+    private const long MaxImageSize = 10 * 1024 * 1024;
+
+
+    // ============================================================
+    // SITE SETTINGS (public endpoint, cached by SiteSettingsService)
+    // Defaults are used if the API is unavailable.
+    // ============================================================
+
+    private string siteName = "AdMind";
+    private string defaultCurrency = "INR";
+    private int MaxImages = 5;
+    private int expiryDays = 30;
+    private bool requireAdminApproval = true;
+
+    private async Task LoadSiteSettingsAsync()
+    {
+        try
+        {
+            var settings = await SiteSettingsService.GetAsync();
+
+            if (settings is not null)
+            {
+                siteName = settings.SiteName;
+                defaultCurrency = settings.DefaultCurrency;
+                MaxImages = Math.Max(1, settings.MaxImagesPerAdvertisement);
+                expiryDays = settings.AdvertisementExpiryDays;
+                requireAdminApproval = settings.RequireAdminApproval;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"CREATE AD SETTINGS ERROR: {ex.Message}");
+        }
+    }
+
+
+    // ============================================================
+    // CONTACT VALIDATION HELPERS
+    // ============================================================
+
+    private bool HasAnyContactInformation =>
+        !string.IsNullOrWhiteSpace(model.WhatsAppNumber) ||
+        !string.IsNullOrWhiteSpace(model.ContactEmail);
+
+
+    private bool HasAnyPublicContact =>
+        model.ShowWhatsAppToPublic ||
+        model.ShowEmailToPublic;
+
+
+    // ============================================================
+    // IMAGE COUNTERS
+    // ============================================================
+
+    private int TotalPhotoCount =>
+        savedImages.Count +
+        selectedImages.Count;
+
+
+    private int RemainingPhotoSlots =>
+        Math.Max(0, MaxImages - TotalPhotoCount);
+
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState =
+            await AuthenticationStateProvider
+                .GetAuthenticationStateAsync();
+
+        isAuthenticated =
+            authenticationState.User.Identity?.IsAuthenticated == true;
+
+        if (!isAuthenticated)
+        {
+            Navigation.NavigateTo("/");
+            return;
+        }
+
+        await LoadSiteSettingsAsync();
+
+        model.CurrencyCode = defaultCurrency;
+
+        await LoadLookupsAsync();
+
+        await LoadAdvertisementFromQueryAsync();
+    }
+
+
+    // ============================================================
+    // SELECTED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SelectedImage
+    {
+        public string FileName { get; init; } = string.Empty;
+
+        public string ContentType { get; init; } = string.Empty;
+
+        public byte[] FileBytes { get; init; } = Array.Empty<byte>();
+
+        public string PreviewUrl { get; set; } = string.Empty;
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public bool IsPrimary { get; set; }
+
+        public long FileSize => FileBytes.LongLength;
+    }
+
+
+    // ============================================================
+    // SAVED IMAGE MODEL
+    // ============================================================
+
+    private sealed class SavedAdvertisementImage
+    {
+        public long AdvertisementImageID { get; init; }
+
+        public long AdvertisementID { get; init; }
+
+        public string FileName { get; init; } = string.Empty;
+
+        public string FileURL { get; init; } = string.Empty;
+
+        public long? FileSize { get; init; }
+
+        public bool IsPrimary { get; set; }
+
+        public int DisplayOrder { get; init; }
+
+        public DateTime CreatedDate { get; init; }
+    }
+
+
+    // ============================================================
+    // LOAD LOOKUPS
+    // ============================================================
+
+    private async Task LoadLookupsAsync()
+    {
+        errorMessage = null;
+
+        try
+        {
+            categories =
+                await AdvertisementApiService.GetCategoriesAsync();
+
+            advertisementTypes =
+                await AdvertisementApiService.GetAdvertisementTypesAsync();
+
+            countries =
+                await AdvertisementApiService.GetCountriesAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD LOOKUPS ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the advertisement options. " +
+                "Please refresh the page and try again.";
+        }
+    }
+
+
+    // ============================================================
+    // LOAD EXISTING ADVERTISEMENT (FROM QUERY STRING)
+    // ============================================================
+
+    private async Task LoadAdvertisementFromQueryAsync()
+    {
+        try
+        {
+            var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+            var query =
+                Microsoft.AspNetCore.WebUtilities
+                    .QueryHelpers.ParseQuery(uri.Query);
+
+            if (!query.TryGetValue("id", out var idValue))
+            {
+                return;
+            }
+
+            if (!long.TryParse(idValue.FirstOrDefault(), out var advertisementId) ||
+                advertisementId <= 0)
+            {
+                errorMessage = "The advertisement ID is invalid.";
+                return;
+            }
+
+            await LoadExistingAdvertisementAsync(advertisementId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD QUERY PARAMETER ERROR: {ex}");
+
+            errorMessage = "We couldn’t load the advertisement.";
+        }
+    }
+
+
+    // ============================================================
+    // LOAD EXISTING ADVERTISEMENT
+    // ============================================================
+
+    private async Task LoadExistingAdvertisementAsync(long advertisementId)
+    {
+        isLoadingAdvertisement = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            Console.WriteLine("================================================");
+            Console.WriteLine("LOADING EXISTING ADVERTISEMENT");
+            Console.WriteLine($"ADVERTISEMENT ID: {advertisementId}");
+            Console.WriteLine("================================================");
+
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(advertisementId);
+
+            if (advertisement is null)
+            {
+                errorMessage = "The advertisement could not be found.";
+                return;
+            }
+
+            draftAdvertisementId = advertisement.AdvertisementID;
+
+            isEditMode = true;
+
+            // BASIC INFORMATION
+            model.CategoryID = advertisement.CategoryID;
+            model.AdvertisementTypeID = advertisement.AdvertisementTypeID;
+            model.Title = advertisement.Title;
+            model.TitleAr = advertisement.TitleAr;
+            model.Description = advertisement.Description;
+            model.DescriptionAr = advertisement.DescriptionAr;
+
+            // PRICING
+            model.Price = advertisement.Price;
+            model.CurrencyCode =
+                string.IsNullOrWhiteSpace(advertisement.CurrencyCode)
+                    ? defaultCurrency
+                    : advertisement.CurrencyCode;
+            model.IsNegotiable = advertisement.IsNegotiable;
+
+            // LOCATION
+            model.CountryID = advertisement.CountryID;
+            model.StateID = advertisement.StateID;
+            model.CityID = advertisement.CityID;
+            model.AreaID = advertisement.AreaID;
+            model.AddressLine = advertisement.AddressLine;
+            model.PlotNumber = advertisement.PlotNumber;
+
+            selectedCountryId = advertisement.CountryID ?? 0;
+            selectedStateId = advertisement.StateID ?? 0;
+            selectedCityId = advertisement.CityID ?? 0;
+            selectedAreaId = advertisement.AreaID ?? 0;
+
+            // PROPERTY DETAILS
+            model.LandArea = advertisement.LandArea;
+            model.BuiltUpArea = advertisement.BuiltUpArea;
+            model.Bedrooms = advertisement.Bedrooms;
+            model.Bathrooms = advertisement.Bathrooms;
+            model.PropertyAge = advertisement.PropertyAge;
+
+            // CONTACT INFORMATION
+            model.WhatsAppNumber = advertisement.WhatsAppNumber;
+            model.ContactEmail = advertisement.ContactEmail;
+            model.ShowWhatsAppToPublic = advertisement.ShowWhatsAppToPublic;
+            model.ShowEmailToPublic = advertisement.ShowEmailToPublic;
+
+            // CATEGORY DETAILS (dynamic fields)
+            await LoadCategoryFeaturesAsync(
+                advertisement.CategoryID,
+                advertisement.FeatureValues);
+
+            // LOCATION LOOKUPS
+            await LoadExistingLocationLookupsAsync();
+
+            // SAVED IMAGES
+            await LoadSavedImagesAsync(advertisement.AdvertisementID);
+
+            Console.WriteLine("EXISTING ADVERTISEMENT LOADED SUCCESSFULLY.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("================================================");
+            Console.WriteLine("LOAD ADVERTISEMENT ERROR");
+            Console.WriteLine(ex.ToString());
+            Console.WriteLine("================================================");
+
+            errorMessage =
+                "We couldn’t load the advertisement information. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isLoadingAdvertisement = false;
+        }
+    }
+
+
+    // ============================================================
+    // LOAD LOCATION LOOKUPS
+    // ============================================================
+
+    private async Task LoadExistingLocationLookupsAsync()
+    {
+        try
+        {
+            states.Clear();
+            cities.Clear();
+            areas.Clear();
+
+            if (selectedCountryId > 0)
+            {
+                states =
+                    await AdvertisementApiService
+                        .GetStatesAsync(selectedCountryId);
+
+                cities =
+                    await AdvertisementApiService
+                        .GetCitiesAsync(
+                            selectedCountryId,
+                            selectedStateId > 0 ? selectedStateId : null);
+
+                areas =
+                    await AdvertisementApiService
+                        .GetAreasAsync(
+                            selectedCountryId,
+                            selectedStateId > 0 ? selectedStateId : null,
+                            selectedCityId > 0 ? selectedCityId : null);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD EXISTING LOCATION LOOKUPS ERROR: {ex}");
+        }
+    }
+
+
+    // ============================================================
+    // COUNTRY
+    // ============================================================
+
+    private async Task OnCountryChanged(int value)
+    {
+        selectedCountryId = value;
+
+        selectedStateId = 0;
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.CountryID = selectedCountryId > 0 ? selectedCountryId : null;
+
+        model.StateID = null;
+        model.CityID = null;
+        model.AreaID = null;
+
+        states.Clear();
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            states =
+                await AdvertisementApiService
+                    .GetStatesAsync(selectedCountryId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD STATES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available states. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    private async Task OnStateChanged(int value)
+    {
+        selectedStateId = value;
+
+        selectedCityId = 0;
+        selectedAreaId = 0;
+
+        model.StateID = selectedStateId > 0 ? selectedStateId : null;
+
+        model.CityID = null;
+        model.AreaID = null;
+
+        cities.Clear();
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            cities =
+                await AdvertisementApiService
+                    .GetCitiesAsync(
+                        selectedCountryId,
+                        selectedStateId > 0 ? selectedStateId : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD CITIES ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available cities. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // CITY
+    // ============================================================
+
+    private async Task OnCityChanged(int value)
+    {
+        selectedCityId = value;
+
+        selectedAreaId = 0;
+
+        model.CityID = selectedCityId > 0 ? selectedCityId : null;
+
+        model.AreaID = null;
+
+        areas.Clear();
+
+        if (selectedCountryId <= 0)
+        {
+            return;
+        }
+
+        errorMessage = null;
+
+        try
+        {
+            areas =
+                await AdvertisementApiService
+                    .GetAreasAsync(
+                        selectedCountryId,
+                        selectedStateId > 0 ? selectedStateId : null,
+                        selectedCityId > 0 ? selectedCityId : null);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD AREAS ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t load the available areas. " +
+                "Please try again.";
+        }
+    }
+
+
+    // ============================================================
+    // IMAGE SELECTION
+    // ============================================================
+
+    private async Task HandleImageSelection(InputFileChangeEventArgs e)
+    {
+        errorMessage = null;
+        successMessage = null;
+
+        var availableSlots = RemainingPhotoSlots;
+
+        if (availableSlots <= 0)
+        {
+            errorMessage =
+                $"You can upload a maximum of {MaxImages} photos " +
+                "for one advertisement.";
+
+            return;
+        }
+
+        IReadOnlyList<IBrowserFile> files;
+
+        try
+        {
+            files = e.GetMultipleFiles(availableSlots);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"IMAGE SELECTION ERROR: {ex}");
+
+            errorMessage =
+                "We couldn’t read the selected photos. " +
+                "Please try selecting them again.";
+
+            return;
+        }
+
+        if (files.Count == 0)
+        {
+            errorMessage = "Please select at least one photo.";
+            return;
+        }
+
+        var addedCount = 0;
+        var rejectedCount = 0;
+
+        foreach (var file in files)
+        {
+            if (file.Size <= 0)
+            {
+                rejectedCount++;
+                continue;
+            }
+
+            if (file.Size > MaxImageSize)
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it exceeds " +
+                    "the maximum file size of 10 MB.";
+
+                continue;
+            }
+
+            if (!IsSupportedImageType(file.ContentType, file.Name))
+            {
+                rejectedCount++;
+
+                errorMessage =
+                    $"'{file.Name}' was not added because it is not " +
+                    "a supported image format. Please use JPG, PNG or WEBP.";
+
+                continue;
+            }
+
+            var duplicate =
+                selectedImages.Any(x =>
+                    string.Equals(
+                        x.FileName,
+                        file.Name,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    x.FileSize == file.Size);
+
+            if (duplicate)
+            {
+                rejectedCount++;
+
+                errorMessage = $"'{file.Name}' is already selected.";
+
+                continue;
+            }
+
+            try
+            {
+                await using var browserStream =
+                    file.OpenReadStream(maxAllowedSize: MaxImageSize);
+
+                using var memoryStream = new MemoryStream();
+
+                await browserStream.CopyToAsync(memoryStream);
+
+                var bytes = memoryStream.ToArray();
+
+                var mimeType = GetImageMimeType(file.ContentType, file.Name);
+
+                var previewUrl =
+                    $"data:{mimeType};base64," +
+                    Convert.ToBase64String(bytes);
+
+                var hasExistingPrimary = savedImages.Any(x => x.IsPrimary);
+
+                var hasSelectedPrimary = selectedImages.Any(x => x.IsPrimary);
+
+                var makePrimary =
+                    !hasExistingPrimary &&
+                    !hasSelectedPrimary &&
+                    selectedImages.Count == 0;
+
+                selectedImages.Add(
+                    new SelectedImage
+                    {
+                        FileName = file.Name,
+                        ContentType = mimeType,
+                        FileBytes = bytes,
+                        PreviewUrl = previewUrl,
+                        IsPrimary = makePrimary
+                    });
+
+                addedCount++;
+            }
+            catch (Exception ex)
+            {
+                rejectedCount++;
+
+                Console.WriteLine($"Unable to prepare image: {file.Name}");
+                Console.WriteLine(ex);
+
+                errorMessage =
+                    $"We couldn’t prepare '{file.Name}'. " +
+                    "Please try selecting the image again.";
+            }
+        }
+
+        if (addedCount > 0)
+        {
+            successMessage =
+                $"{addedCount} photo" +
+                $"{(addedCount == 1 ? "" : "s")} added successfully. " +
+                $"{TotalPhotoCount} of {MaxImages} photos are ready.";
+        }
+
+        if (rejectedCount > 0 &&
+            addedCount == 0 &&
+            string.IsNullOrWhiteSpace(errorMessage))
+        {
+            errorMessage =
+                "None of the selected photos could be added. " +
+                "Please check the file type and size.";
+        }
+    }
+
+
+    // ============================================================
+    // MIME TYPE
+    // ============================================================
+
+    private static string GetImageMimeType(string? contentType, string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized = contentType.Trim().ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return normalized == "image/jpg" ? "image/jpeg" : normalized;
+            }
+        }
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".webp" => "image/webp",
+            _ => "image/jpeg"
+        };
+    }
+
+
+    // ============================================================
+    // REMOVE SELECTED IMAGE
+    // ============================================================
+
+    private void RemoveSelectedImage(SelectedImage image)
+    {
+        if (isSaving || isUploadingImages)
+        {
+            return;
+        }
+
+        var wasPrimary = image.IsPrimary;
+
+        selectedImages.Remove(image);
+
+        if (wasPrimary &&
+            !savedImages.Any(x => x.IsPrimary) &&
+            selectedImages.Count > 0)
+        {
+            foreach (var item in selectedImages)
+            {
+                item.IsPrimary = false;
+            }
+
+            selectedImages[0].IsPrimary = true;
+        }
+
+        errorMessage = null;
+
+        if (selectedImages.Count == 0)
+        {
+            successMessage = "All newly selected photos have been removed.";
+        }
+        else
+        {
+            successMessage =
+                $"{selectedImages.Count} photo" +
+                $"{(selectedImages.Count == 1 ? "" : "s")} " +
+                "ready to upload.";
+        }
+    }
+
+
+    // ============================================================
+    // LOAD SAVED IMAGES
+    // ============================================================
+
+    private async Task LoadSavedImagesAsync(long advertisementId)
+    {
+        try
+        {
+            Console.WriteLine(
+                $"LOADING SAVED IMAGES FOR ADVERTISEMENT: {advertisementId}");
+
+            var advertisement =
+                await AdvertisementApiService
+                    .GetAdvertisementByIdAsync(advertisementId);
+
+            if (advertisement is null)
+            {
+                savedImages.Clear();
+                return;
+            }
+
+            savedImages.Clear();
+
+            if (advertisement.Images is not null)
+            {
+                foreach (var image in advertisement.Images
+                             .OrderBy(x => x.DisplayOrder))
+                {
+                    if (string.IsNullOrWhiteSpace(image.FileURL))
+                    {
+                        continue;
+                    }
+
+                    savedImages.Add(
+                        new SavedAdvertisementImage
+                        {
+                            AdvertisementImageID = image.AdvertisementImageID,
+                            AdvertisementID = image.AdvertisementID,
+                            FileName = image.FileName,
+                            FileURL = image.FileURL,
+                            FileSize = image.FileSize,
+                            IsPrimary = image.IsPrimary,
+                            DisplayOrder = image.DisplayOrder,
+                            CreatedDate = image.CreatedDate
+                        });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("================================================");
+            Console.WriteLine("LOAD SAVED IMAGES ERROR");
+            Console.WriteLine(ex);
+            Console.WriteLine("================================================");
+        }
+    }
+
+
+    // ============================================================
+    // SET PRIMARY IMAGE (NEW)
+    // ============================================================
+
+    private void SetPrimaryImage(SelectedImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (savedImages.Any(x => x.IsPrimary))
+        {
+            errorMessage =
+                "Please save the advertisement first before changing " +
+                "the main photo.";
+
+            return;
+        }
+
+        foreach (var item in selectedImages)
+        {
+            item.IsPrimary = false;
+        }
+
+        image.IsPrimary = true;
+
+        errorMessage = null;
+
+        successMessage =
+            $"'{image.FileName}' has been selected as the main photo.";
+    }
+
+
+    // ============================================================
+    // IMAGE TYPE VALIDATION
+    // ============================================================
+
+    private static bool IsSupportedImageType(string? contentType, string fileName)
+    {
+        if (!string.IsNullOrWhiteSpace(contentType))
+        {
+            var normalized = contentType.Trim().ToLowerInvariant();
+
+            if (normalized is
+                "image/jpeg" or
+                "image/jpg" or
+                "image/png" or
+                "image/webp")
+            {
+                return true;
+            }
+        }
+
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+
+        return extension is
+            ".jpg" or
+            ".jpeg" or
+            ".png" or
+            ".webp";
+    }
+
+
+    // ============================================================
+    // CONTACT VALIDATION
+    // ============================================================
+
+    private bool ValidateContactInformation(bool forSubmission)
+    {
+        showContactValidation = true;
+
+        if (!HasAnyContactInformation)
+        {
+            errorMessage =
+                "Please provide at least one contact method: " +
+                "WhatsApp number or email address.";
+
+            return false;
+        }
+
+        if (model.ShowWhatsAppToPublic &&
+            string.IsNullOrWhiteSpace(model.WhatsAppNumber))
+        {
+            errorMessage =
+                "A WhatsApp number is required because " +
+                "WhatsApp visibility is enabled.";
+
+            return false;
+        }
+
+        if (model.ShowEmailToPublic &&
+            string.IsNullOrWhiteSpace(model.ContactEmail))
+        {
+            errorMessage =
+                "An email address is required because " +
+                "email visibility is enabled.";
+
+            return false;
+        }
+
+        if (forSubmission && !HasAnyPublicContact)
+        {
+            errorMessage =
+                "Please make at least one contact method visible " +
+                "to buyers before submitting the advertisement.";
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+    // ============================================================
+    // DYNAMIC CATEGORY DETAILS
+    // ============================================================
+
+    private string GetSelectedCategoryName() =>
+        categories.FirstOrDefault(c => c.ID == model.CategoryID)?.Name ?? "Category";
+
+    private static bool IsWideFeature(CategoryFeatureResponse feature) =>
+        IsFeatureType(feature, "MultiSelect") ||
+        IsFeatureType(feature, "Radio");
+
+    private async Task OnCategoryChangedAsync(int newCategoryId)
+    {
+        if (model.CategoryID == newCategoryId)
+        {
+            return;
+        }
+
+        model.CategoryID = newCategoryId;
+
+        await LoadCategoryFeaturesAsync(newCategoryId);
+    }
+
+    private async Task OnAdvertisementTypeChangedAsync(int newTypeId)
+    {
+        if (model.AdvertisementTypeID == newTypeId)
+        {
+            return;
+        }
+
+        model.AdvertisementTypeID = newTypeId;
+
+        // TODO: once the API can filter features by advertisement type,
+        // pass newTypeId into GetCategoryFeaturesAsync below.
+        await LoadCategoryFeaturesAsync(model.CategoryID);
+    }
+
+    private async Task LoadCategoryFeaturesAsync(
+        int categoryId,
+        IEnumerable<AdvertisementFeatureValueResponse>? existingValues = null)
+    {
+        isLoadingCategoryFeatures = true;
+        categoryFeatureError = null;
+        invalidFeatureIds.Clear();
+
+        try
+        {
+            if (categoryId <= 0)
+            {
+                categoryFeatures = new List<CategoryFeatureResponse>();
+                featureValues.Clear();
+                featureValuesAr.Clear();
+                return;
+            }
+
+            var loaded = (await CategoryManagementApiService
+                    .GetCategoryFeaturesAsync(categoryId))
+                .OrderBy(x => x.DisplayOrder)
+                .ToList();
+
+            categoryFeatures = loaded;
+
+            // Keep values for fields that still exist (e.g. after a type change);
+            // drop values for fields that no longer apply.
+            var validIds =
+                loaded.Select(x => x.AdvertisementFeatureID).ToHashSet();
+
+            foreach (var key in featureValues.Keys
+                         .Where(k => !validIds.Contains(k)).ToList())
+            {
+                featureValues.Remove(key);
+            }
+
+            foreach (var key in featureValuesAr.Keys
+                         .Where(k => !validIds.Contains(k)).ToList())
+            {
+                featureValuesAr.Remove(key);
+            }
+
+            if (existingValues is not null)
+            {
+                foreach (var saved in existingValues)
+                {
+                    if (!validIds.Contains(saved.AdvertisementFeatureID))
+                    {
+                        continue;
+                    }
+
+                    featureValues[saved.AdvertisementFeatureID] = saved.FeatureValue;
+                    featureValuesAr[saved.AdvertisementFeatureID] = saved.FeatureValueAr;
+                }
+
+                showFeatureArabic =
+                    featureValuesAr.Values.Any(v => !string.IsNullOrWhiteSpace(v));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"LOAD CATEGORY FEATURES ERROR: {ex}");
+
+            categoryFeatures = new List<CategoryFeatureResponse>();
+
+            categoryFeatureError =
+                "Category details could not be loaded. Please try again.";
+        }
+        finally
+        {
+            isLoadingCategoryFeatures = false;
+        }
+    }
+
+    private static bool IsFeatureType(CategoryFeatureResponse feature, string type)
+    {
+        var normalized = feature.DataType
+            .Replace("_", "")
+            .Replace("-", "")
+            .Replace(" ", "")
+            .Trim();
+
+        return normalized.Equals(
+            type.Replace(" ", ""),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetFeatureInputType(CategoryFeatureResponse feature)
+    {
+        var type = feature.DataType.Trim().ToLowerInvariant();
+
+        if (type is "number" or "decimal" or "numeric" or
+            "integer" or "int" or "wholenumber")
+        {
+            return "number";
+        }
+
+        if (type is "date" or "datetime")
+        {
+            return "date";
+        }
+
+        return "text";
+    }
+
+    private string? GetFeatureValue(int featureId) =>
+        featureValues.TryGetValue(featureId, out var value) ? value : null;
+
+    private string? GetFeatureValueAr(int featureId) =>
+        featureValuesAr.TryGetValue(featureId, out var value) ? value : null;
+
+    private void SetFeatureValue(int featureId, string? value)
+    {
+        featureValues[featureId] = value;
+        invalidFeatureIds.Remove(featureId);
+    }
+
+    private void SetFeatureValueAr(int featureId, string? value) =>
+        featureValuesAr[featureId] = value;
+
+    private List<string> GetMultiSelectValues(int featureId)
+    {
+        var raw = GetFeatureValue(featureId);
+
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return new List<string>();
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(raw) ?? new List<string>();
+        }
+        catch (JsonException)
+        {
+            return new List<string>();
+        }
+    }
+
+    private void ToggleMultiSelectValue(int featureId, string optionValue, bool selected)
+    {
+        var values = GetMultiSelectValues(featureId);
+
+        values.RemoveAll(x => string.Equals(
+            x, optionValue, StringComparison.OrdinalIgnoreCase));
+
+        if (selected)
+        {
+            values.Add(optionValue);
+        }
+
+        featureValues[featureId] = values.Count == 0
+            ? null
+            : JsonSerializer.Serialize(values);
+
+        invalidFeatureIds.Remove(featureId);
+    }
+
+    private bool ValidateFeatures()
+    {
+        invalidFeatureIds.Clear();
+
+        foreach (var feature in categoryFeatures.Where(x => x.IsRequired))
+        {
+            var id = feature.AdvertisementFeatureID;
+
+            var filled = IsFeatureType(feature, "MultiSelect")
+                ? GetMultiSelectValues(id).Count > 0
+                : !string.IsNullOrWhiteSpace(GetFeatureValue(id));
+
+            if (!filled)
+            {
+                invalidFeatureIds.Add(id);
+            }
+        }
+
+        if (invalidFeatureIds.Count > 0)
+        {
+            errorMessage =
+                "Please complete the required details highlighted below.";
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private List<AdvertisementFeatureValueRequest> BuildFeatureValueRequests()
+    {
+        var requests = new List<AdvertisementFeatureValueRequest>();
+
+        foreach (var feature in categoryFeatures)
+        {
+            var value = GetFeatureValue(feature.AdvertisementFeatureID);
+            var valueAr = GetFeatureValueAr(feature.AdvertisementFeatureID);
+
+            if (IsFeatureType(feature, "MultiSelect"))
+            {
+                var selected = GetMultiSelectValues(feature.AdvertisementFeatureID);
+                value = selected.Count == 0 ? null : JsonSerializer.Serialize(selected);
+            }
+
+            if (string.IsNullOrWhiteSpace(value) &&
+                string.IsNullOrWhiteSpace(valueAr))
+            {
+                continue;
+            }
+
+            requests.Add(new AdvertisementFeatureValueRequest
+            {
+                AdvertisementFeatureID = feature.AdvertisementFeatureID,
+                FeatureValue = value,
+                FeatureValueAr = valueAr
+            });
+        }
+
+        return requests;
+    }
+
+
+    // ============================================================
+    // CREATE UPDATE REQUEST
+    // ============================================================
+
+    private UpdateAdvertisementRequest BuildUpdateRequest()
+    {
+        return new UpdateAdvertisementRequest
+        {
+            CategoryID = model.CategoryID,
+            AdvertisementTypeID = model.AdvertisementTypeID,
+            Title = model.Title,
+            TitleAr = model.TitleAr,
+            Description = model.Description,
+            DescriptionAr = model.DescriptionAr,
+            Price = model.Price,
+            CurrencyCode = model.CurrencyCode,
+            IsNegotiable = model.IsNegotiable,
+            CountryID = model.CountryID,
+            StateID = model.StateID,
+            CityID = model.CityID,
+            AreaID = model.AreaID,
+            AddressLine = model.AddressLine,
+            PlotNumber = model.PlotNumber,
+            LandArea = model.LandArea,
+            BuiltUpArea = model.BuiltUpArea,
+            Bedrooms = model.Bedrooms,
+            Bathrooms = model.Bathrooms,
+            PropertyAge = model.PropertyAge,
+            WhatsAppNumber = model.WhatsAppNumber,
+            ContactEmail = model.ContactEmail,
+            ShowWhatsAppToPublic = model.ShowWhatsAppToPublic,
+            ShowEmailToPublic = model.ShowEmailToPublic,
+            FeatureValues = BuildFeatureValueRequests()
+        };
+    }
+
+
+    // ============================================================
+    // SAVE DRAFT
+    // ============================================================
+
+    private async Task SaveDraft()
+    {
+        if (isSaving ||
+            isUploadingImages ||
+            isSubmitting ||
+            isLoadingAdvertisement)
+        {
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        if (!ValidateContactInformation(forSubmission: false))
+        {
+            return;
+        }
+
+        isSaving = true;
+
+        try
+        {
+            model.CountryID = selectedCountryId > 0 ? selectedCountryId : null;
+            model.StateID = selectedStateId > 0 ? selectedStateId : null;
+            model.CityID = selectedCityId > 0 ? selectedCityId : null;
+            model.AreaID = selectedAreaId > 0 ? selectedAreaId : null;
+
+            // UPDATE EXISTING
+            if (draftAdvertisementId.HasValue)
+            {
+                var updateRequest = BuildUpdateRequest();
+
+                var updateResult =
+                    await AdvertisementApiService
+                        .UpdateAdvertisementAsync(
+                            draftAdvertisementId.Value,
+                            updateRequest);
+
+                if (updateResult is null)
+                {
+                    errorMessage =
+                        "We couldn’t update the advertisement. " +
+                        "Please review the information and try again.";
+
+                    return;
+                }
+
+                draftAdvertisementId = updateResult.AdvertisementID;
+
+                isEditMode = true;
+
+                if (selectedImages.Count > 0)
+                {
+                    await UploadSelectedImagesAsync();
+                }
+                else
+                {
+                    successMessage = "Advertisement updated successfully.";
+                }
+
+                return;
+            }
+
+            // CREATE NEW
+            model.FeatureValues = BuildFeatureValueRequests();
+
+            var createResult =
+                await AdvertisementApiService.CreateAdvertisementAsync(model);
+
+            if (createResult is null)
+            {
+                errorMessage =
+                    "We couldn’t save the advertisement right now. " +
+                    "Please review the information and try again.";
+
+                return;
+            }
+
+            draftAdvertisementId = createResult.AdvertisementID;
+
+            isEditMode = true;
+
+            if (selectedImages.Count > 0)
+            {
+                await UploadSelectedImagesAsync();
+            }
+            else
+            {
+                successMessage =
+                    "Advertisement saved successfully as a draft. " +
+                    "You can add photos before submitting it for approval.";
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine($"SAVE VALIDATION ERROR: {ex}");
+
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("================================================");
+            Console.WriteLine("SAVE ADVERTISEMENT ERROR");
+            Console.WriteLine(ex.ToString());
+            Console.WriteLine("================================================");
+
+            errorMessage =
+                "We couldn’t save your advertisement right now. " +
+                "Please review the information and try again.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+
+    // ============================================================
+    // SET PRIMARY SAVED IMAGE
+    // ============================================================
+
+    private async Task SetPrimarySavedImage(SavedAdvertisementImage image)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (draftAdvertisementId is null)
+        {
+            errorMessage =
+                "Please save the advertisement before changing the main photo.";
+
+            return;
+        }
+
+        if (image.AdvertisementImageID <= 0)
+        {
+            errorMessage = "The selected photo could not be identified.";
+
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            isSubmitting = true;
+
+            var success =
+                await AdvertisementApiService
+                    .SetPrimaryImageAsync(
+                        draftAdvertisementId.Value,
+                        image.AdvertisementImageID);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The main photo could not be changed. " +
+                    "Please try again.";
+
+                return;
+            }
+
+            foreach (var savedImage in savedImages)
+            {
+                savedImage.IsPrimary =
+                    savedImage.AdvertisementImageID ==
+                    image.AdvertisementImageID;
+            }
+
+            foreach (var selectedImage in selectedImages)
+            {
+                selectedImage.IsPrimary = false;
+            }
+
+            successMessage =
+                $"'{image.FileName}' is now the main advertisement photo.";
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine($"SET PRIMARY IMAGE VALIDATION ERROR: {ex}");
+
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("================================================");
+            Console.WriteLine("SET PRIMARY SAVED IMAGE ERROR");
+            Console.WriteLine(ex.ToString());
+            Console.WriteLine("================================================");
+
+            errorMessage =
+                "The main photo could not be changed right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // UPLOAD PROGRESS
+    // ============================================================
+
+    private int GetUploadProgressPercentage()
+    {
+        if (totalImagesToUpload <= 0)
+        {
+            return 0;
+        }
+
+        return (int)Math.Round(
+            uploadedImageCount * 100d / totalImagesToUpload);
+    }
+
+
+    // ============================================================
+    // UPLOAD SELECTED IMAGES
+    // ============================================================
+
+    private async Task UploadSelectedImagesAsync()
+    {
+        if (!draftAdvertisementId.HasValue)
+        {
+            return;
+        }
+
+        if (selectedImages.Count == 0)
+        {
+            return;
+        }
+
+        isUploadingImages = true;
+
+        uploadedImageCount = 0;
+
+        totalImagesToUpload = selectedImages.Count;
+
+        errorMessage = null;
+
+        successMessage =
+            $"Your advertisement has been saved as a draft. " +
+            $"Now uploading {totalImagesToUpload} photo" +
+            $"{(totalImagesToUpload == 1 ? "" : "s")}...";
+
+        var failedImages = new List<SelectedImage>();
+
+        try
+        {
+            var imagesToUpload = selectedImages.ToList();
+
+            foreach (var selectedImage in imagesToUpload)
+            {
+                try
+                {
+                    await using var stream =
+                        new MemoryStream(
+                            selectedImage.FileBytes,
+                            writable: false);
+
+                    var success =
+                        await AdvertisementApiService
+                            .UploadAdvertisementImageAsync(
+                                draftAdvertisementId.Value,
+                                stream,
+                                selectedImage.FileName,
+                                selectedImage.ContentType,
+                                selectedImage.IsPrimary);
+
+                    if (success)
+                    {
+                        uploadedImageCount++;
+
+                        successMessage =
+                            $"Uploading photo " +
+                            $"{uploadedImageCount} of " +
+                            $"{totalImagesToUpload}...";
+                    }
+                    else
+                    {
+                        failedImages.Add(selectedImage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    failedImages.Add(selectedImage);
+
+                    Console.WriteLine($"IMAGE UPLOAD FAILED: {ex}");
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+
+            if (failedImages.Count == 0)
+            {
+                if (draftAdvertisementId.HasValue)
+                {
+                    await LoadSavedImagesAsync(draftAdvertisementId.Value);
+                }
+
+                successMessage =
+                    $"Advertisement saved successfully with " +
+                    $"{uploadedImageCount} photo" +
+                    $"{(uploadedImageCount == 1 ? "" : "s")}. " +
+                    "You can now submit it for approval.";
+
+                errorMessage = null;
+
+                selectedImages.Clear();
+            }
+            else if (uploadedImageCount > 0)
+            {
+                if (draftAdvertisementId.HasValue)
+                {
+                    await LoadSavedImagesAsync(draftAdvertisementId.Value);
+                }
+
+                successMessage =
+                    $"Advertisement saved successfully. " +
+                    $"{uploadedImageCount} of " +
+                    $"{totalImagesToUpload} photos were uploaded.";
+
+                errorMessage =
+                    $"{failedImages.Count} photo" +
+                    $"{(failedImages.Count == 1 ? "" : "s")} " +
+                    "could not be uploaded. " +
+                    "You can retry the remaining photo(s).";
+
+                selectedImages.Clear();
+
+                selectedImages.AddRange(failedImages);
+
+                if (!savedImages.Any(x => x.IsPrimary))
+                {
+                    if (!selectedImages.Any(x => x.IsPrimary) &&
+                        selectedImages.Count > 0)
+                    {
+                        selectedImages[0].IsPrimary = true;
+                    }
+                }
+                else
+                {
+                    foreach (var image in selectedImages)
+                    {
+                        image.IsPrimary = false;
+                    }
+                }
+            }
+            else
+            {
+                successMessage =
+                    "Advertisement saved successfully as a draft.";
+
+                errorMessage =
+                    "We couldn’t upload the selected photos. " +
+                    "Please try again.";
+            }
+        }
+        finally
+        {
+            isUploadingImages = false;
+        }
+    }
+
+
+    // ============================================================
+    // SUBMIT FOR APPROVAL
+    // ============================================================
+
+    private async Task SubmitForApproval()
+    {
+        if (!draftAdvertisementId.HasValue)
+        {
+            errorMessage =
+                "Please save the advertisement before submitting it.";
+
+            return;
+        }
+
+        if (isUploadingImages)
+        {
+            errorMessage =
+                "Please wait until all images finish uploading.";
+
+            return;
+        }
+
+        if (isSaving || isSubmitting)
+        {
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+
+        if (!ValidateContactInformation(forSubmission: true))
+        {
+            return;
+        }
+
+        if (!ValidateFeatures())
+        {
+            return;
+        }
+
+        isSubmitting = true;
+
+        try
+        {
+            model.CountryID = selectedCountryId > 0 ? selectedCountryId : null;
+            model.StateID = selectedStateId > 0 ? selectedStateId : null;
+            model.CityID = selectedCityId > 0 ? selectedCityId : null;
+            model.AreaID = selectedAreaId > 0 ? selectedAreaId : null;
+
+            var updateRequest = BuildUpdateRequest();
+
+            var updatedAdvertisement =
+                await AdvertisementApiService
+                    .UpdateAdvertisementAsync(
+                        draftAdvertisementId.Value,
+                        updateRequest);
+
+            if (updatedAdvertisement is null)
+            {
+                errorMessage =
+                    "The latest advertisement changes could not be saved. " +
+                    "Please try saving the draft first.";
+
+                return;
+            }
+
+            var success =
+                await AdvertisementApiService
+                    .SubmitAdvertisementAsync(draftAdvertisementId.Value);
+
+            if (!success)
+            {
+                errorMessage =
+                    "The advertisement could not be submitted. " +
+                    "Please make sure the required information is complete.";
+
+                return;
+            }
+
+            successMessage =
+                requireAdminApproval
+                    ? $"Your advertisement has been submitted for approval. " +
+                      $"Once approved, it will stay live for {expiryDays} days."
+                    : $"Your advertisement has been submitted. " +
+                      $"It will stay live for {expiryDays} days.";
+
+            await Task.Delay(1200);
+
+            Navigation.NavigateTo("/my-ads");
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine($"SUBMIT VALIDATION ERROR: {ex}");
+
+            errorMessage = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SUBMIT ADVERTISEMENT ERROR: {ex}");
+
+            errorMessage =
+                "Unable to submit the advertisement right now. " +
+                "Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+
+    // ============================================================
+    // CANCEL
+    // ============================================================
+
+    private void Cancel()
+    {
+        if (isSaving ||
+            isUploadingImages ||
+            isSubmitting)
+        {
+            return;
+        }
+
+        Navigation.NavigateTo("/my-ads");
+    }
+
+
+    // ============================================================
+    // FILE SIZE
+    // ============================================================
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024)
+        {
+            return $"{bytes} B";
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return $"{bytes / 1024d:0.0} KB";
+        }
+
+        return $"{bytes / 1024d / 1024d:0.0} MB";
+    }
+}

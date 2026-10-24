@@ -1413,6 +1413,7 @@ AreaName =
             var selectionDataType = (feature.DataType ?? string.Empty).Trim();
             var isSelectionFeature =
                 string.Equals(selectionDataType, "Select", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(selectionDataType, "Dropdown", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(selectionDataType, "Radio", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(selectionDataType, "MultiSelect", StringComparison.OrdinalIgnoreCase);
 
@@ -1518,8 +1519,10 @@ AreaName =
                 }
             }
 
-            // Apply numeric bounds when configured.
-            if (feature.MinValue.HasValue || feature.MaxValue.HasValue)
+            // Apply numeric bounds only to non-selection features.
+            // Selection values are validated against configured options below.
+            if (!isSelectionFeature &&
+                (feature.MinValue.HasValue || feature.MaxValue.HasValue))
             {
                 var numericValue = !string.IsNullOrWhiteSpace(value)
                     ? value
@@ -1589,7 +1592,9 @@ AreaName =
             var selectionType = (feature.DataType ?? string.Empty).Trim();
 
             var isSelect = string.Equals(
-                selectionType, "Select", StringComparison.OrdinalIgnoreCase);
+                selectionType, "Select", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(
+                    selectionType, "Dropdown", StringComparison.OrdinalIgnoreCase);
             var isRadio = string.Equals(
                 selectionType, "Radio", StringComparison.OrdinalIgnoreCase);
             var isMultiSelect = string.Equals(

@@ -13,6 +13,8 @@ public class CategoryManagementApiService
 
     private readonly AdminAuthenticationStateProvider
         _authenticationStateProvider;
+    private readonly PublicAuthenticationStateProvider
+        _publicAuthenticationStateProvider;
 
     private static readonly JsonSerializerOptions JsonOptions =
         new()
@@ -22,10 +24,12 @@ public class CategoryManagementApiService
 
     public CategoryManagementApiService(
         IHttpClientFactory httpClientFactory,
-        AdminAuthenticationStateProvider authenticationStateProvider)
+        AdminAuthenticationStateProvider authenticationStateProvider,
+        PublicAuthenticationStateProvider publicAuthenticationStateProvider)
     {
         _httpClientFactory = httpClientFactory;
         _authenticationStateProvider = authenticationStateProvider;
+        _publicAuthenticationStateProvider = publicAuthenticationStateProvider;
     }
 
     // ============================================================
@@ -57,6 +61,29 @@ public class CategoryManagementApiService
     }
 
     // ============================================================
+        private HttpClient CreatePublicClient()
+    {
+        var client =
+            _httpClientFactory.CreateClient(
+                "HRInfoAdvertisementsPublicAPI");
+
+        var accessToken =
+            _publicAuthenticationStateProvider.AccessToken;
+
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            throw new UnauthorizedAccessException(
+                "User access token is not available. " +
+                "Please sign in again.");
+        }
+
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                accessToken);
+
+        return client;
+    }
     // GET CATEGORIES
     // ============================================================
 
@@ -183,124 +210,67 @@ public class CategoryManagementApiService
     }
 
     // ============================================================
-    // GET CATEGORY FEATURES
-    // ============================================================
-
-    public async Task<List<CategoryFeatureResponse>>
-        GetCategoryFeaturesAsync(int categoryId)
-    {
-        if (categoryId <= 0)
-        {
-            return new List<CategoryFeatureResponse>();
-        }
-
-        var client = CreateClient();
-
-        var response =
-            await client.GetAsync(
-                $"api/v1/categories/{categoryId}/features");
-
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
-
-        if (response.StatusCode ==
-            System.Net.HttpStatusCode.NotFound)
-        {
-            return new List<CategoryFeatureResponse>();
-        }
-
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"Unable to retrieve category features. " +
-                $"HTTP {(int)response.StatusCode} " +
-                $"({response.StatusCode}). " +
-                $"Response: {responseBody}");
-        }
-
-        if (string.IsNullOrWhiteSpace(responseBody))
-        {
-            return new List<CategoryFeatureResponse>();
-        }
-
-        return JsonSerializer.Deserialize<List<CategoryFeatureResponse>>(
-                   responseBody,
-                   JsonOptions)
-               ?? new List<CategoryFeatureResponse>();
-    }
-
-
     // ============================================================
     // CREATE CATEGORY
     // ============================================================
 
-    public async Task<int?>
-        CreateCategoryAsync(
-            CreateCategoryRequest request)
+    public async Task<int?> CreateCategoryAsync(
+        CreateCategoryRequest request)
     {
-        var client = CreateClient();
+        using var client = CreateClient();
+        using var response = await client.PostAsJsonAsync(
+            "api/v1/categories",
+            request);
 
-        var response =
-            await client.PostAsJsonAsync(
-                "api/v1/categories",
-                request);
-
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
                 $"Unable to create category. " +
-                $"HTTP {(int)response.StatusCode} " +
-                $"({response.StatusCode}). " +
-                $"Response: {responseBody}");
+                $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response: {body}");
         }
 
-        if (string.IsNullOrWhiteSpace(responseBody))
-        {
+        if (string.IsNullOrWhiteSpace(body))
             return null;
+
+        using var document = JsonDocument.Parse(body);
+        var root = document.RootElement;
+
+        if (root.TryGetProperty("categoryID", out var categoryId) ||
+            root.TryGetProperty("categoryId", out categoryId))
+        {
+            return categoryId.GetInt32();
         }
 
-        var result =
-            JsonSerializer.Deserialize<CategoryDetailResponse>(
-                responseBody,
-                JsonOptions);
-
-        return result?.CategoryID;
+        return null;
     }
 
     // ============================================================
     // UPDATE CATEGORY
     // ============================================================
 
-    public async Task<bool>
-        UpdateCategoryAsync(
-            int categoryId,
-            UpdateCategoryRequest request)
+    public async Task<bool> UpdateCategoryAsync(
+        int categoryId,
+        UpdateCategoryRequest request)
     {
         if (categoryId <= 0)
-        {
             return false;
-        }
 
-        var client = CreateClient();
+        using var client = CreateClient();
+        using var response = await client.PutAsJsonAsync(
+            $"api/v1/categories/{categoryId}",
+            request);
 
-        var response =
-            await client.PutAsJsonAsync(
-                $"api/v1/categories/{categoryId}",
-                request);
-
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
                 $"Unable to update category. " +
-                $"HTTP {(int)response.StatusCode} " +
-                $"({response.StatusCode}). " +
-                $"Response: {responseBody}");
+                $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response: {body}");
         }
 
         return true;
@@ -310,40 +280,288 @@ public class CategoryManagementApiService
     // UPDATE CATEGORY STATUS
     // ============================================================
 
-    public async Task<bool>
-        UpdateCategoryStatusAsync(
-            int categoryId,
-            bool isActive)
+    public async Task<bool> UpdateCategoryStatusAsync(
+        int categoryId,
+        bool isActive)
     {
         if (categoryId <= 0)
-        {
             return false;
-        }
-
-        var client = CreateClient();
 
         var request = new UpdateCategoryStatusRequest
         {
             IsActive = isActive
         };
 
-        var response =
-            await client.PutAsJsonAsync(
-                $"api/v1/categories/{categoryId}/status",
-                request);
+        using var client = CreateClient();
+        using var response = await client.PutAsJsonAsync(
+            $"api/v1/categories/{categoryId}/status",
+            request);
 
-        var responseBody =
-            await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestException(
                 $"Unable to update category status. " +
-                $"HTTP {(int)response.StatusCode} " +
-                $"({response.StatusCode}). " +
-                $"Response: {responseBody}");
+                $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response: {body}");
         }
 
         return true;
     }
+    // GET CATEGORY FEATURES
+    // ============================================================
+
+    public async Task<List<CategoryFeatureResponse>> GetCategoryFeaturesAsync(
+        int categoryId)
+    {
+        if (categoryId <= 0)
+            return new List<CategoryFeatureResponse>();
+
+        using var client = CreatePublicClient();
+        using var response = await client.GetAsync(
+            $"api/v1/categories/{categoryId}/features");
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return new List<CategoryFeatureResponse>();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Unable to retrieve category features. " +
+                $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response: {body}");
+        }
+
+        if (string.IsNullOrWhiteSpace(body))
+            return new List<CategoryFeatureResponse>();
+
+        return JsonSerializer.Deserialize<List<CategoryFeatureResponse>>(
+            body,
+            JsonOptions) ?? new List<CategoryFeatureResponse>();
+    }
+
+// CREATE CATEGORY FEATURE
+// ============================================================
+
+public async Task<int?> CreateCategoryFeatureAsync(
+    int categoryId,
+    CreateCategoryFeatureRequest request)
+{
+    if (categoryId <= 0)
+        throw new ArgumentOutOfRangeException(nameof(categoryId));
+
+    ArgumentNullException.ThrowIfNull(request);
+
+    using var client = CreateClient();
+    using var response = await client.PostAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features", request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to create category feature. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    if (string.IsNullOrWhiteSpace(body))
+        return null;
+
+    using var document = JsonDocument.Parse(body);
+
+    return document.RootElement.TryGetProperty("featureId", out var id)
+        && id.TryGetInt32(out var featureId)
+            ? featureId
+            : null;
+}
+
+// ============================================================
+// UPDATE CATEGORY FEATURE
+// ============================================================
+
+public async Task<bool> UpdateCategoryFeatureAsync(
+    int categoryId,
+    int featureId,
+    UpdateCategoryFeatureRequest request)
+{
+    if (categoryId <= 0 || featureId <= 0)
+        return false;
+
+    ArgumentNullException.ThrowIfNull(request);
+
+    using var client = CreateClient();
+    using var response = await client.PutAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features/{featureId}", request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to update category feature. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    return true;
+}
+
+// ============================================================
+// UPDATE CATEGORY FEATURE STATUS
+// ============================================================
+
+public async Task<bool> UpdateCategoryFeatureStatusAsync(
+    int categoryId,
+    int featureId,
+    bool isActive)
+{
+    if (categoryId <= 0 || featureId <= 0)
+        return false;
+
+    var request = new CategoryFeatureStatusRequest
+    {
+        IsActive = isActive
+    };
+
+    using var client = CreateClient();
+    using var response = await client.PutAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features/{featureId}/status",
+        request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to update category feature status. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    return true;
+}
+
+// ============================================================
+    public async Task<List<CategoryFeatureResponse>>
+        GetCategoryFeaturesForAdminAsync(int categoryId)
+    {
+        if (categoryId <= 0)
+            return new List<CategoryFeatureResponse>();
+
+        using var client = CreateClient();
+        using var response = await client.GetAsync(
+            $"api/v1/categories/{categoryId}/features/manage");
+
+        var body = await response.Content.ReadAsStringAsync();
+
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            return new List<CategoryFeatureResponse>();
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Unable to retrieve category features for administration. " +
+                $"HTTP {(int)response.StatusCode} ({response.StatusCode}). " +
+                $"Response: {body}");
+        }
+
+        if (string.IsNullOrWhiteSpace(body))
+            return new List<CategoryFeatureResponse>();
+
+        return System.Text.Json.JsonSerializer.Deserialize<List<CategoryFeatureResponse>>(
+            body,
+            new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }) ?? new List<CategoryFeatureResponse>();
+    }
+// CREATE CATEGORY FEATURE OPTION
+// ============================================================
+
+public async Task<int?> CreateCategoryFeatureOptionAsync(
+    int categoryId,
+    int featureId,
+    CategoryFeatureOptionRequest request)
+{
+    if (categoryId <= 0 || featureId <= 0)
+        throw new ArgumentOutOfRangeException(
+            nameof(featureId), "Category and feature IDs must be positive.");
+
+    ArgumentNullException.ThrowIfNull(request);
+
+    using var client = CreateClient();
+    using var response = await client.PostAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features/{featureId}/options",
+        request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to create feature option. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    if (string.IsNullOrWhiteSpace(body))
+        return null;
+
+    using var document = JsonDocument.Parse(body);
+
+    return document.RootElement.TryGetProperty("optionId", out var id)
+        && id.TryGetInt32(out var optionId)
+            ? optionId
+            : null;
+}
+
+// ============================================================
+// UPDATE CATEGORY FEATURE OPTION
+// ============================================================
+
+public async Task<bool> UpdateCategoryFeatureOptionAsync(
+    int categoryId,
+    int featureId,
+    int optionId,
+    CategoryFeatureOptionRequest request)
+{
+    if (categoryId <= 0 || featureId <= 0 || optionId <= 0)
+        return false;
+
+    ArgumentNullException.ThrowIfNull(request);
+
+    using var client = CreateClient();
+    using var response = await client.PutAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features/{featureId}/options/{optionId}",
+        request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to update feature option. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    return true;
+}
+
+// ============================================================
+// UPDATE CATEGORY FEATURE OPTION STATUS
+// ============================================================
+
+public async Task<bool> UpdateCategoryFeatureOptionStatusAsync(
+    int categoryId,
+    int featureId,
+    int optionId,
+    bool isActive)
+{
+    if (categoryId <= 0 || featureId <= 0 || optionId <= 0)
+        return false;
+
+    var request = new CategoryFeatureStatusRequest
+    {
+        IsActive = isActive
+    };
+
+    using var client = CreateClient();
+    using var response = await client.PutAsJsonAsync(
+        $"api/v1/categories/{categoryId}/features/{featureId}/options/{optionId}/status",
+        request);
+
+    var body = await response.Content.ReadAsStringAsync();
+
+    if (!response.IsSuccessStatusCode)
+        throw new HttpRequestException(
+            $"Unable to update feature option status. HTTP {(int)response.StatusCode} ({response.StatusCode}). Response: {body}");
+
+    return true;
+}
 }

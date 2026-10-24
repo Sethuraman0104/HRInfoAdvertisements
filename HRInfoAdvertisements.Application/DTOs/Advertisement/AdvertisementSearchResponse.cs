@@ -1,7 +1,10 @@
 namespace HRInfoAdvertisements.Application.DTOs.Advertisement;
 
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
+
 public class AdvertisementSearchResponse
 {
+    public List<AdvertisementFeatureValueResponse> FeatureValues { get; set; } = new();
     public long AdvertisementID { get; set; }
 
     public string AdvertisementNumber { get; set; } = string.Empty;

@@ -428,6 +428,14 @@
                                     </button>
 
                                     <button type="button"
+                                            class="categories-action-button edit"
+                                            title="Manage category features"
+                                            @onclick="() => OpenFeaturesDialog(category)">
+
+                                        <i class="bi bi-sliders"></i>
+
+                                    </button>
+                                    <button type="button"
                                             class="@GetStatusActionClass(category.IsActive)"
                                             title="@(category.IsActive
                                                 ? "Deactivate category"
@@ -898,6 +906,355 @@
 </div>
 
 
+    <!-- CATEGORY FEATURES DIALOG -->
+@* ============================================================
+   REPLACE the whole existing block:
+
+       <!-- CATEGORY FEATURES DIALOG -->
+       @if (showFeaturesDialog) { ... }
+
+   in Categories.razor with the block below.
+   (Everything above "@code {" stays the same. The @code section is NOT changed.)
+   Bootstrap classes (form-control, row, col-md-*, btn, badge ...) were removed
+   and replaced with cf-* classes styled in Categories.razor.css.
+   ============================================================ *@
+
+<!-- CATEGORY FEATURES DIALOG -->
+@if (showFeaturesDialog)
+{
+    <div class="categories-modal-backdrop" @onclick="CloseFeaturesDialog">
+        <div class="categories-modal wide" @onclick:stopPropagation="true">
+
+            <div class="categories-modal-header">
+                <div class="categories-modal-title">
+                    <div class="categories-modal-icon"><i class="bi bi-sliders"></i></div>
+                    <div>
+                        <span>CATEGORY FEATURES</span>
+                        <h2>@featuresCategoryName</h2>
+                    </div>
+                </div>
+                <button type="button" class="categories-modal-close"
+                        title="Close" @onclick="CloseFeaturesDialog"
+                        disabled="@isSavingFeature">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="categories-modal-body">
+
+                @if (!string.IsNullOrWhiteSpace(featuresErrorMessage))
+                {
+                    <div class="categories-dialog-error">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <span>@featuresErrorMessage</span>
+                    </div>
+                }
+
+                <div class="cf-toolbar">
+                    <span class="cf-count">
+                        <i class="bi bi-list-check"></i>
+                        @categoryFeatures.Count feature(s)
+                    </span>
+                    <button type="button" class="cf-btn cf-btn-primary"
+                            @onclick="StartCreateFeature"
+                            disabled="@(isSavingFeature || isLoadingFeatures)">
+                        <i class="bi bi-plus-lg"></i> Add feature
+                    </button>
+                </div>
+
+                @if (showFeatureEditor)
+                {
+                    <div class="cf-editor">
+                        <h3 class="cf-editor-title">
+                            <i class="bi @(editingFeatureId.HasValue ? "bi-pencil-square" : "bi-plus-circle")"></i>
+                            @(editingFeatureId.HasValue ? "Edit feature" : "New feature")
+                        </h3>
+
+                        <div class="cf-grid">
+                            <div class="cf-field cf-span-6">
+                                <label>Feature name <b>*</b></label>
+                                <input class="cf-input" @bind="featureForm.FeatureName" maxlength="200"
+                                       placeholder="e.g. Bedrooms" />
+                            </div>
+
+                            <div class="cf-field cf-span-6">
+                                <label>Arabic feature name</label>
+                                <input class="cf-input" @bind="featureForm.FeatureNameAr" dir="rtl" maxlength="200"
+                                       placeholder="مثال: غرف النوم" />
+                            </div>
+
+                            <div class="cf-field cf-span-4">
+                                <label>Data type <b>*</b></label>
+                                <select class="cf-select" @bind="featureForm.DataType">
+                                    <option value="Text">Text</option>
+                                    <option value="Number">Number</option>
+                                    <option value="Integer">Integer</option>
+                                    <option value="Date">Date</option>
+                                    <option value="Boolean">Boolean</option>
+                                    <option value="Select">Select</option>
+                                    <option value="Dropdown">Dropdown</option>
+                                    <option value="Radio">Radio</option>
+                                    <option value="MultiSelect">MultiSelect</option>
+                                </select>
+                            </div>
+
+                            <div class="cf-field cf-span-4">
+                                <label>Display order</label>
+                                <input class="cf-input" type="number" @bind="featureForm.DisplayOrder" />
+                            </div>
+
+                            <div class="cf-field cf-span-4">
+                                <label>Options</label>
+                                <div class="cf-checks">
+                                    <label class="cf-check">
+                                        <input type="checkbox" @bind="featureForm.IsRequired" />
+                                        <span>Required</span>
+                                    </label>
+                                    <label class="cf-check">
+                                        <input type="checkbox" @bind="featureForm.IsSearchable" />
+                                        <span>Searchable</span>
+                                    </label>
+                                    <label class="cf-check">
+                                        <input type="checkbox" @bind="featureForm.IsFilterable" />
+                                        <span>Filterable</span>
+                                    </label>
+                                    @if (editingFeatureId.HasValue)
+                                    {
+                                        <label class="cf-check">
+                                            <input type="checkbox" @bind="featureIsActive" />
+                                            <span>Active</span>
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="cf-field cf-span-6">
+                                <label>Help text</label>
+                                <textarea class="cf-textarea" rows="2" @bind="featureForm.HelpText"
+                                          placeholder="Shown under the field to guide the advertiser"></textarea>
+                            </div>
+
+                            <div class="cf-field cf-span-6">
+                                <label>Arabic help text</label>
+                                <textarea class="cf-textarea" rows="2" dir="rtl" @bind="featureForm.HelpTextAr"></textarea>
+                            </div>
+
+                            <div class="cf-field cf-span-3">
+                                <label>Minimum value</label>
+                                <input class="cf-input" type="number" step="any" @bind="featureForm.MinValue" />
+                            </div>
+
+                            <div class="cf-field cf-span-3">
+                                <label>Maximum value</label>
+                                <input class="cf-input" type="number" step="any" @bind="featureForm.MaxValue" />
+                            </div>
+
+                            <div class="cf-field cf-span-3">
+                                <label>Minimum length</label>
+                                <input class="cf-input" type="number" min="0" @bind="featureForm.MinLength" />
+                            </div>
+
+                            <div class="cf-field cf-span-3">
+                                <label>Maximum length</label>
+                                <input class="cf-input" type="number" min="0" @bind="featureForm.MaxLength" />
+                            </div>
+
+                            <div class="cf-field cf-span-12">
+                                <label>Validation pattern (regular expression)</label>
+                                <input class="cf-input" @bind="featureForm.ValidationPattern" maxlength="1000"
+                                       placeholder="e.g. ^[0-9]{6,15}$" />
+                            </div>
+                        </div>
+
+                        <div class="cf-editor-actions">
+                            <button type="button" class="cf-btn cf-btn-ghost"
+                                    @onclick="CancelFeatureEditor" disabled="@isSavingFeature">
+                                Cancel
+                            </button>
+                            <button type="button" class="cf-btn cf-btn-primary"
+                                    @onclick="SaveCategoryFeatureAsync" disabled="@isSavingFeature">
+                                @if (isSavingFeature)
+                                {
+                                    <span class="categories-button-spinner"></span>
+                                    <span>Saving...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-check-lg"></i>
+                                    <span>Save feature</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+                }
+
+                @if (isLoadingFeatures)
+                {
+                    <div class="cf-empty">
+                        <div class="categories-loading-spinner"></div>
+                        <span>Loading category features...</span>
+                    </div>
+                }
+                else if (categoryFeatures.Count == 0)
+                {
+                    <div class="cf-empty">
+                        <i class="bi bi-sliders"></i>
+                        <strong>No features yet</strong>
+                        <span>No features have been configured for this category yet.</span>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var feature in categoryFeatures.OrderBy(f => f.DisplayOrder))
+                    {
+                        <div class="cf-card" @key="feature.AdvertisementFeatureID">
+
+                            <div class="cf-card-head">
+                                <div class="cf-card-info">
+                                    <div class="cf-card-name">
+                                        <strong>@feature.FeatureName</strong>
+                                        @if (!string.IsNullOrWhiteSpace(feature.FeatureNameAr))
+                                        {
+                                            <span class="cf-card-name-ar" dir="rtl">@feature.FeatureNameAr</span>
+                                        }
+                                    </div>
+
+                                    <div class="cf-card-meta">
+                                        <span>Type: <b>@feature.DataType</b></span>
+                                        <span>Order: <b>@feature.DisplayOrder</b></span>
+                                    </div>
+
+                                    <div class="cf-badges">
+                                        @if (feature.IsRequired) { <span class="cf-badge cf-badge-warn">Required</span> }
+                                        @if (feature.IsSearchable) { <span class="cf-badge cf-badge-info">Searchable</span> }
+                                        @if (feature.IsFilterable) { <span class="cf-badge cf-badge-blue">Filterable</span> }
+                                        <span class="cf-badge @(feature.IsActive ? "cf-badge-ok" : "cf-badge-off")">
+                                            @(feature.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="cf-card-actions">
+                                    <button type="button" class="cf-btn cf-btn-outline cf-btn-sm"
+                                            @onclick="() => StartEditFeature(feature)" disabled="@isSavingFeature">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </button>
+                                    <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm"
+                                            @onclick="() => ToggleFeatureStatusAsync(feature)"
+                                            disabled="@isSavingFeature">
+                                        <i class="bi @(feature.IsActive ? "bi-pause-circle" : "bi-play-circle")"></i>
+                                        @(feature.IsActive ? "Deactivate" : "Activate")
+                                    </button>
+                                    @if (IsOptionFeatureType(feature.DataType))
+                                    {
+                                        <button type="button" class="cf-btn cf-btn-success cf-btn-sm"
+                                                @onclick="() => StartOptionEditor(feature.AdvertisementFeatureID)"
+                                                disabled="@isSavingFeature">
+                                            <i class="bi bi-list-ul"></i> Manage options
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (IsOptionFeatureType(feature.DataType))
+                            {
+                                <div class="cf-options">
+                                    <div class="cf-options-title">Options (@feature.Options.Count)</div>
+
+                                    @if (feature.Options.Count == 0)
+                                    {
+                                        <div class="cf-options-empty">No options configured.</div>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var option in feature.Options.OrderBy(o => o.DisplayOrder))
+                                        {
+                                            <div class="cf-option-row" @key="option.AdvertisementFeatureOptionID">
+                                                <div class="cf-option-text">
+                                                    <span class="cf-option-value">@option.OptionValue</span>
+                                                    @if (!string.IsNullOrWhiteSpace(option.OptionValueAr))
+                                                    {
+                                                        <span class="cf-option-ar" dir="rtl">@option.OptionValueAr</span>
+                                                    }
+                                                    <span class="cf-option-order">#@option.DisplayOrder</span>
+                                                    <span class="cf-badge @(option.IsActive ? "cf-badge-ok" : "cf-badge-off")">
+                                                        @(option.IsActive ? "Active" : "Inactive")
+                                                    </span>
+                                                </div>
+                                                <div class="cf-option-actions">
+                                                    <button type="button" class="cf-btn cf-btn-outline cf-btn-xs"
+                                                            @onclick="() => StartEditOption(feature.AdvertisementFeatureID, option)"
+                                                            disabled="@isSavingFeature">Edit</button>
+                                                    <button type="button" class="cf-btn cf-btn-ghost cf-btn-xs"
+                                                            @onclick="() => ToggleOptionStatusAsync(feature, option)"
+                                                            disabled="@isSavingFeature">
+                                                        @(option.IsActive ? "Deactivate" : "Activate")
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+
+                            @if (optionEditorFeatureId == feature.AdvertisementFeatureID)
+                            {
+                                <div class="cf-editor cf-editor-inner">
+                                    <h3 class="cf-editor-title">
+                                        <i class="bi @(editingOptionId.HasValue ? "bi-pencil-square" : "bi-plus-circle")"></i>
+                                        @(editingOptionId.HasValue ? "Edit option" : "Add option")
+                                    </h3>
+
+                                    <div class="cf-grid">
+                                        <div class="cf-field cf-span-5">
+                                            <label>Option value <b>*</b></label>
+                                            <input class="cf-input" @bind="optionForm.OptionValue" maxlength="200" />
+                                        </div>
+                                        <div class="cf-field cf-span-5">
+                                            <label>Arabic option value</label>
+                                            <input class="cf-input" @bind="optionForm.OptionValueAr" dir="rtl" maxlength="200" />
+                                        </div>
+                                        <div class="cf-field cf-span-2">
+                                            <label>Order</label>
+                                            <input class="cf-input" type="number" @bind="optionForm.DisplayOrder" />
+                                        </div>
+                                    </div>
+
+                                    <div class="cf-editor-actions">
+                                        <button type="button" class="cf-btn cf-btn-ghost cf-btn-sm"
+                                                @onclick="CancelOptionEditor" disabled="@isSavingFeature">Cancel</button>
+                                        <button type="button" class="cf-btn cf-btn-success cf-btn-sm"
+                                                @onclick="SaveFeatureOptionAsync" disabled="@isSavingFeature">
+                                            @if (isSavingFeature)
+                                            {
+                                                <span class="categories-button-spinner"></span>
+                                                <span>Saving...</span>
+                                            }
+                                            else
+                                            {
+                                                <i class="bi bi-check-lg"></i>
+                                                <span>Save option</span>
+                                            }
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <div class="categories-modal-footer">
+                <button type="button" class="categories-modal-cancel"
+                        @onclick="CloseFeaturesDialog" disabled="@isSavingFeature">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+
 @code {
 
     // ============================================================
@@ -947,9 +1304,416 @@
 
     private CategoryListItemResponse? selectedCategory;
 
-    private string siteName = "AdMind"; 
     // ============================================================
-    // INITIALIZATION
+    // CATEGORY FEATURES DIALOG
+    // ============================================================
+
+    private bool showFeaturesDialog;
+private bool isLoadingFeatures;
+private bool isSavingFeature;
+private bool showFeatureEditor;
+private int featuresCategoryId;
+private int? editingFeatureId;
+private int? optionEditorFeatureId;
+private int? editingOptionId;
+private int? optionEditorCategoryFeatureId;
+private bool featureIsActive = true;
+private string featuresCategoryName = string.Empty;
+private string? featuresErrorMessage;
+private List<CategoryFeatureResponse> categoryFeatures = new();
+private CreateCategoryFeatureRequest featureForm = new();
+private CategoryFeatureOptionRequest optionForm = new();
+
+private string siteName = "AdMind";
+
+private async Task OpenFeaturesDialog(CategoryListItemResponse category)
+{
+    featuresCategoryId = category.CategoryID;
+    featuresCategoryName = category.CategoryName;
+    categoryFeatures = new();
+    featuresErrorMessage = null;
+    showFeatureEditor = false;
+    editingFeatureId = null;
+    optionEditorFeatureId = null;
+    editingOptionId = null;
+    showFeaturesDialog = true;
+    isLoadingFeatures = true;
+
+    try
+    {
+        await ReloadCategoryFeaturesAsync();
+    }
+    catch (Exception ex)
+    {
+        featuresErrorMessage = $"Unable to load category features: {ex.Message}";
+    }
+    finally
+    {
+        isLoadingFeatures = false;
+    }
+}
+
+private async Task ReloadCategoryFeaturesAsync()
+{
+    categoryFeatures = await CategoryManagementApiService
+        .GetCategoryFeaturesForAdminAsync(featuresCategoryId);
+}
+
+private void StartCreateFeature()
+{
+    featuresErrorMessage = null;
+    editingFeatureId = null;
+    featureIsActive = true;
+    featureForm = new CreateCategoryFeatureRequest
+    {
+        DataType = "Text",
+        DisplayOrder = categoryFeatures.Count == 0
+            ? 1
+            : categoryFeatures.Max(f => f.DisplayOrder) + 1
+    };
+    showFeatureEditor = true;
+    optionEditorFeatureId = null;
+    editingOptionId = null;
+}
+
+private void StartEditFeature(CategoryFeatureResponse feature)
+{
+    featuresErrorMessage = null;
+    editingFeatureId = feature.AdvertisementFeatureID;
+    featureIsActive = feature.IsActive;
+    featureForm = new CreateCategoryFeatureRequest
+    {
+        FeatureName = feature.FeatureName,
+        FeatureNameAr = feature.FeatureNameAr,
+        DataType = feature.DataType,
+        IsRequired = feature.IsRequired,
+        HelpText = feature.HelpText,
+        HelpTextAr = feature.HelpTextAr,
+        MinValue = feature.MinValue,
+        MaxValue = feature.MaxValue,
+        MinLength = feature.MinLength,
+        MaxLength = feature.MaxLength,
+        ValidationPattern = feature.ValidationPattern,
+        IsSearchable = feature.IsSearchable,
+        IsFilterable = feature.IsFilterable,
+        DisplayOrder = feature.DisplayOrder
+    };
+    showFeatureEditor = true;
+    optionEditorFeatureId = null;
+    editingOptionId = null;
+}
+
+private void CancelFeatureEditor()
+{
+    if (isSavingFeature)
+        return;
+
+    showFeatureEditor = false;
+    editingFeatureId = null;
+    featuresErrorMessage = null;
+}
+
+private async Task SaveCategoryFeatureAsync()
+{
+    if (isSavingFeature)
+        return;
+
+    featuresErrorMessage = null;
+
+    if (string.IsNullOrWhiteSpace(featureForm.FeatureName))
+    {
+        featuresErrorMessage = "Feature name is required.";
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(featureForm.DataType))
+    {
+        featuresErrorMessage = "Select a data type.";
+        return;
+    }
+
+    if (featureForm.MinValue.HasValue && featureForm.MaxValue.HasValue &&
+        featureForm.MinValue.Value > featureForm.MaxValue.Value)
+    {
+        featuresErrorMessage = "Minimum value cannot exceed maximum value.";
+        return;
+    }
+
+    if (featureForm.MinLength.HasValue && featureForm.MaxLength.HasValue &&
+        featureForm.MinLength.Value > featureForm.MaxLength.Value)
+    {
+        featuresErrorMessage = "Minimum length cannot exceed maximum length.";
+        return;
+    }
+
+    isSavingFeature = true;
+    try
+    {
+        if (editingFeatureId.HasValue)
+        {
+            var request = new UpdateCategoryFeatureRequest
+            {
+                FeatureName = featureForm.FeatureName.Trim(),
+                FeatureNameAr = featureForm.FeatureNameAr,
+                DataType = featureForm.DataType,
+                IsRequired = featureForm.IsRequired,
+                HelpText = featureForm.HelpText,
+                HelpTextAr = featureForm.HelpTextAr,
+                MinValue = featureForm.MinValue,
+                MaxValue = featureForm.MaxValue,
+                MinLength = featureForm.MinLength,
+                MaxLength = featureForm.MaxLength,
+                ValidationPattern = featureForm.ValidationPattern,
+                IsSearchable = featureForm.IsSearchable,
+                IsFilterable = featureForm.IsFilterable,
+                DisplayOrder = featureForm.DisplayOrder,
+                IsActive = featureIsActive
+            };
+
+            var updated = await CategoryManagementApiService.UpdateCategoryFeatureAsync(
+                featuresCategoryId, editingFeatureId.Value, request);
+
+            if (!updated)
+            {
+                featuresErrorMessage = "The feature update was not confirmed by the API.";
+                return;
+            }
+        }
+        else
+        {
+            var request = new CreateCategoryFeatureRequest
+            {
+                FeatureName = featureForm.FeatureName.Trim(),
+                FeatureNameAr = featureForm.FeatureNameAr,
+                DataType = featureForm.DataType,
+                IsRequired = featureForm.IsRequired,
+                HelpText = featureForm.HelpText,
+                HelpTextAr = featureForm.HelpTextAr,
+                MinValue = featureForm.MinValue,
+                MaxValue = featureForm.MaxValue,
+                MinLength = featureForm.MinLength,
+                MaxLength = featureForm.MaxLength,
+                ValidationPattern = featureForm.ValidationPattern,
+                IsSearchable = featureForm.IsSearchable,
+                IsFilterable = featureForm.IsFilterable,
+                DisplayOrder = featureForm.DisplayOrder
+            };
+
+            var createdId = await CategoryManagementApiService
+                .CreateCategoryFeatureAsync(featuresCategoryId, request);
+
+            if (!createdId.HasValue)
+            {
+                featuresErrorMessage = "The feature could not be created. The API did not return a feature ID.";
+                return;
+            }
+        }
+
+        showFeatureEditor = false;
+        editingFeatureId = null;
+        await ReloadCategoryFeaturesAsync();
+    }
+    catch (Exception ex)
+    {
+        featuresErrorMessage = $"Unable to save feature: {ex.Message}";
+    }
+    finally
+    {
+        isSavingFeature = false;
+    }
+}
+
+private async Task ToggleFeatureStatusAsync(CategoryFeatureResponse feature)
+{
+    if (isSavingFeature)
+        return;
+
+    featuresErrorMessage = null;
+    isSavingFeature = true;
+    try
+    {
+        await CategoryManagementApiService.UpdateCategoryFeatureStatusAsync(
+            featuresCategoryId,
+            feature.AdvertisementFeatureID,
+            !feature.IsActive);
+
+        await ReloadCategoryFeaturesAsync();
+    }
+    catch (Exception ex)
+    {
+        featuresErrorMessage = $"Unable to update feature status: {ex.Message}";
+    }
+    finally
+    {
+        isSavingFeature = false;
+    }
+}
+
+private static bool IsOptionFeatureType(string? dataType)
+{
+    return string.Equals(dataType, "Select", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(dataType, "Dropdown", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(dataType, "Radio", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(dataType, "MultiSelect", StringComparison.OrdinalIgnoreCase);
+}
+
+private void StartOptionEditor(int featureId)
+{
+    featuresErrorMessage = null;
+    optionEditorFeatureId = featureId;
+    editingOptionId = null;
+    optionEditorCategoryFeatureId = featureId;
+    var feature = categoryFeatures
+        .FirstOrDefault(f => f.AdvertisementFeatureID == featureId);
+    var nextOrder = feature?.Options.Count > 0
+        ? feature.Options.Max(o => o.DisplayOrder) + 1
+        : 1;
+
+    optionForm = new CategoryFeatureOptionRequest
+    {
+        DisplayOrder = nextOrder
+    };
+}
+
+private void StartEditOption(int featureId, CategoryFeatureOptionResponse option)
+{
+    featuresErrorMessage = null;
+    optionEditorFeatureId = featureId;
+    optionEditorCategoryFeatureId = featureId;
+    editingOptionId = option.AdvertisementFeatureOptionID;
+    optionForm = new CategoryFeatureOptionRequest
+    {
+        OptionValue = option.OptionValue,
+        OptionValueAr = option.OptionValueAr,
+        DisplayOrder = option.DisplayOrder
+    };
+}
+
+private void CancelOptionEditor()
+{
+    if (isSavingFeature)
+        return;
+
+    optionEditorFeatureId = null;
+    optionEditorCategoryFeatureId = null;
+    editingOptionId = null;
+    optionForm = new CategoryFeatureOptionRequest();
+    featuresErrorMessage = null;
+}
+
+private async Task SaveFeatureOptionAsync()
+{
+    if (isSavingFeature)
+        return;
+
+    featuresErrorMessage = null;
+
+    if (!optionEditorCategoryFeatureId.HasValue)
+    {
+        featuresErrorMessage = "Select a feature before saving an option.";
+        return;
+    }
+
+    if (string.IsNullOrWhiteSpace(optionForm.OptionValue))
+    {
+        featuresErrorMessage = "Option value is required.";
+        return;
+    }
+
+    isSavingFeature = true;
+    try
+    {
+        var featureId = optionEditorCategoryFeatureId.Value;
+        var request = new CategoryFeatureOptionRequest
+        {
+            OptionValue = optionForm.OptionValue.Trim(),
+            OptionValueAr = optionForm.OptionValueAr,
+            DisplayOrder = optionForm.DisplayOrder
+        };
+
+        if (editingOptionId.HasValue)
+        {
+            var updated = await CategoryManagementApiService.UpdateCategoryFeatureOptionAsync(
+                featuresCategoryId, featureId, editingOptionId.Value, request);
+
+            if (!updated)
+            {
+                featuresErrorMessage = "The option update was not confirmed by the API.";
+                return;
+            }
+        }
+        else
+        {
+            var createdId = await CategoryManagementApiService
+                .CreateCategoryFeatureOptionAsync(featuresCategoryId, featureId, request);
+
+            if (!createdId.HasValue)
+            {
+                featuresErrorMessage = "The option could not be created. The API did not return an option ID.";
+                return;
+            }
+        }
+
+        optionEditorFeatureId = null;
+        optionEditorCategoryFeatureId = null;
+        editingOptionId = null;
+        optionForm = new CategoryFeatureOptionRequest();
+        await ReloadCategoryFeaturesAsync();
+    }
+    catch (Exception ex)
+    {
+        featuresErrorMessage = $"Unable to save option: {ex.Message}";
+    }
+    finally
+    {
+        isSavingFeature = false;
+    }
+}
+
+private async Task ToggleOptionStatusAsync(
+    CategoryFeatureResponse feature,
+    CategoryFeatureOptionResponse option)
+{
+    if (isSavingFeature)
+        return;
+
+    featuresErrorMessage = null;
+    isSavingFeature = true;
+    try
+    {
+        await CategoryManagementApiService.UpdateCategoryFeatureOptionStatusAsync(
+            featuresCategoryId,
+            feature.AdvertisementFeatureID,
+            option.AdvertisementFeatureOptionID,
+            !option.IsActive);
+
+        await ReloadCategoryFeaturesAsync();
+    }
+    catch (Exception ex)
+    {
+        featuresErrorMessage = $"Unable to update option status: {ex.Message}";
+    }
+    finally
+    {
+        isSavingFeature = false;
+    }
+}
+
+private void CloseFeaturesDialog()
+{
+    if (isSavingFeature)
+        return;
+
+    showFeaturesDialog = false;
+    showFeatureEditor = false;
+    optionEditorFeatureId = null;
+    optionEditorCategoryFeatureId = null;
+    editingFeatureId = null;
+    editingOptionId = null;
+    featuresErrorMessage = null;
+    categoryFeatures.Clear();
+}
+// INITIALIZATION
     // ============================================================
 
     protected override async Task OnInitializedAsync()

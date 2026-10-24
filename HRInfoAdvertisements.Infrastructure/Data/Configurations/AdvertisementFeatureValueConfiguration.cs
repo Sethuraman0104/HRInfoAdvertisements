@@ -1,3 +1,4 @@
+
 using HRInfoAdvertisements.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,11 +14,14 @@ public class AdvertisementFeatureValueConfiguration
 
         builder.HasKey(x => x.AdvertisementFeatureValueID);
 
+        builder.Property(x => x.AdvertisementFeatureID)
+            .HasColumnName("FeatureID");
+
         builder.Property(x => x.FeatureValue)
-            .HasMaxLength(1000);
+            .HasMaxLength(2000);
 
         builder.Property(x => x.FeatureValueAr)
-            .HasMaxLength(1000);
+            .HasMaxLength(2000);
 
         builder.HasIndex(x => new
         {
@@ -33,6 +37,7 @@ public class AdvertisementFeatureValueConfiguration
         builder.HasOne(x => x.Feature)
             .WithMany(x => x.Values)
             .HasForeignKey(x => x.AdvertisementFeatureID)
+            .HasPrincipalKey(x => x.AdvertisementFeatureID)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

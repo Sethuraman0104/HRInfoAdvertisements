@@ -11,6 +11,7 @@ public interface ICategoryManagementService
         int categoryId);
 
     Task<List<CategoryFeatureResponse>> GetCategoryFeaturesAsync(int categoryId);
+    Task<List<CategoryFeatureResponse>> GetCategoryFeaturesForAdminAsync(int categoryId);
     Task<int?> CreateCategoryAsync(
         CreateCategoryRequest request,
         long createdBy);

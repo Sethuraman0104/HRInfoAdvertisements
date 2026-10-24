@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\HRInfoAdvertisements.Domain\HRInfoAdvertisements.Domain.csproj" />
@@ -27,4 +27,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Data\Migrations\ReviewTemp\**\*.cs" />
+  </ItemGroup>
 </Project>

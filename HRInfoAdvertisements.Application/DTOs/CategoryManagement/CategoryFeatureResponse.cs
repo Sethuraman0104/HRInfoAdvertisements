@@ -8,6 +8,7 @@ public sealed class CategoryFeatureResponse
     public string? FeatureNameAr { get; set; }
     public string DataType { get; set; } = string.Empty;
     public bool IsRequired { get; set; }
+    public bool IsActive { get; set; } = true;
     public string? HelpText { get; set; }
     public string? HelpTextAr { get; set; }
     public decimal? MinValue { get; set; }
@@ -28,4 +29,5 @@ public sealed class CategoryFeatureOptionResponse
     public string OptionValue { get; set; } = string.Empty;
     public string? OptionValueAr { get; set; }
     public int DisplayOrder { get; set; }
+    public bool IsActive { get; set; } = true;
 }

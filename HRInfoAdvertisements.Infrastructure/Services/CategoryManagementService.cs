@@ -98,7 +98,7 @@ public class CategoryManagementService : ICategoryManagementService
             .Where(x => x.CategoryID == categoryId)
             .Select(x => new CategoryDetailResponse
             {
-                CategoryID = x.CategoryID,
+                CategoryID = categoryId,
                 CategoryName = x.CategoryName,
                 CategoryNameAr = x.CategoryNameAr,
                 Description = x.Description,
@@ -125,7 +125,7 @@ public class CategoryManagementService : ICategoryManagementService
             .Select(x => new CategoryFeatureResponse
             {
                 AdvertisementFeatureID = x.AdvertisementFeatureID,
-                CategoryID = x.CategoryID,
+                CategoryID = categoryId,
                 FeatureName = x.FeatureName,
                 FeatureNameAr = x.FeatureNameAr,
                 DataType = x.DataType,
@@ -156,6 +156,54 @@ public class CategoryManagementService : ICategoryManagementService
             .ToListAsync();
     }
 
+    public async Task<List<CategoryFeatureResponse>> GetCategoryFeaturesForAdminAsync(int categoryId)
+    {
+        var categoryExists = await _context.AdvertisementCategories
+            .AsNoTracking()
+            .AnyAsync(x => x.CategoryID == categoryId);
+
+        if (!categoryExists)
+            return new List<CategoryFeatureResponse>();
+
+        return await _context.AdvertisementFeatures
+            .AsNoTracking()
+            .Where(x => x.CategoryID == categoryId)
+            .OrderBy(x => x.DisplayOrder)
+            .ThenBy(x => x.FeatureName)
+            .Select(x => new CategoryFeatureResponse
+            {
+                AdvertisementFeatureID = x.AdvertisementFeatureID,
+                CategoryID = categoryId,
+                FeatureName = x.FeatureName,
+                FeatureNameAr = x.FeatureNameAr,
+                DataType = x.DataType,
+                IsRequired = x.IsRequired,
+                IsActive = x.IsActive,
+                HelpText = x.HelpText,
+                HelpTextAr = x.HelpTextAr,
+                MinValue = x.MinValue,
+                MaxValue = x.MaxValue,
+                MinLength = x.MinLength,
+                MaxLength = x.MaxLength,
+                ValidationPattern = x.ValidationPattern,
+                IsSearchable = x.IsSearchable,
+                IsFilterable = x.IsFilterable,
+                DisplayOrder = x.DisplayOrder,
+                Options = x.Options
+                    .OrderBy(o => o.DisplayOrder)
+                    .ThenBy(o => o.OptionValue)
+                    .Select(o => new CategoryFeatureOptionResponse
+                    {
+                        AdvertisementFeatureOptionID = o.AdvertisementFeatureOptionID,
+                        OptionValue = o.OptionValue,
+                        OptionValueAr = o.OptionValueAr,
+                        DisplayOrder = o.DisplayOrder,
+                        IsActive = o.IsActive
+                    })
+                    .ToList()
+            })
+            .ToListAsync();
+    }
     public async Task<int?> CreateCategoryAsync(
         CreateCategoryRequest request,
         long createdBy)

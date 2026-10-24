@@ -1,3 +1,4 @@
+
 using HRInfoAdvertisements.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,6 +14,13 @@ public class AdvertisementFeatureConfiguration
 
         builder.HasKey(x => x.AdvertisementFeatureID);
 
+        builder.Property(x => x.AdvertisementFeatureID)
+            .HasColumnName("FeatureID")
+            .ValueGeneratedOnAdd();
+
+        builder.Property(x => x.CategoryID)
+            .IsRequired(false);
+
         builder.Property(x => x.FeatureName)
             .HasMaxLength(150)
             .IsRequired();
@@ -24,13 +32,18 @@ public class AdvertisementFeatureConfiguration
         builder.Property(x => x.HelpTextAr).HasMaxLength(500);
         builder.Property(x => x.ValidationPattern).HasMaxLength(1000);
 
+        builder.Property(x => x.MinValue).HasPrecision(18, 4);
+        builder.Property(x => x.MaxValue).HasPrecision(18, 4);
+
         builder.Property(x => x.DataType)
-            .HasMaxLength(30)
+            .HasMaxLength(20)
+            .IsUnicode(false)
             .IsRequired();
 
         builder.HasOne(x => x.Category)
             .WithMany()
             .HasForeignKey(x => x.CategoryID)
-            .OnDelete(DeleteBehavior.Cascade);
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

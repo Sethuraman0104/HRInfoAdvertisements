@@ -574,10 +574,15 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("ParentCategoryID")
+                        .HasColumnType("int");
+
                     b.HasKey("CategoryID");
 
                     b.HasIndex("CategoryName")
                         .IsUnique();
+
+                    b.HasIndex("ParentCategoryID");
 
                     b.ToTable("AdvertisementCategories", (string)null);
                 });
@@ -759,17 +764,19 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                 {
                     b.Property<int>("AdvertisementFeatureID")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("FeatureID");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdvertisementFeatureID"));
 
-                    b.Property<int>("CategoryID")
+                    b.Property<int?>("CategoryID")
                         .HasColumnType("int");
 
                     b.Property<string>("DataType")
                         .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
 
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
@@ -783,17 +790,83 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)");
 
+                    b.Property<string>("HelpText")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("HelpTextAr")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsFilterable")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRequired")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsSearchable")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MaxLength")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MaxValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int?>("MinLength")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("MinValue")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("ValidationPattern")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.HasKey("AdvertisementFeatureID");
 
                     b.HasIndex("CategoryID");
 
                     b.ToTable("AdvertisementFeatures", (string)null);
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureOption", b =>
+                {
+                    b.Property<int>("AdvertisementFeatureOptionID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AdvertisementFeatureOptionID"));
+
+                    b.Property<int>("AdvertisementFeatureID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OptionValue")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("OptionValueAr")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("AdvertisementFeatureOptionID");
+
+                    b.HasIndex("AdvertisementFeatureID", "OptionValue")
+                        .IsUnique();
+
+                    b.ToTable("AdvertisementFeatureOptions", (string)null);
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureValue", b =>
@@ -805,18 +878,19 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("AdvertisementFeatureValueID"));
 
                     b.Property<int>("AdvertisementFeatureID")
-                        .HasColumnType("int");
+                        .HasColumnType("int")
+                        .HasColumnName("FeatureID");
 
                     b.Property<long>("AdvertisementID")
                         .HasColumnType("bigint");
 
                     b.Property<string>("FeatureValue")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("FeatureValueAr")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.HasKey("AdvertisementFeatureValueID");
 
@@ -2491,6 +2565,16 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", "ParentCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("ParentCategoryID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ParentCategory");
+                });
+
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementDocument", b =>
                 {
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.Advertisement", "Advertisement")
@@ -2572,10 +2656,20 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
                     b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureOption", b =>
+                {
+                    b.HasOne("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", "Feature")
+                        .WithMany("Options")
+                        .HasForeignKey("AdvertisementFeatureID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("Feature");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeatureValue", b =>
@@ -3034,6 +3128,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementCategory", b =>
                 {
                     b.Navigation("Advertisements");
+
+                    b.Navigation("SubCategories");
                 });
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementEnquiry", b =>
@@ -3043,6 +3139,8 @@ namespace HRInfoAdvertisements.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("HRInfoAdvertisements.Domain.Entities.AdvertisementFeature", b =>
                 {
+                    b.Navigation("Options");
+
                     b.Navigation("Values");
                 });
 

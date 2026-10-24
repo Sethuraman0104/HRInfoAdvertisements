@@ -1,4 +1,5 @@
 using HRInfoAdvertisements.Application.DTOs.Advertisement;
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
 using HRInfoAdvertisements.Application.DTOs.Common;
 using HRInfoAdvertisements.Application.Interfaces;
 using HRInfoAdvertisements.Infrastructure.Data;
@@ -38,6 +39,9 @@ public class AdvertisementSearchService
             .Include(x => x.AdvertisementType)
             .Include(x => x.Status)
             .Include(x => x.User)
+            .Include(x => x.FeatureValues)
+                .ThenInclude(v => v.Feature)
+                    .ThenInclude(f => f.Options)
             .AsQueryable();
 
         // --------------------------------------------------
@@ -514,7 +518,32 @@ public class AdvertisementSearchService
                         x.PublishedDate,
 
                     ExpiryDate =
-                        x.ExpiryDate
+                        x.ExpiryDate,
+
+                    FeatureValues =
+                        x.FeatureValues
+                            .Select(v => new AdvertisementFeatureValueResponse
+                            {
+                                AdvertisementFeatureID = v.AdvertisementFeatureID,
+                                FeatureName = v.Feature.FeatureName,
+                                FeatureNameAr = v.Feature.FeatureNameAr,
+                                DataType = v.Feature.DataType,
+                                IsRequired = v.Feature.IsRequired,
+                                FeatureValue = v.FeatureValue,
+                                FeatureValueAr = v.FeatureValueAr,
+                                Options = v.Feature.Options
+                                    .Where(o => o.IsActive)
+                                    .OrderBy(o => o.DisplayOrder)
+                                    .Select(o => new AdvertisementFeatureOptionResponse
+                                    {
+                                        AdvertisementFeatureOptionID = o.AdvertisementFeatureOptionID,
+                                        OptionValue = o.OptionValue,
+                                        OptionValueAr = o.OptionValueAr,
+                                        DisplayOrder = o.DisplayOrder
+                                    })
+                                    .ToList()
+                            })
+                            .ToList()
                 })
                 .ToList();
 
