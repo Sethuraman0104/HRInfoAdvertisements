@@ -1,4 +1,4 @@
-﻿@page "/admin/advertisements/{AdvertisementId:long}"
+@page "/admin/advertisements/{AdvertisementId:long}"
 
 @using System.Globalization
 @using Microsoft.AspNetCore.Components.Forms
@@ -949,143 +949,75 @@
                 </section>
 
 
-                <!-- PROPERTY DETAILS -->
+                                <!-- DYNAMIC ADVERTISEMENT DETAILS -->
 
-                <section class="admin-ad-card">
+                @if (_advertisement.FeatureValues?.Any(feature =>
+                    !string.IsNullOrWhiteSpace(feature.FeatureValue) ||
+                    !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) == true)
+                {
+                    <section class="admin-ad-card">
 
-                    <div class="admin-ad-card-header">
-
-                        <div class="admin-ad-card-title">
-
-                            <div class="admin-ad-section-icon">
-                                <i class="bi bi-house-fill"></i>
+                        <div class="admin-ad-card-header">
+                            <div class="admin-ad-card-title">
+                                <div class="admin-ad-section-icon">
+                                    <i class="bi bi-list-check"></i>
+                                </div>
+                                <div>
+                                    <h2>Dynamic Advertisement Details</h2>
+                                    <p>Additional information for this advertisement category.</p>
+                                </div>
                             </div>
-
-                            <div>
-                                <h2>Property Details</h2>
-                                <p>Additional property information.</p>
-                            </div>
-
                         </div>
 
-                    </div>
-
-                    <div class="admin-ad-card-body">
-
-                        <div class="admin-ad-stat-grid">
-
-                            <div class="admin-ad-stat-item">
-
-                                <i class="bi bi-rulers"></i>
-
-                                <span>Land Area</span>
-
-                                @if (_isEditMode)
+                        <div class="admin-ad-card-body">
+                            <div class="admin-ad-stat-grid">
+                                @foreach (var feature in _advertisement.FeatureValues
+                                    .Where(feature =>
+                                        !string.IsNullOrWhiteSpace(feature.FeatureValue) ||
+                                        !string.IsNullOrWhiteSpace(feature.FeatureValueAr))
+                                    .OrderBy(feature => feature.FeatureName))
                                 {
-                                    <InputNumber class="admin-ad-input"
-                                                 @bind-Value="_editModel.LandArea" />
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @FormatDecimal(_advertisement.LandArea)
-                                    </strong>
-                                }
+                                    var featureValue = GetAdminFeatureDisplayValue(feature);
 
+                                    <div class="admin-ad-stat-item" @key="feature.AdvertisementFeatureID">
+                                        <i class="bi bi-info-circle"></i>
+                                        <span>@GetAdminFeatureDisplayName(feature)</span>
+
+                                        @if (TryGetAdminFeatureArray(feature, out var featureItems))
+{
+    <div class="mt-2">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-light text-dark border rounded-pill px-2 py-1">
+                @featureItems.Count features
+            </span>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            @foreach (var item in featureItems)
+            {
+                <span @key="item"
+                      class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-normal">
+                    <i class="bi bi-check-circle text-success me-1"></i>
+                    @item
+                </span>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <strong>@featureValue</strong>
+}
+                                    </div>
+                                }
                             </div>
-
-
-                            <div class="admin-ad-stat-item">
-
-                                <i class="bi bi-building"></i>
-
-                                <span>Built-up Area</span>
-
-                                @if (_isEditMode)
-                                {
-                                    <InputNumber class="admin-ad-input"
-                                                 @bind-Value="_editModel.BuiltUpArea" />
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @FormatDecimal(_advertisement.BuiltUpArea)
-                                    </strong>
-                                }
-
-                            </div>
-
-
-                            <div class="admin-ad-stat-item">
-
-                                <i class="bi bi-door-open-fill"></i>
-
-                                <span>Bedrooms</span>
-
-                                @if (_isEditMode)
-                                {
-                                    <InputNumber class="admin-ad-input"
-                                                 @bind-Value="_editModel.Bedrooms" />
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @DisplayInt(_advertisement.Bedrooms)
-                                    </strong>
-                                }
-
-                            </div>
-
-
-                            <div class="admin-ad-stat-item">
-
-                                <i class="bi bi-droplet-fill"></i>
-
-                                <span>Bathrooms</span>
-
-                                @if (_isEditMode)
-                                {
-                                    <InputNumber class="admin-ad-input"
-                                                 @bind-Value="_editModel.Bathrooms" />
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @DisplayInt(_advertisement.Bathrooms)
-                                    </strong>
-                                }
-
-                            </div>
-
-
-                            <div class="admin-ad-stat-item">
-
-                                <i class="bi bi-calendar3"></i>
-
-                                <span>Property Age</span>
-
-                                @if (_isEditMode)
-                                {
-                                    <InputNumber class="admin-ad-input"
-                                                 @bind-Value="_editModel.PropertyAge" />
-                                }
-                                else
-                                {
-                                    <strong>
-                                        @DisplayInt(_advertisement.PropertyAge)
-                                    </strong>
-                                }
-
-                            </div>
-
                         </div>
 
-                    </div>
-
-                </section>
-
+                    </section>
+                }
 
                 <!-- MEDIA -->
+
 
                 @if (_advertisement.Images?.Any() == true)
                 {
@@ -3925,6 +3857,100 @@ private bool StatusIsAnyOf(params string[] statuses)
     }
 
 
+    private static string GetAdminFeatureDisplayName(
+        AdvertisementFeatureValueResponse feature)
+    {
+        var isArabic = System.Globalization.CultureInfo.CurrentUICulture
+            .TwoLetterISOLanguageName.Equals("ar", StringComparison.OrdinalIgnoreCase);
+
+        return isArabic && !string.IsNullOrWhiteSpace(feature.FeatureNameAr)
+            ? feature.FeatureNameAr
+            : feature.FeatureName;
+    }
+
+    private static string GetAdminFeatureDisplayValue(
+        AdvertisementFeatureValueResponse feature)
+    {
+        var isArabic = System.Globalization.CultureInfo.CurrentUICulture
+            .TwoLetterISOLanguageName.Equals("ar", StringComparison.OrdinalIgnoreCase);
+
+        var value = (isArabic && !string.IsNullOrWhiteSpace(feature.FeatureValueAr)
+            ? feature.FeatureValueAr
+            : feature.FeatureValue ?? string.Empty).Trim();
+
+        if (bool.TryParse(value, out var booleanValue))
+            return booleanValue ? "Yes" : "No";
+
+        if (string.IsNullOrWhiteSpace(value))
+            return "—";
+
+        var option = feature.Options?.FirstOrDefault(item =>
+            item.AdvertisementFeatureOptionID.ToString() == value);
+
+        return option?.OptionValue ?? value;
+    }
+    private static bool TryGetAdminFeatureArray(
+    AdvertisementFeatureValueResponse feature,
+    out List<string> items)
+{
+    items = new List<string>();
+
+    var isArabic = System.Globalization.CultureInfo.CurrentUICulture
+        .TwoLetterISOLanguageName.Equals(
+            "ar",
+            StringComparison.OrdinalIgnoreCase);
+
+    var value = (
+        isArabic && !string.IsNullOrWhiteSpace(feature.FeatureValueAr)
+            ? feature.FeatureValueAr
+            : feature.FeatureValue ?? string.Empty
+    ).Trim();
+
+    if (string.IsNullOrWhiteSpace(value) ||
+        !value.StartsWith("[", StringComparison.Ordinal))
+    {
+        return false;
+    }
+
+    try
+    {
+        using var document =
+            System.Text.Json.JsonDocument.Parse(value);
+
+        if (document.RootElement.ValueKind !=
+            System.Text.Json.JsonValueKind.Array)
+        {
+            return false;
+        }
+
+        foreach (var element in document.RootElement.EnumerateArray())
+        {
+            var item = element.ValueKind switch
+            {
+                System.Text.Json.JsonValueKind.String =>
+                    element.GetString(),
+
+                System.Text.Json.JsonValueKind.Number or
+                System.Text.Json.JsonValueKind.True or
+                System.Text.Json.JsonValueKind.False =>
+                    element.ToString(),
+
+                _ => null
+            };
+
+            if (!string.IsNullOrWhiteSpace(item))
+            {
+                items.Add(item.Trim());
+            }
+        }
+
+        return true;
+    }
+    catch (System.Text.Json.JsonException)
+    {
+        return false;
+    }
+}
     private static string FormatDecimal(
         decimal? value)
     {

@@ -361,176 +361,43 @@
                     </section>
 
 
-                    <!-- =================================================
-                         PROPERTY DETAILS
-                         ================================================= -->
+                    @if (HasDynamicSpecifications)
+{
+    <section class="my-ad-view-card">
+        <div class="my-ad-view-section-heading">
+            <div class="section-heading-icon">
+                <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+                <h2>Advertisement Details</h2>
+                <span>Details specific to this category</span>
+            </div>
+        </div>
 
-                    @if (HasPropertyDetails)
+        <div class="my-ad-view-details-grid">
+            @foreach (var feature in GetDynamicSpecifications())
+            {
+                <div class="my-ad-view-detail" @key="feature.AdvertisementFeatureID">
+                    <span>@GetFeatureDisplayName(feature)</span>
+
+                    @if (IsFeatureArray(feature))
                     {
-                        <section class="my-ad-view-card">
-
-                            <div class="my-ad-view-section-heading">
-
-                                <div class="section-heading-icon">
-                                    <i class="bi bi-building"></i>
-                                </div>
-
-                                <div>
-
-                                    <h2>
-                                        Property Details
-                                    </h2>
-
-                                    <span>
-                                        Additional information
-                                    </span>
-
-                                </div>
-
-                            </div>
-
-
-                            <div class="my-ad-view-details-grid">
-
-                                @if (advertisement.PlotNumber is not null)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Plot Number
-                                        </span>
-
-                                        <strong>
-                                            @advertisement.PlotNumber
-                                        </strong>
-
-                                    </div>
-                                }
-
-
-                                @if (advertisement.LandArea.HasValue)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Land Area
-                                        </span>
-
-                                        <strong>
-                                            @FormatArea(
-                                                advertisement.LandArea.Value)
-                                        </strong>
-
-                                    </div>
-                                }
-
-
-                                @if (advertisement.BuiltUpArea.HasValue)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Built-up Area
-                                        </span>
-
-                                        <strong>
-                                            @FormatArea(
-                                                advertisement.BuiltUpArea.Value)
-                                        </strong>
-
-                                    </div>
-                                }
-
-
-                                @if (advertisement.Bedrooms.HasValue)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Bedrooms
-                                        </span>
-
-                                        <strong>
-                                            @advertisement.Bedrooms
-                                        </strong>
-
-                                    </div>
-                                }
-
-
-                                @if (advertisement.Bathrooms.HasValue)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Bathrooms
-                                        </span>
-
-                                        <strong>
-                                            @advertisement.Bathrooms
-                                        </strong>
-
-                                    </div>
-                                }
-
-
-                                @if (advertisement.PropertyAge.HasValue)
-                                {
-                                    <div class="my-ad-view-detail">
-
-                                        <span>
-                                            Property Age
-                                        </span>
-
-                                        <strong>
-                                            @advertisement.PropertyAge years
-                                        </strong>
-
-                                    </div>
-                                }
-
-                            </div>
-
-                        </section>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            @foreach (var item in GetFeatureArrayItems(feature))
+                            {
+                                <span class="badge rounded-pill text-bg-light border">@item</span>
+                            }
+                        </div>
                     }
-
-
-                                        @if (HasDynamicSpecifications)
+                    else
                     {
-                        <section class="my-ad-view-card">
-                            <div class="my-ad-view-section-heading">
-                                <div class="section-heading-icon">
-                                    <i class="bi bi-list-check"></i>
-                                </div>
-                                <div>
-                                    <h2>Additional Specifications</h2>
-                                    <span>More details about this advertisement</span>
-                                </div>
-                            </div>
-                            <div class="my-ad-view-details-grid">
-                                @foreach (var feature in GetDynamicSpecifications())
-                                {
-                                    <div class="my-ad-view-detail" @key="feature.AdvertisementFeatureID">
-                                        <span>@GetFeatureDisplayName(feature)</span>
-                                        @if (IsVehicleFeatureList(feature))
-                                        {
-                                            <div class="d-flex flex-wrap gap-2 mt-2">
-                                                @foreach (var item in GetVehicleFeatureItems(feature))
-                                                {
-                                                    <span class="badge rounded-pill text-bg-light border">@item</span>
-                                                }
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <strong>@GetFeatureDisplayValue(feature)</strong>
-                                        }
-                                    </div>
-                                }
-                            </div>
-                        </section>
+                        <strong>@GetFeatureDisplayValue(feature)</strong>
                     }
-
+                </div>
+            }
+        </div>
+    </section>
+}
 <!-- =================================================
                          LOCATION
                          ================================================= -->
@@ -1309,24 +1176,40 @@
             : feature.FeatureName;
     }
 
-    private static bool IsVehicleFeatureList(AdvertisementFeatureValueResponse feature)
+    private static bool IsFeatureArray(AdvertisementFeatureValueResponse feature)
     {
-        return feature.FeatureName.Contains("Vehicle Features", StringComparison.OrdinalIgnoreCase)
-            || (feature.FeatureValue?.StartsWith("Vehicle Features[", StringComparison.OrdinalIgnoreCase) ?? false);
+        var value = GetRawFeatureDisplayValue(feature).Trim();
+        return value.StartsWith("[", StringComparison.Ordinal);
     }
 
-    private IEnumerable<string> GetVehicleFeatureItems(AdvertisementFeatureValueResponse feature)
+    private IEnumerable<string> GetFeatureArrayItems(AdvertisementFeatureValueResponse feature)
     {
-        var value = GetRawFeatureDisplayValue(feature);
+        var value = GetRawFeatureDisplayValue(feature).Trim();
+
         if (string.IsNullOrWhiteSpace(value))
             return Enumerable.Empty<string>();
 
-        var matches = System.Text.RegularExpressions.Regex.Matches(value, "\"([^\"]*)\"");
-        if (matches.Count > 0)
-            return matches.Select(match => match.Groups[1].Value.Trim())
-                .Where(item => !string.IsNullOrWhiteSpace(item));
+        try
+        {
+            using var document = System.Text.Json.JsonDocument.Parse(value);
 
-        return new[] { value.Trim() };
+            if (document.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+            {
+                return document.RootElement.EnumerateArray()
+                    .Select(item => item.ValueKind == System.Text.Json.JsonValueKind.String
+                        ? item.GetString()
+                        : item.ToString())
+                    .Where(item => !string.IsNullOrWhiteSpace(item))
+                    .Select(item => item!.Trim())
+                    .ToArray();
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            // Fall through and show the original value.
+        }
+
+        return new[] { value };
     }
 
     private static string GetRawFeatureDisplayValue(AdvertisementFeatureValueResponse feature)

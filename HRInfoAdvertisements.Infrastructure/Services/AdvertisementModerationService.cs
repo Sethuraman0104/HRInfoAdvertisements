@@ -170,6 +170,9 @@ public AdvertisementModerationService(
                 .Include(x => x.Images)
                 .Include(x => x.Videos)
                 .Include(x => x.Documents)
+                .Include(x => x.FeatureValues)
+                    .ThenInclude(x => x.Feature)
+                        .ThenInclude(x => x.Options)
                 .FirstOrDefaultAsync(x =>
                     x.AdvertisementID ==
                     advertisementId);
@@ -350,6 +353,36 @@ public AdvertisementModerationService(
             // ====================================================
             // IMAGES
             // ====================================================
+
+            // ====================================================
+            // DYNAMIC FEATURE VALUES
+            // ====================================================
+
+            FeatureValues =
+                advertisement.FeatureValues
+                    .OrderBy(x => x.Feature.DisplayOrder)
+                    .Select(x => new AdvertisementFeatureValueResponse
+                    {
+                        AdvertisementFeatureID = x.AdvertisementFeatureID,
+                        FeatureName = x.Feature.FeatureName,
+                        FeatureNameAr = x.Feature.FeatureNameAr,
+                        DataType = x.Feature.DataType,
+                        IsRequired = x.Feature.IsRequired,
+                        FeatureValue = x.FeatureValue,
+                        FeatureValueAr = x.FeatureValueAr,
+                        Options = x.Feature.Options
+                            .Where(option => option.IsActive)
+                            .OrderBy(option => option.DisplayOrder)
+                            .Select(option => new AdvertisementFeatureOptionResponse
+                            {
+                                AdvertisementFeatureOptionID = option.AdvertisementFeatureOptionID,
+                                OptionValue = option.OptionValue,
+                                OptionValueAr = option.OptionValueAr,
+                                DisplayOrder = option.DisplayOrder
+                            })
+                            .ToList()
+                    })
+                    .ToList(),
 
             Images =
                 advertisement.Images

@@ -473,7 +473,33 @@
                             }
 
 
-                            @if (Advertisement.Bedrooms.HasValue)
+                            @* PUBLIC_DYNAMIC_FEATURES_START *@
+                            @if (Advertisement.FeatureValues?.Any(feature =>
+                                !string.IsNullOrWhiteSpace(feature.FeatureValue) ||
+                                !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) == true)
+                            {
+                                @foreach (var feature in Advertisement.FeatureValues
+                                    .Where(feature =>
+                                        !string.IsNullOrWhiteSpace(feature.FeatureValue) ||
+                                        !string.IsNullOrWhiteSpace(feature.FeatureValueAr)))
+                                {
+                                    var displayValue = GetPublicFeatureDisplayValue(feature);
+
+                                    @if (!string.IsNullOrWhiteSpace(displayValue))
+                                    {
+                                        <div class="public-detail-item">
+                                            <span>
+                                                <i class="bi bi-check2-square"></i>
+                                                @feature.FeatureName
+                                            </span>
+                                            <strong>@displayValue</strong>
+                                        </div>
+                                    }
+                                }
+                            }
+                            @* PUBLIC_DYNAMIC_FEATURES_END *@
+
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && Advertisement.Bedrooms.HasValue)
                             {
                                 <div class="public-detail-item">
 
@@ -490,7 +516,7 @@
                             }
 
 
-                            @if (Advertisement.Bathrooms.HasValue)
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && Advertisement.Bathrooms.HasValue)
                             {
                                 <div class="public-detail-item">
 
@@ -507,7 +533,7 @@
                             }
 
 
-                            @if (Advertisement.LandArea.HasValue)
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && Advertisement.LandArea.HasValue)
                             {
                                 <div class="public-detail-item">
 
@@ -525,7 +551,7 @@
                             }
 
 
-                            @if (Advertisement.BuiltUpArea.HasValue)
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && Advertisement.BuiltUpArea.HasValue)
                             {
                                 <div class="public-detail-item">
 
@@ -543,7 +569,7 @@
                             }
 
 
-                            @if (Advertisement.PropertyAge.HasValue)
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && Advertisement.PropertyAge.HasValue)
                             {
                                 <div class="public-detail-item">
 
@@ -560,8 +586,7 @@
                             }
 
 
-                            @if (!string.IsNullOrWhiteSpace(
-                                Advertisement.PlotNumber))
+                            @if (Advertisement.FeatureValues?.Any(feature => !string.IsNullOrWhiteSpace(feature.FeatureValue) || !string.IsNullOrWhiteSpace(feature.FeatureValueAr)) != true && !string.IsNullOrWhiteSpace(Advertisement.PlotNumber))
                             {
                                 <div class="public-detail-item">
 
@@ -2063,6 +2088,85 @@ private string FormatPrice(
 }
 
 
+    private string GetPublicFeatureDisplayValue(
+        AdvertisementFeatureValueResponse feature)
+    {
+        var rawValue = !string.IsNullOrWhiteSpace(feature.FeatureValue)
+            ? feature.FeatureValue.Trim()
+            : feature.FeatureValueAr?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return string.Empty;
+        }
+
+        if (string.Equals(
+            feature.DataType,
+            "MultiSelect",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                using var document = System.Text.Json.JsonDocument.Parse(rawValue);
+
+                if (document.RootElement.ValueKind ==
+                    System.Text.Json.JsonValueKind.Array)
+                {
+                    var labels = new List<string>();
+
+                    foreach (var item in document.RootElement.EnumerateArray())
+                    {
+                        var selectedValue = item.ValueKind ==
+                            System.Text.Json.JsonValueKind.String
+                            ? item.GetString()
+                            : item.ToString();
+
+                        if (string.IsNullOrWhiteSpace(selectedValue))
+                        {
+                            continue;
+                        }
+
+                        var option = feature.Options.FirstOrDefault(candidate =>
+                            string.Equals(
+                                candidate.OptionValue,
+                                selectedValue,
+                                StringComparison.OrdinalIgnoreCase));
+
+                        labels.Add(option?.OptionValue ?? selectedValue);
+                    }
+
+                    return string.Join(", ", labels);
+                }
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // Display the stored value below if it is not valid JSON.
+            }
+        }
+
+        var matchingOption = feature.Options.FirstOrDefault(option =>
+            string.Equals(
+                option.OptionValue,
+                rawValue,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (matchingOption is not null)
+        {
+            return matchingOption.OptionValue;
+        }
+
+        if (string.Equals(rawValue, "true", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Yes";
+        }
+
+        if (string.Equals(rawValue, "false", StringComparison.OrdinalIgnoreCase))
+        {
+            return "No";
+        }
+
+        return rawValue;
+    }
     private string FormatNumber(
         decimal value)
     {

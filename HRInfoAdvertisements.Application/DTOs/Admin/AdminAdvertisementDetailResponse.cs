@@ -1,4 +1,5 @@
 using HRInfoAdvertisements.Application.DTOs.AdvertisementMedia;
+using HRInfoAdvertisements.Application.DTOs.Advertisements;
 
 namespace HRInfoAdvertisements.Application.DTOs.Admin;
 
@@ -123,6 +124,8 @@ public class AdminAdvertisementDetailResponse
     // ============================================================
     // MEDIA
     // ============================================================
+
+    public List<AdvertisementFeatureValueResponse> FeatureValues { get; set; } = new();
 
     public List<AdvertisementImageResponse> Images { get; set; } = new();
 
